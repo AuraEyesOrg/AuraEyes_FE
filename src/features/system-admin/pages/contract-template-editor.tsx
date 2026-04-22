@@ -29,6 +29,14 @@ const formatDateTime = (
   return parsed.toLocaleString(locale);
 };
 
+const getFileExtension = (url: string) => {
+  const cleanUrl = url.split('?')[0] ?? url;
+  return cleanUrl.split('.').pop()?.toLowerCase() ?? '';
+};
+
+const getOfficeViewerUrl = (fileUrl: string) =>
+  `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
+
 export default function ContractTemplateEditorPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -294,7 +302,13 @@ export default function ContractTemplateEditorPage() {
               <div className="flex flex-wrap gap-3">
                 {selectedFileUrl && (
                   <a
-                    href={selectedFileUrl}
+                    href={
+                      ['doc', 'docx'].includes(
+                        getFileExtension(selectedFileUrl)
+                      )
+                        ? getOfficeViewerUrl(selectedFileUrl)
+                        : selectedFileUrl
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-slate-300 hover:bg-slate-50"
@@ -309,7 +323,13 @@ export default function ContractTemplateEditorPage() {
 
                 {!selectedFileUrl && existingTemplate?.contentTemplate && (
                   <a
-                    href={existingTemplate.contentTemplate}
+                    href={
+                      ['doc', 'docx'].includes(
+                        getFileExtension(existingTemplate.contentTemplate)
+                      )
+                        ? getOfficeViewerUrl(existingTemplate.contentTemplate)
+                        : existingTemplate.contentTemplate
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-slate-300 hover:bg-slate-50"

@@ -1511,6 +1511,8 @@ declare module 'i18next' {
       secondaryCta: string;
     };
     GuestEnhancements: {
+      trustedByPrefix: string;
+      trustedBySuffix: string;
       breadcrumb: {
         ariaLabel: string;
       };
@@ -2035,8 +2037,8 @@ declare module 'i18next' {
       liveStats: {
         ophthalmologists: string;
         organisations: string;
-        availableSlots: string;
-        resources: string;
+        screenings: string;
+        feedbacks: string;
       };
     };
     EthicsPrivacy: {
@@ -2261,8 +2263,14 @@ declare module 'i18next' {
     };
     PatientAppointments: {
       page: {
+        eyebrow: string;
         title: string;
         subtitle: string;
+      };
+      pagination: {
+        prev: string;
+        next: string;
+        pageOf: string;
       };
       loading: {
         appointments: string;
@@ -2286,6 +2294,7 @@ declare module 'i18next' {
         doctorSlots: string;
       };
       actions: {
+        bookNew: string;
         bookMoreSlot: string;
         rateClinic: string;
         viewChat: string;
@@ -2465,6 +2474,63 @@ declare module 'i18next' {
         subtitle: string;
       };
     };
+    PatientHelpFeedback: {
+      page: {
+        title: string;
+        subtitle: string;
+      };
+      whyFeedbackMatters: {
+        title: string;
+        items: {
+          bookingAndConsultation: string;
+          bugReporting: string;
+          featureSuggestions: string;
+        };
+      };
+      form: {
+        title: string;
+        subtitle: string;
+        unlockHint: string;
+        success: {
+          title: string;
+          message: string;
+        };
+        actions: {
+          leaveFeedback: string;
+        };
+      };
+      modal: {
+        title: string;
+        subtitle: string;
+        submitLabel: string;
+        labels: {
+          rating: string;
+          ratingValidation: string;
+          category: string;
+          commentOptional: string;
+          commentPlaceholder: string;
+        };
+        categories: {
+          BUG: string;
+          UX: string;
+          SUGGESTION: string;
+          OTHER: string;
+        };
+        actions: {
+          notNow: string;
+          submitting: string;
+        };
+        discard: {
+          title: string;
+          description: string;
+          keepEditing: string;
+          discardDraft: string;
+        };
+      };
+      toast: {
+        feedbackSubmitted: string;
+      };
+    };
     PatientRoadmap: {
       page: {
         title: string;
@@ -2488,6 +2554,20 @@ declare module 'i18next' {
       };
       generatedOn: string;
       source: string;
+      sourceBadges: {
+        doctorReviewed: string;
+        aiGenerated: string;
+        doctorVerified: string;
+      };
+      actions: {
+        viewDiagnosis: string;
+        downloadPdf: string;
+        preparingPdf: string;
+      };
+      toast: {
+        downloadPdfSuccess: string;
+        downloadPdfFailed: string;
+      };
       sections: {
         nextSteps: {
           title: string;
@@ -2508,6 +2588,26 @@ declare module 'i18next' {
         timeframeFallback: string;
         notNeeded: string;
         disclaimer: string;
+      };
+      timeline: {
+        title: string;
+        phases: {
+          today: string;
+          followUpInTwoWeeks: string;
+          followUpOptional: string;
+          ongoing: string;
+        };
+        titles: {
+          immediateActions: string;
+          followUpPlan: string;
+          lifestyleRoutine: string;
+        };
+        fallbacks: {
+          immediateActions: string;
+          followUpNeeded: string;
+          followUpNotNeeded: string;
+          lifestyleRoutine: string;
+        };
       };
     };
     PatientNotifications: {
@@ -3003,6 +3103,18 @@ declare module 'i18next' {
         walletBalance: string;
         insufficient: string;
       };
+      confirmModal: {
+        title: string;
+        subtitle: string;
+        time: string;
+        free: string;
+        balanceAfter: string;
+        terms: string;
+        cancel: string;
+        confirm: string;
+        processing: string;
+        close: string;
+      };
       toast: {
         bookSuccess: string;
       };
@@ -3153,6 +3265,23 @@ declare module 'i18next' {
         settings: string;
         security: string;
         notifications: string;
+      };
+    };
+    PatientN8nChat: {
+      title: string;
+      subtitle: string;
+      welcome: string;
+      inputPlaceholder: string;
+      status: {
+        responding: string;
+      };
+      actions: {
+        topUpNow: string;
+      };
+      quickPrompts: {
+        findSpecificTime: string;
+        availableThisWeek: string;
+        bestMatch: string;
       };
     };
     PatientChat: {
@@ -5852,6 +5981,8 @@ declare module 'i18next' {
           actions: {
             saveChanges: string;
             saving: string;
+            resetChanges: string;
+            stickyHint: string;
           };
         };
         sections: {
@@ -5905,6 +6036,10 @@ declare module 'i18next' {
           partTimeMaxSlotsPerDayHint: string;
           fullTimeSlotWindowDays: string;
           fullTimeSlotWindowDaysHint: string;
+          fullTimeRequiredHoursWeek: string;
+          fullTimeRequiredHoursWeekHint: string;
+          fullTimeRequiredHoursMonth: string;
+          fullTimeRequiredHoursMonthHint: string;
           fullTimeMinSlotCost: string;
           fullTimeMaxSlotCost: string;
           fullTimeMaxSlotCostHint: string;

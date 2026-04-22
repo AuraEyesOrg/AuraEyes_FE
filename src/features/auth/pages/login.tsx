@@ -522,7 +522,7 @@ const LoginPage = () => {
     }
     const timer = window.setTimeout(
       () => setRegisterCountdown((prev) => (prev !== null ? prev - 1 : null)),
-      1000
+      3000
     );
     return () => window.clearTimeout(timer);
   }, [registerCountdown, registeredEmail, navigate, toLocalizedAuthPath]);

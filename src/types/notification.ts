@@ -557,7 +557,7 @@ export function getNotificationRoute(
         (action.includes('contract') && action.includes('activat'));
 
       if (action === 'ophthalmologist_email_confirmed') {
-        return isSystemAdmin ? '/system-admin/contracts' : fallbackHome;
+        return isSystemAdmin ? '/system-admin/verifications' : fallbackHome;
       }
 
       if (isVerificationSubmittedAction) {

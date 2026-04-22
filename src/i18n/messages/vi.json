@@ -2472,6 +2472,63 @@
       "subtitle": "Chọn ngôn ngữ hiển thị bạn muốn sử dụng"
     }
   },
+  "PatientHelpFeedback": {
+    "page": {
+      "title": "Hỗ trợ & phản hồi",
+      "subtitle": "Chia sẻ trải nghiệm sử dụng website để giúp chúng tôi cải thiện hành trình chăm sóc võng mạc."
+    },
+    "whyFeedbackMatters": {
+      "title": "Vì sao phản hồi của bạn quan trọng",
+      "items": {
+        "bookingAndConsultation": "Giúp chúng tôi cải thiện trải nghiệm đặt lịch và tư vấn.",
+        "bugReporting": "Phát hiện lỗi sớm trước khi ảnh hưởng đến nhiều bệnh nhân hơn.",
+        "featureSuggestions": "Đề xuất tính năng để hành trình chăm sóc của bạn thuận tiện hơn."
+      }
+    },
+    "form": {
+      "title": "Hỗ trợ & phản hồi",
+      "subtitle": "Chỉ mất dưới 30 giây. Phản hồi của bạn giúp chúng tôi cải thiện nền tảng.",
+      "unlockHint": "Hoàn tất ít nhất một lần phân tích, báo cáo hoặc lịch hẹn để mở phản hồi website.",
+      "success": {
+        "title": "Đã gửi phản hồi",
+        "message": "Cảm ơn bạn đã giúp chúng tôi cải thiện hành trình chăm sóc."
+      },
+      "actions": {
+        "leaveFeedback": "Gửi phản hồi website"
+      }
+    },
+    "modal": {
+      "title": "Phản hồi website",
+      "subtitle": "Hãy cho chúng tôi biết điều gì hoạt động tốt và điều gì cần cải thiện.",
+      "submitLabel": "Gửi phản hồi website",
+      "labels": {
+        "rating": "Đánh giá",
+        "ratingValidation": "Vui lòng chọn mức đánh giá từ 1 đến 5.",
+        "category": "Danh mục",
+        "commentOptional": "Nội dung (không bắt buộc)",
+        "commentPlaceholder": "Hãy chia sẻ thêm về trải nghiệm của bạn"
+      },
+      "categories": {
+        "BUG": "Lỗi",
+        "UX": "Trải nghiệm người dùng",
+        "SUGGESTION": "Đề xuất",
+        "OTHER": "Khác"
+      },
+      "actions": {
+        "notNow": "Để sau",
+        "submitting": "Đang gửi..."
+      },
+      "discard": {
+        "title": "Hủy bản nháp?",
+        "description": "Phản hồi hiện tại của bạn chưa được gửi. Nếu rời đi bây giờ, bản nháp sẽ bị mất.",
+        "keepEditing": "Tiếp tục chỉnh sửa",
+        "discardDraft": "Hủy bản nháp"
+      }
+    },
+    "toast": {
+      "feedbackSubmitted": "Đã gửi phản hồi"
+    }
+  },
   "PatientRoadmap": {
     "page": {
       "title": "Lộ trình sức khỏe",
@@ -2495,6 +2552,20 @@
     },
     "generatedOn": "Tạo vào {{date}}",
     "source": "Nguồn: {{source}}",
+    "sourceBadges": {
+      "doctorReviewed": "Đã được bác sĩ rà soát",
+      "aiGenerated": "AI tạo",
+      "doctorVerified": "Bác sĩ xác nhận"
+    },
+    "actions": {
+      "viewDiagnosis": "Xem chẩn đoán",
+      "downloadPdf": "Tải PDF",
+      "preparingPdf": "Đang chuẩn bị PDF..."
+    },
+    "toast": {
+      "downloadPdfSuccess": "Đã tải PDF lộ trình thành công.",
+      "downloadPdfFailed": "Không thể tải PDF lộ trình. Vui lòng thử lại."
+    },
     "sections": {
       "nextSteps": {
         "title": "Bước tiếp theo",
@@ -2515,6 +2586,26 @@
       "timeframeFallback": "Vui lòng liên hệ bác sĩ để biết lịch phù hợp.",
       "notNeeded": "Hiện chưa cần tái khám ngay.",
       "disclaimer": "Chẩn đoán và quyết định điều trị vẫn thuộc trách nhiệm của bác sĩ. Lộ trình này chỉ mang tính hướng dẫn cho bệnh nhân."
+    },
+    "timeline": {
+      "title": "Mốc chăm sóc",
+      "phases": {
+        "today": "Hôm nay",
+        "followUpInTwoWeeks": "Trong 2 tuần",
+        "followUpOptional": "Tái khám tùy chọn",
+        "ongoing": "Duy trì"
+      },
+      "titles": {
+        "immediateActions": "Hành động ngay",
+        "followUpPlan": "Kế hoạch tái khám",
+        "lifestyleRoutine": "Thói quen sinh hoạt"
+      },
+      "fallbacks": {
+        "immediateActions": "Xem lại tóm tắt lộ trình và theo dõi triệu chứng sát sao.",
+        "followUpNeeded": "Lên lịch tái khám theo hướng dẫn của bác sĩ.",
+        "followUpNotNeeded": "Chưa cần tái khám gấp nếu triệu chứng không nặng hơn.",
+        "lifestyleRoutine": "Duy trì thói quen chăm sóc mắt lành mạnh và nghỉ ngơi đều đặn."
+      }
     }
   },
   "PatientNotifications": {
@@ -5887,7 +5978,9 @@
         "description": "Cấu hình các thiết lập và tùy chọn toàn hệ thống",
         "actions": {
           "saveChanges": "Lưu thay đổi",
-          "saving": "Đang lưu..."
+          "saving": "Đang lưu...",
+          "resetChanges": "Đặt lại",
+          "stickyHint": "Kiểm tra thay đổi trước khi lưu. Bạn có thể đặt lại các chỉnh sửa chưa lưu bất kỳ lúc nào."
         }
       },
       "sections": {
@@ -5941,6 +6034,10 @@
         "partTimeMaxSlotsPerDayHint": "Quota toàn cục mỗi ngày cho tất cả slot của bác sĩ bán thời gian.",
         "fullTimeSlotWindowDays": "Cửa sổ tạo lịch cho bác sĩ toàn thời gian (ngày)",
         "fullTimeSlotWindowDaysHint": "Số ngày tương lai mà Hangfire duy trì tạo sẵn cho lịch toàn thời gian.",
+        "fullTimeRequiredHoursWeek": "Khối lượng công việc yêu cầu cho bác sĩ toàn thời gian (giờ/tuần)",
+        "fullTimeRequiredHoursWeekHint": "Mục tiêu giờ tư vấn cho bác sĩ toàn thời gian trên dashboard theo tuần.",
+        "fullTimeRequiredHoursMonth": "Khối lượng công việc yêu cầu cho bác sĩ toàn thời gian (giờ/tháng)",
+        "fullTimeRequiredHoursMonthHint": "Mục tiêu giờ tư vấn cho bác sĩ toàn thời gian trên dashboard theo tháng.",
         "fullTimeMinSlotCost": "Giá slot tối thiểu toàn thời gian (VND)",
         "fullTimeMaxSlotCost": "Giá slot tối đa toàn thời gian (VND)",
         "fullTimeMaxSlotCostHint": "Giá slot tạo tự động cho toàn thời gian sẽ được giới hạn trong khoảng min và max.",

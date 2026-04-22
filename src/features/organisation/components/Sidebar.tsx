@@ -111,7 +111,13 @@ export default function Sidebar({
 
   const pendingCount = propPendingCount ?? sidebarPendingCount;
 
-  const visibleNavItems = navItems.filter((item) =>
+  const contractApproved = user?.contractStatus === 'Active';
+
+  const visibleNavItems = (
+    contractApproved
+      ? navItems
+      : navItems.filter((item) => item.path === '/organisation/contract')
+  ).filter((item) =>
     item.requiredPermission ? hasPermission(item.requiredPermission) : true
   );
 

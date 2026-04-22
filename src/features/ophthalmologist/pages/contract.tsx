@@ -464,6 +464,8 @@ export default function ContractPage() {
   const queryClient = useQueryClient();
   const { user, setUser } = useAuthStore();
   const [redirectSeconds, setRedirectSeconds] = useState<number | null>(null);
+  const [shouldAutoRedirect, setShouldAutoRedirect] = useState(false);
+  const previousContractStatusRef = useRef<string | null>(null);
 
   const {
     data: contract,
@@ -483,8 +485,30 @@ export default function ContractPage() {
   }, [contract?.status, setUser, user]);
 
   useEffect(() => {
-    if (contract?.status !== 'Active') {
+    const currentStatus = contract?.status ?? null;
+    const previousStatus = previousContractStatusRef.current;
+
+    if (!currentStatus) {
+      setShouldAutoRedirect(false);
       setRedirectSeconds(null);
+      return;
+    }
+
+    const transitionedToActive =
+      previousStatus !== null &&
+      previousStatus !== 'Active' &&
+      currentStatus === 'Active';
+
+    setShouldAutoRedirect(transitionedToActive);
+    if (!transitionedToActive) {
+      setRedirectSeconds(null);
+    }
+
+    previousContractStatusRef.current = currentStatus;
+  }, [contract?.status]);
+
+  useEffect(() => {
+    if (!shouldAutoRedirect) {
       return;
     }
 
@@ -507,7 +531,7 @@ export default function ContractPage() {
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [contract?.status, navigate]);
+  }, [navigate, shouldAutoRedirect]);
 
   const handleUploadSuccess = () => {
     queryClient.invalidateQueries({ queryKey: CONTRACT_QUERY_KEY });
