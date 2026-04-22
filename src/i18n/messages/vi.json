@@ -356,7 +356,7 @@
     },
     "login": {
       "leftPanel": {
-        "titleLine1": "Nền tảng chăm sóc mắt",
+        "titleLine": "Nền tảng chăm sóc mắt",
         "titleHighlight": "ứng dụng AI.",
         "description": "Truy cập an toàn cho bệnh nhân, bác sĩ nhãn khoa và tổ chức y tế với công cụ sàng lọc võng mạc thế hệ mới, độ chính xác lâm sàng 99.2%.",
         "hipaa": "Tuân thủ HIPAA",
@@ -429,6 +429,84 @@
         "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
         "passwordMismatch": "Mật khẩu không khớp",
         "agreeTerms": "Bạn phải đồng ý với điều khoản"
+      }
+    },
+    "registerDoctor": {
+      "leftPanel": {
+        "welcome": "Chào mừng bạn đến với",
+        "medicalExcellence": "Y tế Xuất sắc.",
+        "description": "Tham gia vào mạng lưới chuyên gia y tế của chúng tôi, sử dụng công nghệ AI tiên tiến trong chẩn đoán võng mạc.",
+        "status": "Trạng thái hệ thống:",
+        "online": "Đang hoạt động"
+      },
+      "form": {
+        "title": "Đăng ký Bác sĩ",
+        "description": "Gia nhập mạng lưới Y tế AURA",
+        "fullName": "Họ và tên",
+        "fullNamePlaceholder": "Bác sĩ Nguyễn Văn A",
+        "email": "Email chuyên môn",
+        "emailPlaceholder": "bacsi.nguyen@benhvien.org",
+        "phone": "Số điện thoại",
+        "phonePlaceholder": "+84 (090) 000-0000",
+        "password": "Mật khẩu",
+        "passwordPlaceholder": "Tối thiểu 8 ký tự",
+        "confirmPassword": "Xác nhận mật khẩu",
+        "confirmPasswordPlaceholder": "Nhập lại mật khẩu",
+        "experience": "Kinh nghiệm (năm)",
+        "workingMode": "Hình thức làm việc",
+        "fullTime": "Toàn thời gian",
+        "fullTimeDesc": "Lịch trình cố định",
+        "partTime": "Bán thời gian",
+        "partTimeDesc": "Lịch trình linh hoạt",
+        "workingHours": "Số giờ làm việc / Tuần",
+        "expectedSalary": "Mức lương mong muốn (VND)",
+        "suggestedSalary": "Gợi ý theo hình thức + kinh nghiệm: {{salary}} VND",
+        "bio": "Tiểu sử tóm tắt (Tùy chọn)",
+        "bioPlaceholder": "Giới thiệu ngắn gọn về quá trình công tác và chuyên môn của bạn...",
+        "degrees": "Bằng cấp",
+        "addDegree": "Thêm bằng cấp",
+        "degreeItem": "Bằng cấp #{{index}}",
+        "degreeLevels": {
+          "Bachelor": "Cử nhân",
+          "Master": "Thạc sĩ",
+          "Doctor": "Tiến sĩ",
+          "AssociateProfessor": "Phó Giáo sư",
+          "Professor": "Giáo sư"
+        },
+        "certificates": "Chứng chỉ / Chứng chỉ hành nghề",
+        "addCertificate": "Thêm chứng chỉ",
+        "certificateItem": "Chứng chỉ #{{index}}",
+        "fields": {
+          "name": "Tên bằng cấp/chứng chỉ",
+          "level": "Cấp bậc",
+          "issuingAuthority": "Cơ quan cấp",
+          "issuedDate": "Ngày cấp",
+          "expiryDate": "Ngày hết hạn",
+          "selectFile": "Chọn tệp tin (PDF, JPG, PNG)"
+        },
+        "submit": "Gửi đơn đăng ký",
+        "submitting": "Đang gửi đơn..."
+      },
+      "validation": {
+        "passwordsNotMatch": "Mật khẩu không khớp",
+        "degreeRequired": "Yêu cầu ít nhất một bằng cấp để gửi đơn.",
+        "certificateRequired": "Yêu cầu ít nhất một chứng chỉ/giấy phép hành nghề để gửi đơn.",
+        "degreeFileRequired": "Mỗi bằng cấp phải đính kèm tệp minh chứng.",
+        "certificateFileRequired": "Mỗi chứng chỉ phải đính kèm tệp minh chứng.",
+        "expiryDateRequired": "Chứng chỉ phải có ngày hết hạn.",
+        "expiryDateInvalid": "Ngày hết hạn chứng chỉ phải sau ngày cấp."
+      },
+      "success": {
+        "title": "Đã gửi đơn đăng ký!",
+        "subtitle": "Cảm ơn bạn đã đăng ký gia nhập mạng lưới Y tế AURA.",
+        "description": "Đội ngũ của chúng tôi sẽ xem xét hồ sơ và chứng chỉ của bạn. Bạn sẽ nhận được thông tin tài khoản qua email trong vòng 2-3 ngày làm việc.",
+        "emailNotice": "Vui lòng kiểm tra email <strong>{{email}}</strong> để xác nhận tài khoản trước khi admin xem xét hợp đồng của bạn.",
+        "redirect": "Chuyển hướng đến trang xác nhận email sau {{seconds}} giây...",
+        "backHome": "Quay về Trang chủ"
+      },
+      "toast": {
+        "success": "Đăng ký bác sĩ thành công! Vui lòng kiểm tra email để xác nhận tài khoản và đợi admin phê duyệt.",
+        "failed": "Đăng ký thất bại. Vui lòng thử lại sau."
       }
     },
     "forgotPassword": {
@@ -1170,6 +1248,7 @@
       "contractCode": "Mã hợp đồng",
       "signedDate": "Ngày ký",
       "contractInfo": "Thông tin hợp đồng",
+      "pdfDocument": "Tài liệu PDF",
       "template": "Mẫu",
       "type": "Loại",
       "ophthalmologistType": "Bác sĩ nhãn khoa",
@@ -3596,6 +3675,7 @@
         "createdAt": "Ngày tạo",
         "email": "Email",
         "organisationType": "Tổ chức y tế",
+        "pdfDocument": "Tài liệu PDF",
         "template": "Mẫu",
         "type": "Loại"
       },

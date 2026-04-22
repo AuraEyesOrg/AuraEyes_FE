@@ -356,7 +356,7 @@
     },
     "login": {
       "leftPanel": {
-        "titleLine1": "AI-Powered",
+        "titleLine": "AI-Powered",
         "titleHighlight": "Eye Care Platform.",
         "description": "Secure access for patients, ophthalmologists, and organizations to next-generation retinal screening tools with 99.2% clinical accuracy.",
         "hipaa": "HIPAA Compliant",
@@ -429,6 +429,85 @@
         "confirmPasswordRequired": "Please confirm your password",
         "passwordMismatch": "Passwords do not match",
         "agreeTerms": "You must agree to the terms"
+      }
+    },
+    "registerDoctor": {
+      "leftPanel": {
+        "welcome": "Welcome to",
+        "medicalExcellence": "Medical Excellence.",
+        "description": "Join our network of healthcare professionals leveraging cutting-edge AI for retinal diagnostics.",
+        "status": "System Status:",
+        "online": "Online"
+      },
+      "form": {
+        "title": "Doctor Registration",
+        "description": "Join AURA Healthcare Network",
+        "fullName": "Full Name",
+        "fullNamePlaceholder": "Dr. John Smith",
+        "email": "Medical Email",
+        "emailPlaceholder": "dr.smith@hospital.org",
+        "phone": "Phone Number",
+        "phonePlaceholder": "+84 (123) 456-7890",
+        "password": "Password",
+        "passwordPlaceholder": "Minimum 8 characters",
+        "confirmPassword": "Confirm Password",
+        "confirmPasswordPlaceholder": "Re-enter your password",
+        "experience": "Experience (years)",
+        "workingMode": "Working Mode",
+        "fullTime": "Full-time",
+        "fullTimeDesc": "Stable schedule",
+        "partTime": "Part-time",
+        "partTimeDesc": "Flexible schedule",
+        "workingHours": "Working Hours / Week",
+        "expectedSalary": "Expected Monthly Salary (VND)",
+        "suggestedSalary": "Suggested by mode + experience: {{salary}} VND",
+        "bio": "Brief Bio (Optional)",
+        "bioPlaceholder": "Brief introduction about your practice and expertise...",
+        "degrees": "Degrees",
+        "addDegree": "Add Degree",
+        "degreeItem": "Degree #{{index}}",
+        "certificates": "Certificates",
+        "addCertificate": "Add Certificate",
+        "certificateItem": "Certificate #{{index}}",
+        "submit": "Secure Register",
+        "submitting": "Registering...",
+        "degreeLevels": {
+          "Bachelor": "Bachelor",
+          "Master": "Master",
+          "Doctor": "Doctor (PhD)",
+          "AssociateProfessor": "Associate Professor",
+          "Professor": "Professor"
+        },
+        "fields": {
+          "name": "Name",
+          "level": "Level",
+          "issuingAuthority": "Issuing Authority",
+          "issuedDate": "Issued Date",
+          "expiryDate": "Expiry Date",
+          "file": "File",
+          "selectFile": "Select File"
+        }
+      },
+      "success": {
+        "title": "Application Submitted!",
+        "subtitle": "Thank you for registering with AURA Healthcare Network.",
+        "description": "Our team will review your application and credentials. You will receive your account details via email within 2-3 business days.",
+        "emailNotice": "Please check your email <strong>{{email}}</strong> to verify your account before the admin reviews your contract.",
+        "redirect": "Redirecting to email confirmation page in {{seconds}}s...",
+        "backHome": "Back to Home"
+      },
+      "validation": {
+        "passwordsNotMatch": "Passwords do not match",
+        "degreeRequired": "At least one degree is required before submitting.",
+        "certificateRequired": "At least one certificate/license is required before submitting.",
+        "degreeFileRequired": "Every degree item must include a file.",
+        "certificateFileRequired": "Every certificate item must include a file.",
+        "expiryDateRequired": "Every certificate item must include an expiry date.",
+        "expiryDateInvalid": "Certificate expiry date must be later than issued date."
+      },
+      "toast": {
+        "success": "Doctor registration successful! Please check your email to confirm your account and wait for admin approval.",
+        "failed": "Registration failed. Please try again."
       }
     },
     "forgotPassword": {
@@ -1170,6 +1249,7 @@
       "contractCode": "Contract code",
       "signedDate": "Signed date",
       "contractInfo": "Contract information",
+      "pdfDocument": "PDF Document",
       "template": "Template",
       "type": "Type",
       "ophthalmologistType": "Ophthalmologist",
@@ -3586,6 +3666,7 @@
         "createdAt": "Created At",
         "email": "Email",
         "organisationType": "Medical organisation",
+        "pdfDocument": "PDF Document",
         "template": "Template",
         "type": "Type"
       },
