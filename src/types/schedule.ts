@@ -203,6 +203,8 @@ export interface AllowedPriceRangeDto {
 
 // ============ SCHEDULE TEMPLATE TYPES ============
 
+export type ScheduleTemplateSource = 'Doctor' | 'SystemGenerated';
+
 export interface ScheduleTemplateDto {
   id: string;
   ophthalmologistId: string;
@@ -216,6 +218,7 @@ export interface ScheduleTemplateDto {
   cost: number;
   maxCapacity: number;
   isActive: boolean;
+  source?: ScheduleTemplateSource;
   createdAt: string;
 }
 

@@ -381,7 +381,8 @@ declare module 'i18next' {
           loginError: string;
           registrationError: string;
           googleError: string;
-          recaptchaRequired: string;
+          captchaRequired: string;
+          turnstileRequired: string;
         };
         loginForm: {
           heading: string;

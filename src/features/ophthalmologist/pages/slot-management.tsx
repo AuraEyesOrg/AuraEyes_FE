@@ -239,6 +239,17 @@ export default function SlotManagementPage() {
   const { data: templates, isLoading: templatesLoading } =
     useScheduleTemplates(doctorId);
 
+  const visibleTemplates = useMemo(() => {
+    const templateList = templates ?? [];
+    if (!isPartTimeDoctor) {
+      return templateList;
+    }
+
+    return templateList.filter(
+      (template) => template.source !== 'SystemGenerated'
+    );
+  }, [isPartTimeDoctor, templates]);
+
   const generateMutation = useGenerateSlots();
   const blockMutation = useBlockSlot();
   const unblockMutation = useUnblockSlot();
@@ -813,9 +824,9 @@ export default function SlotManagementPage() {
                 )}
               </h2>
 
-              {templates && templates.length > 0 ? (
+              {visibleTemplates.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {templates.map((template) => (
+                  {visibleTemplates.map((template) => (
                     <div
                       key={template.id}
                       className="bg-gray-50 dark:bg-[#0d2850] rounded-lg border border-gray-200 dark:border-[#1e3a5f] p-4"

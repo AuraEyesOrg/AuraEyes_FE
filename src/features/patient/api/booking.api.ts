@@ -35,7 +35,19 @@ type BackendScheduleTemplateDto = {
   slotDuration: number;
   maxCapacity: number;
   cost?: number | null;
+  source?: string | null;
   createdAt: string;
+};
+
+const normalizeScheduleTemplateSource = (
+  source: string | null | undefined
+): 'Doctor' | 'SystemGenerated' => {
+  if (!source) {
+    return 'Doctor';
+  }
+
+  const normalized = source.replace(/[_\s-]/g, '').toLowerCase();
+  return normalized === 'systemgenerated' ? 'SystemGenerated' : 'Doctor';
 };
 
 const dayOfWeekToNumber = (value: string | number | undefined): number => {
@@ -74,6 +86,7 @@ const normalizeScheduleTemplate = (
   cost: template.cost ?? 0,
   maxCapacity: template.maxCapacity,
   isActive: true,
+  source: normalizeScheduleTemplateSource(template.source),
   createdAt: template.createdAt,
 });
 
