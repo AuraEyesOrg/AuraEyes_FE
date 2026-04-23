@@ -1307,45 +1307,42 @@ const RegisterDoctorPage = () => {
                         </label>
                         <input
                           type="date"
-                          {...register(
-                            'certificates.' + index + '.expiryDate',
-                            {
-                              required:
-                                t(
-                                  'AuthPages.registerDoctor.form.fields.expiryDate',
-                                  'Expiry Date'
-                                ) +
-                                ' ' +
-                                t('Validation.Required', 'is required'),
-                              validate: (value) => {
-                                if (!value)
-                                  return (
-                                    t(
-                                      'AuthPages.registerDoctor.form.fields.expiryDate',
-                                      'Expiry Date'
-                                    ) +
-                                    ' ' +
-                                    t('Validation.Required', 'is required')
-                                  );
-
-                                const issuedDate = getValues(
-                                  `certificates.${index}.issuedDate`
+                          {...register(`certificates.${index}.expiryDate`, {
+                            required:
+                              t(
+                                'AuthPages.registerDoctor.form.fields.expiryDate',
+                                'Expiry Date'
+                              ) +
+                              ' ' +
+                              t('Validation.Required', 'is required'),
+                            validate: (value) => {
+                              if (!value)
+                                return (
+                                  t(
+                                    'AuthPages.registerDoctor.form.fields.expiryDate',
+                                    'Expiry Date'
+                                  ) +
+                                  ' ' +
+                                  t('Validation.Required', 'is required')
                                 );
-                                if (
-                                  issuedDate &&
-                                  new Date(`${value}T00:00:00.000Z`) <=
-                                    new Date(`${issuedDate}T00:00:00.000Z`)
-                                ) {
-                                  return t(
-                                    'AuthPages.registerDoctor.validation.expiryDateInvalid',
-                                    'Certificate expiry date must be later than issued date'
-                                  );
-                                }
 
-                                return true;
-                              },
-                            }
-                          )}
+                              const issuedDate = getValues(
+                                `certificates.${index}.issuedDate`
+                              );
+                              if (
+                                issuedDate &&
+                                new Date(`${value}T00:00:00.000Z`) <=
+                                  new Date(`${issuedDate}T00:00:00.000Z`)
+                              ) {
+                                return t(
+                                  'AuthPages.registerDoctor.validation.expiryDateInvalid',
+                                  'Certificate expiry date must be later than issued date'
+                                );
+                              }
+
+                              return true;
+                            },
+                          })}
                           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                         />
                         {errors.certificates?.[index]?.expiryDate && (

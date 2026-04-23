@@ -50,6 +50,7 @@ const openContractTemplate = (fileUrl: string) => {
 };
 
 const downloadContractTemplate = async (
+  t: (key: string, fallback: string) => string,
   fileUrl: string,
   contractNumber: string
 ) => {
@@ -140,7 +141,7 @@ function UploadSection({
   contract: ContractDetailDto;
   onUploadSuccess: () => void;
   allowReupload: boolean;
-  t: (key: string, fallback: string) => string;
+  t: (key: string, fallbackOrParams?: any, params?: any) => string;
 }) {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -830,6 +831,7 @@ export default function ContractPage() {
                     onClick={async () => {
                       try {
                         await downloadContractTemplate(
+                          t,
                           contract.signedContent!,
                           contract.contractNumber
                         );
