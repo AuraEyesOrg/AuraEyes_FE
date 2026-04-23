@@ -61,6 +61,9 @@ const ResetPasswordPage = lazy(
 const ForceChangePasswordPage = lazy(
   () => import('@/features/auth/pages/force-change-password')
 );
+const ForceUpdateProfilePage = lazy(
+  () => import('@/features/auth/pages/force-update-profile')
+);
 const RegisterDoctorPage = lazy(
   () => import('@/features/auth/pages/register-doctor')
 );
@@ -283,6 +286,9 @@ const NetworkProfilePage = lazy(
 const NetworkOrganisationPage = lazy(
   () => import('@/features/professional-network/pages/organisation')
 );
+const NetworkCollaborationPage = lazy(
+  () => import('@/features/professional-network/pages/collaboration')
+);
 
 /**
  * Loading component hiển thị khi lazy load
@@ -489,6 +495,12 @@ const Router = () => (
               allowedRoles={['ClinicStaff']}
               element={<ForceChangePasswordPage />}
             />
+          }
+        />
+        <Route
+          path="/:locale/force-update-profile"
+          element={
+            <LocalizedPrivateRoute element={<ForceUpdateProfilePage />} />
           }
         />
         <Route
@@ -1450,7 +1462,7 @@ const Router = () => (
         <Route
           path="/organisation/patients/:patientId/history"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin', 'Organization']}>
+            <PrivateRoute allowedRoles={['ClinicStaff']}>
               <OrganisationPatientHistoryPage />
             </PrivateRoute>
           }
@@ -1787,6 +1799,7 @@ const Router = () => (
             path="organisation/:id"
             element={<NetworkOrganisationPage />}
           />
+          <Route path="collaboration" element={<NetworkCollaborationPage />} />
         </Route>
 
         <Route
@@ -1810,6 +1823,7 @@ const Router = () => (
             path="organisation/:id"
             element={<NetworkOrganisationPage />}
           />
+          <Route path="collaboration" element={<NetworkCollaborationPage />} />
         </Route>
 
         <Route path="*" element={<LocalizedRedirect target="/404" />} />

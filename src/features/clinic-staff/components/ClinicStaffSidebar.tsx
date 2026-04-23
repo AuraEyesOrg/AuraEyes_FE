@@ -57,6 +57,11 @@ export default function ClinicStaffSidebar() {
       requiredPermission: Permissions.DashboardRead,
     },
     {
+      icon: Globe,
+      label: t('ClinicStaffSidebar.nav.network', 'Aura Network'),
+      path: '/network',
+    },
+    {
       icon: Calendar,
       label: t('ClinicStaffSidebar.nav.appointments', 'Appointments'),
       path: '/clinic-staff/appointments',

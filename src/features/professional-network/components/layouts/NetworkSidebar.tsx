@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Sun,
   Moon,
+  Users,
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import useAuthStore from '@/store/auth-store';
@@ -36,9 +37,9 @@ const roleLabelConfig: Record<
     labelKey: 'ProfessionalNetwork.common.roles.ophthalmologist',
     labelFallback: 'Ophthalmologist',
   },
-  OrgAdmin: {
-    labelKey: 'ProfessionalNetwork.common.roles.orgAdmin',
-    labelFallback: 'Organisation Admin',
+  ClinicStaff: {
+    labelKey: 'ProfessionalNetwork.common.roles.clinicStaff',
+    labelFallback: 'Clinic Staff',
   },
   SystemAdmin: {
     labelKey: 'ProfessionalNetwork.common.roles.systemAdmin',
@@ -71,7 +72,7 @@ export function NetworkSidebar() {
 
   const dashboardRoute = stateDashboardRoute
     ? stateDashboardRoute
-    : user?.roles?.includes('OrgAdmin')
+    : user?.roles?.includes('ClinicStaff')
       ? '/organisation/dashboard'
       : user?.roles?.includes('Ophthalmologist')
         ? '/ophthalmologist/dashboard'
@@ -132,6 +133,13 @@ export function NetworkSidebar() {
         location.pathname ===
         toLocalizedPath(`/network/profile/${user?.id || 'me'}`),
     },
+    {
+      to: '/network/collaboration',
+      icon: Users,
+      label: t('ProfessionalNetwork.navigation.collaboration', 'Collaboration'),
+      isActive: () =>
+        location.pathname === toLocalizedPath('/network/collaboration'),
+    },
   ];
 
   const handleLogout = () => {
@@ -166,7 +174,7 @@ export function NetworkSidebar() {
         >
           <ArrowLeft className="w-5 h-5" />
           <span className="text-sm font-medium">
-            {user?.roles?.includes('OrgAdmin')
+            {user?.roles?.includes('ClinicStaff')
               ? t(
                   'ProfessionalNetwork.sidebar.backToOrganisationDashboard',
                   'Back to Organisation Dashboard'

@@ -67,6 +67,15 @@ const PrivateRoute: React.FC<Props> = ({
     );
   }
 
+  const mustUpdateProfile = user?.mustUpdateProfile === true;
+  const isForceUpdateProfilePath = normalizedPath === '/force-update-profile';
+
+  if (mustUpdateProfile && !isForceUpdateProfilePath) {
+    return (
+      <Navigate to={resolvePathWithLocale('/force-update-profile')} replace />
+    );
+  }
+
   // Redirect unverified ophthalmologists to pending approval page
   const isOphthalmologist = hasAnyRole(['Ophthalmologist']);
   const isPendingApproval = isOphthalmologist && isPendingVerification;

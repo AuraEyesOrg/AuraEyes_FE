@@ -303,6 +303,9 @@ export interface UserStats {
   totalUsers: number;
   activeUsers: number;
   lockedUsers: number;
+  pendingApprovals: number;
+  clinicStaffCount: number;
+  ophthalmologistCount: number;
   usersByRole: {
     [key in UserRole]: number;
   };

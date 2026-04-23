@@ -88,19 +88,12 @@ export default function StaffManagementPage() {
 
   // Use stats from API if available, fallback to local count
   const totalStaff = stats
-    ? (stats.usersByRole?.ClinicStaff || 0) +
-      (stats.usersByRole?.Ophthalmologist || 0)
+    ? (stats.clinicStaffCount || 0) + (stats.ophthalmologistCount || 0)
     : users.length;
-  const activeStaff = stats
-    ? stats.activeUsers
-    : users.filter((u) => u.status === 'Active' || u.status === 'active')
-        .length;
-  const pendingStaff = users.filter(
-    (u) =>
-      u.status === 'Pending' ||
-      (u as any).mustUpdateProfile ||
-      (u as any).mustChangePassword
+  const activeStaff = users.filter(
+    (u) => u.status === 'Active' || u.status === 'Online'
   ).length;
+  const pendingStaff = stats?.pendingApprovals || 0;
 
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const toSearchable = (value: unknown) => String(value ?? '').toLowerCase();

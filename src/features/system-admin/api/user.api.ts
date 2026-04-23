@@ -15,13 +15,19 @@ import type {
 
 export const userApi = {
   /**
-   * Fetch all users with pagination
+   * Fetch all users with pagination and filtering
    */
-  async getUsers(page = 1, pageSize = 10) {
+  async getUsers(
+    page = 1,
+    pageSize = 10,
+    role?: string,
+    status?: string,
+    searchTerm?: string
+  ) {
     try {
       const response = await api.get<ApiResponse<PaginatedResponse<User>>>(
         API_ENDPOINTS.SYSTEM_ADMIN.USERS.LIST,
-        { params: { pageNumber: page, pageSize } }
+        { params: { pageNumber: page, pageSize, role, status, searchTerm } }
       );
 
       const data = response.data.data;

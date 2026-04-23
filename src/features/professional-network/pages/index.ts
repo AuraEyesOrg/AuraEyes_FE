@@ -14,3 +14,6 @@ export { default as PostDetailPage } from './post-detail';
 // Profile & Organisation
 export { default as ProfilePage } from './profile';
 export { default as OrganisationPage } from './organisation';
+
+// Collaboration
+export { default as CollaborationPage } from './collaboration';
