@@ -66,8 +66,8 @@ export default function PatientSidebar() {
     },
     {
       icon: MapPin,
-      label: t('PatientSidebar.nav.findClinics', 'Find Clinics'),
-      path: '/patient/clinics',
+      label: t('PatientSidebar.nav.clinicSchedule', 'Clinic Schedule'),
+      path: '/patient/schedule',
     },
     {
       icon: Milestone,

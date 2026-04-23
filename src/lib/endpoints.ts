@@ -286,6 +286,8 @@ export const API_ENDPOINTS = {
       `/organisations/${orgId}/appointments`,
     PATIENT_CLINIC_APPOINTMENTS: (patientId: string) =>
       `/patients/${patientId}/clinic-appointments`,
+    ORGANISATION_SCHEDULE: (orgId: string) =>
+      `/patient/search/organisations/${orgId}/schedule`,
   },
 
   CLINIC_APPOINTMENTS: {

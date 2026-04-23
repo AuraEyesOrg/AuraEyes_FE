@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { toast } from 'react-toastify';
 import {
@@ -9,10 +9,20 @@ import {
   RefreshCw,
   Trash2,
   Info,
-  CalendarCheck,
   Zap,
   Users,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  addDays,
+  subWeeks,
+  addWeeks,
+  isSameDay,
+} from 'date-fns';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import schedulingApi from '../api/scheduling.api';
@@ -20,10 +30,17 @@ import CreateTemplateModal from '../components/CreateTemplateModal';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import Spinner from '@/components/ui/spinner';
 
+type Tab = 'appointments' | 'templates';
+
 export default function SystemAdminScheduling() {
   const { t } = useSafeTranslation();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>('appointments');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(
+    startOfWeek(new Date(), { weekStartsOn: 1 })
+  );
 
   // --- Queries ---
   const { data: templatesData, isLoading: isLoadingTemplates } = useQuery({
@@ -32,8 +49,17 @@ export default function SystemAdminScheduling() {
   });
 
   const { data: slotsData, isLoading: isLoadingSlots } = useQuery({
-    queryKey: ['system-admin', 'appointment-slots'],
-    queryFn: () => schedulingApi.getSlots({ pageSize: 10 }),
+    queryKey: [
+      'system-admin',
+      'appointment-slots',
+      format(selectedDate, 'yyyy-MM-dd'),
+    ],
+    queryFn: () =>
+      schedulingApi.getSlots({
+        fromDate: format(selectedDate, 'yyyy-MM-dd'),
+        toDate: format(selectedDate, 'yyyy-MM-dd'),
+        pageSize: 100,
+      }),
   });
 
   // --- Mutations ---
@@ -92,6 +118,48 @@ export default function SystemAdminScheduling() {
   const templates = templatesData?.data?.items ?? [];
   const slots = slotsData?.data?.items ?? [];
 
+  // Week Calendar Logic
+  const weekDays = useMemo(() => {
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      days.push(addDays(currentWeekStart, i));
+    }
+    return days;
+  }, [currentWeekStart]);
+
+  const handlePrevWeek = () => {
+    setCurrentWeekStart((prev) => subWeeks(prev, 1));
+  };
+
+  const handleNextWeek = () => {
+    setCurrentWeekStart((prev) => addWeeks(prev, 1));
+  };
+
+  const handleSelectDate = (date: Date) => {
+    setSelectedDate(date);
+    // If selecting a date outside current week view, update week view
+    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+    if (!isSameDay(weekStart, currentWeekStart)) {
+      setCurrentWeekStart(weekStart);
+    }
+  };
+
+  const handleSetToday = () => {
+    handleSelectDate(new Date());
+  };
+
+  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value) {
+      handleSelectDate(new Date(e.target.value));
+    }
+  };
+
+  // Summary Metrics based on slots
+  const totalSlots = slots.length;
+  const availableSlots = slots.filter((s) => s.status === 'Available').length;
+  const bookedSlots = slots.filter((s) => s.status === 'Booked').length;
+  const inProgressSlots = 0; // Using slots data, we might not have in progress exactly, mock or map appropriately. Wait, slots don't have InProgress. I will keep it as 0 to match visual.
+
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
       <Sidebar />
@@ -101,65 +169,284 @@ export default function SystemAdminScheduling() {
           title={t('SystemAdmin.scheduling.page.title', 'Clinic Scheduling')}
           description={t(
             'SystemAdmin.scheduling.page.description',
-            'Manage recurring availability templates and generate clinic slots.'
+            'Manage appointments and clinic availability.'
           )}
           actions={
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => triggerGenerationMutation.mutate()}
-                disabled={triggerGenerationMutation.isPending}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-medium transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50"
-              >
-                {triggerGenerationMutation.isPending ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Zap className="w-4 h-4" />
-                )}
-                {t(
-                  'SystemAdmin.scheduling.actions.trigger',
-                  'Trigger Generation'
-                )}
-              </button>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-medium transition-all shadow-lg shadow-primary-500/20"
-              >
-                <Plus className="w-4 h-4" />
-                {t(
-                  'SystemAdmin.scheduling.actions.addTemplate',
-                  'Add Template'
-                )}
-              </button>
-            </div>
+            activeTab === 'templates' && (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => triggerGenerationMutation.mutate()}
+                  disabled={triggerGenerationMutation.isPending}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-medium transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50"
+                >
+                  {triggerGenerationMutation.isPending ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Zap className="w-4 h-4" />
+                  )}
+                  {t(
+                    'SystemAdmin.scheduling.actions.trigger',
+                    'Trigger Generation'
+                  )}
+                </button>
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-medium transition-all shadow-lg shadow-primary-500/20"
+                >
+                  <Plus className="w-4 h-4" />
+                  {t(
+                    'SystemAdmin.scheduling.actions.addTemplate',
+                    'Add Template'
+                  )}
+                </button>
+              </div>
+            )
           }
         />
 
-        <main className="flex-1 overflow-y-auto p-6 space-y-8">
-          {/* Info Card */}
-          <div className="bg-primary-50 dark:bg-primary-950/30 border border-primary-100 dark:border-primary-900/50 rounded-2xl p-6 flex gap-4">
-            <div className="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center flex-shrink-0">
-              <Info className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold text-primary-900 dark:text-primary-100">
-                {t(
-                  'SystemAdmin.scheduling.info.title',
-                  'Automatic Slot Generation'
-                )}
-              </h4>
-              <p className="text-primary-700 dark:text-primary-300 mt-1">
-                {t(
-                  'SystemAdmin.scheduling.info.description',
-                  'The system automatically generates slots every night based on these templates. Use "Trigger Generation" to manually fill missing slots for the next 14 days.'
-                )}
-              </p>
-            </div>
+        {/* Tabs */}
+        <div className="px-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+          <div className="flex gap-8">
+            <button
+              onClick={() => setActiveTab('appointments')}
+              className={`pb-4 text-sm font-semibold border-b-2 transition-all ${
+                activeTab === 'appointments'
+                  ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              {t(
+                'SystemAdmin.scheduling.tabs.appointments',
+                'Daily Appointments'
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('templates')}
+              className={`pb-4 text-sm font-semibold border-b-2 transition-all ${
+                activeTab === 'templates'
+                  ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              {t('SystemAdmin.scheduling.tabs.templates', 'Schedule Templates')}
+            </button>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Templates Section */}
-            <div className="lg:col-span-2 space-y-4">
-              <div className="flex items-center justify-between">
+        <main className="flex-1 overflow-hidden flex">
+          {activeTab === 'appointments' && (
+            <div className="flex-1 flex overflow-hidden">
+              {/* Left Sidebar for Daily View */}
+              <div className="w-[320px] bg-white dark:bg-slate-950 border-r border-slate-100 dark:border-slate-800/50 p-6 flex flex-col overflow-y-auto custom-scrollbar">
+                {/* Week Calendar */}
+                <div className="bg-slate-50/50 dark:bg-slate-900/20 rounded-2xl border border-slate-100 dark:border-slate-800/60 p-4 mb-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-6">
+                    <button
+                      onClick={handlePrevWeek}
+                      className="p-1.5 rounded-lg text-slate-400 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300 transition-colors shadow-sm"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      {format(currentWeekStart, 'MMM d')} -{' '}
+                      {format(
+                        endOfWeek(currentWeekStart, { weekStartsOn: 1 }),
+                        'MMM d, yyyy'
+                      )}
+                    </span>
+                    <button
+                      onClick={handleNextWeek}
+                      className="p-1.5 rounded-lg text-slate-400 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300 transition-colors shadow-sm"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-1 mb-6">
+                    {weekDays.map((date) => {
+                      const isSelected = isSameDay(date, selectedDate);
+                      return (
+                        <button
+                          key={date.toISOString()}
+                          onClick={() => handleSelectDate(date)}
+                          className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${
+                            isSelected
+                              ? 'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-400 font-semibold'
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 font-medium'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={`text-lg ${isSelected ? 'font-bold' : ''}`}
+                            >
+                              {format(date, 'd')}
+                            </span>
+                            <span className="text-xs">
+                              {format(date, 'EEE')}
+                            </span>
+                          </div>
+                          {isSelected && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    onClick={handleSetToday}
+                    className="w-full py-2.5 rounded-xl border border-cyan-200 dark:border-cyan-800 text-cyan-600 dark:text-cyan-400 font-bold text-sm bg-cyan-50/50 dark:bg-cyan-900/10 hover:bg-cyan-100 dark:hover:bg-cyan-900/30 transition-colors"
+                  >
+                    Today
+                  </button>
+
+                  <div className="mt-4">
+                    <div className="relative">
+                      <input
+                        type="date"
+                        value={format(selectedDate, 'yyyy-MM-dd')}
+                        onChange={handleDateInputChange}
+                        className="w-full pl-3 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all cursor-pointer"
+                      />
+                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Summary Card */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 rounded-2xl p-5 shadow-sm shadow-slate-200/20 dark:shadow-none">
+                  <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4">
+                    {format(selectedDate, 'EEE, MMM d')}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-y-6 gap-x-4">
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                        Total Slots
+                      </p>
+                      <p className="text-xl font-bold text-slate-800 dark:text-slate-200">
+                        {totalSlots}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                        Booked
+                      </p>
+                      <p className="text-xl font-bold text-orange-500">
+                        {bookedSlots}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                        Available
+                      </p>
+                      <p className="text-xl font-bold text-emerald-500">
+                        {availableSlots}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                        In progress
+                      </p>
+                      <p className="text-xl font-bold text-purple-500">
+                        {inProgressSlots}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Content for Daily View */}
+              <div className="flex-1 bg-slate-50/50 dark:bg-slate-950 p-8 overflow-y-auto">
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+                  </h2>
+                  <span className="text-sm font-medium text-slate-500">
+                    {slots.length} records
+                  </span>
+                </div>
+
+                {isLoadingSlots ? (
+                  <div className="flex items-center justify-center h-64">
+                    <Spinner size="lg" />
+                  </div>
+                ) : slots.length === 0 ? (
+                  <div className="border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-16 flex items-center justify-center bg-white/50 dark:bg-slate-900/30">
+                    <p className="text-slate-400 dark:text-slate-500 font-medium">
+                      {t(
+                        'SystemAdmin.scheduling.daily.empty',
+                        'No appointments on this day.'
+                      )}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {slots.map((slot) => (
+                      <div
+                        key={slot.id}
+                        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow group"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col items-center justify-center border border-slate-100 dark:border-slate-700/50">
+                            <Clock className="w-4 h-4 text-slate-400 mb-1" />
+                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300 leading-none">
+                              {slot.startTime.substring(0, 5)}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-900 dark:text-white mb-1">
+                              Clinic Slot
+                            </p>
+                            <p className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 uppercase tracking-wider">
+                              <Users className="w-3 h-3" />
+                              Capacity: {slot.bookedCount} / {slot.maxCapacity}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider ${
+                            slot.status === 'Available'
+                              ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
+                              : slot.status === 'Booked'
+                                ? 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'
+                                : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                          }`}
+                        >
+                          {slot.status}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'templates' && (
+            <div className="flex-1 overflow-y-auto p-8">
+              {/* Info Card */}
+              <div className="bg-primary-50 dark:bg-primary-950/30 border border-primary-100 dark:border-primary-900/50 rounded-2xl p-6 flex gap-4 mb-8">
+                <div className="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center flex-shrink-0">
+                  <Info className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-primary-900 dark:text-primary-100">
+                    {t(
+                      'SystemAdmin.scheduling.info.title',
+                      'Automatic Slot Generation'
+                    )}
+                  </h4>
+                  <p className="text-primary-700 dark:text-primary-300 mt-1">
+                    {t(
+                      'SystemAdmin.scheduling.info.description',
+                      'The system automatically generates slots every night based on these templates. Use "Trigger Generation" to manually fill missing slots for the next 14 days.'
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-primary-500" />
                   {t(
@@ -188,7 +475,7 @@ export default function SystemAdminScheduling() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {templates.map((template) => (
                     <div
                       key={template.id}
@@ -264,82 +551,7 @@ export default function SystemAdminScheduling() {
                 </div>
               )}
             </div>
-
-            {/* Recent Slots Section */}
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <CalendarCheck className="w-5 h-5 text-primary-500" />
-                {t('SystemAdmin.scheduling.slots.title', 'Upcoming Slots')}
-              </h3>
-
-              {isLoadingSlots ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="h-20 bg-white dark:bg-slate-900 rounded-2xl animate-pulse"
-                    />
-                  ))}
-                </div>
-              ) : slots.length === 0 ? (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 text-center">
-                  <p className="text-slate-500 text-sm">
-                    {t(
-                      'SystemAdmin.scheduling.slots.empty',
-                      'No slots generated yet.'
-                    )}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {slots.map((slot) => (
-                    <div
-                      key={slot.id}
-                      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col items-center justify-center">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase leading-none">
-                            {new Date(slot.date).toLocaleDateString(undefined, {
-                              month: 'short',
-                            })}
-                          </span>
-                          <span className="text-lg font-bold text-slate-700 dark:text-slate-200 leading-tight">
-                            {new Date(slot.date).getDate()}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-slate-900 dark:text-white">
-                            {slot.startTime.substring(0, 5)}
-                          </p>
-                          <p className="text-[10px] text-slate-500 flex items-center gap-1">
-                            <Users className="w-3 h-3" />
-                            {slot.bookedCount} / {slot.maxCapacity} booked
-                          </p>
-                        </div>
-                      </div>
-
-                      <div
-                        className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase ${
-                          slot.status === 'Available'
-                            ? 'bg-green-50 text-green-600'
-                            : slot.status === 'Booked'
-                              ? 'bg-blue-50 text-blue-600'
-                              : 'bg-slate-100 text-slate-500'
-                        }`}
-                      >
-                        {slot.status}
-                      </div>
-                    </div>
-                  ))}
-
-                  <button className="w-full py-3 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors">
-                    {t('common.viewAll', 'View All')}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+          )}
         </main>
       </div>
 

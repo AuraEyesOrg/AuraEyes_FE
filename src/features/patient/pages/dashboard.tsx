@@ -310,7 +310,7 @@ export default function PatientDashboard() {
 
           <div className="flex flex-wrap items-center gap-4 w-full md:w-auto md:justify-end mt-4 md:mt-0">
             <Link
-              to="/patient/clinics"
+              to="/patient/schedule"
               className="btn-primary flex items-center gap-2"
             >
               <Calendar className="w-4 h-4" />
@@ -674,7 +674,7 @@ export default function PatientDashboard() {
               </Link>
 
               <Link
-                to="/patient/clinics"
+                to="/patient/schedule"
                 className="flex items-center justify-between w-full p-4 rounded-lg bg-(--bg-secondary) border border-(--border-color) text-(--text-primary) hover:border-brand/50 hover:bg-(--bg-tertiary) transition-all group"
               >
                 <div className="flex items-center gap-3">

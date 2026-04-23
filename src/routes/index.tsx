@@ -61,9 +61,6 @@ const ResetPasswordPage = lazy(
 const ForceChangePasswordPage = lazy(
   () => import('@/features/auth/pages/force-change-password')
 );
-const RegisterDoctorPage = lazy(
-  () => import('@/features/auth/pages/register-doctor')
-);
 const RegisterOrganisationPage = lazy(
   () => import('@/features/auth/pages/register-organisation')
 );
@@ -88,6 +85,9 @@ const ProfilePage = lazy(() => import('@/features/patient/pages/profile'));
 const SettingsPage = lazy(() => import('@/features/patient/pages/settings'));
 const ClinicsPage = lazy(() => import('@/features/patient/pages/clinics'));
 const DoctorsPage = lazy(() => import('@/features/patient/pages/doctors'));
+const OrganisationSchedulePage = lazy(
+  () => import('@/features/patient/pages/organisation-schedule')
+);
 
 const RoadmapPage = lazy(() => import('@/features/patient/pages/roadmap'));
 const ChatPage = lazy(() => import('@/features/patient/pages/chat'));
@@ -461,10 +461,6 @@ const Router = () => (
           element={<LocalizedPublicRoute element={<ResetPasswordPage />} />}
         />
         <Route
-          path="/:locale/register-doctor"
-          element={<LocalizedPublicRoute element={<RegisterDoctorPage />} />}
-        />
-        <Route
           path="/:locale/register-organisation"
           element={
             <LocalizedPublicRoute element={<RegisterOrganisationPage />} />
@@ -776,6 +772,15 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['Patient']}
               element={<ClinicsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/patient/schedule"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient']}
+              element={<OrganisationSchedulePage />}
             />
           }
         />
@@ -1192,14 +1197,6 @@ const Router = () => (
           element={
             <PublicRoute>
               <ResetPasswordPage />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/register-doctor"
-          element={
-            <PublicRoute>
-              <RegisterDoctorPage />
             </PublicRoute>
           }
         />
