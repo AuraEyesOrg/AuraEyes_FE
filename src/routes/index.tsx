@@ -234,6 +234,9 @@ const SystemAdminEmploymentTypeChangeRequests = lazy(
 const SystemAdminUsers = lazy(
   () => import('@/features/system-admin/pages/users')
 );
+const SystemAdminStaffManagement = lazy(
+  () => import('@/features/system-admin/pages/staff-management')
+);
 const SystemAdminAuditLogs = lazy(
   () => import('@/features/system-admin/pages/audit-logs')
 );
@@ -1682,6 +1685,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
               <SystemAdminUsers />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/system-admin/staff-management"
+          element={
+            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+              <SystemAdminStaffManagement />
             </PrivateRoute>
           }
         />

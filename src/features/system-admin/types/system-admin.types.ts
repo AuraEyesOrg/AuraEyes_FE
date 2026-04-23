@@ -278,11 +278,10 @@ export interface ApproveOrganisationOnboardingResult {
 
 // ============ USERS & ROLES ============
 export type UserRole =
-  | 'system_admin'
-  | 'organisation_admin'
-  | 'doctor'
-  | 'operator'
-  | 'analyst';
+  | 'patient'
+  | 'ophthalmologist'
+  | 'clinic_staff'
+  | 'system_admin';
 
 export interface User {
   id: string;

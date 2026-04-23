@@ -41,11 +41,9 @@ export interface User {
 
 export type UserRole =
   | 'patient'
-  | 'doctor'
   | 'ophthalmologist'
-  | 'admin'
-  | 'clinic'
-  | 'organization';
+  | 'clinic_staff'
+  | 'system_admin';
 
 export interface LoginCredentials {
   email: string;
