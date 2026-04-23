@@ -260,15 +260,6 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
                       : {}),
                   }}
                 />
-                {/* Label chip at top-left of box */}
-                {anomaly.isHighest && (
-                  <span
-                    className="absolute -top-5 left-0 text-[10px] font-bold text-white px-1.5 py-0.5 rounded"
-                    style={{ background: style.border }}
-                  >
-                    {anomaly.friendlyName ?? anomaly.name}
-                  </span>
-                )}
               </div>
             );
           })}
