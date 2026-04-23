@@ -23,6 +23,11 @@ export enum SlotType {
   Emergency = 4,
 }
 
+export enum PricingType {
+  AutoAssign = 1,
+  DoctorSelected = 2,
+}
+
 // ============ DTOs (match BE Application layer) ============
 
 /** List item - maps to ScheduleListDto */
@@ -113,13 +118,10 @@ export const SLOT_TYPE_LABELS: Record<SlotType, string> = {
 export interface AppointmentSlotListDto {
   id: string;
   scheduleTemplateId: string;
-  ophthalId: string | null;
-  orgId: string | null;
   date: string; // "YYYY-MM-DD"
   startTime: string; // "HH:mm:ss"
   endTime: string; // "HH:mm:ss"
   status: string; // "Available", "Reserved", "Booked", "Blocked"
-  cost: number | null;
   maxCapacity: number;
   bookedCount: number;
   availableCapacity: number;
@@ -130,18 +132,13 @@ export interface AppointmentSlotListDto {
 export interface AppointmentSlotDto {
   id: string;
   scheduleTemplateId: string;
-  ophthalId: string | null;
-  orgId: string | null;
   date: string; // "YYYY-MM-DD"
   startTime: string; // "HH:mm:ss"
   endTime: string; // "HH:mm:ss"
   status: string; // "Available", "Reserved", "Booked", "Blocked"
-  cost: number | null;
   maxCapacity: number;
   bookedCount: number;
   availableCapacity: number;
-  reservedBy: string | null;
-  reservationExpireAt: string | null;
   createdAt: string;
   updatedAt: string | null;
 }
@@ -178,6 +175,13 @@ export interface ReleaseReservationRequest {
   patientId: string;
 }
 
+export interface CreateClinicAppointmentRequest {
+  slotId: string;
+  visitReason?: string;
+  pricingType: PricingType;
+  requestedDoctorId?: string;
+}
+
 export interface BlockSlotRequest {
   ophthalmologistId: string;
   reason?: string;
@@ -207,30 +211,22 @@ export type ScheduleTemplateSource = 'Doctor' | 'SystemGenerated';
 
 export interface ScheduleTemplateDto {
   id: string;
-  ophthalmologistId: string;
-  organisationId: string | null;
-  dayOfWeek: number; // 0=Sunday, 1=Monday, etc.
+  dayOfWeek: string; // "Monday", "Tuesday", etc.
   startTime: string;
   endTime: string;
   slotDuration: number; // minutes
-  slotType: SlotType;
-  slotTypeName: string;
-  cost: number;
   maxCapacity: number;
   isActive: boolean;
   source?: ScheduleTemplateSource;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CreateScheduleTemplateRequest {
-  ophthalId: string;
-  organisationId?: string;
-  dayOfWeek: number;
+  dayOfWeek: number; // 0=Sunday, 1=Monday, etc.
   startTime: string;
   endTime: string;
   slotDuration: number;
-  slotType?: SlotType;
-  cost?: number;
   maxCapacity?: number;
 }
 

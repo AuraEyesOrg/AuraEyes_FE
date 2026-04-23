@@ -1,0 +1,59 @@
+import { api } from '@/lib/api';
+import { ApiResponse, PagedResult } from '@/types/api.types';
+import {
+  ScheduleTemplateDto,
+  CreateScheduleTemplateRequest,
+  AppointmentSlotListDto,
+} from '@/types/schedule.ts';
+
+const schedulingApi = {
+  // --- Schedule Templates ---
+  getTemplates: async (params?: {
+    dayOfWeek?: number;
+    pageNumber?: number;
+    pageSize?: number;
+  }) => {
+    const response = await api.get<
+      ApiResponse<PagedResult<ScheduleTemplateDto>>
+    >('/schedule-templates', { params });
+    return response.data;
+  },
+
+  createTemplate: async (request: CreateScheduleTemplateRequest) => {
+    const response = await api.post<ApiResponse<string>>(
+      '/schedule-templates',
+      request
+    );
+    return response.data;
+  },
+
+  deleteTemplate: async (templateId: string) => {
+    const response = await api.delete<ApiResponse<void>>(
+      `/schedule-templates/${templateId}`
+    );
+    return response.data;
+  },
+
+  // --- Background Jobs ---
+  triggerGeneration: async () => {
+    const response = await api.post<ApiResponse<void>>(
+      '/system-admin/scheduling/trigger-generation'
+    );
+    return response.data;
+  },
+
+  // --- Slots ---
+  getSlots: async (params?: {
+    fromDate?: string;
+    toDate?: string;
+    pageNumber?: number;
+    pageSize?: number;
+  }) => {
+    const response = await api.get<
+      ApiResponse<PagedResult<AppointmentSlotListDto>>
+    >('/appointment-slots', { params });
+    return response.data;
+  },
+};
+
+export default schedulingApi;
