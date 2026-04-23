@@ -131,6 +131,8 @@ const TwoFactorVerifyPage = () => {
           } else {
             nextPath = '/ophthalmologist/dashboard';
           }
+        } else if (roles.includes('OrgAdmin')) {
+          nextPath = '/organisation/dashboard';
         } else if (roles.includes('ClinicStaff')) {
           nextPath = '/clinic-staff/dashboard';
         }

@@ -27,17 +27,13 @@ const PublicRoute: React.FC<Props> = ({ children }) => {
     return children;
   }
 
-  const isOrganisationUser = user?.roles?.some((r) =>
-    ['Organization', 'OrgAdmin'].includes(r)
-  );
-  const isClinicStaff = user?.roles?.includes('ClinicStaff');
-  const mustChangePassword =
-    (isOrganisationUser || isClinicStaff) && user?.mustChangePassword;
+  const isOrganisationAdmin =
+    user?.roles?.includes('OrgAdmin') || user?.roles?.includes('Organization');
 
   const organisationContractQuery = useQuery({
     queryKey: ['organisation', 'my-contract', 'gate'],
     queryFn: organisationContractApi.getMyContract,
-    enabled: !!isOrganisationUser,
+    enabled: isOrganisationAdmin,
     staleTime: 30_000,
     retry: 1,
   });
@@ -45,11 +41,11 @@ const PublicRoute: React.FC<Props> = ({ children }) => {
   const hasActiveOrganisationContract =
     organisationContractQuery.data?.status === 'Active';
   const isOrgContractGateResolved =
-    !isOrganisationUser ||
+    !isOrganisationAdmin ||
     organisationContractQuery.isSuccess ||
     organisationContractQuery.isError;
 
-  if (isOrganisationUser && !isOrgContractGateResolved) {
+  if (isOrganisationAdmin && !isOrgContractGateResolved) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
@@ -57,30 +53,9 @@ const PublicRoute: React.FC<Props> = ({ children }) => {
     );
   }
 
-  if (isOrganisationUser && !hasActiveOrganisationContract) {
+  if (isOrganisationAdmin && !hasActiveOrganisationContract) {
     return (
       <Navigate to={resolvePathWithLocale('/organisation/contract')} replace />
-    );
-  }
-
-  if (mustChangePassword) {
-    if (
-      normalizedPath === '/organisation/contract' &&
-      new URLSearchParams(location.search).get('tab') === 'change-password'
-    ) {
-      return children;
-    }
-
-    if (isClinicStaff) {
-      // Clinic staff might need a different password change page if organisation/contract is deleted soon
-      // For now, if they are forced, we can redirect to a general force-change-password if it exists
-    }
-
-    return (
-      <Navigate
-        to={resolvePathWithLocale('/organisation/contract?tab=change-password')}
-        replace
-      />
     );
   }
 
@@ -107,13 +82,11 @@ const PublicRoute: React.FC<Props> = ({ children }) => {
   const roles = user?.roles ?? [];
   const dashboardPath = roles.includes('SystemAdmin')
     ? '/system-admin/dashboard'
-    : roles.includes('ClinicStaff')
-      ? '/clinic-staff/dashboard'
-      : roles.includes('Organization') || roles.includes('OrgAdmin')
-        ? '/organisation/dashboard'
-        : roles.includes('Ophthalmologist')
-          ? '/ophthalmologist/dashboard'
-          : '/patient/dashboard';
+    : roles.includes('OrgAdmin') || roles.includes('Organization')
+      ? '/organisation/dashboard'
+      : roles.includes('Ophthalmologist')
+        ? '/ophthalmologist/dashboard'
+        : '/patient/dashboard';
 
   return <Navigate to={resolvePathWithLocale(dashboardPath)} replace />;
 };

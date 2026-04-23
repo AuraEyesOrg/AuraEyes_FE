@@ -281,6 +281,8 @@ const LoginPage = () => {
           } else {
             navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
           }
+        } else if (roles.includes('OrgAdmin')) {
+          navigate('/organisation/dashboard');
         } else if (roles.includes('ClinicStaff')) {
           navigate('/clinic-staff/dashboard');
         } else {

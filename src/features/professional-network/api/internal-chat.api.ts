@@ -33,12 +33,12 @@ export const internalChatApi = {
   /**
    * Create a new internal group chat
    */
-  async createGroup(name: string, memberIds: string[]): Promise<string> {
-    const response = await api.post('/internal-chat/groups', {
-      name,
-      memberIds,
-      type: 0, // General
-    });
+  async createGroup(data: {
+    name: string;
+    description?: string;
+    memberIds: string[];
+  }): Promise<string> {
+    const response = await api.post('/internal-chat/groups', data);
     return response.data.data;
   },
 
@@ -58,16 +58,6 @@ export const internalChatApi = {
       `/internal-chat/groups/${groupId}/messages`,
       { content }
     );
-    return response.data.data;
-  },
-
-  /**
-   * Search for internal system users
-   */
-  async getSystemUsers(searchTerm?: string): Promise<any[]> {
-    const response = await api.get('/internal-chat/users', {
-      params: { searchTerm },
-    });
     return response.data.data;
   },
 

@@ -60,7 +60,7 @@ export const API_ENDPOINTS = {
       UPDATE_ROLE: (id: string) => `/system-admin/users/${id}/role`,
       LOCK: (id: string) => `/system-admin/users/${id}/lock`,
       UNLOCK: (id: string) => `/system-admin/users/${id}/unlock`,
-      STATS: '/system-admin/users/metrics',
+      STATS: '/system-admin/users/stats',
     },
 
     // Ophthalmologist Management

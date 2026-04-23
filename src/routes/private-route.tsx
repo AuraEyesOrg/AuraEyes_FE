@@ -58,23 +58,6 @@ const PrivateRoute: React.FC<Props> = ({
   }
 
   const isClinicStaff = hasAnyRole(['ClinicStaff']);
-  const mustChangePassword = user?.mustChangePassword === true;
-  const isForceChangePasswordPath = normalizedPath === '/force-change-password';
-
-  if (mustChangePassword && !isForceChangePasswordPath) {
-    return (
-      <Navigate to={resolvePathWithLocale('/force-change-password')} replace />
-    );
-  }
-
-  const mustUpdateProfile = user?.mustUpdateProfile === true;
-  const isForceUpdateProfilePath = normalizedPath === '/force-update-profile';
-
-  if (mustUpdateProfile && !isForceUpdateProfilePath) {
-    return (
-      <Navigate to={resolvePathWithLocale('/force-update-profile')} replace />
-    );
-  }
 
   // Redirect unverified ophthalmologists to pending approval page
   const isOphthalmologist = hasAnyRole(['Ophthalmologist']);

@@ -18,8 +18,6 @@ export interface AuthUser {
   organizationId?: string | null;
   employmentType?: 'FullTime' | 'PartTime' | null;
   twoFactorEnabled: boolean;
-  mustChangePassword?: boolean | null;
-  mustUpdateProfile?: boolean | null;
   isVerified?: boolean | null;
   verificationStatus?: string | null;
   contractStatus?: string | null;
@@ -62,8 +60,6 @@ const isSameAuthUser = (a: AuthUser, b: AuthUser): boolean => {
     a.organizationId === b.organizationId &&
     a.employmentType === b.employmentType &&
     a.twoFactorEnabled === b.twoFactorEnabled &&
-    a.mustChangePassword === b.mustChangePassword &&
-    a.mustUpdateProfile === b.mustUpdateProfile &&
     a.isVerified === b.isVerified &&
     a.verificationStatus === b.verificationStatus &&
     a.contractStatus === b.contractStatus &&

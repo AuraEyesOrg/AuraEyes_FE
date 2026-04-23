@@ -61,9 +61,6 @@ const ResetPasswordPage = lazy(
 const ForceChangePasswordPage = lazy(
   () => import('@/features/auth/pages/force-change-password')
 );
-const ForceUpdateProfilePage = lazy(
-  () => import('@/features/auth/pages/force-update-profile')
-);
 const RegisterDoctorPage = lazy(
   () => import('@/features/auth/pages/register-doctor')
 );
@@ -495,12 +492,6 @@ const Router = () => (
               allowedRoles={['ClinicStaff']}
               element={<ForceChangePasswordPage />}
             />
-          }
-        />
-        <Route
-          path="/:locale/force-update-profile"
-          element={
-            <LocalizedPrivateRoute element={<ForceUpdateProfilePage />} />
           }
         />
         <Route
@@ -1462,7 +1453,7 @@ const Router = () => (
         <Route
           path="/organisation/patients/:patientId/history"
           element={
-            <PrivateRoute allowedRoles={['ClinicStaff']}>
+            <PrivateRoute allowedRoles={['OrgAdmin', 'Organization']}>
               <OrganisationPatientHistoryPage />
             </PrivateRoute>
           }

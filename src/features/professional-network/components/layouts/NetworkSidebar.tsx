@@ -37,9 +37,9 @@ const roleLabelConfig: Record<
     labelKey: 'ProfessionalNetwork.common.roles.ophthalmologist',
     labelFallback: 'Ophthalmologist',
   },
-  ClinicStaff: {
-    labelKey: 'ProfessionalNetwork.common.roles.clinicStaff',
-    labelFallback: 'Clinic Staff',
+  OrgAdmin: {
+    labelKey: 'ProfessionalNetwork.common.roles.orgAdmin',
+    labelFallback: 'Organisation Admin',
   },
   SystemAdmin: {
     labelKey: 'ProfessionalNetwork.common.roles.systemAdmin',
@@ -72,7 +72,7 @@ export function NetworkSidebar() {
 
   const dashboardRoute = stateDashboardRoute
     ? stateDashboardRoute
-    : user?.roles?.includes('ClinicStaff')
+    : user?.roles?.includes('OrgAdmin')
       ? '/organisation/dashboard'
       : user?.roles?.includes('Ophthalmologist')
         ? '/ophthalmologist/dashboard'
@@ -174,7 +174,7 @@ export function NetworkSidebar() {
         >
           <ArrowLeft className="w-5 h-5" />
           <span className="text-sm font-medium">
-            {user?.roles?.includes('ClinicStaff')
+            {user?.roles?.includes('OrgAdmin')
               ? t(
                   'ProfessionalNetwork.sidebar.backToOrganisationDashboard',
                   'Back to Organisation Dashboard'

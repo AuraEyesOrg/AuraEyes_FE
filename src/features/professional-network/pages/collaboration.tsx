@@ -11,9 +11,6 @@ import {
   Calendar,
   ExternalLink,
   Info,
-  X,
-  CheckCircle2,
-  Filter,
 } from 'lucide-react';
 import {
   internalChatApi,
@@ -40,16 +37,6 @@ export default function CollaborationPage() {
   const [newMessage, setNewMessage] = useState('');
   const [activeTab, setActiveTab] = useState<'chat' | 'consultation'>('chat');
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Group Creation State
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [groupName, setGroupName] = useState('');
-  const [searchUserTerm, setSearchUserTerm] = useState('');
-  const [systemUsers, setSystemUsers] = useState<any[]>([]);
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-  const [isCreating, setIsCreating] = useState(false);
-
-  const isSystemAdmin = user?.roles?.includes('SystemAdmin');
 
   // Initialize SignalR
   useSignalRInternalChat();
@@ -179,98 +166,6 @@ export default function CollaborationPage() {
     }
   };
 
-  const handleOpenCreateModal = async () => {
-    if (!isSystemAdmin) {
-      toast.info(
-        t(
-          'ProfessionalNetwork.collaboration.adminOnly',
-          'Only System Administrators can create groups.'
-        )
-      );
-      return;
-    }
-    setIsCreateModalOpen(true);
-    loadSystemUsers();
-  };
-
-  const loadSystemUsers = async (term?: string) => {
-    try {
-      const data = await internalChatApi.getSystemUsers(term);
-      // Filter out current user
-      setSystemUsers(data.filter((u) => u.id !== user?.id));
-    } catch (error) {
-      console.error('Failed to load system users', error);
-    }
-  };
-
-  const toggleUserSelection = (userId: string) => {
-    setSelectedUserIds((prev) =>
-      prev.includes(userId)
-        ? prev.filter((id) => id !== userId)
-        : [...prev, userId]
-    );
-  };
-
-  const handleSelectAllByRole = (role: string) => {
-    const usersWithRole = systemUsers.filter((u) => u.roles.includes(role));
-    const userIds = usersWithRole.map((u) => u.id);
-    setSelectedUserIds((prev) => Array.from(new Set([...prev, ...userIds])));
-    toast.success(
-      t(
-        'ProfessionalNetwork.collaboration.selectedRole',
-        `Added all members with role: ${role}`
-      )
-    );
-  };
-
-  const handleSelectAllStaff = () => {
-    const allInternalIds = systemUsers.map((u) => u.id);
-    setSelectedUserIds(allInternalIds);
-    toast.success(
-      t(
-        'ProfessionalNetwork.collaboration.selectedAll',
-        'Added all system staff members.'
-      )
-    );
-  };
-
-  const handleCreateGroup = async () => {
-    if (!groupName.trim() || selectedUserIds.length === 0) {
-      toast.warning(
-        t(
-          'ProfessionalNetwork.collaboration.createIncomplete',
-          'Please provide a name and select at least one member.'
-        )
-      );
-      return;
-    }
-
-    try {
-      setIsCreating(true);
-      await internalChatApi.createGroup(groupName.trim(), selectedUserIds);
-      toast.success(
-        t(
-          'ProfessionalNetwork.collaboration.createSuccess',
-          'Group created successfully!'
-        )
-      );
-      setIsCreateModalOpen(false);
-      setGroupName('');
-      setSelectedUserIds([]);
-      loadGroups();
-    } catch (error) {
-      console.error('Failed to create group', error);
-      toast.error(
-        t(
-          'ProfessionalNetwork.collaboration.createError',
-          'Failed to create group.'
-        )
-      );
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
   const selectedGroup = groups.find((g) => g.id === selectedGroupId);
 
   if (loading) {
@@ -289,10 +184,7 @@ export default function CollaborationPage() {
           <h2 className="font-bold text-lg dark:text-white">
             {t('ProfessionalNetwork.collaboration.groups', 'Internal Groups')}
           </h2>
-          <button
-            onClick={handleOpenCreateModal}
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-primary transition-colors"
-          >
+          <button className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-primary transition-colors">
             <Plus className="w-5 h-5" />
           </button>
         </div>
@@ -648,202 +540,6 @@ export default function CollaborationPage() {
           </>
         )}
       </div>
-
-      {/* Create Group Modal */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-            onClick={() => setIsCreateModalOpen(false)}
-          />
-          <div className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[90vh]">
-            {/* Modal Header */}
-            <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-primary/5">
-              <div>
-                <h3 className="text-xl font-bold dark:text-white">
-                  {t(
-                    'ProfessionalNetwork.collaboration.createGroup',
-                    'Create New Group'
-                  )}
-                </h3>
-                <p className="text-sm text-slate-500">
-                  {t(
-                    'ProfessionalNetwork.collaboration.createGroupDesc',
-                    'Set up a new collaboration space for your team.'
-                  )}
-                </p>
-              </div>
-              <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
-              >
-                <X className="w-6 h-6 text-slate-400" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6 overflow-y-auto">
-              {/* Group Name */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
-                  {t(
-                    'ProfessionalNetwork.collaboration.modal.groupName',
-                    'Group Name'
-                  )}
-                </label>
-                <input
-                  type="text"
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
-                  placeholder={t(
-                    'ProfessionalNetwork.collaboration.modal.groupNamePlaceholder',
-                    'e.g., Retina Specialists, Reception Team...'
-                  )}
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-slate-100 dark:border-slate-800 focus:border-primary focus:ring-0 bg-slate-50 dark:bg-slate-800/50 transition-all"
-                />
-              </div>
-
-              {/* Quick Actions */}
-              <div className="space-y-3">
-                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1 flex items-center gap-2">
-                  <Filter className="w-4 h-4 text-primary" />
-                  {t(
-                    'ProfessionalNetwork.collaboration.modal.quickSelect',
-                    'Quick Selection'
-                  )}
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => handleSelectAllByRole('Ophthalmologist')}
-                    className="px-4 py-2 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
-                  >
-                    +{' '}
-                    {t('Common.roles.ophthalmologist', 'All Ophthalmologists')}
-                  </button>
-                  <button
-                    onClick={() => handleSelectAllByRole('ClinicStaff')}
-                    className="px-4 py-2 rounded-xl border border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-xs font-bold hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors"
-                  >
-                    + {t('Common.roles.clinicStaff', 'All Clinic Staff')}
-                  </button>
-                  <button
-                    onClick={handleSelectAllStaff}
-                    className="px-4 py-2 rounded-xl border border-purple-200 dark:border-purple-900 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 text-xs font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
-                  >
-                    +{' '}
-                    {t(
-                      'ProfessionalNetwork.collaboration.modal.addAll',
-                      'All System Members'
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* User Search & Selection */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between ml-1">
-                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                    {t(
-                      'ProfessionalNetwork.collaboration.modal.members',
-                      'Select Members'
-                    )}
-                  </label>
-                  <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-lg">
-                    {selectedUserIds.length}{' '}
-                    {t(
-                      'ProfessionalNetwork.collaboration.modal.selected',
-                      'selected'
-                    )}
-                  </span>
-                </div>
-
-                <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    value={searchUserTerm}
-                    onChange={(e) => {
-                      setSearchUserTerm(e.target.value);
-                      loadSystemUsers(e.target.value);
-                    }}
-                    placeholder={t(
-                      'ProfessionalNetwork.collaboration.modal.searchPlaceholder',
-                      'Search by email or name...'
-                    )}
-                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 border-none focus:ring-2 focus:ring-primary text-sm"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                  {systemUsers.map((u) => (
-                    <button
-                      key={u.id}
-                      onClick={() => toggleUserSelection(u.id)}
-                      className={`flex items-center gap-3 p-3 rounded-2xl transition-all border-2 ${
-                        selectedUserIds.includes(u.id)
-                          ? 'border-primary bg-primary/5'
-                          : 'border-slate-50 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
-                      }`}
-                    >
-                      <UserAvatar
-                        fullName={u.fullName}
-                        avatarUrl={u.avatarUrl}
-                        size="sm"
-                      />
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-bold dark:text-white leading-tight">
-                          {u.fullName}
-                        </p>
-                        <p className="text-[10px] text-slate-500">
-                          {u.email} • {u.roles[0]}
-                        </p>
-                      </div>
-                      {selectedUserIds.includes(u.id) && (
-                        <CheckCircle2 className="w-5 h-5 text-primary" />
-                      )}
-                    </button>
-                  ))}
-                  {systemUsers.length === 0 && (
-                    <div className="py-10 text-center opacity-40">
-                      <p className="text-sm">
-                        {t('Common.noResults', 'No users found')}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/20 flex gap-3">
-              <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="flex-1 py-3 rounded-2xl font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
-              >
-                {t('Common.cancel', 'Cancel')}
-              </button>
-              <button
-                onClick={handleCreateGroup}
-                disabled={
-                  isCreating ||
-                  !groupName.trim() ||
-                  selectedUserIds.length === 0
-                }
-                className="flex-[2] py-3 rounded-2xl font-bold text-white bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2"
-              >
-                {isCreating ? (
-                  <Spinner size={20} />
-                ) : (
-                  <Plus className="w-5 h-5" />
-                )}
-                {t(
-                  'ProfessionalNetwork.collaboration.modal.createBtn',
-                  'Create Group'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
