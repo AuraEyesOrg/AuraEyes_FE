@@ -81,8 +81,7 @@ const normalizeAuthUser = (user: AuthUser): AuthUser => {
     const r = role.toLowerCase().replace(/[\s_-]/g, '');
     if (r === 'systemadmin' || r === 'admin') return 'SystemAdmin';
     if (r === 'ophthalmologist' || r === 'doctor') return 'Ophthalmologist';
-    if (r === 'clinicstaff' || r === 'orgadmin' || r === 'organization')
-      return 'ClinicStaff';
+    if (r === 'clinicstaff') return 'ClinicStaff';
     if (r === 'patient') return 'Patient';
     return role; // Fallback
   });

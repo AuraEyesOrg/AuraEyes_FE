@@ -59,7 +59,8 @@ const PrivateRoute: React.FC<Props> = ({
     return <Navigate to={resolvePathWithLocale('/')} replace />;
   }
 
-  const isClinicStaff = hasAnyRole(['ClinicStaff']);
+  const isClinicStaff = hasAnyRole(['ClinicStaff', 'OrgAdmin', 'Organization']);
+  const canReadContracts = user?.permissions?.includes('contracts:read');
   const mustChangePassword = isClinicStaff && user?.mustChangePassword;
   const isOrganisationContractPath =
     normalizedPath === '/organisation/contract';
@@ -67,7 +68,7 @@ const PrivateRoute: React.FC<Props> = ({
   const organisationContractQuery = useQuery({
     queryKey: ['organisation', 'my-contract', 'gate'],
     queryFn: organisationContractApi.getMyContract,
-    enabled: isClinicStaff,
+    enabled: isClinicStaff && canReadContracts,
     staleTime: 30_000,
     retry: 1,
   });
@@ -76,6 +77,7 @@ const PrivateRoute: React.FC<Props> = ({
     organisationContractQuery.data?.status === 'Active';
   const isOrgContractGateResolved =
     !isClinicStaff ||
+    !canReadContracts ||
     organisationContractQuery.isSuccess ||
     organisationContractQuery.isError;
 
@@ -97,6 +99,7 @@ const PrivateRoute: React.FC<Props> = ({
 
   if (
     isClinicStaff &&
+    canReadContracts &&
     !hasActiveOrganisationContract &&
     !isOrganisationContractPath
   ) {
