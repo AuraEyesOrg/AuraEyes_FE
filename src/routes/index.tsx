@@ -118,6 +118,11 @@ const ViewAllNotificationsPage = lazy(
   () => import('@/features/notifications/pages/view-all')
 );
 
+// Clinic Staff pages
+const ClinicStaffDashboard = lazy(
+  () => import('@/features/clinic-staff/pages/dashboard')
+);
+
 // Organisation pages
 const OrganisationDashboard = lazy(
   () => import('@/features/organisation/pages/dashboard')
@@ -701,6 +706,7 @@ const Router = () => (
                 'Admin',
                 'OrgAdmin',
                 'Ophthalmologist',
+                'ClinicStaff',
               ]}
               element={<ViewAllNotificationsPage />}
             />
@@ -820,6 +826,17 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['Patient']}
               element={<TwoFactorSettingsPage />}
+            />
+          }
+        />
+
+        {/* ============ CLINIC STAFF ROUTES (localized) ============ */}
+        <Route
+          path="/:locale/clinic-staff/dashboard"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff']}
+              element={<ClinicStaffDashboard />}
             />
           }
         />
@@ -1277,6 +1294,7 @@ const Router = () => (
                 'Admin',
                 'OrgAdmin',
                 'Ophthalmologist',
+                'ClinicStaff',
               ]}
             >
               <ViewAllNotificationsPage />
@@ -1384,6 +1402,16 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['Patient']}>
               <TwoFactorSettingsPage />
+            </PrivateRoute>
+          }
+        />
+
+        {/* ============ CLINIC STAFF ROUTES ============ */}
+        <Route
+          path="/clinic-staff/dashboard"
+          element={
+            <PrivateRoute allowedRoles={['ClinicStaff']}>
+              <ClinicStaffDashboard />
             </PrivateRoute>
           }
         />

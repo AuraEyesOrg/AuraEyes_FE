@@ -283,6 +283,8 @@ const LoginPage = () => {
           }
         } else if (roles.includes('OrgAdmin')) {
           navigate('/organisation/dashboard');
+        } else if (roles.includes('ClinicStaff')) {
+          navigate('/clinic-staff/dashboard');
         } else {
           navigate(toLocalizedAuthPath('/'));
         }
@@ -448,6 +450,8 @@ const LoginPage = () => {
           }
         } else if (roles.includes('OrgAdmin')) {
           navigate('/organisation/dashboard');
+        } else if (roles.includes('ClinicStaff')) {
+          navigate('/clinic-staff/dashboard');
         } else {
           navigate(toLocalizedAuthPath('/'));
         }

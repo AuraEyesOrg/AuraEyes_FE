@@ -133,6 +133,8 @@ const TwoFactorVerifyPage = () => {
           }
         } else if (roles.includes('OrgAdmin')) {
           nextPath = '/organisation/dashboard';
+        } else if (roles.includes('ClinicStaff')) {
+          nextPath = '/clinic-staff/dashboard';
         }
 
         toast.success('Xác thực thành công. Đang chuyển trang...');

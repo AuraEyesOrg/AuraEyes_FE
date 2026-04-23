@@ -56,6 +56,24 @@ export const Permissions = {
   ApptSlotsManage: 'appt-slots:manage',
   SchedulesManage: 'schedules:manage',
 
+  // Visit Records
+  VisitsRead: 'visits:read',
+  VisitsManage: 'visits:manage',
+
+  // Orders & Billing
+  OrdersRead: 'orders:read',
+  OrdersManage: 'orders:manage',
+
+  // Payments
+  PaymentsRead: 'payments:read',
+  PaymentsManage: 'payments:manage',
+
+  // Clinic Staff
+  ClinicStaffRead: 'clinic-staff:read',
+  ClinicStaffCreate: 'clinic-staff:create',
+  ClinicStaffUpdate: 'clinic-staff:update',
+  ClinicStaffDelete: 'clinic-staff:delete',
+
   // Quotas
   QuotasRead: 'quotas:read',
   QuotasBuy: 'quotas:buy',
