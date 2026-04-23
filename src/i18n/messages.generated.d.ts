@@ -359,7 +359,7 @@ declare module 'i18next' {
       };
       login: {
         leftPanel: {
-          titleLine1: string;
+          titleLine: string;
           titleHighlight: string;
           description: string;
           hipaa: string;
@@ -432,6 +432,84 @@ declare module 'i18next' {
           confirmPasswordRequired: string;
           passwordMismatch: string;
           agreeTerms: string;
+        };
+      };
+      registerDoctor: {
+        leftPanel: {
+          welcome: string;
+          medicalExcellence: string;
+          description: string;
+          status: string;
+          online: string;
+        };
+        form: {
+          title: string;
+          description: string;
+          fullName: string;
+          fullNamePlaceholder: string;
+          email: string;
+          emailPlaceholder: string;
+          phone: string;
+          phonePlaceholder: string;
+          password: string;
+          passwordPlaceholder: string;
+          confirmPassword: string;
+          confirmPasswordPlaceholder: string;
+          experience: string;
+          workingMode: string;
+          fullTime: string;
+          fullTimeDesc: string;
+          partTime: string;
+          partTimeDesc: string;
+          workingHours: string;
+          expectedSalary: string;
+          suggestedSalary: string;
+          bio: string;
+          bioPlaceholder: string;
+          degrees: string;
+          addDegree: string;
+          degreeItem: string;
+          degreeLevels: {
+            Bachelor: string;
+            Master: string;
+            Doctor: string;
+            AssociateProfessor: string;
+            Professor: string;
+          };
+          certificates: string;
+          addCertificate: string;
+          certificateItem: string;
+          fields: {
+            name: string;
+            level: string;
+            issuingAuthority: string;
+            issuedDate: string;
+            expiryDate: string;
+            selectFile: string;
+          };
+          submit: string;
+          submitting: string;
+        };
+        validation: {
+          passwordsNotMatch: string;
+          degreeRequired: string;
+          certificateRequired: string;
+          degreeFileRequired: string;
+          certificateFileRequired: string;
+          expiryDateRequired: string;
+          expiryDateInvalid: string;
+        };
+        success: {
+          title: string;
+          subtitle: string;
+          description: string;
+          emailNotice: string;
+          redirect: string;
+          backHome: string;
+        };
+        toast: {
+          success: string;
+          failed: string;
         };
       };
       forgotPassword: {
@@ -1173,6 +1251,7 @@ declare module 'i18next' {
         contractCode: string;
         signedDate: string;
         contractInfo: string;
+        pdfDocument: string;
         template: string;
         type: string;
         ophthalmologistType: string;
@@ -2256,6 +2335,13 @@ declare module 'i18next' {
         downloadingReport: string;
         newScan: string;
         viewAllResources: string;
+      };
+      consultation: {
+        alreadyBookedTitle: string;
+        alreadyBookedDescription: string;
+        statusLabel: string;
+        createdAtLabel: string;
+        chatLocked: string;
       };
       footer: {
         importantDisclaimer: string;
@@ -3599,6 +3685,7 @@ declare module 'i18next' {
           createdAt: string;
           email: string;
           organisationType: string;
+          pdfDocument: string;
           template: string;
           type: string;
         };
