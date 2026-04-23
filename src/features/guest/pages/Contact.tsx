@@ -10,8 +10,6 @@ import { registerOrganisation } from '@/features/auth/api/auth.api';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import GuestPageContextBar from '../components/GuestPageContextBar';
-import MedicalTermTooltip from '../components/MedicalTermTooltip';
-import SourceVerificationTag from '../components/SourceVerificationTag';
 import {
   getAdaptiveScrollBehavior,
   prefersReducedMotion,
@@ -25,17 +23,11 @@ const ContactPage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    organizationContactName: '',
-    organizationContactRole: '',
-    organizationContactEmail: '',
-    organizationPhone: '',
-    organizationName: '',
-    organizationBusinessCode: '',
-    organizationTaxCode: '',
-    organizationType: 'clinic',
-    organizationLocation: '',
-    estimatedVolume: '',
-    organizationMessage: '',
+    fullName: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: '',
     termsAgreed: false,
   });
 
@@ -52,19 +44,17 @@ const ContactPage = () => {
         { opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: 'power3.out' }
       );
 
-      // Partner cards
       gsap.fromTo(
-        '.partner-card',
-        { opacity: 0, y: 40, scale: 0.95 },
+        '.contact-panel',
+        { opacity: 0, y: 30 },
         {
           opacity: 1,
           y: 0,
-          scale: 1,
-          duration: 0.6,
-          stagger: 0.2,
-          ease: 'back.out(1.4)',
+          duration: 0.7,
+          stagger: 0.15,
+          ease: 'power3.out',
           scrollTrigger: {
-            trigger: '.partnership-layout-section',
+            trigger: '.contact-layout-section',
             start: 'top 80%',
             toggleActions: 'play none none reverse',
           },
@@ -105,28 +95,27 @@ const ContactPage = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
       setIsSubmitting(true);
 
       await registerOrganisation({
-        organisationName: formData.organizationName.trim(),
-        orgType: formData.organizationType === 'hospital' ? 1 : 2,
-        contactFullName: formData.organizationContactName.trim(),
-        contactEmail: formData.organizationContactEmail.trim(),
-        contactPhone: formData.organizationPhone.trim() || undefined,
-        address: formData.organizationLocation.trim() || undefined,
-        licenseNumber: formData.organizationBusinessCode.trim() || undefined,
-        taxCode: formData.organizationTaxCode.trim() || undefined,
+        organisationName: `Contact lead - ${formData.fullName.trim()}`,
+        orgType: 2,
+        contactFullName: formData.fullName.trim(),
+        contactEmail: formData.email.trim(),
+        contactPhone: formData.phone.trim() || undefined,
         notes:
           [
-            `Role: ${formData.organizationContactRole.trim()}`,
-            formData.estimatedVolume
-              ? `Estimated monthly screenings: ${formData.estimatedVolume}`
+            `Contact page inquiry`,
+            formData.subject.trim()
+              ? `Subject: ${formData.subject.trim()}`
               : null,
-            formData.organizationMessage.trim() || null,
+            formData.message.trim()
+              ? `Message: ${formData.message.trim()}`
+              : null,
           ]
             .filter(Boolean)
             .join('\n') || undefined,
@@ -135,17 +124,11 @@ const ContactPage = () => {
       toast.success(t('Contact.toast.success'));
 
       setFormData({
-        organizationContactName: '',
-        organizationContactRole: '',
-        organizationContactEmail: '',
-        organizationPhone: '',
-        organizationName: '',
-        organizationBusinessCode: '',
-        organizationTaxCode: '',
-        organizationType: 'clinic',
-        organizationLocation: '',
-        estimatedVolume: '',
-        organizationMessage: '',
+        fullName: '',
+        email: '',
+        phone: '',
+        subject: '',
+        message: '',
         termsAgreed: false,
       });
     } catch (error) {
@@ -155,51 +138,25 @@ const ContactPage = () => {
     }
   };
 
-  const partnerCard = {
-    title: t('Contact.partnerCard.title'),
-    description: t('Contact.partnerCard.description'),
-    icon: (
-      <svg
-        className="w-8 h-8"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-        />
-      </svg>
-    ),
-    benefits: [
-      t('Contact.partnerCard.benefits.volumeLicensing'),
-      t('Contact.partnerCard.benefits.whiteLabel'),
-      t('Contact.partnerCard.benefits.customIntegrations'),
-    ],
-  };
-
   return (
     <div
       ref={containerRef}
-      className="min-h-screen bg-[var(--color-medical-bg)]"
+      className="min-h-[100dvh] bg-[var(--color-medical-bg)]"
     >
       <SeoMeta
-        title="Contact AURA — Partner With Us"
-        description="Partner with AURA to bring AI retinal screening to your clinic or hospital. Register as an organisation and get onboarded within 48 hours."
+        title="Contact AURA — Contact Us"
+        description="Reach out to AURA for support, product questions, and collaboration inquiries."
         canonical="https://web.auraeyes.site/en/contact"
         structuredData={{
           '@context': 'https://schema.org',
           '@type': 'ContactPage',
           name: 'Contact AURA',
           url: 'https://web.auraeyes.site/en/contact',
-          description:
-            'Partner with AURA to bring AI retinal screening to your healthcare organisation.',
+          description: 'Reach out to AURA for support and general inquiries.',
           contactPoint: {
             '@type': 'ContactPoint',
             email: 'auraeyes4se@gmail.com',
-            contactType: 'partnership',
+            contactType: 'customer support',
             availableLanguage: ['English', 'Vietnamese'],
           },
         }}
@@ -275,56 +232,15 @@ const ContactPage = () => {
           </div>
         </section>
 
-        {/* Partnership Layout Section */}
+        {/* Contact Layout Section */}
         <section
           id="contact-form"
-          className="partnership-layout-section form-section bg-[var(--color-medical-bg)]"
+          className="contact-layout-section form-section bg-[var(--color-medical-bg)]"
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-7xl mx-auto px-4 py-12">
             {/* Left Column */}
-            <div className="flex flex-col gap-8">
-              <div className="partner-card text-left p-8 rounded-2xl border-2 border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/5 shadow-md">
-                <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 bg-[var(--color-brand-primary)] text-white">
-                  {partnerCard.icon}
-                </div>
-
-                <h3 className="text-xl font-bold text-[var(--color-brand-dark)] mb-2">
-                  {partnerCard.title}
-                </h3>
-                <p className="text-[var(--color-text-muted)] mb-4">
-                  {partnerCard.description}
-                </p>
-                <SourceVerificationTag
-                  label={t('GuestEnhancements.source.auraGovernance')}
-                  className="mb-4"
-                />
-
-                <ul className="space-y-2">
-                  {partnerCard.benefits.map((benefit, i) => (
-                    <li
-                      key={i}
-                      className="flex items-center gap-2 text-sm text-[var(--color-brand-dark)]"
-                    >
-                      <svg
-                        className="w-4 h-4 text-[var(--color-brand-primary)]"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      {benefit}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
+            <div className="contact-panel">
+              <div className="rounded-2xl border border-[var(--color-medical-border)] bg-white p-8 shadow-[0_24px_50px_-28px_rgba(0,0,0,0.28)]">
                 <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
                   {t('Contact.info.badge')}
                 </span>
@@ -335,18 +251,7 @@ const ContactPage = () => {
                   {t('Contact.info.description')}
                 </p>
 
-                <div className="mb-6 flex flex-wrap gap-2 text-xs text-[var(--color-text-muted)]">
-                  <MedicalTermTooltip
-                    term={t('GuestEnhancements.terms.fundus')}
-                    description={t('GuestEnhancements.tooltips.fundus')}
-                  />
-                  <MedicalTermTooltip
-                    term={t('GuestEnhancements.terms.oct')}
-                    description={t('GuestEnhancements.tooltips.oct')}
-                  />
-                </div>
-
-                <div className="space-y-6 p-6 bg-white rounded-xl border border-[var(--color-medical-border)]">
+                <div className="space-y-6 rounded-xl border border-[var(--color-medical-border)] bg-[var(--color-medical-bg)] p-6">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center flex-shrink-0">
                       <svg
@@ -435,7 +340,7 @@ const ContactPage = () => {
             </div>
 
             {/* Right Column */}
-            <div>
+            <div className="contact-panel">
               <form
                 onSubmit={handleSubmit}
                 className="contact-form bg-white p-8 lg:p-10 rounded-2xl border border-[var(--color-medical-border)] shadow-lg"
@@ -448,11 +353,6 @@ const ContactPage = () => {
                     <p className="text-[var(--color-text-muted)]">
                       {t('Contact.form.description')}
                     </p>
-                    <div className="mt-3">
-                      <SourceVerificationTag
-                        label={t('GuestEnhancements.source.auraGovernance')}
-                      />
-                    </div>
                   </div>
 
                   <div>
@@ -467,23 +367,9 @@ const ContactPage = () => {
                         </label>
                         <input
                           type="text"
-                          name="organizationContactName"
+                          name="fullName"
                           required
-                          value={formData.organizationContactName}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                          {t('Contact.form.role')}{' '}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="organizationContactRole"
-                          required
-                          value={formData.organizationContactRole}
+                          value={formData.fullName}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
                         />
@@ -495,9 +381,9 @@ const ContactPage = () => {
                         </label>
                         <input
                           type="email"
-                          name="organizationContactEmail"
+                          name="email"
                           required
-                          value={formData.organizationContactEmail}
+                          value={formData.email}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
                           placeholder={t('Contact.form.workEmailPlaceholder')}
@@ -505,99 +391,30 @@ const ContactPage = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                          {t('Contact.form.phone')}{' '}
-                          <span className="text-red-500">*</span>
+                          {t('Contact.form.phone')}
                         </label>
                         <input
                           type="tel"
-                          name="organizationPhone"
-                          required
-                          value={formData.organizationPhone}
+                          name="phone"
+                          value={formData.phone}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
                           placeholder={t('Contact.form.phonePlaceholder')}
                         />
                       </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-bold uppercase tracking-wide text-[var(--color-brand-primary)] mb-4">
-                      {t('Contact.form.organizationDetails')}
-                    </p>
-                    <div className="grid sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                          {t('Contact.form.organizationName')}{' '}
+                          {t('Contact.form.role')}{' '}
                           <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
-                          name="organizationName"
+                          name="subject"
                           required
-                          value={formData.organizationName}
+                          value={formData.subject}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                          {t('Contact.form.organizationType')}{' '}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          name="organizationType"
-                          required
-                          value={formData.organizationType}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] bg-white"
-                        >
-                          <option value="clinic">
-                            {t('Contact.form.organizationTypeClinic')}
-                          </option>
-                          <option value="hospital">
-                            {t('Contact.form.organizationTypeHospital')}
-                          </option>
-                        </select>
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                          {t('Contact.form.cityLocation')}
-                        </label>
-                        <input
-                          type="text"
-                          name="organizationLocation"
-                          value={formData.organizationLocation}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                          {t('Contact.form.businessCode')}
-                        </label>
-                        <input
-                          type="text"
-                          name="organizationBusinessCode"
-                          value={formData.organizationBusinessCode}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
-                          placeholder={t(
-                            'Contact.form.businessCodePlaceholder'
-                          )}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                          {t('Contact.form.taxCode')}
-                        </label>
-                        <input
-                          type="text"
-                          name="organizationTaxCode"
-                          value={formData.organizationTaxCode}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
-                          placeholder={t('Contact.form.taxCodePlaceholder')}
+                          placeholder={t('Contact.form.role')}
                         />
                       </div>
                     </div>
@@ -605,39 +422,19 @@ const ContactPage = () => {
 
                   <div>
                     <p className="text-sm font-bold uppercase tracking-wide text-[var(--color-brand-primary)] mb-4">
-                      {t('Contact.form.partnershipNeeds')}
+                      {t('Contact.form.additionalInformation')}
                     </p>
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                          {t('Contact.form.estimatedMonthlyScreenings')}{' '}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          name="estimatedVolume"
-                          required
-                          value={formData.estimatedVolume}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] bg-white"
-                        >
-                          <option value="">
-                            {t('Contact.form.selectRange')}
-                          </option>
-                          <option value="lt_100">&lt;100</option>
-                          <option value="100_500">100-500</option>
-                          <option value="500_2000">500-2000</option>
-                          <option value="gt_2000">&gt;2000</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
                           {t('Contact.form.additionalInformation')}
+                          <span className="text-red-500"> *</span>
                         </label>
                         <textarea
-                          name="organizationMessage"
+                          name="message"
                           rows={4}
-                          value={formData.organizationMessage}
+                          required
+                          value={formData.message}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] resize-none"
                           placeholder={t(
@@ -692,11 +489,11 @@ const ContactPage = () => {
                         ? t('Contact.form.sending')
                         : t('Contact.form.send')}
                     </span>
-                    {!isSubmitting ? (
+                    {isSubmitting ? null : (
                       <span className="guest-cta-subtext">
                         {t('GuestEnhancements.ctaSubtext.fastContact')}
                       </span>
-                    ) : null}
+                    )}
                   </button>
                 </div>
               </form>
@@ -723,9 +520,9 @@ const ContactPage = () => {
                   q: t('Contact.faq.items.onboarding.question'),
                   a: t('Contact.faq.items.onboarding.answer'),
                 },
-              ].map((faq, index) => (
+              ].map((faq) => (
                 <details
-                  key={index}
+                  key={faq.q}
                   className="group bg-white rounded-xl border border-[var(--color-medical-border)] overflow-hidden"
                 >
                   <summary className="flex items-center justify-between p-6 cursor-pointer text-[var(--color-brand-dark)] font-semibold hover:bg-gray-50 transition-colors">
