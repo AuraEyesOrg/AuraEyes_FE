@@ -258,6 +258,9 @@ const SystemAdminContracts = lazy(
 const SystemAdminCashflow = lazy(
   () => import('@/features/system-admin/pages/cashflow')
 );
+const SchedulingPage = lazy(
+  () => import('@/features/system-admin/pages/scheduling')
+);
 
 // Professional Network pages
 const NetworkLayout = lazy(() =>
@@ -1029,6 +1032,15 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['SystemAdmin']}
               element={<SystemAdminCashflow />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/scheduling"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin']}
+              element={<SchedulingPage />}
             />
           }
         />
