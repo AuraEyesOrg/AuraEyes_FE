@@ -13,6 +13,7 @@ import {
   createClinicAppointment,
   getOrganisationAppointments,
   getOrganisationAvailableSlots,
+  getOrganisationSchedule,
   getOrganisations,
   getPatientClinicAppointments,
   markNoShowClinicAppointment,
@@ -53,6 +54,17 @@ export const clinicBookingKeys = {
       'organisation-appointments',
       organisationId,
       date,
+    ] as const,
+  organisationSchedule: (
+    organisationId: string,
+    params?: { fromDate?: string; toDate?: string }
+  ) =>
+    [
+      ...clinicBookingKeys.all,
+      'organisation-schedule',
+      organisationId,
+      params?.fromDate,
+      params?.toDate,
     ] as const,
 };
 
@@ -144,6 +156,18 @@ export const useOrganisationAppointments = (
     queryFn: () => getOrganisationAppointments(organisationId, date),
     enabled: enabled && !!organisationId,
     staleTime: 10_000,
+  });
+
+export const useOrganisationSchedule = (
+  organisationId: string,
+  params?: { fromDate?: string; toDate?: string },
+  enabled = true
+) =>
+  useQuery({
+    queryKey: clinicBookingKeys.organisationSchedule(organisationId, params),
+    queryFn: () => getOrganisationSchedule(organisationId, params),
+    enabled: enabled && !!organisationId,
+    staleTime: 15_000,
   });
 
 export const useCreateClinicAppointment = () => {

@@ -30,6 +30,16 @@ export interface OrganisationAvailableSlotDto {
   cost?: number | null;
 }
 
+export interface OrganisationScheduleDto {
+  id: string;
+  name: string;
+  address?: string | null;
+  description?: string | null;
+  ratingAverage: number;
+  ratingCount: number;
+  availableSlots: OrganisationAvailableSlotDto[];
+}
+
 export interface CreateClinicAppointmentRequest {
   organisationId: string;
   slotId: string;

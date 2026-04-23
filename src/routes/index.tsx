@@ -88,6 +88,9 @@ const ProfilePage = lazy(() => import('@/features/patient/pages/profile'));
 const SettingsPage = lazy(() => import('@/features/patient/pages/settings'));
 const ClinicsPage = lazy(() => import('@/features/patient/pages/clinics'));
 const DoctorsPage = lazy(() => import('@/features/patient/pages/doctors'));
+const OrganisationSchedulePage = lazy(
+  () => import('@/features/patient/pages/organisation-schedule')
+);
 
 const RoadmapPage = lazy(() => import('@/features/patient/pages/roadmap'));
 const ChatPage = lazy(() => import('@/features/patient/pages/chat'));
@@ -767,6 +770,15 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['Patient']}
               element={<ClinicsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/patient/schedule"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient']}
+              element={<OrganisationSchedulePage />}
             />
           }
         />
