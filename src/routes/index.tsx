@@ -286,6 +286,9 @@ const NetworkProfilePage = lazy(
 const NetworkOrganisationPage = lazy(
   () => import('@/features/professional-network/pages/organisation')
 );
+const NetworkCollaborationPage = lazy(
+  () => import('@/features/professional-network/pages/collaboration')
+);
 
 /**
  * Loading component hiển thị khi lazy load
@@ -428,6 +431,12 @@ const Router = () => (
           }
         />
         <Route path="/404" element={<LocalizedRedirect target="/404" />} />
+        <Route
+          path="/system-admin/staff-management"
+          element={
+            <LocalizedRedirect target="/system-admin/staff-management" />
+          }
+        />
         <Route
           path="/ophthalmologist/analytics"
           element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
@@ -1793,6 +1802,7 @@ const Router = () => (
             path="organisation/:id"
             element={<NetworkOrganisationPage />}
           />
+          <Route path="collaboration" element={<NetworkCollaborationPage />} />
         </Route>
 
         <Route
@@ -1816,6 +1826,7 @@ const Router = () => (
             path="organisation/:id"
             element={<NetworkOrganisationPage />}
           />
+          <Route path="collaboration" element={<NetworkCollaborationPage />} />
         </Route>
 
         <Route path="*" element={<LocalizedRedirect target="/404" />} />

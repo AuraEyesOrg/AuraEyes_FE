@@ -29,7 +29,6 @@ const PublicRoute: React.FC<Props> = ({ children }) => {
 
   const isOrganisationAdmin =
     user?.roles?.includes('OrgAdmin') || user?.roles?.includes('Organization');
-  const mustChangePassword = isOrganisationAdmin && user?.mustChangePassword;
 
   const organisationContractQuery = useQuery({
     queryKey: ['organisation', 'my-contract', 'gate'],
@@ -57,22 +56,6 @@ const PublicRoute: React.FC<Props> = ({ children }) => {
   if (isOrganisationAdmin && !hasActiveOrganisationContract) {
     return (
       <Navigate to={resolvePathWithLocale('/organisation/contract')} replace />
-    );
-  }
-
-  if (mustChangePassword) {
-    if (
-      normalizedPath === '/organisation/contract' &&
-      new URLSearchParams(location.search).get('tab') === 'change-password'
-    ) {
-      return children;
-    }
-
-    return (
-      <Navigate
-        to={resolvePathWithLocale('/organisation/contract?tab=change-password')}
-        replace
-      />
     );
   }
 

@@ -26,12 +26,30 @@ export const userApi = {
 
       const data = response.data.data;
       if (data && data.items) {
-        data.items = data.items.map((u) => ({
-          ...u,
-          name: u.fullName || u.name,
-          role: (u.roles?.[0] as UserRole) || u.role,
-          lastLogin: u.lastLoginAt || u.lastLogin,
-        }));
+        data.items = data.items.map((u) => {
+          const rawRole = (u.roles?.[0] || u.role || '')
+            .toLowerCase()
+            .replace(/[\s_-]/g, '');
+          let normalizedRole: UserRole = 'Patient';
+
+          if (rawRole === 'systemadmin' || rawRole === 'admin')
+            normalizedRole = 'SystemAdmin';
+          else if (rawRole === 'ophthalmologist' || rawRole === 'doctor')
+            normalizedRole = 'Ophthalmologist';
+          else if (
+            rawRole === 'clinicstaff' ||
+            rawRole === 'orgadmin' ||
+            rawRole === 'organization'
+          )
+            normalizedRole = 'ClinicStaff';
+
+          return {
+            ...u,
+            name: u.fullName || u.name,
+            role: normalizedRole,
+            lastLogin: u.lastLoginAt || u.lastLogin,
+          };
+        });
       }
 
       return data;
@@ -114,6 +132,26 @@ export const userApi = {
       return response.data.data;
     } catch (error) {
       console.error('Failed to fetch user stats:', error);
+      throw error;
+    }
+  },
+  /**
+   * Onboard a new staff member
+   */
+  async onboardStaff(data: {
+    fullName: string;
+    email: string;
+    phone: string;
+    role: UserRole;
+  }) {
+    try {
+      const response = await api.post<ApiResponse<string>>(
+        `${API_ENDPOINTS.SYSTEM_ADMIN.USERS.LIST}/onboard`,
+        data
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error('Failed to onboard staff:', error);
       throw error;
     }
   },

@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Sun,
   Moon,
+  Users,
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import useAuthStore from '@/store/auth-store';
@@ -131,6 +132,13 @@ export function NetworkSidebar() {
       isActive: () =>
         location.pathname ===
         toLocalizedPath(`/network/profile/${user?.id || 'me'}`),
+    },
+    {
+      to: '/network/collaboration',
+      icon: Users,
+      label: t('ProfessionalNetwork.navigation.collaboration', 'Collaboration'),
+      isActive: () =>
+        location.pathname === toLocalizedPath('/network/collaboration'),
     },
   ];
 

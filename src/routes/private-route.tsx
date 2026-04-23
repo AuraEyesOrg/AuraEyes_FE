@@ -1,11 +1,9 @@
 import { type ReactElement } from 'react';
 import { Navigate, useLocation } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth-store';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { stripLocaleFromPathname } from '@/i18n/locales';
 import { NoIndexMeta } from '@/hooks/useSeoMeta';
-import { organisationContractApi } from '@/features/organisation/api/contract.api';
 
 interface Props {
   children: ReactElement;
@@ -60,63 +58,6 @@ const PrivateRoute: React.FC<Props> = ({
   }
 
   const isClinicStaff = hasAnyRole(['ClinicStaff']);
-  const mustChangePassword = isClinicStaff && user?.mustChangePassword;
-  const isOrganisationContractPath =
-    normalizedPath === '/organisation/contract';
-
-  const organisationContractQuery = useQuery({
-    queryKey: ['organisation', 'my-contract', 'gate'],
-    queryFn: organisationContractApi.getMyContract,
-    enabled: isClinicStaff,
-    staleTime: 30_000,
-    retry: 1,
-  });
-
-  const hasActiveOrganisationContract =
-    organisationContractQuery.data?.status === 'Active';
-  const isOrgContractGateResolved =
-    !isClinicStaff ||
-    organisationContractQuery.isSuccess ||
-    organisationContractQuery.isError;
-
-  if (
-    isClinicStaff &&
-    !isOrganisationContractPath &&
-    !isOrgContractGateResolved
-  ) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
-      </div>
-    );
-  }
-
-  const isOnChangePasswordTab =
-    isOrganisationContractPath &&
-    new URLSearchParams(location.search).get('tab') === 'change-password';
-
-  if (
-    isClinicStaff &&
-    !hasActiveOrganisationContract &&
-    !isOrganisationContractPath
-  ) {
-    return (
-      <Navigate to={resolvePathWithLocale('/organisation/contract')} replace />
-    );
-  }
-
-  if (
-    mustChangePassword &&
-    hasActiveOrganisationContract &&
-    !isOnChangePasswordTab
-  ) {
-    return (
-      <Navigate
-        to={resolvePathWithLocale('/organisation/contract?tab=change-password')}
-        replace
-      />
-    );
-  }
 
   // Redirect unverified ophthalmologists to pending approval page
   const isOphthalmologist = hasAnyRole(['Ophthalmologist']);

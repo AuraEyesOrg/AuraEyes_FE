@@ -8,12 +8,15 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { NotificationDropdown } from '@/components/ui/notification';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
+import { AuraLogo } from '@/components/ui/aura-logo';
+
 interface PageHeaderProps {
   title: string;
   description?: React.ReactNode;
   badge?: React.ReactNode;
   actions?: React.ReactNode;
   showNotifications?: boolean;
+  showLogo?: boolean;
 }
 
 export const PageHeader: React.FC<PageHeaderProps> = ({
@@ -22,6 +25,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   badge,
   actions,
   showNotifications = true,
+  showLogo = false,
 }) => {
   const { theme, toggleTheme } = useTheme();
   const { t } = useSafeTranslation();
@@ -29,11 +33,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   return (
     <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 md:px-10 py-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
       <div className="flex-1">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-            {title}
-          </h1>
-          {badge}
+        <div className="flex items-center gap-4">
+          {showLogo && <AuraLogo size="sm" showText={false} />}
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+              {title}
+            </h1>
+            {badge}
+          </div>
         </div>
         {description && (
           <p className="text-slate-600 dark:text-slate-400 text-base mt-1">
