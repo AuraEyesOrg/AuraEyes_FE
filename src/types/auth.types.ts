@@ -40,10 +40,10 @@ export interface User {
 }
 
 export type UserRole =
-  | 'patient'
-  | 'ophthalmologist'
-  | 'clinic_staff'
-  | 'system_admin';
+  | 'Patient'
+  | 'Ophthalmologist'
+  | 'ClinicStaff'
+  | 'SystemAdmin';
 
 export interface LoginCredentials {
   email: string;

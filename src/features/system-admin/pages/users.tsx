@@ -28,29 +28,29 @@ import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
 import { toast } from 'react-toastify';
 
 const roleLabelMeta: Record<UserRole, { key: string; fallback: string }> = {
-  system_admin: {
+  SystemAdmin: {
     key: 'SystemAdmin.users.roles.systemAdmin',
     fallback: 'System Admin',
   },
-  organisation_admin: {
-    key: 'SystemAdmin.users.roles.organisationAdmin',
-    fallback: 'Org Admin',
+  Ophthalmologist: {
+    key: 'SystemAdmin.users.roles.ophthalmologist',
+    fallback: 'Ophthalmologist',
   },
-  doctor: { key: 'SystemAdmin.users.roles.doctor', fallback: 'Doctor' },
-  operator: { key: 'SystemAdmin.users.roles.operator', fallback: 'Operator' },
-  analyst: { key: 'SystemAdmin.users.roles.analyst', fallback: 'Analyst' },
+  ClinicStaff: {
+    key: 'SystemAdmin.users.roles.clinicStaff',
+    fallback: 'Clinic Staff',
+  },
+  Patient: { key: 'SystemAdmin.users.roles.patient', fallback: 'Patient' },
 };
 
 const roleColors: Record<UserRole, string> = {
-  system_admin:
+  SystemAdmin:
     'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-  organisation_admin:
-    'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-  doctor:
+  Ophthalmologist:
     'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  operator: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
-  analyst:
-    'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+  ClinicStaff:
+    'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+  Patient: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
 };
 
 export default function UsersPage() {
@@ -68,24 +68,20 @@ export default function UsersPage() {
       label: t('SystemAdmin.users.filters.options.allRoles', 'All Roles'),
     },
     {
-      value: 'system_admin',
+      value: 'SystemAdmin',
       label: t('SystemAdmin.users.roles.systemAdmin', 'System Admin'),
     },
     {
-      value: 'organisation_admin',
-      label: t('SystemAdmin.users.roles.organisationAdmin', 'Org Admin'),
+      value: 'Ophthalmologist',
+      label: t('SystemAdmin.users.roles.ophthalmologist', 'Ophthalmologist'),
     },
     {
-      value: 'doctor',
-      label: t('SystemAdmin.users.roles.doctor', 'Doctor'),
+      value: 'ClinicStaff',
+      label: t('SystemAdmin.users.roles.clinicStaff', 'Clinic Staff'),
     },
     {
-      value: 'operator',
-      label: t('SystemAdmin.users.roles.operator', 'Operator'),
-    },
-    {
-      value: 'analyst',
-      label: t('SystemAdmin.users.roles.analyst', 'Analyst'),
+      value: 'Patient',
+      label: t('SystemAdmin.users.roles.patient', 'Patient'),
     },
   ];
 
@@ -97,8 +93,8 @@ export default function UsersPage() {
   // Load data
   const loadData = useCallback(async () => {
     try {
-      const usersData = await userApi.getUsers().catch(() => null);
-      setUsers(usersData?.items ?? usersData?.data ?? []);
+      const data = await userApi.getUsers();
+      setUsers(data?.items ?? []);
     } finally {
       setLoading(false);
     }
@@ -110,8 +106,13 @@ export default function UsersPage() {
 
   // Calculate stats
   const totalUsers = users.length;
-  const activeUsers = users.filter((u) => u.status === 'active').length;
-  const lockedUsers = users.filter((u) => u.status === 'locked').length;
+  const activeUsers = users.filter(
+    (u) =>
+      u.status === 'Active' || u.status === 'active' || u.status === 'Online'
+  ).length;
+  const lockedUsers = users.filter(
+    (u) => u.status === 'Locked' || u.status === 'locked'
+  ).length;
 
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const toSearchable = (value: unknown) => String(value ?? '').toLowerCase();
@@ -124,7 +125,8 @@ export default function UsersPage() {
       toSearchable(user.email).includes(normalizedSearchQuery) ||
       toSearchable(user.id).includes(normalizedSearchQuery);
 
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    const userRoles = (user as any).roles || [user.role];
+    const matchesRole = roleFilter === 'all' || userRoles.includes(roleFilter);
 
     return matchesSearch && matchesRole;
   });
@@ -328,8 +330,12 @@ export default function UsersPage() {
       render: (value) => {
         const statusMap: Record<string, 'success' | 'warning' | 'error'> = {
           active: 'success',
+          Active: 'success',
+          Online: 'success',
           inactive: 'warning',
+          Inactive: 'warning',
           locked: 'error',
+          Locked: 'error',
         };
         return (
           <StatusBadge

@@ -20,20 +20,20 @@ import { toast } from 'react-toastify';
 import CreateStaffModal from '../components/CreateStaffModal';
 
 const roleLabelMeta: Record<string, { key: string; fallback: string }> = {
-  ophthalmologist: {
+  Ophthalmologist: {
     key: 'SystemAdmin.users.roles.ophthalmologist',
     fallback: 'Ophthalmologist',
   },
-  clinic_staff: {
+  ClinicStaff: {
     key: 'SystemAdmin.users.roles.clinicStaff',
     fallback: 'Clinic Staff',
   },
 };
 
 const roleColors: Record<string, string> = {
-  ophthalmologist:
+  Ophthalmologist:
     'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  clinic_staff:
+  ClinicStaff:
     'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
 };
 
@@ -51,8 +51,8 @@ export default function StaffManagementPage() {
       value: 'all',
       label: t('SystemAdmin.users.filters.options.allRoles', 'All Roles'),
     },
-    { value: 'ophthalmologist', label: 'Ophthalmologist' },
-    { value: 'clinic_staff', label: 'Clinic Staff' },
+    { value: 'Ophthalmologist', label: 'Ophthalmologist' },
+    { value: 'ClinicStaff', label: 'Clinic Staff' },
   ];
 
   const getRoleLabel = (role: string) => {
@@ -62,10 +62,10 @@ export default function StaffManagementPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const usersData = await userApi.getUsers().catch(() => null);
-      // Only keep staff roles
-      const staffUsers = (usersData?.items ?? usersData?.data ?? []).filter(
-        (u: User) => u.role === 'ophthalmologist' || u.role === 'clinic_staff'
+      const data = await userApi.getUsers();
+      // Only keep staff roles (ClinicStaff, Ophthalmologist)
+      const staffUsers = (data?.items || []).filter(
+        (u: User) => u.role === 'ClinicStaff' || u.role === 'Ophthalmologist'
       );
       setUsers(staffUsers);
     } finally {
@@ -78,8 +78,12 @@ export default function StaffManagementPage() {
   }, [loadData]);
 
   const totalStaff = users.length;
-  const activeStaff = users.filter((u) => u.status === 'active').length;
-  const pendingStaff = users.filter((u) => (u as any).mustUpdateProfile).length;
+  const activeStaff = users.filter(
+    (u) => u.status === 'Active' || u.status === 'active'
+  ).length;
+  const pendingStaff = users.filter(
+    (u) => u.status === 'Pending' || (u as any).mustUpdateProfile
+  ).length;
 
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const toSearchable = (value: unknown) => String(value ?? '').toLowerCase();
@@ -158,8 +162,12 @@ export default function StaffManagementPage() {
 
         const statusMap: Record<string, 'success' | 'warning' | 'error'> = {
           active: 'success',
+          Active: 'success',
+          Online: 'success',
           inactive: 'warning',
+          Inactive: 'warning',
           locked: 'error',
+          Locked: 'error',
         };
         return (
           <StatusBadge

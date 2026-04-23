@@ -5,7 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { toast } from 'react-toastify';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
-import type { UserRole } from '../../types/system-admin.types';
+import type { UserRole } from '../types/system-admin.types';
 
 interface CreateStaffModalProps {
   isOpen: boolean;
@@ -35,7 +35,7 @@ const schema = yup.object().shape({
     .matches(/^[0-9+() -]+$/, 'Invalid phone format'),
   role: yup
     .string()
-    .oneOf(['ophthalmologist', 'clinic_staff'])
+    .oneOf(['Ophthalmologist', 'ClinicStaff'])
     .required('Role is required') as yup.Schema<UserRole>,
 });
 
@@ -58,7 +58,7 @@ export default function CreateStaffModal({
       fullName: '',
       email: '',
       phone: '',
-      role: 'clinic_staff',
+      role: 'ClinicStaff',
     },
   });
 
@@ -202,8 +202,8 @@ export default function CreateStaffModal({
                     : 'border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/20'
                 }`}
               >
-                <option value="clinic_staff">Clinic Staff</option>
-                <option value="ophthalmologist">Ophthalmologist</option>
+                <option value="ClinicStaff">Clinic Staff</option>
+                <option value="Ophthalmologist">Ophthalmologist</option>
               </select>
             </div>
             {errors.role && (
