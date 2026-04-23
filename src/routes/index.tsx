@@ -122,6 +122,18 @@ const ViewAllNotificationsPage = lazy(
 const ClinicStaffDashboard = lazy(
   () => import('@/features/clinic-staff/pages/dashboard')
 );
+const ClinicStaffScreeningsPage = lazy(
+  () => import('@/features/clinic-staff/pages/screenings')
+);
+const ClinicStaffScreeningNewPage = lazy(
+  () => import('@/features/clinic-staff/pages/screening-new')
+);
+const ClinicStaffScreeningResultPage = lazy(
+  () => import('@/features/clinic-staff/pages/screening-result')
+);
+const ClinicStaffPatientsPage = lazy(
+  () => import('@/features/clinic-staff/pages/patients')
+);
 
 // Organisation pages
 const OrganisationDashboard = lazy(
@@ -842,6 +854,42 @@ const Router = () => (
             />
           }
         />
+        <Route
+          path="/:locale/clinic-staff/screenings"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffScreeningsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/screenings/new"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffScreeningNewPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/screenings/result"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffScreeningResultPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/patients"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffPatientsPage />}
+            />
+          }
+        />
 
         <Route
           path="/:locale/organisation/dashboard"
@@ -1426,6 +1474,46 @@ const Router = () => (
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
             >
               <ClinicStaffDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/screenings"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffScreeningsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/screenings/new"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffScreeningNewPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/screenings/result"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffScreeningResultPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/patients"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffPatientsPage />
             </PrivateRoute>
           }
         />

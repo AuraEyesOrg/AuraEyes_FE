@@ -7,16 +7,39 @@ import {
   withLocalePathname,
 } from '@/i18n/locales';
 import { GuestTourProvider } from './tour';
-import { detectPreferredLocale } from '@/i18n/middleware';
+import {
+  detectPreferredLocale,
+  resolvePathWithLocale,
+} from '@/i18n/middleware';
 import GuestScrollProgress from './components/GuestScrollProgress';
 import GuestTourFAB from './components/GuestTourFAB';
 import { prefersReducedMotion } from './utils/motion';
+import useAuthStore from '@/store/auth-store';
+
+/**
+ * Maps a user's roles to their home dashboard path.
+ * Mirrors the same logic in public-route.tsx so both stay consistent.
+ */
+const resolveDashboardPath = (roles: string[]): string => {
+  if (roles.includes('SystemAdmin')) return '/system-admin/dashboard';
+  if (roles.includes('OrgAdmin') || roles.includes('Organization'))
+    return '/organisation/dashboard';
+  if (roles.includes('ClinicStaff')) return '/clinic-staff/dashboard';
+  if (roles.includes('Ophthalmologist')) return '/ophthalmologist/dashboard';
+  return '/patient/dashboard';
+};
 
 export const GuestLayout = () => {
   const { locale } = useParams();
   const location = useLocation();
+  const { isAuthenticated, user } = useAuthStore((state) => state);
 
+  // Must call all hooks before any conditional returns (Rules of Hooks)
   useEffect(() => {
+    // Skip animation setup when the user is authenticated — they will be
+    // redirected before the guest shell renders.
+    if (isAuthenticated) return;
+
     const revealTargets = Array.from(
       document.querySelectorAll<HTMLElement>('[data-guest-reveal]')
     );
@@ -56,7 +79,15 @@ export const GuestLayout = () => {
     return () => {
       observer.disconnect();
     };
-  }, [location.pathname]);
+  }, [location.pathname, isAuthenticated]);
+
+  // ── Auth guard: redirect logged-in users straight to their dashboard ──
+  // This comes AFTER hooks to satisfy the Rules of Hooks.
+  if (isAuthenticated && user) {
+    const roles = user.roles ?? [];
+    const dashboardPath = resolveDashboardPath(roles);
+    return <Navigate to={resolvePathWithLocale(dashboardPath)} replace />;
+  }
 
   if (!locale || !isSupportedLocale(locale)) {
     const preferredLocale = detectPreferredLocale();
