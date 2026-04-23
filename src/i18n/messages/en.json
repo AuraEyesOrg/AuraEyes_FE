@@ -6859,5 +6859,40 @@
         "viewFile": "View file"
       }
     }
+  },
+  "SystemAdmin": {
+    "common": {
+      "systemAdmin": "System Admin"
+    },
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "groups": {
+        "user-directory": {
+          "label": "User Directory",
+          "description": "Manage users and staff"
+        }
+      },
+      "items": {
+        "staff-management": "Staff Management"
+      }
+    },
+    "staff": {
+      "modal": {
+        "title": "Add New Staff"
+      },
+      "fields": {
+        "fullName": "Full Name",
+        "email": "Email Address",
+        "phone": "Phone Number",
+        "role": "Staff Role"
+      },
+      "actions": {
+        "create": "Create Staff"
+      },
+      "toasts": {
+        "createSuccess": "Staff created successfully. Temporary password sent.",
+        "createError": "Failed to create staff"
+      }
+    }
   }
 }

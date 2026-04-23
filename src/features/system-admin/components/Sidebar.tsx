@@ -116,7 +116,7 @@ export default function Sidebar() {
           <AuraLogo
             size="md"
             subtitle={systemAdminLabel}
-            to="/system-admin/dashboard"
+            to={resolvePathWithLocale('/system-admin/dashboard')}
           />
         </div>
 

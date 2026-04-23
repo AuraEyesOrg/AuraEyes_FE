@@ -2,12 +2,12 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   Users,
   Search,
-  Plus,
   MoreVertical,
   Lock,
   Unlock,
   Shield,
 } from 'lucide-react';
+const AURA_LOGO = '/logo.png';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
@@ -45,6 +45,7 @@ export default function StaffManagementPage() {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [stats, setStats] = useState<any>(null);
 
   const roleFilterOptions: Array<{ value: string; label: string }> = [
     {
@@ -62,12 +63,20 @@ export default function StaffManagementPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const data = await userApi.getUsers();
+      setLoading(true);
+      const [usersData, statsData] = await Promise.all([
+        userApi.getUsers(1, 100), // Get a larger batch for now
+        userApi.getUserStats(),
+      ]);
+
       // Only keep staff roles (ClinicStaff, Ophthalmologist)
-      const staffUsers = (data?.items || []).filter(
+      const staffUsers = (usersData?.items || []).filter(
         (u: User) => u.role === 'ClinicStaff' || u.role === 'Ophthalmologist'
       );
       setUsers(staffUsers);
+      setStats(statsData);
+    } catch (error) {
+      console.error('Failed to load staff data', error);
     } finally {
       setLoading(false);
     }
@@ -77,12 +86,20 @@ export default function StaffManagementPage() {
     loadData();
   }, [loadData]);
 
-  const totalStaff = users.length;
-  const activeStaff = users.filter(
-    (u) => u.status === 'Active' || u.status === 'active'
-  ).length;
+  // Use stats from API if available, fallback to local count
+  const totalStaff = stats
+    ? (stats.usersByRole?.ClinicStaff || 0) +
+      (stats.usersByRole?.Ophthalmologist || 0)
+    : users.length;
+  const activeStaff = stats
+    ? stats.activeUsers
+    : users.filter((u) => u.status === 'Active' || u.status === 'active')
+        .length;
   const pendingStaff = users.filter(
-    (u) => u.status === 'Pending' || (u as any).mustUpdateProfile
+    (u) =>
+      u.status === 'Pending' ||
+      (u as any).mustUpdateProfile ||
+      (u as any).mustChangePassword
   ).length;
 
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
@@ -211,14 +228,19 @@ export default function StaffManagementPage() {
         <PageHeader
           title="Internal Staff Management"
           description="Manage clinic staff, assign roles, and handle onboarding"
+          showLogo={true}
           actions={
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setIsCreateModalOpen(true)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20"
               >
-                <Plus className="w-4 h-4" />
-                Add New Staff
+                <img
+                  src={AURA_LOGO}
+                  alt="Aura"
+                  className="w-5 h-5 object-contain"
+                />
+                {t('SystemAdmin.staff.actions.addNew', 'Add New Staff')}
               </button>
             </div>
           }

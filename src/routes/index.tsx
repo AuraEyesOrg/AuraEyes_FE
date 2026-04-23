@@ -426,6 +426,12 @@ const Router = () => (
         />
         <Route path="/404" element={<LocalizedRedirect target="/404" />} />
         <Route
+          path="/system-admin/staff-management"
+          element={
+            <LocalizedRedirect target="/system-admin/staff-management" />
+          }
+        />
+        <Route
           path="/ophthalmologist/analytics"
           element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
         />
