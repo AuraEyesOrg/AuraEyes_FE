@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Eye,
-  Plus,
   Search,
   Filter,
   Clock,
@@ -339,13 +338,6 @@ export default function ScreeningPage() {
               )}
             </p>
           </div>
-          <button
-            onClick={() => navigate('/patient/screening/new')}
-            className="btn-primary flex items-center gap-2 self-start md:self-auto"
-          >
-            <Plus className="w-4 h-4" />
-            {t('PatientScreening.actions.newScreening', 'New Screening')}
-          </button>
         </div>
 
         {/* Stats Cards */}
@@ -506,13 +498,6 @@ export default function ScreeningPage() {
                   'Start your first retinal screening to detect potential issues early'
                 )}
               </p>
-              <button
-                onClick={() => navigate('/patient/screening/new')}
-                className="btn-primary flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                {t('PatientScreening.actions.newScreening', 'New Screening')}
-              </button>
             </div>
           ) : (
             <div className="divide-y divide-[var(--border-color)]">

@@ -1,7 +1,6 @@
 import {
   Calendar,
   FileText,
-  Upload,
   Eye,
   Wallet,
   MessageCircle,
@@ -311,11 +310,11 @@ export default function PatientDashboard() {
 
           <div className="flex flex-wrap items-center gap-4 w-full md:w-auto md:justify-end mt-4 md:mt-0">
             <Link
-              to="/patient/screening/new"
+              to="/patient/clinics"
               className="btn-primary flex items-center gap-2"
             >
-              <Upload className="w-4 h-4" />
-              {t('PatientDashboard.actions.newScreening')}
+              <Calendar className="w-4 h-4" />
+              {t('PatientDashboard.quickActions.bookAppointment')}
             </Link>
           </div>
         </header>
@@ -503,15 +502,7 @@ export default function PatientDashboard() {
                       {t('PatientDashboard.actions.openLatestSession')}
                     </Link>
                   </div>
-                ) : (
-                  <Link
-                    to="/patient/screening/new"
-                    className="btn-primary inline-flex items-center gap-2 self-center lg:self-end w-fit"
-                  >
-                    <Upload className="w-4 h-4" />
-                    {t('PatientDashboard.actions.uploadFirstScan')}
-                  </Link>
-                )}
+                ) : null}
               </div>
             </div>
           </section>
