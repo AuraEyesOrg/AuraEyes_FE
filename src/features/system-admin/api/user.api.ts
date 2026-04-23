@@ -10,6 +10,7 @@ import type {
   User,
   UserStats,
   PaginatedResponse,
+  UserRole,
 } from '../types/system-admin.types';
 
 export const userApi = {
@@ -20,9 +21,20 @@ export const userApi = {
     try {
       const response = await api.get<ApiResponse<PaginatedResponse<User>>>(
         API_ENDPOINTS.SYSTEM_ADMIN.USERS.LIST,
-        { params: { page, pageSize } }
+        { params: { pageNumber: page, pageSize } }
       );
-      return response.data.data;
+
+      const data = response.data.data;
+      if (data && data.items) {
+        data.items = data.items.map((u) => ({
+          ...u,
+          name: u.fullName || u.name,
+          role: (u.roles?.[0] as UserRole) || u.role,
+          lastLogin: u.lastLoginAt || u.lastLogin,
+        }));
+      }
+
+      return data;
     } catch (error) {
       console.error('Failed to fetch users:', error);
       throw error;
@@ -47,15 +59,7 @@ export const userApi = {
   /**
    * Update user role
    */
-  async updateUserRole(
-    id: string,
-    role:
-      | 'system_admin'
-      | 'organisation_admin'
-      | 'doctor'
-      | 'operator'
-      | 'analyst'
-  ) {
+  async updateUserRole(id: string, role: UserRole) {
     try {
       const response = await api.put<ApiResponse<User>>(
         API_ENDPOINTS.SYSTEM_ADMIN.USERS.UPDATE_ROLE(id),

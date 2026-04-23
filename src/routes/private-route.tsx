@@ -32,12 +32,19 @@ const PrivateRoute: React.FC<Props> = ({
     return <Navigate to={resolvePathWithLocale('/')} replace />;
   }
 
-  // Role check
-  if (
-    allowedRoles &&
-    allowedRoles.length > 0 &&
-    !allowedRoles.some((role) => user?.roles?.includes(role))
-  ) {
+  // Role check helper
+  const hasAnyRole = (roles: string[]) => {
+    if (!user?.roles) return false;
+    const normalizedUserRoles = user.roles.map((r) =>
+      r.toLowerCase().replace(/[\s_-]/g, '')
+    );
+    return roles.some((role) => {
+      const normalizedAllowedRole = role.toLowerCase().replace(/[\s_-]/g, '');
+      return normalizedUserRoles.includes(normalizedAllowedRole);
+    });
+  };
+
+  if (allowedRoles && allowedRoles.length > 0 && !hasAnyRole(allowedRoles)) {
     return <Navigate to={resolvePathWithLocale('/')} replace />;
   }
 
@@ -52,16 +59,15 @@ const PrivateRoute: React.FC<Props> = ({
     return <Navigate to={resolvePathWithLocale('/')} replace />;
   }
 
-  const isOrganisationAdmin =
-    user?.roles?.includes('OrgAdmin') || user?.roles?.includes('Organization');
-  const mustChangePassword = isOrganisationAdmin && user?.mustChangePassword;
+  const isClinicStaff = hasAnyRole(['ClinicStaff']);
+  const mustChangePassword = isClinicStaff && user?.mustChangePassword;
   const isOrganisationContractPath =
     normalizedPath === '/organisation/contract';
 
   const organisationContractQuery = useQuery({
     queryKey: ['organisation', 'my-contract', 'gate'],
     queryFn: organisationContractApi.getMyContract,
-    enabled: isOrganisationAdmin,
+    enabled: isClinicStaff,
     staleTime: 30_000,
     retry: 1,
   });
@@ -69,12 +75,12 @@ const PrivateRoute: React.FC<Props> = ({
   const hasActiveOrganisationContract =
     organisationContractQuery.data?.status === 'Active';
   const isOrgContractGateResolved =
-    !isOrganisationAdmin ||
+    !isClinicStaff ||
     organisationContractQuery.isSuccess ||
     organisationContractQuery.isError;
 
   if (
-    isOrganisationAdmin &&
+    isClinicStaff &&
     !isOrganisationContractPath &&
     !isOrgContractGateResolved
   ) {
@@ -90,7 +96,7 @@ const PrivateRoute: React.FC<Props> = ({
     new URLSearchParams(location.search).get('tab') === 'change-password';
 
   if (
-    isOrganisationAdmin &&
+    isClinicStaff &&
     !hasActiveOrganisationContract &&
     !isOrganisationContractPath
   ) {
@@ -113,7 +119,7 @@ const PrivateRoute: React.FC<Props> = ({
   }
 
   // Redirect unverified ophthalmologists to pending approval page
-  const isOphthalmologist = user?.roles?.includes('Ophthalmologist');
+  const isOphthalmologist = hasAnyRole(['Ophthalmologist']);
   const isPendingApproval = isOphthalmologist && isPendingVerification;
 
   if (

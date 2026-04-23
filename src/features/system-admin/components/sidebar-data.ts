@@ -49,6 +49,13 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
     icon: Users,
     items: [
       {
+        id: 'staff-management',
+        label: 'Staff Management',
+        path: '/system-admin/staff-management',
+        icon: Users,
+        requiredPermission: Permissions.UsersRead,
+      },
+      {
         id: 'organisations',
         label: 'Organisations',
         path: '/system-admin/organisations',

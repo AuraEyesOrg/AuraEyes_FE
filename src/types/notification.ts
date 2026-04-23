@@ -364,13 +364,15 @@ function readBoolean(
 }
 
 function getRoleHome(roles: string[]): string {
-  if (hasRole(roles, ['systemadmin', 'admin']))
-    return '/system-admin/dashboard';
-  if (hasRole(roles, ['orgadmin', 'organization']))
-    return '/organisation/dashboard';
-  if (hasRole(roles, ['ophthalmologist', 'doctor']))
+  const normalizedRoles = roles.map((r) =>
+    r.toLowerCase().replace(/[\s_-]/g, '')
+  );
+
+  if (normalizedRoles.includes('systemadmin')) return '/system-admin/dashboard';
+  if (normalizedRoles.includes('clinicstaff')) return '/organisation/dashboard';
+  if (normalizedRoles.includes('ophthalmologist'))
     return '/ophthalmologist/dashboard';
-  if (hasRole(roles, ['patient'])) return '/patient/notifications';
+  if (normalizedRoles.includes('patient')) return '/patient/notifications';
 
   return '/notifications/view-all';
 }
@@ -414,16 +416,20 @@ export function getNotificationRoute(
   const transactionId =
     readString(payload, 'transactionId') || fallbackReferenceId;
 
-  const isSystemAdmin = hasRole(normalizedRoles, ['systemadmin', 'admin']);
-  const isOrgAdmin = hasRole(normalizedRoles, ['orgadmin', 'organization']);
-  const isDoctor = hasRole(normalizedRoles, ['ophthalmologist', 'doctor']);
-  const isPatient = hasRole(normalizedRoles, ['patient']);
+  const isSystemAdmin = hasRole(roles, ['SystemAdmin', 'Admin']);
+  const isClinicStaff = hasRole(roles, [
+    'ClinicStaff',
+    'OrgAdmin',
+    'Organization',
+  ]);
+  const isOphthalmologist = hasRole(roles, ['Ophthalmologist', 'Doctor']);
+  const isPatient = hasRole(roles, ['Patient']);
 
   const fallbackHome = getRoleHome(normalizedRoles);
 
   switch (normalizedType) {
     case NotificationType.AiScreeningCompleted: {
-      if (isOrgAdmin && screeningId) {
+      if (isClinicStaff && screeningId) {
         return appendIdQuery(
           '/organisation/screening/result',
           'id',
@@ -433,7 +439,7 @@ export function getNotificationRoute(
 
       const base = isPatient
         ? '/patient/screening'
-        : isDoctor
+        : isOphthalmologist
           ? '/ophthalmologist/screenings'
           : isSystemAdmin
             ? '/system-admin/dashboard'
@@ -445,11 +451,11 @@ export function getNotificationRoute(
     case NotificationType.ConsultationResultProvided:
     case NotificationType.NewConsultationRequest:
     case NotificationType.NewPatientMessage: {
-      const base = isDoctor
+      const base = isOphthalmologist
         ? '/ophthalmologist/consultations'
         : isPatient
           ? '/patient/chat'
-          : isOrgAdmin
+          : isClinicStaff
             ? '/organisation/calendar'
             : isSystemAdmin
               ? '/system-admin/verifications'
@@ -462,7 +468,7 @@ export function getNotificationRoute(
       const aiScreeningId = readString(payload, 'aiScreeningId', 'screeningId');
       const sharedMedicalData = readBoolean(payload, 'sharedMedicalData');
 
-      if (isDoctor && aiScreeningId && sharedMedicalData) {
+      if (isOphthalmologist && aiScreeningId && sharedMedicalData) {
         return `/ophthalmologist/screenings/${encodeURIComponent(aiScreeningId)}/review`;
       }
 
@@ -478,9 +484,9 @@ export function getNotificationRoute(
         'slotId',
         'appointmentId'
       );
-      const base = isDoctor
+      const base = isOphthalmologist
         ? '/ophthalmologist/appointments'
-        : isOrgAdmin
+        : isClinicStaff
           ? '/organisation/calendar'
           : isPatient
             ? '/patient/appointments'
@@ -506,9 +512,9 @@ export function getNotificationRoute(
     case NotificationType.WalletPaymentProcessed: {
       const base = isPatient
         ? '/patient/wallet'
-        : isOrgAdmin
+        : isClinicStaff
           ? '/organisation/wallet'
-          : isDoctor
+          : isOphthalmologist
             ? '/ophthalmologist/wallet'
             : isSystemAdmin
               ? '/system-admin/dashboard'
@@ -563,17 +569,17 @@ export function getNotificationRoute(
       if (isVerificationSubmittedAction) {
         return isSystemAdmin
           ? '/system-admin/verifications'
-          : isDoctor
+          : isOphthalmologist
             ? '/ophthalmologist/settings'
-            : isOrgAdmin
+            : isClinicStaff
               ? '/organisation/contract'
               : fallbackHome;
       }
 
       if (isVerificationReviewAction) {
-        return isDoctor
+        return isOphthalmologist
           ? '/ophthalmologist/settings'
-          : isOrgAdmin
+          : isClinicStaff
             ? '/organisation/contract'
             : isSystemAdmin
               ? '/system-admin/verifications'
@@ -581,9 +587,9 @@ export function getNotificationRoute(
       }
 
       if (isContractActivatedAction) {
-        return isDoctor
+        return isOphthalmologist
           ? '/ophthalmologist/contract'
-          : isOrgAdmin
+          : isClinicStaff
             ? '/organisation/contract'
             : fallbackHome;
       }
@@ -591,9 +597,9 @@ export function getNotificationRoute(
       if (isVerificationFlow) {
         return isSystemAdmin
           ? '/system-admin/verifications'
-          : isDoctor
+          : isOphthalmologist
             ? '/ophthalmologist/settings'
-            : isOrgAdmin
+            : isClinicStaff
               ? '/organisation/contract'
               : fallbackHome;
       }

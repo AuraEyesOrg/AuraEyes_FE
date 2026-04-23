@@ -76,8 +76,20 @@ const normalizeAuthUser = (user: AuthUser): AuthUser => {
   const uploadedAvatarUrl = resolveAvatarUrl(user.uploadedAvatarUrl) ?? null;
   const providerAvatarUrl = resolveAvatarUrl(user.providerAvatarUrl) ?? null;
 
+  // Normalize roles to match frontend expectations (PascalCase)
+  const normalizedRoles = (user.roles ?? []).map((role) => {
+    const r = role.toLowerCase().replace(/[\s_-]/g, '');
+    if (r === 'systemadmin' || r === 'admin') return 'SystemAdmin';
+    if (r === 'ophthalmologist' || r === 'doctor') return 'Ophthalmologist';
+    if (r === 'clinicstaff' || r === 'orgadmin' || r === 'organization')
+      return 'ClinicStaff';
+    if (r === 'patient') return 'Patient';
+    return role; // Fallback
+  });
+
   return {
     ...user,
+    roles: normalizedRoles,
     uploadedAvatarUrl,
     providerAvatarUrl,
     avatarUrl:
