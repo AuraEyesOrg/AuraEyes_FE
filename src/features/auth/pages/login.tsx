@@ -11,7 +11,6 @@ import {
   Shield,
   Zap,
   Activity,
-  Stethoscope,
   AlertCircle,
   CheckCircle,
   Loader2,
@@ -1160,31 +1159,6 @@ const LoginPage = () => {
                       </button>
                     </div>
                   </form>
-
-                  <div className="p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl border-2 border-primary/20">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-primary/20 rounded-lg">
-                        <Stethoscope className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                          {t('AuthPages.login.registerForm.doctorCardTitle')}
-                        </h3>
-                        <p className="text-xs text-gray-600 mb-3">
-                          {t(
-                            'AuthPages.login.registerForm.doctorCardDescription'
-                          )}
-                        </p>
-                        <Link
-                          to={toLocalizedAuthPath('/register-doctor')}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-primary text-primary rounded-lg text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 group"
-                        >
-                          <Stethoscope className="h-4 w-4" />
-                          {t('AuthPages.login.registerForm.registerDoctor')}
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
 
                   {/* Footer Note */}
                   <div className="pt-6 border-t border-gray-100">

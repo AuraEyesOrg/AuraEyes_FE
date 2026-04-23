@@ -61,9 +61,6 @@ const ResetPasswordPage = lazy(
 const ForceChangePasswordPage = lazy(
   () => import('@/features/auth/pages/force-change-password')
 );
-const RegisterDoctorPage = lazy(
-  () => import('@/features/auth/pages/register-doctor')
-);
 const RegisterOrganisationPage = lazy(
   () => import('@/features/auth/pages/register-organisation')
 );
@@ -453,10 +450,6 @@ const Router = () => (
         <Route
           path="/:locale/reset-password"
           element={<LocalizedPublicRoute element={<ResetPasswordPage />} />}
-        />
-        <Route
-          path="/:locale/register-doctor"
-          element={<LocalizedPublicRoute element={<RegisterDoctorPage />} />}
         />
         <Route
           path="/:locale/register-organisation"
@@ -1195,14 +1188,6 @@ const Router = () => (
           element={
             <PublicRoute>
               <ResetPasswordPage />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/register-doctor"
-          element={
-            <PublicRoute>
-              <RegisterDoctorPage />
             </PublicRoute>
           }
         />

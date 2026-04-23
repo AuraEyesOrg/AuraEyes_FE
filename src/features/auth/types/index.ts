@@ -25,38 +25,6 @@ export interface RegisterPatientRequest {
   gender?: number;
 }
 
-export interface CredentialItemRequest {
-  name: string;
-  degreeLevel?: DegreeLevel;
-  issuingAuthority?: string;
-  issuedDate: string;
-  expiryDate?: string;
-  file: File;
-}
-
-export type DegreeLevel =
-  | 'Bachelor'
-  | 'Master'
-  | 'Doctor'
-  | 'AssociateProfessor'
-  | 'Professor';
-
-export interface RegisterOphthalmologistRequest {
-  email: string;
-  password: string;
-  confirmPassword: string;
-  fullName: string;
-  phone?: string;
-  bio?: string;
-  yearsOfExperience: number;
-  employmentType: 'FullTime' | 'PartTime';
-  workingHoursPerWeek?: number;
-  expectedMonthlySalary?: number;
-  organizationId?: string;
-  degrees: CredentialItemRequest[];
-  certificates: CredentialItemRequest[];
-}
-
 export interface RegisterOrganisationRequest {
   contactEmail: string;
   contactFullName: string;
@@ -181,7 +149,6 @@ export interface RegisterFormData {
   agreeTerms: boolean;
 }
 export { default as ConfirmEmailPage } from '../pages/confirm-email';
-export { default as RegisterDoctorPage } from '../pages/register-doctor';
 export interface TwoFactorVerifyFormData {
   code: string;
 }
