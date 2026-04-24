@@ -1,10 +1,8 @@
 import { type ReactElement } from 'react';
 import { Navigate, useLocation } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth-store';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { stripLocaleFromPathname } from '@/i18n/locales';
-import { organisationContractApi } from '@/features/organisation/api/contract.api';
 
 interface Props {
   children: ReactElement;
@@ -25,58 +23,6 @@ const PublicRoute: React.FC<Props> = ({ children }) => {
     normalizedPath === '/email-verification-required'
   ) {
     return children;
-  }
-
-  const isOrganisationAdmin =
-    user?.roles?.includes('OrgAdmin') || user?.roles?.includes('Organization');
-
-  const organisationContractQuery = useQuery({
-    queryKey: ['organisation', 'my-contract', 'gate'],
-    queryFn: organisationContractApi.getMyContract,
-    enabled: isOrganisationAdmin,
-    staleTime: 30_000,
-    retry: 1,
-  });
-
-  const hasActiveOrganisationContract =
-    organisationContractQuery.data?.status === 'Active';
-  const isOrgContractGateResolved =
-    !isOrganisationAdmin ||
-    organisationContractQuery.isSuccess ||
-    organisationContractQuery.isError;
-
-  if (isOrganisationAdmin && !isOrgContractGateResolved) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
-      </div>
-    );
-  }
-
-  if (isOrganisationAdmin && !hasActiveOrganisationContract) {
-    return (
-      <Navigate to={resolvePathWithLocale('/organisation/contract')} replace />
-    );
-  }
-
-  const isOphthalmologist = user?.roles?.includes('Ophthalmologist');
-  const isPendingVerification =
-    user?.verificationStatus === 'PendingVerification' ||
-    (user?.isVerified === false &&
-      (!user?.verificationStatus ||
-        user?.verificationStatus === 'PendingVerification'));
-
-  if (isOphthalmologist && isPendingVerification) {
-    if (normalizedPath === '/ophthalmologist/pending-approval') {
-      return children;
-    }
-
-    return (
-      <Navigate
-        to={resolvePathWithLocale('/ophthalmologist/pending-approval')}
-        replace
-      />
-    );
   }
 
   const roles = user?.roles ?? [];

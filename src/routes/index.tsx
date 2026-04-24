@@ -65,11 +65,6 @@ const RegisterOrganisationPage = lazy(
   () => import('@/features/auth/pages/register-organisation')
 );
 
-// Pending Approval page
-const PendingApprovalPage = lazy(
-  () => import('@/features/auth/pages/pending-approval')
-);
-
 // Patient pages
 const PatientDashboard = lazy(
   () => import('@/features/patient/pages/dashboard')
@@ -216,12 +211,7 @@ const OphthalmologistConsultationsPage = lazy(
 const OphthalmologistScreeningReviewPage = lazy(
   () => import('@/features/ophthalmologist/pages/screening-review')
 );
-const OphthalmologistSlotManagementPage = lazy(
-  () => import('@/features/ophthalmologist/pages/slot-management')
-);
-const OphthalmologistContractPage = lazy(
-  () => import('@/features/ophthalmologist/pages/contract')
-);
+
 const OphthalmologistWalletPage = lazy(
   () => import('@/features/ophthalmologist/pages/wallet')
 );
@@ -524,21 +514,6 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/ophthalmologist/pending-approval"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Ophthalmologist']}
-              element={<PendingApprovalPage />}
-            />
-          }
-        />
-        <Route
-          path="/:locale/pending-approval"
-          element={
-            <LocalizedRedirect target="/ophthalmologist/pending-approval" />
-          }
-        />
-        <Route
           path="/:locale/ophthalmologist/analytics"
           element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
         />
@@ -571,15 +546,6 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['Ophthalmologist']}
               element={<OphthalmologistScreeningsPage />}
-            />
-          }
-        />
-        <Route
-          path="/:locale/ophthalmologist/appointments"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Ophthalmologist']}
-              element={<OphthalmologistAppointmentsPage />}
             />
           }
         />
@@ -620,33 +586,6 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/ophthalmologist/schedules"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Ophthalmologist']}
-              element={<OphthalmologistSlotManagementPage />}
-            />
-          }
-        />
-        <Route
-          path="/:locale/ophthalmologist/slot-management"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Ophthalmologist']}
-              element={<OphthalmologistSlotManagementPage />}
-            />
-          }
-        />
-        <Route
-          path="/:locale/ophthalmologist/contract"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Ophthalmologist']}
-              element={<OphthalmologistContractPage />}
-            />
-          }
-        />
-        <Route
           path="/:locale/ophthalmologist/wallet"
           element={
             <LocalizedPrivateRoute
@@ -661,15 +600,6 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['Ophthalmologist']}
               element={<OphthalmologistLeaveRequestsPage />}
-            />
-          }
-        />
-        <Route
-          path="/:locale/ophthalmologist/employment-type-change-requests"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Ophthalmologist']}
-              element={<OphthalmologistEmploymentTypeChangeRequestsPage />}
             />
           }
         />
@@ -1357,17 +1287,11 @@ const Router = () => (
         />
         <Route
           path="/ophthalmologist/pending-approval"
-          element={
-            <PrivateRoute allowedRoles={['Ophthalmologist']}>
-              <PendingApprovalPage />
-            </PrivateRoute>
-          }
+          element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
         />
         <Route
           path="/pending-approval"
-          element={
-            <LocalizedRedirect target="/ophthalmologist/pending-approval" />
-          }
+          element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
         />
 
         {/* ============ PATIENT ROUTES ============ */}
@@ -1824,28 +1748,8 @@ const Router = () => (
           }
         />
         <Route
-          path="/ophthalmologist/schedules"
-          element={
-            <PrivateRoute allowedRoles={['Ophthalmologist']}>
-              <OphthalmologistSlotManagementPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/ophthalmologist/slot-management"
-          element={
-            <PrivateRoute allowedRoles={['Ophthalmologist']}>
-              <OphthalmologistSlotManagementPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
           path="/ophthalmologist/contract"
-          element={
-            <PrivateRoute allowedRoles={['Ophthalmologist']}>
-              <OphthalmologistContractPage />
-            </PrivateRoute>
-          }
+          element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
         />
         <Route
           path="/ophthalmologist/leave-requests"
