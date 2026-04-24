@@ -245,6 +245,15 @@ export interface CreateScheduleTemplateRequest {
   cost?: number;
 }
 
+export interface UpdateScheduleTemplateRequest {
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  slotDuration: number;
+  maxCapacity?: number;
+  isActive?: boolean;
+}
+
 // ============ QUERY PARAMS ============
 
 export interface GetAppointmentSlotsParams {

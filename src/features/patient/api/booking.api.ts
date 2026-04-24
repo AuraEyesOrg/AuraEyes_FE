@@ -22,6 +22,7 @@ import type {
   BlockSlotRequest,
   UnblockSlotRequest,
   AllowedPriceRangeDto,
+  UpdateScheduleTemplateRequest,
 } from '@/types/schedule';
 import type { PagedResult } from '@/features/patient/types';
 
@@ -260,6 +261,20 @@ export const createScheduleTemplate = async (
     payload
   );
   return unwrapApiData<ScheduleTemplateDto>(response.data);
+};
+
+/** Update a schedule template */
+export const updateScheduleTemplate = async (
+  templateId: string,
+  request: UpdateScheduleTemplateRequest
+): Promise<void> => {
+  await api.put(API_ENDPOINTS.SCHEDULE_TEMPLATES.UPDATE(templateId), {
+    dayOfWeek: request.dayOfWeek,
+    startTime: request.startTime,
+    endTime: request.endTime,
+    slotDuration: request.slotDuration,
+    maxCapacity: request.maxCapacity,
+  });
 };
 
 /** Delete a schedule template */

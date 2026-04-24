@@ -1,21 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { toast } from 'react-toastify';
 import { X, Clock, Calendar, Users } from 'lucide-react';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import schedulingApi from '../api/scheduling.api';
-import { DAY_OF_WEEK_LABELS } from '@/types/schedule';
+import { DAY_OF_WEEK_LABELS, ScheduleTemplateDto } from '@/types/schedule';
 
 interface CreateTemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  editTemplate?: ScheduleTemplateDto | null;
 }
+
+const getDayOfWeekNumber = (dayName: string) => {
+  const index = Object.values(DAY_OF_WEEK_LABELS).indexOf(dayName);
+  return index !== -1 ? parseInt(Object.keys(DAY_OF_WEEK_LABELS)[index]) : 1;
+};
 
 export default function CreateTemplateModal({
   isOpen,
   onClose,
   onSuccess,
+  editTemplate,
 }: CreateTemplateModalProps) {
   const { t } = useSafeTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,6 +35,26 @@ export default function CreateTemplateModal({
     maxCapacity: 1,
   });
 
+  useEffect(() => {
+    if (editTemplate) {
+      setFormData({
+        dayOfWeek: getDayOfWeekNumber(editTemplate.dayOfWeek),
+        startTime: editTemplate.startTime.substring(0, 5),
+        endTime: editTemplate.endTime.substring(0, 5),
+        slotDuration: editTemplate.slotDuration,
+        maxCapacity: editTemplate.maxCapacity,
+      });
+    } else {
+      setFormData({
+        dayOfWeek: 1,
+        startTime: '08:00',
+        endTime: '17:00',
+        slotDuration: 30,
+        maxCapacity: 1,
+      });
+    }
+  }, [editTemplate, isOpen]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,27 +62,45 @@ export default function CreateTemplateModal({
     setIsSubmitting(true);
 
     try {
-      await schedulingApi.createTemplate({
+      const payload = {
         ...formData,
         startTime: `${formData.startTime}:00`,
         endTime: `${formData.endTime}:00`,
-      });
-      toast.success(
-        t(
-          'SystemAdmin.scheduling.toasts.createSuccess',
-          'Schedule template created successfully.'
-        )
-      );
+      };
+
+      if (editTemplate) {
+        await schedulingApi.updateTemplate(editTemplate.id, payload);
+        toast.success(
+          t(
+            'SystemAdmin.scheduling.toasts.updateSuccess',
+            'Schedule template updated successfully.'
+          )
+        );
+      } else {
+        await schedulingApi.createTemplate(payload);
+        toast.success(
+          t(
+            'SystemAdmin.scheduling.toasts.createSuccess',
+            'Schedule template created successfully.'
+          )
+        );
+      }
+
       onSuccess();
       onClose();
     } catch (error) {
       toast.error(
         extractApiErrorMessage(
           error,
-          t(
-            'SystemAdmin.scheduling.toasts.createError',
-            'Failed to create template.'
-          )
+          editTemplate
+            ? t(
+                'SystemAdmin.scheduling.toasts.updateError',
+                'Failed to update template.'
+              )
+            : t(
+                'SystemAdmin.scheduling.toasts.createError',
+                'Failed to create template.'
+              )
         )
       );
     } finally {
@@ -68,10 +113,15 @@ export default function CreateTemplateModal({
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 dark:border-slate-800">
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-            {t(
-              'SystemAdmin.scheduling.createModal.title',
-              'Create Slot Template'
-            )}
+            {editTemplate
+              ? t(
+                  'SystemAdmin.scheduling.createModal.editTitle',
+                  'Edit Slot Template'
+                )
+              : t(
+                  'SystemAdmin.scheduling.createModal.title',
+                  'Create Slot Template'
+                )}
           </h3>
           <button
             onClick={onClose}
@@ -195,7 +245,9 @@ export default function CreateTemplateModal({
             >
               {isSubmitting
                 ? t('common.saving', 'Saving...')
-                : t('common.save', 'Save Template')}
+                : editTemplate
+                  ? t('common.update', 'Update Template')
+                  : t('common.save', 'Save Template')}
             </button>
           </div>
         </form>
