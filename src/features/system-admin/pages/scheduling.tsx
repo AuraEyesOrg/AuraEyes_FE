@@ -389,43 +389,131 @@ export default function SystemAdminScheduling() {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {slots.map((slot) => (
-                      <div
-                        key={slot.id}
-                        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow group"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col items-center justify-center border border-slate-100 dark:border-slate-700/50">
-                            <Clock className="w-4 h-4 text-slate-400 mb-1" />
-                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300 leading-none">
-                              {slot.startTime.substring(0, 5)}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-900 dark:text-white mb-1">
-                              Clinic Slot
-                            </p>
-                            <p className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 uppercase tracking-wider">
-                              <Users className="w-3 h-3" />
-                              Capacity: {slot.bookedCount} / {slot.maxCapacity}
-                            </p>
-                          </div>
-                        </div>
+                  <div className="space-y-3">
+                    {slots.map((slot) => {
+                      // Determine if the slot time has already passed (using local time)
+                      const now = new Date();
+                      const slotDateStr = `${slot.date}T${slot.startTime}`;
+                      const slotDateTime = new Date(slotDateStr);
+                      const isPast = slotDateTime < now;
+                      const isBlocked = slot.status === 'Blocked';
+                      const isFullyBooked =
+                        slot.bookedCount >= slot.maxCapacity;
+                      const hasBookings = slot.bookedCount > 0;
 
+                      // Derived display state
+                      let statusLabel = slot.status;
+                      let statusClass = '';
+                      let cardClass = '';
+                      let timeClass = '';
+
+                      if (isBlocked && hasBookings) {
+                        // Past but had/has booking — show as "Attended"
+                        statusLabel = 'Attended';
+                        statusClass =
+                          'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400';
+                        cardClass = 'border-blue-100 dark:border-blue-900/30';
+                        timeClass = 'text-blue-600 dark:text-blue-400';
+                      } else if (isBlocked) {
+                        // Past, no booking — expired
+                        statusLabel = isPast ? 'Expired' : 'Blocked';
+                        statusClass =
+                          'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500';
+                        cardClass =
+                          'border-slate-100 dark:border-slate-800 opacity-60';
+                        timeClass = 'text-slate-400';
+                      } else if (isPast && hasBookings) {
+                        // Available status but time passed with booking (job hasn't run yet)
+                        statusLabel = 'Attended';
+                        statusClass =
+                          'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400';
+                        cardClass = 'border-blue-100 dark:border-blue-900/30';
+                        timeClass = 'text-blue-600 dark:text-blue-400';
+                      } else if (isPast) {
+                        // Available but time passed, no booking (job hasn't cleaned yet)
+                        statusLabel = 'Expired';
+                        statusClass =
+                          'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500';
+                        cardClass =
+                          'border-slate-100 dark:border-slate-800 opacity-60';
+                        timeClass = 'text-slate-400';
+                      } else if (isFullyBooked) {
+                        statusLabel = 'Full';
+                        statusClass =
+                          'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400';
+                        cardClass =
+                          'border-orange-100 dark:border-orange-900/30';
+                        timeClass = 'text-orange-600 dark:text-orange-400';
+                      } else if (hasBookings) {
+                        statusLabel = 'Partial';
+                        statusClass =
+                          'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400';
+                        cardClass = '';
+                        timeClass = 'text-amber-600 dark:text-amber-400';
+                      } else {
+                        // Available, future
+                        statusLabel = 'Available';
+                        statusClass =
+                          'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400';
+                        cardClass =
+                          'border-emerald-100 dark:border-emerald-900/30';
+                        timeClass = 'text-emerald-600 dark:text-emerald-400';
+                      }
+
+                      return (
                         <div
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider ${
-                            slot.status === 'Available'
-                              ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
-                              : slot.status === 'Booked'
-                                ? 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'
-                                : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                          }`}
+                          key={slot.id}
+                          className={`bg-white dark:bg-slate-900 rounded-2xl border p-4 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow group ${cardClass || 'border-slate-200 dark:border-slate-800'}`}
                         >
-                          {slot.status}
+                          <div className="flex items-center gap-4">
+                            <div
+                              className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center border ${isBlocked || (isPast && !hasBookings) ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700/50' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700/50'}`}
+                            >
+                              <Clock
+                                className={`w-3.5 h-3.5 mb-0.5 ${timeClass || 'text-slate-400'}`}
+                              />
+                              <span
+                                className={`text-xs font-bold leading-none ${timeClass || 'text-slate-700 dark:text-slate-300'}`}
+                              >
+                                {slot.startTime.substring(0, 5)}
+                              </span>
+                              <span className="text-[9px] text-slate-400 leading-none mt-0.5">
+                                {slot.endTime.substring(0, 5)}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="font-bold text-slate-900 dark:text-white text-sm">
+                                  Clinic Slot
+                                </p>
+                                {isPast && (
+                                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                    Past
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 uppercase tracking-wider">
+                                <Users className="w-3 h-3" />
+                                {slot.bookedCount} / {slot.maxCapacity} booked
+                                {slot.availableCapacity > 0 &&
+                                  !isPast &&
+                                  !isBlocked && (
+                                    <span className="text-emerald-500">
+                                      · {slot.availableCapacity} open
+                                    </span>
+                                  )}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider ${statusClass}`}
+                          >
+                            {statusLabel}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
