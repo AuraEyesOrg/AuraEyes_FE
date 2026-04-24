@@ -13,6 +13,7 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
+  Pencil,
 } from 'lucide-react';
 import {
   format,
@@ -30,12 +31,17 @@ import CreateTemplateModal from '../components/CreateTemplateModal';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import Spinner from '@/components/ui/spinner';
 
+import { ScheduleTemplateDto } from '@/types/schedule';
+
 type Tab = 'appointments' | 'templates';
 
 export default function SystemAdminScheduling() {
   const { t } = useSafeTranslation();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editTemplate, setEditTemplate] = useState<ScheduleTemplateDto | null>(
+    null
+  );
   const [activeTab, setActiveTab] = useState<Tab>('appointments');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(
@@ -190,7 +196,10 @@ export default function SystemAdminScheduling() {
                   )}
                 </button>
                 <button
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={() => {
+                    setEditTemplate(null);
+                    setIsModalOpen(true);
+                  }}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-medium transition-all shadow-lg shadow-primary-500/20"
                 >
                   <Plus className="w-4 h-4" />
@@ -497,14 +506,25 @@ export default function SystemAdminScheduling() {
                             </div>
                           </div>
                         </div>
-                        <button
-                          onClick={() =>
-                            deleteTemplateMutation.mutate(template.id)
-                          }
-                          className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                          <button
+                            onClick={() => {
+                              setEditTemplate(template);
+                              setIsModalOpen(true);
+                            }}
+                            className="p-2 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:text-primary-400 dark:hover:bg-primary-900/20 transition-all"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() =>
+                              deleteTemplateMutation.mutate(template.id)
+                            }
+                            className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
@@ -557,12 +577,16 @@ export default function SystemAdminScheduling() {
 
       <CreateTemplateModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditTemplate(null);
+        }}
         onSuccess={() =>
           queryClient.invalidateQueries({
             queryKey: ['system-admin', 'schedule-templates'],
           })
         }
+        editTemplate={editTemplate}
       />
     </div>
   );

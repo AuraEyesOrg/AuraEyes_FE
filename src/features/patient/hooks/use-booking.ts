@@ -21,6 +21,7 @@ import {
   getAllowedPriceRange,
   getScheduleTemplates,
   createScheduleTemplate,
+  updateScheduleTemplate,
   deleteScheduleTemplate,
 } from '../api/booking.api';
 import type {
@@ -32,6 +33,7 @@ import type {
   BlockSlotRequest,
   UnblockSlotRequest,
   CreateScheduleTemplateRequest,
+  UpdateScheduleTemplateRequest,
 } from '@/types/schedule';
 
 // ============ QUERY KEYS ============
@@ -215,6 +217,23 @@ export const useCreateScheduleTemplate = () => {
   return useMutation({
     mutationFn: (request: CreateScheduleTemplateRequest) =>
       createScheduleTemplate(request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: bookingKeys.templates });
+    },
+  });
+};
+
+/** Update a schedule template */
+export const useUpdateScheduleTemplate = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      templateId,
+      request,
+    }: {
+      templateId: string;
+      request: UpdateScheduleTemplateRequest;
+    }) => updateScheduleTemplate(templateId, request),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: bookingKeys.templates });
     },

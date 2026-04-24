@@ -230,6 +230,14 @@ export interface CreateScheduleTemplateRequest {
   maxCapacity?: number;
 }
 
+export interface UpdateScheduleTemplateRequest {
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  slotDuration: number;
+  maxCapacity?: number;
+}
+
 // ============ QUERY PARAMS ============
 
 export interface GetAppointmentSlotsParams {

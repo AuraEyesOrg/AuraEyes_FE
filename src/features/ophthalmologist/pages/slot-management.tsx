@@ -13,6 +13,7 @@ import {
   Power,
   PowerOff,
   Sparkles,
+  Pencil,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import ConfirmModal from '@/components/ui/confirm-modal';
@@ -25,6 +26,7 @@ import {
   useBlockSlot,
   useUnblockSlot,
   useCreateScheduleTemplate,
+  useUpdateScheduleTemplate,
   useDeleteScheduleTemplate,
   useAllowedPriceRange,
 } from '@/features/patient/hooks/use-booking';
@@ -57,6 +59,29 @@ const formatTemplateCost = (
   }
 
   return t('Ophthalmologist.slotManagement.notConfigured', 'Not configured');
+};
+
+const toTimeInputValue = (time: string): string =>
+  time.length >= 5 ? time.slice(0, 5) : time;
+
+const normalizeDayOfWeekValue = (value: string): number => {
+  const numeric = Number(value);
+  if (Number.isInteger(numeric) && numeric >= 0 && numeric <= 6) {
+    return numeric;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  const map: Record<string, number> = {
+    sunday: 0,
+    monday: 1,
+    tuesday: 2,
+    wednesday: 3,
+    thursday: 4,
+    friday: 5,
+    saturday: 6,
+  };
+
+  return map[normalized] ?? 1;
 };
 
 const getSlotStatusColor = (status: string): string => {
@@ -193,6 +218,8 @@ export default function SlotManagementPage() {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] =
     useState<ScheduleTemplateDto | null>(null);
+  const [editingTemplate, setEditingTemplate] =
+    useState<ScheduleTemplateDto | null>(null);
   const [templateToDeleteId, setTemplateToDeleteId] = useState<string | null>(
     null
   );
@@ -254,7 +281,9 @@ export default function SlotManagementPage() {
   const blockMutation = useBlockSlot();
   const unblockMutation = useUnblockSlot();
   const createTemplateMutation = useCreateScheduleTemplate();
+  const updateTemplateMutation = useUpdateScheduleTemplate();
   const deleteTemplateMutation = useDeleteScheduleTemplate();
+  const isEditingTemplate = editingTemplate !== null;
 
   const suggestedPartTimeCost = useMemo(() => {
     if (!allowedPriceRange) {
@@ -302,7 +331,12 @@ export default function SlotManagementPage() {
   }, [allowedPriceRange, isPartTimeDoctor, t, templateCost]);
 
   useEffect(() => {
-    if (!showTemplateModal || !isPartTimeDoctor || !allowedPriceRange) {
+    if (
+      !showTemplateModal ||
+      isEditingTemplate ||
+      !isPartTimeDoctor ||
+      !allowedPriceRange
+    ) {
       return;
     }
 
@@ -319,10 +353,37 @@ export default function SlotManagementPage() {
     }
   }, [
     allowedPriceRange,
+    isEditingTemplate,
     isPartTimeDoctor,
     showTemplateModal,
     suggestedPartTimeCost,
   ]);
+
+  const closeTemplateModal = useCallback(() => {
+    setShowTemplateModal(false);
+    setEditingTemplate(null);
+  }, []);
+
+  const openCreateTemplateModal = useCallback(() => {
+    setEditingTemplate(null);
+    setTemplateDayOfWeek(1);
+    setTemplateStartTime('18:00');
+    setTemplateEndTime('21:00');
+    setTemplateSlotDuration(30);
+    setTemplateSlotType(SlotType.Consultation);
+    setTemplateCost(String(suggestedPartTimeCost ?? 200000));
+    setShowTemplateModal(true);
+  }, [suggestedPartTimeCost]);
+
+  const openEditTemplateModal = useCallback((template: ScheduleTemplateDto) => {
+    setEditingTemplate(template);
+    setTemplateDayOfWeek(normalizeDayOfWeekValue(String(template.dayOfWeek)));
+    setTemplateStartTime(toTimeInputValue(template.startTime));
+    setTemplateEndTime(toTimeInputValue(template.endTime));
+    setTemplateSlotDuration(template.slotDuration);
+    setTemplateSlotType(SlotType.Consultation);
+    setShowTemplateModal(true);
+  }, []);
 
   const slots = slotsData?.items ?? [];
 
@@ -462,7 +523,7 @@ export default function SlotManagementPage() {
     [doctorId, unblockMutation, t]
   );
 
-  const handleCreateTemplate = useCallback(() => {
+  const handleSaveTemplate = useCallback(() => {
     if (isFullTimeDoctor) {
       ophthalToast.error(
         t(
@@ -473,7 +534,7 @@ export default function SlotManagementPage() {
       return;
     }
 
-    if (isPartTimeDoctor && pricingRangeLoading) {
+    if (!isEditingTemplate && isPartTimeDoctor && pricingRangeLoading) {
       ophthalToast.error(
         t(
           'Ophthalmologist.slotManagement.pricing.rangeLoading',
@@ -483,7 +544,7 @@ export default function SlotManagementPage() {
       return;
     }
 
-    if (isPartTimeDoctor && pricingRangeError) {
+    if (!isEditingTemplate && isPartTimeDoctor && pricingRangeError) {
       ophthalToast.error(
         t(
           'Ophthalmologist.slotManagement.pricing.rangeLoadFailed',
@@ -493,8 +554,47 @@ export default function SlotManagementPage() {
       return;
     }
 
-    if (templateCostValidationMessage) {
+    if (!isEditingTemplate && templateCostValidationMessage) {
       ophthalToast.error(templateCostValidationMessage);
+      return;
+    }
+
+    if (editingTemplate) {
+      updateTemplateMutation.mutate(
+        {
+          templateId: editingTemplate.id,
+          request: {
+            dayOfWeek: templateDayOfWeek,
+            startTime: `${templateStartTime}:00`,
+            endTime: `${templateEndTime}:00`,
+            slotDuration: templateSlotDuration,
+            maxCapacity: 1,
+          },
+        },
+        {
+          onSuccess: () => {
+            ophthalToast.success(
+              t(
+                'Ophthalmologist.slotManagement.messages.templateUpdated',
+                'Template updated successfully.'
+              )
+            );
+            closeTemplateModal();
+          },
+          onError: (err) => {
+            ophthalToast.error(
+              extractApiErrorMessage(
+                err,
+                t(
+                  'Ophthalmologist.slotManagement.errors.failedUpdateTemplate',
+                  'Failed to update schedule template.'
+                )
+              )
+            );
+          },
+        }
+      );
+
       return;
     }
 
@@ -519,14 +619,7 @@ export default function SlotManagementPage() {
               'Template created successfully.'
             )
           );
-          setShowTemplateModal(false);
-          // Reset form
-          setTemplateDayOfWeek(1);
-          setTemplateStartTime('18:00');
-          setTemplateEndTime('21:00');
-          setTemplateSlotDuration(30);
-          setTemplateSlotType(SlotType.Consultation);
-          setTemplateCost(String(suggestedPartTimeCost ?? 200000));
+          closeTemplateModal();
         },
         onError: (err) => {
           ophthalToast.error(
@@ -548,15 +641,19 @@ export default function SlotManagementPage() {
     templateEndTime,
     templateSlotDuration,
     templateSlotType,
+    editingTemplate,
     templateCost,
     templateCostValidationMessage,
+    closeTemplateModal,
     createTemplateMutation,
+    isEditingTemplate,
     isFullTimeDoctor,
     isPartTimeDoctor,
     pricingRangeError,
     pricingRangeLoading,
     suggestedPartTimeCost,
     t,
+    updateTemplateMutation,
   ]);
 
   const handleGenerateSlots = useCallback(() => {
@@ -755,7 +852,7 @@ export default function SlotManagementPage() {
             </div>
             {!isFullTimeDoctor && (
               <button
-                onClick={() => setShowTemplateModal(true)}
+                onClick={openCreateTemplateModal}
                 className="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-medium transition-colors flex items-center gap-2"
               >
                 <Plus className="w-5 h-5" />
@@ -835,12 +932,28 @@ export default function SlotManagementPage() {
                         <span className="px-3 py-1 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 rounded-full text-sm font-medium">
                           {DAY_OF_WEEK_LABELS[template.dayOfWeek]}
                         </span>
-                        <button
-                          onClick={() => setTemplateToDeleteId(template.id)}
-                          className="p-1.5 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => openEditTemplateModal(template)}
+                            className="p-1.5 text-cyan-600 hover:bg-cyan-100 dark:text-cyan-400 dark:hover:bg-cyan-900/30 rounded-lg transition"
+                            title={t(
+                              'Ophthalmologist.slotManagement.templates.editTemplate',
+                              'Edit template'
+                            )}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setTemplateToDeleteId(template.id)}
+                            className="p-1.5 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition"
+                            title={t(
+                              'Ophthalmologist.slotManagement.templates.deleteTemplate',
+                              'Delete template'
+                            )}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
@@ -1081,10 +1194,15 @@ export default function SlotManagementPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              {t(
-                'Ophthalmologist.slotManagement.modal.createTemplateTitle',
-                'Create Schedule Template'
-              )}
+              {isEditingTemplate
+                ? t(
+                    'Ophthalmologist.slotManagement.modal.editTemplateTitle',
+                    'Update Schedule Template'
+                  )
+                : t(
+                    'Ophthalmologist.slotManagement.modal.createTemplateTitle',
+                    'Create Schedule Template'
+                  )}
             </h3>
 
             {isPartTimeDoctor &&
@@ -1217,64 +1335,78 @@ export default function SlotManagementPage() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t(
-                    'Ophthalmologist.slotManagement.modal.costVnd',
-                    'Cost (VND)'
-                  )}
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  step={1}
-                  value={templateCost}
-                  onChange={(e) => setTemplateCost(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                />
-                {allowedPriceRange && (
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {!isEditingTemplate && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t(
-                      'Ophthalmologist.slotManagement.pricing.allowedRangeHint',
-                      `Allowed range: ${allowedPriceRange.minPrice.toLocaleString('vi-VN')} - ${allowedPriceRange.maxPrice.toLocaleString('vi-VN')} VND.`
+                      'Ophthalmologist.slotManagement.modal.costVnd',
+                      'Cost (VND)'
                     )}
-                    {suggestedPartTimeCost && (
-                      <>
-                        {' '}
-                        {t(
-                          'Ophthalmologist.slotManagement.pricing.suggestedHint',
-                          `Suggested: ${suggestedPartTimeCost.toLocaleString('vi-VN')} VND.`
-                        )}
-                      </>
-                    )}
-                  </p>
-                )}
-                {templateCostValidationMessage && (
-                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                    {templateCostValidationMessage}
-                  </p>
-                )}
-              </div>
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={templateCost}
+                    onChange={(e) => setTemplateCost(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  />
+                  {allowedPriceRange && (
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {t(
+                        'Ophthalmologist.slotManagement.pricing.allowedRangeHint',
+                        `Allowed range: ${allowedPriceRange.minPrice.toLocaleString('vi-VN')} - ${allowedPriceRange.maxPrice.toLocaleString('vi-VN')} VND.`
+                      )}
+                      {suggestedPartTimeCost && (
+                        <>
+                          {' '}
+                          {t(
+                            'Ophthalmologist.slotManagement.pricing.suggestedHint',
+                            `Suggested: ${suggestedPartTimeCost.toLocaleString('vi-VN')} VND.`
+                          )}
+                        </>
+                      )}
+                    </p>
+                  )}
+                  {templateCostValidationMessage && (
+                    <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                      {templateCostValidationMessage}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3 mt-6">
               <button
-                onClick={() => setShowTemplateModal(false)}
+                onClick={closeTemplateModal}
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition"
               >
                 {t('Ophthalmologist.common.cancel', 'Cancel')}
               </button>
               <button
-                onClick={handleCreateTemplate}
+                onClick={handleSaveTemplate}
                 disabled={
-                  createTemplateMutation.isPending ||
-                  Boolean(templateCostValidationMessage)
+                  (isEditingTemplate
+                    ? updateTemplateMutation.isPending
+                    : createTemplateMutation.isPending) ||
+                  (!isEditingTemplate && Boolean(templateCostValidationMessage))
                 }
                 className="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition disabled:opacity-50"
               >
-                {createTemplateMutation.isPending
-                  ? t('Ophthalmologist.slotManagement.creating', 'Creating...')
-                  : t('Ophthalmologist.slotManagement.create', 'Create')}
+                {isEditingTemplate
+                  ? updateTemplateMutation.isPending
+                    ? t(
+                        'Ophthalmologist.slotManagement.updating',
+                        'Updating...'
+                      )
+                    : t('Ophthalmologist.slotManagement.update', 'Update')
+                  : createTemplateMutation.isPending
+                    ? t(
+                        'Ophthalmologist.slotManagement.creating',
+                        'Creating...'
+                      )
+                    : t('Ophthalmologist.slotManagement.create', 'Create')}
               </button>
             </div>
           </div>

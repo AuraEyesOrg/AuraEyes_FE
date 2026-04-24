@@ -3,6 +3,7 @@ import { ApiResponse, PagedResult } from '@/types/api.types';
 import {
   ScheduleTemplateDto,
   CreateScheduleTemplateRequest,
+  UpdateScheduleTemplateRequest,
   AppointmentSlotListDto,
 } from '@/types/schedule.ts';
 
@@ -22,6 +23,17 @@ const schedulingApi = {
   createTemplate: async (request: CreateScheduleTemplateRequest) => {
     const response = await api.post<ApiResponse<string>>(
       '/schedule-templates',
+      request
+    );
+    return response.data;
+  },
+
+  updateTemplate: async (
+    templateId: string,
+    request: UpdateScheduleTemplateRequest
+  ) => {
+    const response = await api.put<ApiResponse<void>>(
+      `/schedule-templates/${templateId}`,
       request
     );
     return response.data;
