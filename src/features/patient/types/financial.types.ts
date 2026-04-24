@@ -35,6 +35,8 @@ export interface OrderDto {
   id: string;
   userId: string;
   totalAmount: number;
+  depositAmount?: number | null;
+  patientName?: string | null;
   description: string | null;
   status: OrderStatus;
   createdAt: string;
