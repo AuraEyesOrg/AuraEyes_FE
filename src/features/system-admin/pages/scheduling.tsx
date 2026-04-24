@@ -10,7 +10,6 @@ import {
   Trash2,
   Info,
   Zap,
-  Users,
   ChevronLeft,
   ChevronRight,
   Pencil,
@@ -134,20 +133,11 @@ export default function SystemAdminScheduling() {
       template: ScheduleTemplateDto;
     }) =>
       schedulingApi.updateTemplate(templateId, {
-        dayOfWeek: Object.keys(DAY_OF_WEEK_LABELS).find(
-          (key) => DAY_OF_WEEK_LABELS[parseInt(key)] === template.dayOfWeek
-        )
-          ? parseInt(
-              Object.keys(DAY_OF_WEEK_LABELS).find(
-                (key) =>
-                  DAY_OF_WEEK_LABELS[parseInt(key)] === template.dayOfWeek
-              )!
-            )
-          : 0,
+        dayOfWeek: Number(template.dayOfWeek),
         startTime: template.startTime,
         endTime: template.endTime,
-        slotDuration: template.slotDuration,
-        maxCapacity: template.maxCapacity,
+        slotDuration: Number(template.slotDuration),
+        maxCapacity: Number(template.maxCapacity),
         isActive: isActive,
       }),
     onSuccess: () => {
@@ -194,8 +184,23 @@ export default function SystemAdminScheduling() {
         return a.isActive ? -1 : 1;
       }
 
-      const indexA = dayOrder.indexOf(a.dayOfWeek);
-      const indexB = dayOrder.indexOf(b.dayOfWeek);
+      const getDayIndex = (day: string | number) => {
+        if (typeof day === 'number') return day === 0 ? 7 : day;
+        const days = [
+          'Sunday',
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+        ];
+        const idx = days.indexOf(day as string);
+        return idx === 0 ? 7 : idx === -1 ? 99 : idx;
+      };
+
+      const indexA = getDayIndex(a.dayOfWeek);
+      const indexB = getDayIndex(b.dayOfWeek);
       if (indexA !== indexB) return indexA - indexB;
       // If same day, sort by start time
       return a.startTime.localeCompare(b.startTime);
@@ -518,130 +523,147 @@ export default function SystemAdminScheduling() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {slots.map((slot) => {
-                      // Determine if the slot time has already passed (using local time)
-                      const now = new Date();
-                      const slotDateStr = `${slot.date}T${slot.startTime}`;
-                      const slotDateTime = new Date(slotDateStr);
-                      const isPast = slotDateTime < now;
-                      const isBlocked = slot.status === 'Blocked';
-                      const isFullyBooked =
-                        slot.bookedCount >= slot.maxCapacity;
-                      const hasBookings = slot.bookedCount > 0;
+                    {/* Aggregated Slots Logic */}
+                    {Object.values(
+                      slots.reduce(
+                        (acc, slot) => {
+                          const timeKey = `${slot.startTime}-${slot.endTime}`;
+                          if (!acc[timeKey]) {
+                            acc[timeKey] = {
+                              startTime: slot.startTime,
+                              endTime: slot.endTime,
+                              slots: [],
+                              totalCapacity: 0,
+                              totalBooked: 0,
+                              isPast: false,
+                            };
+                          }
+                          acc[timeKey].slots.push(slot);
+                          acc[timeKey].totalCapacity += slot.maxCapacity;
+                          acc[timeKey].totalBooked += slot.bookedCount;
 
-                      // Derived display state
-                      let statusLabel = slot.status;
-                      let statusClass = '';
-                      let cardClass = '';
-                      let timeClass = '';
+                          // Determine if the slot time has already passed
+                          const now = new Date();
+                          const slotDateStr = `${slot.date}T${slot.startTime}`;
+                          const slotDateTime = new Date(slotDateStr);
+                          if (slotDateTime < now) acc[timeKey].isPast = true;
 
-                      if (isBlocked && hasBookings) {
-                        // Past but had/has booking — show as "Attended"
-                        statusLabel = 'Attended';
-                        statusClass =
-                          'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400';
-                        cardClass = 'border-blue-100 dark:border-blue-900/30';
-                        timeClass = 'text-blue-600 dark:text-blue-400';
-                      } else if (isBlocked) {
-                        // Past, no booking — expired
-                        statusLabel = isPast ? 'Expired' : 'Blocked';
-                        statusClass =
-                          'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500';
-                        cardClass =
-                          'border-slate-100 dark:border-slate-800 opacity-60';
-                        timeClass = 'text-slate-400';
-                      } else if (isPast && hasBookings) {
-                        // Available status but time passed with booking (job hasn't run yet)
-                        statusLabel = 'Attended';
-                        statusClass =
-                          'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400';
-                        cardClass = 'border-blue-100 dark:border-blue-900/30';
-                        timeClass = 'text-blue-600 dark:text-blue-400';
-                      } else if (isPast) {
-                        // Available but time passed, no booking (job hasn't cleaned yet)
-                        statusLabel = 'Expired';
-                        statusClass =
-                          'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500';
-                        cardClass =
-                          'border-slate-100 dark:border-slate-800 opacity-60';
-                        timeClass = 'text-slate-400';
-                      } else if (isFullyBooked) {
-                        statusLabel = 'Full';
-                        statusClass =
-                          'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400';
-                        cardClass =
-                          'border-orange-100 dark:border-orange-900/30';
-                        timeClass = 'text-orange-600 dark:text-orange-400';
-                      } else if (hasBookings) {
-                        statusLabel = 'Partial';
-                        statusClass =
-                          'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400';
-                        cardClass = '';
-                        timeClass = 'text-amber-600 dark:text-amber-400';
-                      } else {
-                        // Available, future
-                        statusLabel = 'Available';
-                        statusClass =
-                          'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400';
-                        cardClass =
-                          'border-emerald-100 dark:border-emerald-900/30';
-                        timeClass = 'text-emerald-600 dark:text-emerald-400';
-                      }
-
-                      return (
-                        <div
-                          key={slot.id}
-                          className={`bg-white dark:bg-slate-900 rounded-2xl border p-4 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow group ${cardClass || 'border-slate-200 dark:border-slate-800'}`}
+                          return acc;
+                        },
+                        {} as Record<
+                          string,
+                          {
+                            startTime: string;
+                            endTime: string;
+                            slots: typeof slots;
+                            totalCapacity: number;
+                            totalBooked: number;
+                            isPast: boolean;
+                          }
                         >
-                          <div className="flex items-center gap-4">
-                            <div
-                              className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center border ${isBlocked || (isPast && !hasBookings) ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700/50' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700/50'}`}
-                            >
-                              <Clock
-                                className={`w-3.5 h-3.5 mb-0.5 ${timeClass || 'text-slate-400'}`}
-                              />
-                              <span
-                                className={`text-xs font-bold leading-none ${timeClass || 'text-slate-700 dark:text-slate-300'}`}
-                              >
-                                {slot.startTime.substring(0, 5)}
-                              </span>
-                              <span className="text-[9px] text-slate-400 leading-none mt-0.5">
-                                {slot.endTime.substring(0, 5)}
-                              </span>
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <p className="font-bold text-slate-900 dark:text-white text-sm">
-                                  Clinic Slot
-                                </p>
-                                {isPast && (
-                                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                                    Past
+                      )
+                    )
+                      .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                      .map((group) => {
+                        const isFullyBooked =
+                          group.totalBooked >= group.totalCapacity;
+                        const hasBookings = group.totalBooked > 0;
+
+                        let statusLabel = 'Available';
+                        let statusClass =
+                          'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400';
+                        let cardClass =
+                          'border-emerald-100 dark:border-emerald-900/30';
+
+                        if (group.isPast) {
+                          statusLabel = hasBookings ? 'Attended' : 'Expired';
+                          statusClass =
+                            'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500';
+                          cardClass =
+                            'border-slate-100 dark:border-slate-800 opacity-75';
+                        } else if (isFullyBooked) {
+                          statusLabel = 'Full';
+                          statusClass =
+                            'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400';
+                          cardClass =
+                            'border-orange-100 dark:border-orange-900/30';
+                        } else if (hasBookings) {
+                          statusLabel = 'Partial';
+                          statusClass =
+                            'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400';
+                          cardClass =
+                            'border-amber-100 dark:border-amber-900/30';
+                        }
+
+                        return (
+                          <div
+                            key={`${group.startTime}-${group.endTime}`}
+                            className={`bg-white dark:bg-slate-900 rounded-3xl border p-5 shadow-sm hover:shadow-md transition-all ${cardClass}`}
+                          >
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex flex-col items-center justify-center border border-slate-100 dark:border-slate-700">
+                                  <Clock className="w-3.5 h-3.5 mb-0.5 text-slate-400" />
+                                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                    {group.startTime.substring(0, 5)}
                                   </span>
-                                )}
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-slate-900 dark:text-white">
+                                    {group.startTime.substring(0, 5)} -{' '}
+                                    {group.endTime.substring(0, 5)}
+                                  </h4>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <div
+                                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusClass}`}
+                                    >
+                                      {statusLabel}
+                                    </div>
+                                    <span className="text-xs font-semibold text-slate-500">
+                                      {group.totalBooked} /{' '}
+                                      {group.totalCapacity} Booked
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
-                              <p className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 uppercase tracking-wider">
-                                <Users className="w-3 h-3" />
-                                {slot.bookedCount} / {slot.maxCapacity} booked
-                                {slot.availableCapacity > 0 &&
-                                  !isPast &&
-                                  !isBlocked && (
-                                    <span className="text-emerald-500">
-                                      · {slot.availableCapacity} open
+                            </div>
+
+                            {/* Doctor Specific Slots inside the group */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                              {group.slots.map((slot) => (
+                                <div
+                                  key={slot.id}
+                                  className={`p-3 rounded-2xl border ${slot.bookedCount > 0 ? 'bg-blue-50/30 border-blue-100 dark:bg-blue-900/10 dark:border-blue-900/30' : 'bg-slate-50/30 border-slate-100 dark:bg-slate-800/30 dark:border-slate-800'} flex items-center justify-between`}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center text-[10px] font-bold text-primary-600">
+                                      {slot.ophthalFullName
+                                        ?.split(' ')
+                                        .map((n) => n[0])
+                                        .join('')
+                                        .substring(0, 2) || 'Dr'}
+                                    </div>
+                                    <div>
+                                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-[120px]">
+                                        {slot.ophthalFullName || 'Clinic Slot'}
+                                      </p>
+                                      <p className="text-[10px] text-slate-500">
+                                        {slot.bookedCount}/{slot.maxCapacity}{' '}
+                                        Booked
+                                      </p>
+                                    </div>
+                                  </div>
+                                  {slot.status === 'Blocked' && (
+                                    <span className="text-[8px] font-bold uppercase bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
+                                      Blocked
                                     </span>
                                   )}
-                              </p>
+                                </div>
+                              ))}
                             </div>
                           </div>
-
-                          <div
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider ${statusClass}`}
-                          >
-                            {statusLabel}
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
                   </div>
                 )}
               </div>
@@ -701,127 +723,134 @@ export default function SystemAdminScheduling() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {sortedTemplates.map((template) => (
-                    <div
-                      key={template.id}
-                      className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none transition-all group ${
-                        !template.isActive ? 'opacity-70 grayscale-[0.3]' : ''
-                      }`}
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-950/50 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold">
-                            {template.dayOfWeek.substring(0, 2)}
-                          </div>
-                          <div>
-                            <h5 className="font-bold text-slate-900 dark:text-white">
-                              {template.dayOfWeek}
-                            </h5>
-                            <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                              <Clock className="w-3 h-3" />
-                              {template.startTime.substring(0, 5)} -{' '}
-                              {template.endTime.substring(0, 5)}
+                  {sortedTemplates.map((template) => {
+                    const dayString =
+                      typeof template.dayOfWeek === 'string'
+                        ? template.dayOfWeek
+                        : DAY_OF_WEEK_LABELS[template.dayOfWeek as number] ||
+                          String(template.dayOfWeek);
+
+                    return (
+                      <div
+                        key={template.id}
+                        className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none transition-all group ${
+                          !template.isActive ? 'opacity-70 grayscale-[0.3]' : ''
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-950/50 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold text-sm">
+                              {dayString.substring(0, 3)}
+                            </div>
+                            <div>
+                              <h5 className="font-bold text-slate-900 dark:text-white">
+                                {dayString}
+                              </h5>
+                              <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                                <Clock className="w-3 h-3" />
+                                {template.startTime.substring(0, 5)} -{' '}
+                                {template.endTime.substring(0, 5)}
+                              </div>
                             </div>
                           </div>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                            <button
+                              onClick={() =>
+                                toggleTemplateStatusMutation.mutate({
+                                  templateId: template.id,
+                                  isActive: !template.isActive,
+                                  template,
+                                })
+                              }
+                              title={
+                                template.isActive ? 'Deactivate' : 'Activate'
+                              }
+                              className={`p-2 rounded-lg transition-all ${
+                                template.isActive
+                                  ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                                  : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
+                              }`}
+                            >
+                              {template.isActive ? (
+                                <ToggleRight className="w-5 h-5" />
+                              ) : (
+                                <ToggleLeft className="w-5 h-5" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditTemplate(template);
+                                setIsModalOpen(true);
+                              }}
+                              className="p-2 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:text-primary-400 dark:hover:bg-primary-900/20 transition-all"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() =>
+                                deleteTemplateMutation.mutate(template.id)
+                              }
+                              className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                          <button
-                            onClick={() =>
-                              toggleTemplateStatusMutation.mutate({
-                                templateId: template.id,
-                                isActive: !template.isActive,
-                                template,
-                              })
-                            }
-                            title={
-                              template.isActive ? 'Deactivate' : 'Activate'
-                            }
-                            className={`p-2 rounded-lg transition-all ${
+
+                        {/* Status indicator badge */}
+                        <div className="mb-4">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                               template.isActive
-                                ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
-                                : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
+                                : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
                             }`}
                           >
-                            {template.isActive ? (
-                              <ToggleRight className="w-5 h-5" />
-                            ) : (
-                              <ToggleLeft className="w-5 h-5" />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditTemplate(template);
-                              setIsModalOpen(true);
-                            }}
-                            className="p-2 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:text-primary-400 dark:hover:bg-primary-900/20 transition-all"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              deleteTemplateMutation.mutate(template.id)
-                            }
-                            className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Status indicator badge */}
-                      <div className="mb-4">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            template.isActive
-                              ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
-                              : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
-                          }`}
-                        >
-                          {template.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">
-                            {t(
-                              'SystemAdmin.scheduling.templates.duration',
-                              'Slot Duration'
-                            )}
-                          </p>
-                          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                            {template.slotDuration} min
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">
-                            {t(
-                              'SystemAdmin.scheduling.templates.capacity',
-                              'Max Capacity'
-                            )}
-                          </p>
-                          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                            {template.maxCapacity}{' '}
-                            {t(
-                              'SystemAdmin.scheduling.templates.patients',
-                              'patients'
-                            )}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex items-center justify-end">
-                        <div className="flex items-center gap-1">
-                          <div
-                            className={`w-2 h-2 rounded-full ${template.isActive ? 'bg-green-500' : 'bg-slate-300'}`}
-                          />
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">
                             {template.isActive ? 'Active' : 'Inactive'}
                           </span>
                         </div>
+
+                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">
+                              {t(
+                                'SystemAdmin.scheduling.templates.duration',
+                                'Slot Duration'
+                              )}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                              {template.slotDuration} min
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">
+                              {t(
+                                'SystemAdmin.scheduling.templates.capacityMode',
+                                'Capacity Mode'
+                              )}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                              {t(
+                                'SystemAdmin.scheduling.templates.dynamic',
+                                'Dynamic (By Doctor)'
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 flex items-center justify-end">
+                          <div className="flex items-center gap-1">
+                            <div
+                              className={`w-2 h-2 rounded-full ${template.isActive ? 'bg-green-500' : 'bg-slate-300'}`}
+                            />
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">
+                              {template.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
