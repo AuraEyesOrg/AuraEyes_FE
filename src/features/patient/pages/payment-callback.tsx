@@ -3,32 +3,41 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   CheckCircle,
   XCircle,
-  Wallet,
+  Calendar,
   ArrowLeft,
   AlertCircle,
+  CreditCard,
+  RotateCw,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
-import { useWallet } from '../hooks/use-wallet';
-import { walletApi } from '../api/patient.api';
-import type { VerifyPaymentResponse } from '../types';
 import { toast } from 'react-toastify';
+import { getOrderById } from '../api/financial.api';
 import { formatCurrency } from '@/lib/helper';
 import { useTranslation } from 'react-i18next';
+import type { OrderDto } from '../types/financial.types';
 
-type PaymentStatus = 'loading' | 'success' | 'failed' | 'cancelled';
+type CallbackStatus = 'loading' | 'success' | 'failed' | 'cancelled';
+type CallbackType = 'clinic-booking' | 'deposit' | 'unknown';
+
+interface ApiResponse<T> {
+  data: T;
+}
+
+const MAX_POLL_RETRIES = 6;
+const POLL_INTERVAL_MS = 2000;
 
 /**
  * Payment Callback Page
  *
- * After a user completes (or cancels) payment on PayOS, they are redirected
- * back to this page with query params such as `orderCode`, `status`, etc.
+ * PayOS redirects here after payment with:
+ *   ?type=clinic-booking&orderId=<guid>&appointmentId=<guid>[&cancel=true]
  *
- * NOTE: We call walletApi.verifyPayment() directly instead of via useMutation.
- * React 18 StrictMode re-mounts the component (mount → unmount → remount),
- * which destroys the first MutationObserver. Inline callbacks registered on
- * that observer's `.mutate()` call never fire on the replacement observer,
- * leaving the page stuck on "loading". A plain promise is immune to this.
+ * Flow:
+ *  1. Read orderId from URL → GET /financial/orders/{orderId}
+ *  2. Check order/payment status
+ *  3. If still Pending (webhook may not have fired yet) → poll up to MAX_POLL_RETRIES times
+ *  4. Show success / failed / cancelled UI
  */
 export default function PaymentCallbackPage() {
   const { t: i18nT } = useTranslation();
@@ -38,50 +47,92 @@ export default function PaymentCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const orderCode =
-    searchParams.get('orderCode') ?? searchParams.get('order_code') ?? '';
+  const orderId = searchParams.get('orderId') ?? '';
+  const callbackType = (searchParams.get('type') ?? 'deposit') as CallbackType;
+  const appointmentId = searchParams.get('appointmentId') ?? '';
   const cancelled =
     searchParams.get('cancel') === 'true' ||
     searchParams.get('status') === 'CANCELLED';
 
-  const { refetch: refetchWallet } = useWallet();
-
-  const [status, setStatus] = useState<PaymentStatus>(
+  const [status, setStatus] = useState<CallbackStatus>(
     cancelled ? 'cancelled' : 'loading'
   );
-  const [paymentData, setPaymentData] = useState<VerifyPaymentResponse | null>(
-    null
-  );
+  const [orderData, setOrderData] = useState<OrderDto | null>(null);
+  const hasStarted = useRef(false);
 
-  // Guard against React 18 StrictMode double-invoke
-  const hasVerified = useRef(false);
-
-  // Verify payment on mount by calling the API directly
   useEffect(() => {
-    if (!orderCode || cancelled || hasVerified.current) return;
+    if (cancelled || hasStarted.current) return;
+    hasStarted.current = true;
 
-    hasVerified.current = true;
+    if (!orderId) {
+      setStatus('failed');
+      return;
+    }
 
-    walletApi.verifyPayment({ orderCode }).then(
-      (data) => {
-        setPaymentData(data);
-        setStatus(data.isSuccess ? 'success' : 'failed');
-        if (data.isSuccess) {
-          toast.success(t('PatientPaymentCallback.toast.depositSuccess'));
+    let retries = 0;
+
+    /**
+     * Fetch the order by ID and check if payment is completed.
+     * Webhook may take a few seconds, so we retry a few times.
+     */
+    const checkOrderStatus = async (): Promise<void> => {
+      try {
+        const order = await getOrderById(orderId);
+
+        if (!order) {
+          setStatus('failed');
+          return;
         }
-        refetchWallet();
-      },
-      () => {
+
+        setOrderData(order);
+
+        const firstPayment = order.payments?.[0];
+        const paymentDone = firstPayment?.status === 'Completed';
+        const orderDone =
+          order.status === 'Completed' || order.status === 'Confirmed';
+        const isCancelled =
+          order.status === 'Cancelled' ||
+          firstPayment?.status === 'Cancelled' ||
+          firstPayment?.status === 'Failed';
+
+        if (paymentDone || orderDone) {
+          setStatus('success');
+          toast.success(
+            callbackType === 'clinic-booking'
+              ? 'Thanh toán đặt cọc thành công! Lịch khám đã được xác nhận.'
+              : t('PatientPaymentCallback.toast.depositSuccess')
+          );
+          return;
+        }
+
+        if (isCancelled) {
+          setStatus('cancelled');
+          return;
+        }
+
+        // Still pending — webhook not fired yet. Retry.
+        retries += 1;
+        if (retries < MAX_POLL_RETRIES) {
+          setTimeout(checkOrderStatus, POLL_INTERVAL_MS);
+        } else {
+          // After max retries, treat as failed (payment may have been abandoned)
+          setStatus('failed');
+        }
+      } catch {
         setStatus('failed');
       }
-    );
-  }, [orderCode, cancelled]);
+    };
+
+    checkOrderStatus();
+  }, [orderId, cancelled]);
+
+  const isClinicBooking = callbackType === 'clinic-booking';
 
   return (
     <PatientLayout>
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="medical-card w-full max-w-md text-center">
-          {/* Loading */}
+          {/* ── Loading / Polling ─────────────────────────────────────── */}
           {status === 'loading' && (
             <>
               <div className="w-16 h-16 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -90,63 +141,97 @@ export default function PaymentCallbackPage() {
               <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
                 {t('PatientPaymentCallback.loading.title')}
               </h1>
-              <p className="text-(--text-secondary)">
-                {t('PatientPaymentCallback.loading.description')}
+              <p className="text-(--text-secondary) text-sm">
+                {isClinicBooking
+                  ? 'Đang xác nhận thanh toán đặt cọc...'
+                  : t('PatientPaymentCallback.loading.description')}
+              </p>
+              <p className="text-xs text-(--text-muted) mt-2 flex items-center justify-center gap-1">
+                <RotateCw className="w-3 h-3 animate-spin" />
+                Vui lòng không đóng trang này
               </p>
             </>
           )}
 
-          {/* Success */}
+          {/* ── Success ───────────────────────────────────────────────── */}
           {status === 'success' && (
             <>
               <div className="w-16 h-16 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
               </div>
               <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
-                {t('PatientPaymentCallback.success.title')}
+                {isClinicBooking
+                  ? 'Thanh toán đặt cọc thành công!'
+                  : t('PatientPaymentCallback.success.title')}
               </h1>
-              <p className="text-(--text-secondary) mb-6">
-                {t('PatientPaymentCallback.success.description')}
+              <p className="text-(--text-secondary) mb-6 text-sm">
+                {isClinicBooking
+                  ? 'Lịch khám của bạn đã được xác nhận. Vui lòng đến đúng giờ hẹn.'
+                  : t('PatientPaymentCallback.success.description')}
               </p>
 
-              {/* Payment details */}
-              <div className="bg-(--bg-secondary) rounded-xl p-4 mb-6 space-y-3">
-                {paymentData && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-(--text-secondary)">
-                        {t('PatientPaymentCallback.labels.amount')}
+              {/* Order detail card */}
+              {orderData && (
+                <div className="bg-(--bg-secondary) rounded-xl p-4 mb-6 space-y-2.5 text-left">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-(--text-secondary) flex items-center gap-1.5">
+                      <CreditCard className="w-4 h-4" />
+                      {isClinicBooking ? 'Số tiền đặt cọc (30%)' : 'Số tiền'}
+                    </span>
+                    <span className="font-bold text-green-600 dark:text-green-400">
+                      {formatCurrency(orderData.totalAmount)}
+                    </span>
+                  </div>
+
+                  {orderData.description && (
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-sm text-(--text-secondary) shrink-0">
+                        Mô tả
                       </span>
-                      <span className="font-semibold text-green-600 dark:text-green-400">
-                        +{formatCurrency(paymentData.amount)}
+                      <span className="text-sm font-medium text-(--text-primary) text-right">
+                        {orderData.description}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
+                  )}
+
+                  {orderData.payments?.[0]?.paidAt && (
+                    <div className="flex items-center justify-between pt-2 border-t border-(--border-color)">
                       <span className="text-sm text-(--text-secondary)">
-                        {t('PatientPaymentCallback.labels.orderCode')}
+                        Thời gian thanh toán
                       </span>
-                      <span className="font-mono text-sm text-(--text-primary)">
-                        {paymentData.orderCode}
+                      <span className="text-sm font-medium text-(--text-primary)">
+                        {new Date(orderData.payments[0].paidAt!).toLocaleString(
+                          'vi-VN'
+                        )}
                       </span>
                     </div>
-                    {paymentData.newBalance !== null && (
-                      <div className="flex items-center justify-between pt-3 border-t border-(--border-color)">
-                        <span className="text-sm text-(--text-secondary) flex items-center gap-1">
-                          <Wallet className="w-4 h-4" />{' '}
-                          {t('PatientPaymentCallback.labels.newBalance')}
-                        </span>
-                        <span className="font-bold text-brand text-lg">
-                          {formatCurrency(paymentData.newBalance)}
-                        </span>
-                      </div>
-                    )}
-                  </>
+                  )}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                {isClinicBooking && appointmentId && (
+                  <button
+                    onClick={() => navigate('/patient/appointments')}
+                    className="flex-1 py-3 bg-brand hover:brightness-110 text-white rounded-xl font-semibold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    Xem lịch hẹn
+                  </button>
                 )}
+                <button
+                  onClick={() => navigate('/patient/wallet')}
+                  className="flex-1 py-3 bg-(--bg-secondary) hover:bg-(--bg-tertiary) text-(--text-primary) border border-(--border-color) rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Lịch sử thanh toán
+                </button>
               </div>
             </>
           )}
 
-          {/* Failed */}
+          {/* ── Failed ────────────────────────────────────────────────── */}
           {status === 'failed' && (
             <>
               <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -155,27 +240,35 @@ export default function PaymentCallbackPage() {
               <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
                 {t('PatientPaymentCallback.failed.title')}
               </h1>
-              <p className="text-(--text-secondary) mb-6">
-                {paymentData?.message ||
-                  t('PatientPaymentCallback.failed.fallbackDescription')}
+              <p className="text-(--text-secondary) mb-6 text-sm">
+                {isClinicBooking
+                  ? 'Thanh toán chưa được xác nhận. Lịch khám vẫn được giữ — bạn có thể thử thanh toán lại trong trang lịch sử.'
+                  : t('PatientPaymentCallback.failed.fallbackDescription')}
               </p>
 
-              {orderCode && (
-                <div className="bg-(--bg-secondary) rounded-xl p-4 mb-6">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-(--text-secondary)">
-                      {t('PatientPaymentCallback.labels.orderCode')}
-                    </span>
-                    <span className="font-mono text-sm text-(--text-primary)">
-                      {orderCode}
-                    </span>
-                  </div>
-                </div>
-              )}
+              <div className="flex gap-3">
+                {/* Retry payment if we have order with pending payment URL */}
+                {orderData?.payments?.[0]?.paymentUrl && (
+                  <a
+                    href={orderData.payments[0].paymentUrl!}
+                    className="flex-1 py-3 bg-brand hover:brightness-110 text-white rounded-xl font-semibold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <RotateCw className="w-4 h-4" />
+                    Thanh toán lại
+                  </a>
+                )}
+                <button
+                  onClick={() => navigate('/patient/wallet')}
+                  className="flex-1 py-3 bg-(--bg-secondary) hover:bg-(--bg-tertiary) text-(--text-primary) border border-(--border-color) rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Lịch sử thanh toán
+                </button>
+              </div>
             </>
           )}
 
-          {/* Cancelled */}
+          {/* ── Cancelled ─────────────────────────────────────────────── */}
           {status === 'cancelled' && (
             <>
               <div className="w-16 h-16 bg-amber-100 dark:bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -184,23 +277,31 @@ export default function PaymentCallbackPage() {
               <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
                 {t('PatientPaymentCallback.cancelled.title')}
               </h1>
-              <p className="text-(--text-secondary) mb-6">
-                {t('PatientPaymentCallback.cancelled.description')}
+              <p className="text-(--text-secondary) mb-6 text-sm">
+                {isClinicBooking
+                  ? 'Bạn đã hủy thanh toán. Lịch khám vẫn còn — bạn có thể thanh toán đặt cọc sau trong trang lịch sử.'
+                  : t('PatientPaymentCallback.cancelled.description')}
               </p>
-            </>
-          )}
 
-          {/* Actions */}
-          {status !== 'loading' && (
-            <div className="flex gap-3">
-              <button
-                onClick={() => navigate('/patient/wallet')}
-                className="flex-1 py-3 bg-brand hover:brightness-110 text-white rounded-xl font-semibold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                {t('PatientPaymentCallback.actions.backToWallet')}
-              </button>
-            </div>
+              <div className="flex gap-3">
+                {isClinicBooking && appointmentId && (
+                  <button
+                    onClick={() => navigate('/patient/appointments')}
+                    className="flex-1 py-3 bg-brand hover:brightness-110 text-white rounded-xl font-semibold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    Xem lịch hẹn
+                  </button>
+                )}
+                <button
+                  onClick={() => navigate('/patient/wallet')}
+                  className="flex-1 py-3 bg-(--bg-secondary) hover:bg-(--bg-tertiary) text-(--text-primary) border border-(--border-color) rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Lịch sử thanh toán
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>

@@ -99,16 +99,28 @@ export default function OrganisationSchedulePage() {
 
     createBooking(
       {
+        organisationId,
         slotId: selectedSlotId,
         visitReason: visitReason || 'Regular eye checkup',
       },
       {
-        onSuccess: () => {
-          toast.success(t('ClinicBooking.success.booked'));
-          navigate('/patient/appointments');
+        onSuccess: (data) => {
+          if (data.paymentUrl) {
+            toast.info(
+              `Đặt lịch thành công! Đang chuyển đến trang thanh toán đặt cọc ${data.depositAmount.toLocaleString('vi-VN')} VND...`
+            );
+            // Small delay so user sees the toast before redirect
+            setTimeout(() => {
+              window.location.href = data.paymentUrl!;
+            }, 1500);
+          } else {
+            // Fallback if no payment URL (e.g., zero-price slot)
+            toast.success(t('ClinicBooking.success.booked'));
+            navigate('/patient/appointments');
+          }
         },
         onError: (err) => {
-          toast.error(mapClinicPatientErrorMessage(err, t));
+          toast.error(mapClinicPatientErrorMessage(err));
         },
       }
     );

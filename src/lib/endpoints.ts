@@ -382,6 +382,15 @@ export const API_ENDPOINTS = {
     /** POST - Mark all notifications as read */
     MARK_ALL_READ: '/notifications/mark-all-read',
   },
+  // Financial - Order & Payment system (replaces wallet top-up for clinic bookings)
+  FINANCIAL: {
+    /** GET - Paginated payment order history for the current user */
+    MY_ORDERS: '/financial/my-orders',
+    /** GET - Single order with payments */
+    ORDER: (id: string) => `/financial/orders/${id}`,
+    /** POST - Create a new payment order */
+    CREATE_ORDER: '/financial/orders',
+  },
 } as const;
 
 export type ApiEndpoints = typeof API_ENDPOINTS;

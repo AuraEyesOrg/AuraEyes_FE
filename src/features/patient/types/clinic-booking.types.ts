@@ -82,6 +82,12 @@ export interface PatientClinicAppointmentsQuery {
 export interface CreateClinicAppointmentResult {
   appointmentId: string;
   status: ClinicAppointmentStatus;
+  /** PayOS checkout URL – redirect patient here to complete the 30% deposit. */
+  paymentUrl: string | null;
+  /** The Order ID created for this booking deposit. */
+  orderId: string | null;
+  /** Deposit amount in VND (30% of full slot price). */
+  depositAmount: number;
 }
 
 export interface CompleteClinicAppointmentRequest {
