@@ -134,6 +134,24 @@ const ClinicStaffScreeningResultPage = lazy(
 const ClinicStaffPatientsPage = lazy(
   () => import('@/features/clinic-staff/pages/patients')
 );
+const ClinicStaffAppointmentsPage = lazy(
+  () => import('@/features/clinic-staff/pages/appointments')
+);
+const ClinicStaffPatientHistoryPage = lazy(
+  () => import('@/features/clinic-staff/pages/patient-history')
+);
+const ClinicStaffSchedulesPage = lazy(
+  () => import('@/features/clinic-staff/pages/schedules')
+);
+const ClinicStaffBillingPage = lazy(
+  () => import('@/features/clinic-staff/pages/billing')
+);
+const ClinicStaffWalletPage = lazy(
+  () => import('@/features/clinic-staff/pages/wallet')
+);
+const ClinicStaffSettingsPage = lazy(
+  () => import('@/features/clinic-staff/pages/settings')
+);
 
 // Organisation pages
 const OrganisationDashboard = lazy(
@@ -907,6 +925,60 @@ const Router = () => (
             />
           }
         />
+        <Route
+          path="/:locale/clinic-staff/patients/:patientId/history"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffPatientHistoryPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/appointments"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffAppointmentsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/schedules"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffSchedulesPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/billing"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffBillingPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/wallet"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffWalletPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/settings"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffSettingsPage />}
+            />
+          }
+        />
 
         <Route
           path="/:locale/organisation/dashboard"
@@ -1532,6 +1604,66 @@ const Router = () => (
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
             >
               <ClinicStaffPatientsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/patients/:patientId/history"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffPatientHistoryPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/appointments"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffAppointmentsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/schedules"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffSchedulesPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/billing"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffBillingPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/wallet"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffWalletPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/settings"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffSettingsPage />
             </PrivateRoute>
           }
         />

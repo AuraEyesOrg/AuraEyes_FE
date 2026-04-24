@@ -291,6 +291,7 @@ export const API_ENDPOINTS = {
   },
 
   CLINIC_APPOINTMENTS: {
+    LIST: '/clinic-appointments',
     CREATE: '/clinic-appointments',
     CANCEL: (appointmentId: string) => `/clinic-appointments/${appointmentId}`,
     CHECK_IN: (appointmentId: string) =>
