@@ -21,8 +21,8 @@ import CreateWalkInPatientModal from '../components/CreateWalkInPatientModal';
 import UpdatePatientContactModal from '../components/UpdatePatientContactModal';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
-  getOrganisationRecentPatients,
-  type OrganisationRecentPatientDto,
+  getClinicRecentPatients,
+  type ClinicRecentPatientDto,
 } from '../api/patients.api';
 
 function normalize(s: string | null | undefined): string {
@@ -55,7 +55,7 @@ export default function PatientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
   const [editingPatient, setEditingPatient] =
-    useState<OrganisationRecentPatientDto | null>(null);
+    useState<ClinicRecentPatientDto | null>(null);
   const [openActionMenuPatientId, setOpenActionMenuPatientId] = useState<
     string | null
   >(null);
@@ -67,8 +67,8 @@ export default function PatientsPage() {
     useState<ActionMenuPosition | null>(null);
 
   const patientsQuery = useQuery({
-    queryKey: ['organisation-patients', 'recent'],
-    queryFn: getOrganisationRecentPatients,
+    queryKey: ['clinic-patients', 'recent'],
+    queryFn: getClinicRecentPatients,
     staleTime: 30_000,
   });
 
@@ -237,7 +237,7 @@ export default function PatientsPage() {
     );
   };
 
-  const handleOpenEditContact = (patient: OrganisationRecentPatientDto) => {
+  const handleOpenEditContact = (patient: ClinicRecentPatientDto) => {
     setEditingPatient(patient);
     setOpenActionMenuPatientId(null);
   };
@@ -267,7 +267,7 @@ export default function PatientsPage() {
                 <p className="text-sm text-(--text-secondary)">
                   {t(
                     'Organisation.patients.header.subtitle',
-                    "Manage your organisation's patient records and screenings"
+                    'Manage your clinic patient records and screenings'
                   )}
                 </p>
               </div>
@@ -369,163 +369,158 @@ export default function PatientsPage() {
                       </td>
                     </tr>
                   ) : (
-                    filteredPatients.map(
-                      (patient: OrganisationRecentPatientDto) => (
-                        <tr
-                          key={patient.id}
-                          className="hover:bg-(--bg-tertiary) transition-colors"
-                        >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <AvatarFallback
-                                fullName={patient.name}
-                                avatarUrl={`${import.meta.env.VITE_AVATAR_FALLBACK_URL}${encodeURIComponent(patient.id.slice(0, 8))}`}
-                                size="w-10 h-10"
-                              />
-                              <div>
-                                <div className="text-sm font-semibold text-(--text-primary)">
-                                  {patient.name}
-                                </div>
-                                <div className="text-xs text-(--text-tertiary)">
-                                  {patient.age}
-                                  {t(
-                                    'Organisation.common.yearsAbbr',
-                                    'yrs'
-                                  )} ·{' '}
-                                  {patient.gender === 'M'
-                                    ? t(
-                                        'Organisation.common.gender.male',
-                                        'Male'
-                                      )
-                                    : t(
-                                        'Organisation.common.gender.female',
-                                        'Female'
-                                      )}
-                                  {patient.phoneNumber &&
-                                    ` · ${patient.phoneNumber}`}
-                                </div>
+                    filteredPatients.map((patient: ClinicRecentPatientDto) => (
+                      <tr
+                        key={patient.id}
+                        className="hover:bg-(--bg-tertiary) transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <AvatarFallback
+                              fullName={patient.name}
+                              avatarUrl={`${import.meta.env.VITE_AVATAR_FALLBACK_URL}${encodeURIComponent(patient.id.slice(0, 8))}`}
+                              size="w-10 h-10"
+                            />
+                            <div>
+                              <div className="text-sm font-semibold text-(--text-primary)">
+                                {patient.name}
+                              </div>
+                              <div className="text-xs text-(--text-tertiary)">
+                                {patient.age}
+                                {t(
+                                  'Organisation.common.yearsAbbr',
+                                  'yrs'
+                                )} ·{' '}
+                                {patient.gender === 'M'
+                                  ? t('Organisation.common.gender.male', 'Male')
+                                  : t(
+                                      'Organisation.common.gender.female',
+                                      'Female'
+                                    )}
+                                {patient.phoneNumber &&
+                                  ` · ${patient.phoneNumber}`}
                               </div>
                             </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm text-(--text-secondary)">
-                              {patient.lastScreening
-                                ? new Date(
-                                    patient.lastScreening
-                                  ).toLocaleDateString('vi-VN')
-                                : '—'}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getPatientTypeBadge(patient.isWalkIn)}`}
-                            >
-                              {patient.isWalkIn
-                                ? t(
-                                    'Organisation.patients.types.walkIn',
-                                    'Walk-in'
-                                  )
-                                : t(
-                                    'Organisation.patients.types.auraPartner',
-                                    'Aura Partner'
-                                  )}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getRiskBadge(patient.priority)}`}
-                            >
-                              {patient.priority || 'low'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="inline-flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleScreenPatient(patient.id)}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
-                              >
-                                <ScanEye className="h-3.5 w-3.5" />
-                                {t(
-                                  'Organisation.patients.actions.screenNow',
-                                  'Screen Now'
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-(--text-secondary)">
+                            {patient.lastScreening
+                              ? new Date(
+                                  patient.lastScreening
+                                ).toLocaleDateString('vi-VN')
+                              : '—'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getPatientTypeBadge(patient.isWalkIn)}`}
+                          >
+                            {patient.isWalkIn
+                              ? t(
+                                  'Organisation.patients.types.walkIn',
+                                  'Walk-in'
+                                )
+                              : t(
+                                  'Organisation.patients.types.auraPartner',
+                                  'Aura Partner'
                                 )}
-                              </button>
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getRiskBadge(patient.priority)}`}
+                          >
+                            {patient.priority || 'low'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="inline-flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleScreenPatient(patient.id)}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
+                            >
+                              <ScanEye className="h-3.5 w-3.5" />
+                              {t(
+                                'Organisation.patients.actions.screenNow',
+                                'Screen Now'
+                              )}
+                            </button>
 
-                              <button
-                                ref={(element) => {
-                                  actionMenuTriggerRefs.current[patient.id] =
-                                    element;
-                                }}
-                                type="button"
-                                onClick={() =>
-                                  setOpenActionMenuPatientId((currentId) =>
-                                    currentId === patient.id ? null : patient.id
-                                  )
-                                }
-                                className="inline-flex items-center justify-center rounded-lg border border-(--border-primary) bg-(--bg-tertiary) p-1.5 text-(--text-secondary) transition hover:bg-(--bg-primary)"
-                                aria-label={t(
-                                  'Organisation.patients.actions.moreForPatient',
-                                  'More actions for {{name}}',
-                                  { name: patient.name }
-                                )}
-                                aria-haspopup="menu"
-                                aria-expanded={
-                                  openActionMenuPatientId === patient.id
-                                }
-                              >
-                                <MoreHorizontal className="h-3.5 w-3.5" />
-                              </button>
+                            <button
+                              ref={(element) => {
+                                actionMenuTriggerRefs.current[patient.id] =
+                                  element;
+                              }}
+                              type="button"
+                              onClick={() =>
+                                setOpenActionMenuPatientId((currentId) =>
+                                  currentId === patient.id ? null : patient.id
+                                )
+                              }
+                              className="inline-flex items-center justify-center rounded-lg border border-(--border-primary) bg-(--bg-tertiary) p-1.5 text-(--text-secondary) transition hover:bg-(--bg-primary)"
+                              aria-label={t(
+                                'Organisation.patients.actions.moreForPatient',
+                                'More actions for {{name}}',
+                                { name: patient.name }
+                              )}
+                              aria-haspopup="menu"
+                              aria-expanded={
+                                openActionMenuPatientId === patient.id
+                              }
+                            >
+                              <MoreHorizontal className="h-3.5 w-3.5" />
+                            </button>
 
-                              {openActionMenuPatientId === patient.id &&
-                                actionMenuPosition &&
-                                createPortal(
-                                  <div
-                                    ref={actionMenuRef}
-                                    role="menu"
-                                    className="fixed z-30 w-44 rounded-xl border border-(--border-primary) bg-(--bg-primary) p-1.5 shadow-lg"
-                                    style={{
-                                      top: actionMenuPosition.top,
-                                      left: actionMenuPosition.left,
-                                      transform: 'translateX(-100%)',
-                                    }}
+                            {openActionMenuPatientId === patient.id &&
+                              actionMenuPosition &&
+                              createPortal(
+                                <div
+                                  ref={actionMenuRef}
+                                  role="menu"
+                                  className="fixed z-30 w-44 rounded-xl border border-(--border-primary) bg-(--bg-primary) p-1.5 shadow-lg"
+                                  style={{
+                                    top: actionMenuPosition.top,
+                                    left: actionMenuPosition.left,
+                                    transform: 'translateX(-100%)',
+                                  }}
+                                >
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    onClick={() =>
+                                      handleOpenPatientHistory(patient.id)
+                                    }
+                                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-(--text-secondary) transition hover:bg-(--bg-tertiary)"
                                   >
-                                    <button
-                                      type="button"
-                                      role="menuitem"
-                                      onClick={() =>
-                                        handleOpenPatientHistory(patient.id)
-                                      }
-                                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-(--text-secondary) transition hover:bg-(--bg-tertiary)"
-                                    >
-                                      <History className="h-3.5 w-3.5" />
-                                      {t(
-                                        'Organisation.patients.actions.viewHistory',
-                                        'View History'
-                                      )}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      role="menuitem"
-                                      onClick={() =>
-                                        handleOpenEditContact(patient)
-                                      }
-                                      className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-(--text-secondary) transition hover:bg-(--bg-tertiary)"
-                                    >
-                                      <Pencil className="h-3.5 w-3.5" />
-                                      {t(
-                                        'Organisation.patients.actions.editContact',
-                                        'Edit Contact'
-                                      )}
-                                    </button>
-                                  </div>,
-                                  document.body
-                                )}
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    )
+                                    <History className="h-3.5 w-3.5" />
+                                    {t(
+                                      'Organisation.patients.actions.viewHistory',
+                                      'View History'
+                                    )}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    onClick={() =>
+                                      handleOpenEditContact(patient)
+                                    }
+                                    className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-(--text-secondary) transition hover:bg-(--bg-tertiary)"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                    {t(
+                                      'Organisation.patients.actions.editContact',
+                                      'Edit Contact'
+                                    )}
+                                  </button>
+                                </div>,
+                                document.body
+                              )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>

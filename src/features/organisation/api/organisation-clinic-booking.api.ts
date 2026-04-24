@@ -43,6 +43,20 @@ export const getOrganisationAppointments = async (
   );
 };
 
+export const getCurrentClinicAppointments = async (
+  date?: string
+): Promise<OrganisationClinicAppointmentDto[]> => {
+  const response = await api.get<
+    ApiResponse<OrganisationClinicAppointmentDto[]>
+  >(API_ENDPOINTS.CLINIC_APPOINTMENTS.LIST, { params: { date } });
+
+  return (
+    unwrapApiData<OrganisationClinicAppointmentDto[] | undefined>(
+      response.data
+    ) ?? []
+  );
+};
+
 export const checkInClinicAppointment = async (
   appointmentId: string
 ): Promise<void> => {

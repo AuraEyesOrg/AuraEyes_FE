@@ -38,7 +38,7 @@ export default function CreateWalkInPatientModal({
     onSuccess: (data: string) => {
       // Invalidate the recent patients query so the new one shows up
       queryClient.invalidateQueries({
-        queryKey: ['organisation-patients', 'recent'],
+        queryKey: ['clinic-patients', 'recent'],
       });
       toast.success(
         t(
