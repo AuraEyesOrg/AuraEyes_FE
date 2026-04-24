@@ -24,6 +24,14 @@ export interface OrganisationClinicAppointmentDto {
     | 'Cancelled'
     | 'NoShow';
   createdAt?: string;
+
+  // Billing info
+  orderId?: string;
+  totalAmount?: number;
+  depositAmount?: number;
+  isPaidDeposit: boolean;
+  remainingAmount: number | null;
+  orderStatus: string | null;
 }
 
 export const getOrganisationAppointments = async (

@@ -132,10 +132,23 @@ function parseClinicCheckInQrPayload(rawValue: string): {
 
   const parts = value.split('|').map((part) => part.trim());
 
-  if (parts.length >= 7 && parts[0] === CLINIC_CHECKIN_QR_PREFIX) {
+  if (parts[0] === CLINIC_CHECKIN_QR_PREFIX) {
     const appointmentId = parts[1] ?? '';
-    const organisationId = parts[3] ?? '';
-    const dateKey = parts[4] ?? '';
+    let organisationId = '';
+    let dateKey = '';
+
+    // Legacy payload:
+    // AURA-CLINIC-APPOINTMENT|appointmentId|patientId|date|start|end
+    if (parts.length >= 6) {
+      dateKey = parts[3] ?? '';
+    }
+
+    // Extended payload:
+    // AURA-CLINIC-APPOINTMENT|appointmentId|patientId|organisationId|date|start|end
+    if (parts.length >= 7) {
+      organisationId = parts[3] ?? '';
+      dateKey = parts[4] ?? '';
+    }
 
     if (!UUID_REGEX.test(appointmentId)) return null;
 

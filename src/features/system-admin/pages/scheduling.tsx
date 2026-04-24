@@ -505,7 +505,7 @@ export default function SystemAdminScheduling() {
 
                 {isLoadingSlots ? (
                   <div className="flex items-center justify-center h-64">
-                    <Spinner size="lg" />
+                    <Spinner size={40} />
                   </div>
                 ) : slots.length === 0 ? (
                   <div className="border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-16 flex items-center justify-center bg-white/50 dark:bg-slate-900/30">
@@ -687,7 +687,7 @@ export default function SystemAdminScheduling() {
 
               {isLoadingTemplates ? (
                 <div className="h-64 flex items-center justify-center">
-                  <Spinner size="lg" />
+                  <Spinner size={40} />
                 </div>
               ) : templates.length === 0 ? (
                 <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-12 text-center">

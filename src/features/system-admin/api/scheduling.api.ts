@@ -1,11 +1,12 @@
 import { api } from '@/lib/api';
-import { ApiResponse, PagedResult } from '@/types/api.types';
+import { ApiResponse } from '@/types/api-response';
+import { PagedResult } from '@/features/patient/types';
 import {
   ScheduleTemplateDto,
   CreateScheduleTemplateRequest,
   UpdateScheduleTemplateRequest,
   AppointmentSlotListDto,
-} from '@/types/schedule.ts';
+} from '@/types/schedule';
 
 const schedulingApi = {
   // --- Schedule Templates ---

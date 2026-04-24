@@ -117,6 +117,7 @@ export const SLOT_TYPE_LABELS: Record<SlotType, string> = {
 /** List item DTO for appointment slots - matches BE AppointmentSlotListDto */
 export interface AppointmentSlotListDto {
   id: string;
+  ophthalId: string;
   scheduleTemplateId: string;
   date: string; // "YYYY-MM-DD"
   startTime: string; // "HH:mm:ss"
@@ -125,12 +126,15 @@ export interface AppointmentSlotListDto {
   maxCapacity: number;
   bookedCount: number;
   availableCapacity: number;
+  cost: number | null;
+  reservationExpireAt?: string | null;
   createdAt: string;
 }
 
 /** Full detail DTO for appointment slot - matches BE AppointmentSlotDto */
 export interface AppointmentSlotDto {
   id: string;
+  ophthalId: string;
   scheduleTemplateId: string;
   date: string; // "YYYY-MM-DD"
   startTime: string; // "HH:mm:ss"
@@ -139,6 +143,8 @@ export interface AppointmentSlotDto {
   maxCapacity: number;
   bookedCount: number;
   availableCapacity: number;
+  cost: number | null;
+  reservationExpireAt?: string | null;
   createdAt: string;
   updatedAt: string | null;
 }
@@ -211,11 +217,16 @@ export type ScheduleTemplateSource = 'Doctor' | 'SystemGenerated';
 
 export interface ScheduleTemplateDto {
   id: string;
-  dayOfWeek: string; // "Monday", "Tuesday", etc.
+  ophthalmologistId?: string;
+  organisationId?: string | null;
+  dayOfWeek: number; // 0=Sunday, 1=Monday, etc.
   startTime: string;
   endTime: string;
   slotDuration: number; // minutes
+  slotType: number;
+  slotTypeName: string;
   maxCapacity: number;
+  cost?: number;
   isActive: boolean;
   source?: ScheduleTemplateSource;
   createdAt: string;
@@ -223,11 +234,15 @@ export interface ScheduleTemplateDto {
 }
 
 export interface CreateScheduleTemplateRequest {
+  ophthalId?: string;
+  organisationId?: string;
   dayOfWeek: number; // 0=Sunday, 1=Monday, etc.
   startTime: string;
   endTime: string;
   slotDuration: number;
+  slotType?: number;
   maxCapacity?: number;
+  cost?: number;
 }
 
 export interface UpdateScheduleTemplateRequest {

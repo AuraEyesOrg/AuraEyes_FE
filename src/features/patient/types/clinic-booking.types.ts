@@ -58,6 +58,7 @@ export interface ClinicAppointmentDto {
   visitReason?: string | null;
   status: ClinicAppointmentStatus;
   createdAt?: string;
+  cost?: number | null;
   /**
    * True when the current patient has already submitted feedback for this
    * appointment. Populated server-side so the client never has to run an
@@ -87,7 +88,7 @@ export interface CreateClinicAppointmentResult {
   /** The Order ID created for this booking deposit. */
   orderId: string | null;
   /** Deposit amount in VND (30% of full slot price). */
-  depositAmount: number;
+  depositAmount?: number | null;
 }
 
 export interface CompleteClinicAppointmentRequest {

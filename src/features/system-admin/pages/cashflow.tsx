@@ -1,157 +1,134 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
-  Eye,
-  RefreshCw,
-  Search,
-  Wallet,
+  CheckCircle,
+  ShoppingCart,
+  Clock3,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  History,
+  AlertCircle,
   X,
-  Landmark,
-  ArrowDown,
+  Wallet,
   ArrowUp,
+  ArrowDown,
+  BarChart3,
+  DollarSign,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
-import {
-  cashflowApi,
-  type CashflowActorRole,
-  type CashflowStatus,
-  type CashflowTransactionDetail,
-} from '../api/cashflow.api';
-import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { getAllOrders } from '@/features/clinic-staff/api/billing.api';
+import type {
+  OrderStatus,
+  PaymentStatus,
+} from '@/features/patient/types/financial.types';
+import { formatCurrency } from '@/lib/helper';
+import { useQuery } from '@tanstack/react-query';
 
-const ROLE_FILTERS: Array<{
-  labelKey: string;
-  labelFallback: string;
-  value: 'all' | CashflowActorRole;
-}> = [
-  {
-    labelKey: 'SystemAdmin.cashflow.filters.role.all',
-    labelFallback: 'All roles',
-    value: 'all',
-  },
-  {
-    labelKey: 'SystemAdmin.cashflow.roles.patient',
-    labelFallback: 'Patient',
-    value: 'Patient',
-  },
-  {
-    labelKey: 'SystemAdmin.cashflow.roles.ophthalmologist',
-    labelFallback: 'Ophthalmologist',
-    value: 'Ophthalmologist',
-  },
-  {
-    labelKey: 'SystemAdmin.cashflow.roles.organisation',
-    labelFallback: 'Organisation',
-    value: 'Organisation',
-  },
-];
+type FilterType = 'all' | 'completed' | 'pending' | 'cancelled';
 
-const STATUS_FILTERS: Array<{
-  labelKey: string;
-  labelFallback: string;
-  value: 'all' | CashflowStatus;
-}> = [
-  {
-    labelKey: 'SystemAdmin.cashflow.filters.status.all',
-    labelFallback: 'All statuses',
-    value: 'all',
-  },
-  {
-    labelKey: 'SystemAdmin.common.status.pending',
-    labelFallback: 'Pending',
-    value: 'Pending',
-  },
-  {
-    labelKey: 'SystemAdmin.common.status.processing',
-    labelFallback: 'Processing',
-    value: 'Processing',
-  },
-  {
-    labelKey: 'SystemAdmin.common.status.completed',
-    labelFallback: 'Completed',
-    value: 'Completed',
-  },
-  {
-    labelKey: 'SystemAdmin.common.status.failed',
-    labelFallback: 'Failed',
-    value: 'Failed',
-  },
-  {
-    labelKey: 'SystemAdmin.common.status.cancelled',
-    labelFallback: 'Cancelled',
-    value: 'Cancelled',
-  },
-  {
-    labelKey: 'SystemAdmin.cashflow.status.refunded',
-    labelFallback: 'Refunded',
-    value: 'Refunded',
-  },
-];
+const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
+  Pending: 'Chờ thanh toán',
+  Confirmed: 'Đã xác nhận',
+  Processing: 'Đang xử lý',
+  Completed: 'Hoàn thành',
+  Cancelled: 'Đã hủy',
+  Refunded: 'Hoàn tiền',
+};
 
-const formatMoney = (value: number, locale: string) =>
-  value.toLocaleString(locale, {
-    style: 'currency',
-    currency: 'VND',
-  });
-
-const formatDateTime = (value: string, locale: string, fallback: string) => {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return fallback;
-  return parsed.toLocaleString(locale);
+const PAYMENT_STATUS_COLOR: Record<PaymentStatus, string> = {
+  Pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  Processing: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  Completed: 'bg-green-500/10 text-green-600 dark:text-green-400',
+  Failed: 'bg-red-500/10 text-red-500 dark:text-red-400',
+  Refunded: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+  Cancelled: 'bg-slate-500/10 text-slate-500 dark:text-slate-400',
 };
 
 export default function CashflowPage() {
-  const { t } = useSafeTranslation();
-  const { i18n } = useTranslation();
-  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
-    ? 'en-US'
-    : 'vi-VN';
-  const notAvailableLabel = t('SystemAdmin.common.notAvailable', 'N/A');
+  const { t } = useTranslation();
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 15;
 
-  const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize] = useState(20);
-  const [actorRole, setActorRole] = useState<'all' | CashflowActorRole>('all');
-  const [status, setStatus] = useState<'all' | CashflowStatus>('all');
-  const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<string>('createdAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [selectedTransaction, setSelectedTransaction] =
-    useState<CashflowTransactionDetail | null>(null);
 
   const query = useQuery({
-    queryKey: [
-      'admin',
-      'cashflow',
-      {
-        pageNumber,
-        pageSize,
-        actorRole,
-        status,
-        searchTerm,
-        sortBy,
-        sortDirection,
-      },
-    ],
-    queryFn: () =>
-      cashflowApi.getTransactions({
-        pageNumber,
-        pageSize,
-        actorRole: actorRole === 'all' ? undefined : actorRole,
-        status: status === 'all' ? undefined : status,
-        searchTerm: searchTerm.trim() || undefined,
-        sortBy,
-        sortDirection,
-      }),
+    queryKey: ['system-admin', 'orders', page, activeFilter],
+    queryKeyHashFn: (key) => JSON.stringify(key),
+    queryFn: () => getAllOrders(page, PAGE_SIZE),
   });
+
+  const orders = query.data?.items ?? [];
+
+  const visibleOrders = useMemo(() => {
+    let result = [...orders];
+    if (activeFilter === 'completed') {
+      result = result.filter(
+        (o) => o.status === 'Completed' || o.status === 'Confirmed'
+      );
+    } else if (activeFilter === 'pending') {
+      result = result.filter(
+        (o) => o.status === 'Pending' || o.status === 'Processing'
+      );
+    } else if (activeFilter === 'cancelled') {
+      result = result.filter(
+        (o) => o.status === 'Cancelled' || o.status === 'Refunded'
+      );
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      const valA = a[sortBy as keyof typeof a];
+      const valB = b[sortBy as keyof typeof b];
+
+      if (valA === valB) return 0;
+      if (valA === null || valA === undefined) return 1;
+      if (valB === null || valB === undefined) return -1;
+
+      const factor = sortDirection === 'asc' ? 1 : -1;
+      return valA < valB ? -factor : factor;
+    });
+
+    return result;
+  }, [activeFilter, orders, sortBy, sortDirection]);
+
+  const summary = useMemo(() => {
+    const completedOrders = orders.filter(
+      (o) => o.status === 'Completed' || o.status === 'Confirmed'
+    );
+    const pendingOrders = orders.filter(
+      (o) => o.status === 'Pending' || o.status === 'Processing'
+    );
+    const totalRevenue = completedOrders.reduce((s, o) => s + o.totalAmount, 0);
+    const totalPending = pendingOrders.reduce((s, o) => s + o.totalAmount, 0);
+
+    return {
+      totalRevenue,
+      totalPending,
+      orderCount: query.data?.totalCount ?? 0,
+    };
+  }, [orders, query.data?.totalCount]);
+
+  const getOrderStatusIcon = (status: OrderStatus) => {
+    if (status === 'Completed' || status === 'Confirmed')
+      return (
+        <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+      );
+    if (status === 'Refunded')
+      return <X className="w-5 h-5 text-purple-600 dark:text-purple-400" />;
+    if (status === 'Cancelled') return <X className="w-5 h-5 text-slate-400" />;
+    return <ShoppingCart className="w-5 h-5 text-amber-500" />;
+  };
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(column);
-      setSortDirection('desc'); // Default to desc when changing column
+      setSortDirection('desc');
     }
   };
 
@@ -164,346 +141,259 @@ export default function CashflowPage() {
     );
   };
 
-  const rows = query.data?.items ?? [];
-  const pageMeta = query.data;
-
-  const pageTotal = useMemo(
-    () => rows.reduce((sum, row) => sum + (row.amount || 0), 0),
-    [rows]
-  );
-
-  const roleSummary = useMemo(() => {
-    return rows.reduce<Record<string, number>>((acc, row) => {
-      acc[row.actorRole] = (acc[row.actorRole] || 0) + row.amount;
-      return acc;
-    }, {});
-  }, [rows]);
-
-  const commissionTotal = useMemo(() => {
-    return rows.reduce((acc, row) => {
-      if (
-        row.actorRole === 'System' &&
-        row.transactionType === 'Deposit' &&
-        row.referenceType === 'Booking'
-      ) {
-        return acc + row.amount;
-      }
-      return acc;
-    }, 0);
-  }, [rows]);
-
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
       <Sidebar />
 
       <div className="flex-1 h-full overflow-y-auto">
         <PageHeader
-          title={t('SystemAdmin.cashflow.title', 'Payment Transactions')}
-          description={t(
-            'SystemAdmin.cashflow.description',
-            'Manage wallet top-up and withdrawal transactions in one financial table'
-          )}
+          title={t('SystemAdmin.cashflow.title', {
+            defaultValue: 'Quản lý thanh toán',
+          })}
+          description={t('SystemAdmin.cashflow.description', {
+            defaultValue:
+              'Theo dõi tất cả đơn thanh toán khám chữa bệnh của bệnh nhân trên toàn hệ thống.',
+          })}
         />
 
-        <main className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <main className="p-6 space-y-6 max-w-[1200px] mx-auto">
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <SummaryCard
-              title={t(
-                'SystemAdmin.cashflow.summary.totalCurrentPage',
-                'Total on current page'
-              )}
-              value={formatMoney(pageTotal, dateLocale)}
-              tone="cyan"
-            />
-            <SummaryCard
-              title={t('SystemAdmin.cashflow.summary.patients', 'Patients')}
-              value={formatMoney(roleSummary.Patient ?? 0, dateLocale)}
+              title="Tổng doanh thu (Trang này)"
+              value={formatCurrency(summary.totalRevenue, { absolute: true })}
               tone="emerald"
+              icon={DollarSign}
             />
             <SummaryCard
-              title={t(
-                'SystemAdmin.cashflow.summary.ophthalmologists',
-                'Ophthalmologists'
-              )}
-              value={formatMoney(roleSummary.Ophthalmologist ?? 0, dateLocale)}
+              title="Tổng chờ (Trang này)"
+              value={formatCurrency(summary.totalPending, { absolute: true })}
               tone="amber"
+              icon={Clock3}
             />
             <SummaryCard
-              title={t(
-                'SystemAdmin.cashflow.summary.organisations',
-                'Organisations'
-              )}
-              value={formatMoney(roleSummary.Organisation ?? 0, dateLocale)}
+              title="Tổng số đơn hàng"
+              value={summary.orderCount.toString()}
               tone="violet"
-            />
-            <SummaryCard
-              title={t(
-                'SystemAdmin.cashflow.summary.commission',
-                'Consultation commission'
-              )}
-              value={formatMoney(commissionTotal, dateLocale)}
-              tone="teal"
-              icon={Landmark}
+              icon={BarChart3}
             />
           </div>
 
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-              <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 min-w-64">
-                <Search className="w-4 h-4 text-slate-400" />
-                <input
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setPageNumber(1);
-                    setSearchTerm(e.target.value);
-                  }}
-                  placeholder={t(
-                    'SystemAdmin.cashflow.filters.searchPlaceholder',
-                    'Search actor, reference, description...'
-                  )}
-                  className="bg-transparent outline-none text-sm w-full"
-                />
-              </div>
+          {/* Order List Card */}
+          <div className="medical-card p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl shadow-sm">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold text-(--text-primary) flex items-center gap-2">
+                <ShoppingCart className="w-5 h-5 text-brand" />
+                Danh sách đơn hàng
+              </h2>
 
-              <div className="flex items-center gap-2">
-                <select
-                  value={actorRole}
-                  onChange={(e) => {
-                    setPageNumber(1);
-                    setActorRole(e.target.value as 'all' | CashflowActorRole);
-                  }}
-                  className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
-                >
-                  {ROLE_FILTERS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {t(option.labelKey, option.labelFallback)}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={status}
-                  onChange={(e) => {
-                    setPageNumber(1);
-                    setStatus(e.target.value as 'all' | CashflowStatus);
-                  }}
-                  className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
-                >
-                  {STATUS_FILTERS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {t(option.labelKey, option.labelFallback)}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  onClick={() => query.refetch()}
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  {t('SystemAdmin.common.actions.refresh', 'Refresh')}
-                </button>
+              {/* Filter tabs */}
+              <div className="inline-flex rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-1">
+                {(
+                  ['all', 'completed', 'pending', 'cancelled'] as FilterType[]
+                ).map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => {
+                      setActiveFilter(option);
+                      setPage(1);
+                    }}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                      activeFilter === option
+                        ? 'bg-white dark:bg-slate-700 text-brand shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                    }`}
+                  >
+                    {option === 'all'
+                      ? 'Tất cả'
+                      : option === 'completed'
+                        ? 'Hoàn thành'
+                        : option === 'pending'
+                          ? 'Chờ'
+                          : 'Đã hủy/Hoàn'}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {query.isLoading ? (
-              <div className="py-10 text-center text-sm text-slate-500">
-                {t(
-                  'SystemAdmin.cashflow.states.loading',
-                  'Loading transaction records...'
-                )}
-              </div>
-            ) : query.isError ? (
-              <div className="py-10 text-center text-sm text-rose-500">
-                {t(
-                  'SystemAdmin.cashflow.states.loadError',
-                  'Unable to load transaction records from API.'
-                )}
-              </div>
-            ) : rows.length === 0 ? (
-              <div className="py-10 text-center text-sm text-slate-500">
-                {t(
-                  'SystemAdmin.cashflow.states.empty',
-                  'No transaction records found.'
-                )}
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left border-b border-slate-200 dark:border-slate-700 text-slate-500">
-                        <th
-                          className="py-3 pr-3 cursor-pointer hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
-                          onClick={() => handleSort('createdAt')}
-                        >
-                          <div className="flex items-center">
-                            {t(
-                              'SystemAdmin.cashflow.table.columns.date',
-                              'Date'
-                            )}
-                            {renderSortIcon('createdAt')}
-                          </div>
-                        </th>
-                        <th className="py-3 pr-3">
-                          {t(
-                            'SystemAdmin.cashflow.table.columns.actor',
-                            'Actor'
-                          )}
-                        </th>
-                        <th className="py-3 pr-3">
-                          {t('SystemAdmin.cashflow.table.columns.role', 'Role')}
-                        </th>
-                        <th className="py-3 pr-3">
-                          {t('SystemAdmin.cashflow.table.columns.type', 'Type')}
-                        </th>
-                        <th
-                          className="py-3 pr-3 cursor-pointer hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
-                          onClick={() => handleSort('amount')}
-                        >
-                          <div className="flex items-center">
-                            {t(
-                              'SystemAdmin.cashflow.table.columns.amount',
-                              'Amount'
-                            )}
-                            {renderSortIcon('amount')}
-                          </div>
-                        </th>
-                        <th className="py-3 pr-3">
-                          {t(
-                            'SystemAdmin.cashflow.table.columns.status',
-                            'Status'
-                          )}
-                        </th>
-                        <th className="py-3 pr-3">
-                          {t(
-                            'SystemAdmin.cashflow.table.columns.reference',
-                            'Reference'
-                          )}
-                        </th>
-                        <th className="py-3 pr-3 text-right">
-                          {t(
-                            'SystemAdmin.cashflow.table.columns.action',
-                            'Action'
-                          )}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((row) => (
-                        <tr
-                          key={row.id}
-                          className="border-b border-slate-100 dark:border-slate-800"
-                        >
-                          <td className="py-3 pr-3 text-slate-600 dark:text-slate-300">
-                            {formatDateTime(
-                              row.createdAt,
-                              dateLocale,
-                              notAvailableLabel
-                            )}
-                          </td>
-                          <td className="py-3 pr-3">
-                            <p className="font-medium text-slate-800 dark:text-slate-100">
-                              {row.actorName}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {row.actorEmail || notAvailableLabel}
-                            </p>
-                          </td>
-                          <td className="py-3 pr-3 text-slate-700 dark:text-slate-300">
-                            {t(
-                              `SystemAdmin.cashflow.roles.${row.actorRole.toLowerCase()}`,
-                              row.actorRole
-                            )}
-                          </td>
-                          <td className="py-3 pr-3">
-                            <p className="text-slate-700 dark:text-slate-300">
-                              {row.transactionType}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {row.referenceType || notAvailableLabel}
-                            </p>
-                          </td>
-                          <td className="py-3 pr-3 font-semibold text-slate-900 dark:text-slate-100">
-                            {formatMoney(row.amount, dateLocale)}
-                          </td>
-                          <td className="py-3 pr-3">
-                            <StatusBadge status={row.status} />
-                          </td>
-                          <td className="py-3 pr-3 text-xs text-slate-500">
-                            {row.bookingCode ||
-                              row.referenceId ||
-                              row.depositOrderCode ||
-                              notAvailableLabel}
-                          </td>
-                          <td className="py-3 pr-3 text-right">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedTransaction(row)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                              {t(
-                                'SystemAdmin.cashflow.table.actions.details',
-                                'Details'
-                              )}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between text-sm">
-                  <span className="text-slate-500">
-                    {t(
-                      'SystemAdmin.cashflow.pagination.pageSummary',
-                      'Showing page {{page}} of {{totalPages}}',
-                      {
-                        page: pageMeta?.pageNumber ?? pageNumber,
-                        totalPages: pageMeta?.totalPages ?? 1,
-                      }
-                    )}
-                  </span>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        setPageNumber((prev) => Math.max(1, prev - 1))
-                      }
-                      disabled={!pageMeta?.hasPrevious}
-                      className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40"
-                    >
-                      {t(
-                        'SystemAdmin.common.pagination.previous',
-                        'Previous page'
-                      )}
-                    </button>
-                    <button
-                      onClick={() =>
-                        setPageNumber((prev) =>
-                          pageMeta?.hasNext ? prev + 1 : prev
-                        )
-                      }
-                      disabled={!pageMeta?.hasNext}
-                      className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40"
-                    >
-                      {t('SystemAdmin.common.pagination.next', 'Next page')}
-                    </button>
+            {query.isLoading && (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div
+                    key={`order-skeleton-${index}`}
+                    className="rounded-2xl border border-slate-100 dark:border-slate-800 p-5"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-48 rounded bg-slate-100 dark:bg-slate-800 animate-pulse" />
+                        <div className="h-3 w-36 rounded bg-slate-100 dark:bg-slate-800 animate-pulse" />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </>
+                ))}
+              </div>
+            )}
+
+            {query.error && (
+              <div className="p-8 text-center text-red-500 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/20">
+                <AlertCircle className="w-10 h-10 mx-auto mb-3" />
+                <p>Lỗi khi tải dữ liệu đơn hàng</p>
+              </div>
+            )}
+
+            {!query.isLoading && !query.error && visibleOrders.length === 0 && (
+              <div className="text-center py-12">
+                <History className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500 font-medium">
+                  Không tìm thấy đơn hàng nào
+                </p>
+              </div>
+            )}
+
+            {!query.isLoading && !query.error && visibleOrders.length > 0 && (
+              <div className="space-y-3">
+                {visibleOrders.map((order) => {
+                  const isCompleted =
+                    order.status === 'Completed' ||
+                    order.status === 'Confirmed';
+                  const isRefunded = order.status === 'Refunded';
+                  const isCancelled = order.status === 'Cancelled';
+                  const isOnlineDeposit = order.depositAmount != null;
+                  const firstPayment = order.payments?.[0];
+
+                  return (
+                    <article
+                      key={order.id}
+                      className="group rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 transition-all hover:border-brand/40 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between gap-4 flex-wrap">
+                        <div className="flex min-w-0 items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-slate-50 dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700">
+                            {getOrderStatusIcon(order.status)}
+                          </div>
+
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand text-[10px] font-bold">
+                                {order.patientName
+                                  ? order.patientName
+                                      .split(' ')
+                                      .map((n) => n[0])
+                                      .join('')
+                                      .toUpperCase()
+                                      .slice(0, 2)
+                                  : 'PT'}
+                              </div>
+                              <p className="text-slate-900 dark:text-white font-bold truncate flex items-center gap-2">
+                                {order.patientName ||
+                                  `Patient ${order.userId.slice(0, 8)}`}
+                              </p>
+                            </div>
+
+                            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400 font-medium">
+                              {order.description || 'Thanh toán phòng khám'}
+                            </p>
+
+                            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                              <span
+                                className="inline-flex items-center gap-1.5 cursor-pointer hover:text-brand transition-colors"
+                                onClick={() => handleSort('createdAt')}
+                              >
+                                <Calendar className="w-3.5 h-3.5 shrink-0" />
+                                {new Date(order.createdAt).toLocaleString()}
+                                {renderSortIcon('createdAt')}
+                              </span>
+                              <span className="text-slate-300">|</span>
+                              <span className="inline-flex items-center gap-1.5 font-medium text-brand">
+                                <Clock3 className="w-3.5 h-3.5 shrink-0" />
+                                ID: {order.id.slice(0, 8)}
+                              </span>
+                              <span className="text-slate-300">|</span>
+                              {isOnlineDeposit ? (
+                                <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 uppercase tracking-tighter">
+                                  Online Deposit
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 uppercase tracking-tighter">
+                                  Full Payment
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-left md:text-right shrink-0 flex flex-col items-end gap-2">
+                          <p className="font-bold text-lg text-slate-900 dark:text-white">
+                            {formatCurrency(order.totalAmount, {
+                              absolute: true,
+                            })}
+                          </p>
+                          {isOnlineDeposit && (
+                            <p className="text-xs text-slate-500 font-medium flex items-center gap-2">
+                              Đã cọc:{' '}
+                              <span className="text-blue-600 dark:text-blue-400">
+                                {formatCurrency(order.depositAmount!)}
+                              </span>
+                              <span className="text-slate-300">|</span>
+                              Còn lại:{' '}
+                              <span className="text-rose-500">
+                                {formatCurrency(
+                                  order.totalAmount - order.depositAmount!
+                                )}
+                              </span>
+                            </p>
+                          )}
+
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                              isCompleted
+                                ? 'bg-green-500/10 text-green-600 dark:text-green-400'
+                                : isCancelled
+                                  ? 'bg-slate-500/10 text-slate-500'
+                                  : isRefunded
+                                    ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                            }`}
+                          >
+                            {ORDER_STATUS_LABEL[order.status]}
+                          </span>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {query.data && query.data.totalPages > 1 && (
+              <div className="flex flex-wrap items-center justify-between mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 gap-3">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={!query.data.hasPrevious}
+                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-slate-100 dark:bg-slate-800 disabled:opacity-50 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Trước
+                </button>
+                <span className="text-sm text-slate-500">
+                  Trang {query.data.pageNumber} / {query.data.totalPages}
+                </span>
+                <button
+                  onClick={() =>
+                    setPage((p) => Math.min(query.data!.totalPages, p + 1))
+                  }
+                  disabled={!query.data.hasNext}
+                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-slate-100 dark:bg-slate-800 disabled:opacity-50 transition-colors"
+                >
+                  Sau
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             )}
           </div>
         </main>
-
-        {selectedTransaction && (
-          <TransactionDetailModal
-            transaction={selectedTransaction}
-            onClose={() => setSelectedTransaction(null)}
-          />
-        )}
       </div>
     </div>
   );
@@ -538,412 +428,6 @@ function SummaryCard({
         <p className="text-sm">{title}</p>
       </div>
       <p className="min-w-0 break-words leading-tight text-xl font-bold">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function StatusBadge({ status }: { status: CashflowStatus }) {
-  const { t } = useSafeTranslation();
-
-  const statusLabelMap: Record<CashflowStatus, string> = {
-    Pending: t('SystemAdmin.common.status.pending', 'Pending'),
-    Processing: t('SystemAdmin.common.status.processing', 'Processing'),
-    Completed: t('SystemAdmin.common.status.completed', 'Completed'),
-    Failed: t('SystemAdmin.common.status.failed', 'Failed'),
-    Cancelled: t('SystemAdmin.common.status.cancelled', 'Cancelled'),
-    Refunded: t('SystemAdmin.cashflow.status.refunded', 'Refunded'),
-  };
-
-  const classes =
-    status === 'Completed'
-      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-      : status === 'Pending' || status === 'Processing'
-        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-        : status === 'Refunded'
-          ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-          : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300';
-
-  return (
-    <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${classes}`}
-    >
-      {statusLabelMap[status]}
-    </span>
-  );
-}
-
-function TransactionDetailModal({
-  transaction,
-  onClose,
-}: {
-  transaction: CashflowTransactionDetail;
-  onClose: () => void;
-}) {
-  const { t } = useSafeTranslation();
-  const { i18n } = useTranslation();
-  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
-    ? 'en-US'
-    : 'vi-VN';
-  const notAvailableLabel = t('SystemAdmin.common.notAvailable', 'N/A');
-
-  const hasWithdrawalDetails =
-    Boolean(transaction.withdrawalBankName) ||
-    Boolean(transaction.withdrawalBankAccountNumber) ||
-    Boolean(transaction.withdrawalExternalPayoutId) ||
-    transaction.referenceType === 'WithdrawalRequest';
-
-  const hasDepositDetails =
-    Boolean(transaction.depositOrderCode) ||
-    Boolean(transaction.depositPaymentMethod) ||
-    Boolean(transaction.depositProviderTxnRef) ||
-    transaction.referenceType === 'DepositRequest' ||
-    transaction.transactionType === 'Deposit';
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="w-full max-w-3xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              {t(
-                'SystemAdmin.cashflow.detailModal.title',
-                'Payment Transaction Details'
-              )}
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {t('SystemAdmin.cashflow.detailModal.idLabel', 'ID')}:{' '}
-              {transaction.id}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="max-h-[70vh] overflow-y-auto p-6 space-y-6">
-          <section>
-            <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">
-              {t(
-                'SystemAdmin.cashflow.detailModal.sections.general',
-                'General Information'
-              )}
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <DetailRow
-                label={t(
-                  'SystemAdmin.cashflow.detailModal.fields.createdAt',
-                  'Created At'
-                )}
-                value={formatDateTime(
-                  transaction.createdAt,
-                  dateLocale,
-                  notAvailableLabel
-                )}
-              />
-              <DetailRow
-                label={t(
-                  'SystemAdmin.cashflow.detailModal.fields.status',
-                  'Status'
-                )}
-                value={transaction.status}
-              />
-              <DetailRow
-                label={t(
-                  'SystemAdmin.cashflow.detailModal.fields.actor',
-                  'Actor'
-                )}
-                value={transaction.actorName}
-              />
-              <DetailRow
-                label={t(
-                  'SystemAdmin.cashflow.detailModal.fields.actorEmail',
-                  'Actor Email'
-                )}
-                value={transaction.actorEmail || notAvailableLabel}
-              />
-              <DetailRow
-                label={t(
-                  'SystemAdmin.cashflow.detailModal.fields.actorRole',
-                  'Actor Role'
-                )}
-                value={transaction.actorRole}
-              />
-              <DetailRow
-                label={t(
-                  'SystemAdmin.cashflow.detailModal.fields.amount',
-                  'Amount'
-                )}
-                value={formatMoney(transaction.amount, dateLocale)}
-              />
-              <DetailRow
-                label={t(
-                  'SystemAdmin.cashflow.detailModal.fields.transactionType',
-                  'Transaction Type'
-                )}
-                value={transaction.transactionType}
-              />
-              <DetailRow
-                label={t(
-                  'SystemAdmin.cashflow.detailModal.fields.referenceType',
-                  'Reference Type'
-                )}
-                value={transaction.referenceType || notAvailableLabel}
-              />
-              <DetailRow
-                label={t(
-                  'SystemAdmin.cashflow.detailModal.fields.referenceId',
-                  'Reference ID'
-                )}
-                value={
-                  transaction.referenceId ||
-                  transaction.bookingCode ||
-                  notAvailableLabel
-                }
-              />
-              <DetailRow
-                label={t(
-                  'SystemAdmin.cashflow.detailModal.fields.description',
-                  'Description'
-                )}
-                value={transaction.description || notAvailableLabel}
-              />
-            </div>
-          </section>
-
-          {hasDepositDetails && (
-            <section>
-              <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">
-                {t(
-                  'SystemAdmin.cashflow.detailModal.sections.topUp',
-                  'Top-up Information'
-                )}
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.orderCode',
-                    'Order Code'
-                  )}
-                  value={transaction.depositOrderCode || notAvailableLabel}
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.paymentMethod',
-                    'Payment Method'
-                  )}
-                  value={transaction.depositPaymentMethod || notAvailableLabel}
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.completedAt',
-                    'Completed At'
-                  )}
-                  value={
-                    transaction.depositCompletedAt
-                      ? formatDateTime(
-                          transaction.depositCompletedAt,
-                          dateLocale,
-                          notAvailableLabel
-                        )
-                      : notAvailableLabel
-                  }
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.providerTxnRef',
-                    'Provider Txn Ref'
-                  )}
-                  value={transaction.depositProviderTxnRef || notAvailableLabel}
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.failureReason',
-                    'Failure Reason'
-                  )}
-                  value={transaction.depositFailureReason || notAvailableLabel}
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.paymentUrl',
-                    'Payment URL'
-                  )}
-                  value={transaction.depositPaymentUrl || notAvailableLabel}
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.returnUrl',
-                    'Return URL'
-                  )}
-                  value={transaction.depositReturnUrl || notAvailableLabel}
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.cancelUrl',
-                    'Cancel URL'
-                  )}
-                  value={transaction.depositCancelUrl || notAvailableLabel}
-                />
-              </div>
-
-              <div className="mt-3">
-                <p className="text-xs font-medium text-slate-500 mb-1">
-                  {t(
-                    'SystemAdmin.cashflow.detailModal.fields.providerResponse',
-                    'Provider Response'
-                  )}
-                </p>
-                <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 text-xs whitespace-pre-wrap break-all text-slate-700 dark:text-slate-300">
-                  {transaction.depositProviderResponse || notAvailableLabel}
-                </div>
-              </div>
-            </section>
-          )}
-
-          {hasWithdrawalDetails && (
-            <section>
-              <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">
-                {t(
-                  'SystemAdmin.cashflow.detailModal.sections.withdrawal',
-                  'Withdrawal Information'
-                )}
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.processedAt',
-                    'Processed At'
-                  )}
-                  value={
-                    transaction.withdrawalProcessedAt
-                      ? formatDateTime(
-                          transaction.withdrawalProcessedAt,
-                          dateLocale,
-                          notAvailableLabel
-                        )
-                      : notAvailableLabel
-                  }
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.processedByAdmin',
-                    'Processed By Admin'
-                  )}
-                  value={
-                    transaction.withdrawalProcessedByAdminId ||
-                    notAvailableLabel
-                  }
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.bankName',
-                    'Bank Name'
-                  )}
-                  value={transaction.withdrawalBankName || notAvailableLabel}
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.bankAccountNumber',
-                    'Bank Account Number'
-                  )}
-                  value={
-                    transaction.withdrawalBankAccountNumber || notAvailableLabel
-                  }
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.accountHolder',
-                    'Account Holder'
-                  )}
-                  value={
-                    transaction.withdrawalAccountHolderName || notAvailableLabel
-                  }
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.bankBin',
-                    'Bank BIN'
-                  )}
-                  value={transaction.withdrawalBankBin || notAvailableLabel}
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.transferReference',
-                    'Transfer Reference'
-                  )}
-                  value={
-                    transaction.withdrawalTransferReference || notAvailableLabel
-                  }
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.payOSExternalPayoutId',
-                    'PayOS External Payout ID'
-                  )}
-                  value={
-                    transaction.withdrawalExternalPayoutId || notAvailableLabel
-                  }
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.payOSReferenceId',
-                    'PayOS Reference ID'
-                  )}
-                  value={
-                    transaction.withdrawalPayOSReferenceId || notAvailableLabel
-                  }
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.payOSTransactionId',
-                    'PayOS Transaction ID'
-                  )}
-                  value={
-                    transaction.withdrawalPayOSTransactionId ||
-                    notAvailableLabel
-                  }
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.payOSApprovalState',
-                    'PayOS Approval State'
-                  )}
-                  value={
-                    transaction.withdrawalPayOSApprovalState ||
-                    notAvailableLabel
-                  }
-                />
-                <DetailRow
-                  label={t(
-                    'SystemAdmin.cashflow.detailModal.fields.payoutFee',
-                    'Payout Fee'
-                  )}
-                  value={
-                    transaction.withdrawalFee !== null &&
-                    transaction.withdrawalFee !== undefined
-                      ? formatMoney(transaction.withdrawalFee, dateLocale)
-                      : notAvailableLabel
-                  }
-                />
-              </div>
-            </section>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
-      <p className="text-xs text-slate-500 mb-0.5">{label}</p>
-      <p className="font-medium text-slate-800 dark:text-slate-100 break-all">
         {value}
       </p>
     </div>

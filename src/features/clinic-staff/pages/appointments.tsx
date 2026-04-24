@@ -8,12 +8,18 @@ import {
   QrCode,
   X,
   UserX,
+  Banknote,
+  CreditCard,
+  Receipt,
+  CheckCircle,
+  Clock3,
 } from 'lucide-react';
 import { useQueries } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import Spinner from '@/components/ui/spinner';
 import useAuthStore from '@/store/auth-store';
+import PaymentConfirmationModal from '../components/PaymentConfirmationModal';
 import { getCurrentClinicAppointments } from '@/features/organisation/api/organisation-clinic-booking.api';
 import {
   organisationClinicBookingKeys,
@@ -21,6 +27,7 @@ import {
   useCompleteClinicAppointment,
   useMarkNoShowClinicAppointment,
   useStartClinicAppointment,
+  useCompleteOrderPayment,
 } from '@/features/organisation/hooks/use-organisation-clinic-booking';
 import { mapClinicStaffErrorMessage } from '@/lib/api-error';
 import {
@@ -126,10 +133,24 @@ function parseClinicCheckInQrPayload(rawValue: string): {
   if (!value) return null;
   const parts = value.split('|').map((part) => part.trim());
 
-  if (parts.length >= 7 && parts[0] === CLINIC_CHECKIN_QR_PREFIX) {
+  if (parts[0] === CLINIC_CHECKIN_QR_PREFIX) {
     const appointmentId = parts[1] ?? '';
-    const organisationId = parts[3] ?? '';
-    const dateKey = parts[4] ?? '';
+    let organisationId = '';
+    let dateKey = '';
+
+    // Legacy payload:
+    // AURA-CLINIC-APPOINTMENT|appointmentId|patientId|date|start|end
+    if (parts.length >= 6) {
+      dateKey = parts[3] ?? '';
+    }
+
+    // Extended payload:
+    // AURA-CLINIC-APPOINTMENT|appointmentId|patientId|organisationId|date|start|end
+    if (parts.length >= 7) {
+      organisationId = parts[3] ?? '';
+      dateKey = parts[4] ?? '';
+    }
+
     if (!UUID_REGEX.test(appointmentId)) return null;
     return {
       appointmentId,
@@ -163,6 +184,8 @@ export default function ClinicStaffAppointmentsPage() {
   const [scanTargetAppointmentId, setScanTargetAppointmentId] = useState<
     string | null
   >(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [appointmentToPay, setAppointmentToPay] = useState<any>(null);
 
   const weekWindow = useMemo(() => {
     const weekStart = getStartOfWeekMonday(new Date());
@@ -217,6 +240,7 @@ export default function ClinicStaffAppointmentsPage() {
   const startMutation = useStartClinicAppointment();
   const completeMutation = useCompleteClinicAppointment();
   const noShowMutation = useMarkNoShowClinicAppointment();
+  const payRemainingMutation = useCompleteOrderPayment();
 
   const stats = useMemo(
     () => ({
@@ -232,7 +256,8 @@ export default function ClinicStaffAppointmentsPage() {
     checkInMutation.isPending ||
     startMutation.isPending ||
     completeMutation.isPending ||
-    noShowMutation.isPending;
+    noShowMutation.isPending ||
+    payRemainingMutation.isPending;
 
   const getStatusDisplay = (status: string) => {
     switch (status) {
@@ -690,11 +715,10 @@ export default function ClinicStaffAppointmentsPage() {
                         ))}
                       </div>
                     )}
-
-                    <div className="mb-3 flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
+                    <div className="mb-4 flex items-start justify-between gap-4">
+                      <div className="flex items-center gap-4">
                         <div
-                          className={`relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-medium ${avatarColors[appt.status] ?? avatarColors.Pending}`}
+                          className={`relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-sm font-bold shadow-sm ${avatarColors[appt.status] ?? avatarColors.Pending}`}
                         >
                           <span>{initials}</span>
                           {patientAvatarUrl && (
@@ -709,30 +733,139 @@ export default function ClinicStaffAppointmentsPage() {
                           )}
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-(--text-primary)">
+                          <h3 className="text-base font-bold text-(--text-primary)">
                             {patientDisplayName}
-                          </p>
-                          <p className="mt-0.5 flex items-center gap-1 text-xs text-(--text-muted)">
-                            <Clock className="h-3 w-3" />
-                            {formatSlotTime(appt.startTime)} -{' '}
-                            {formatSlotTime(appt.endTime)}
-                          </p>
+                          </h3>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-(--text-secondary)">
+                            <span className="flex items-center gap-1.5 font-medium text-cyan-600 dark:text-cyan-400">
+                              <Clock className="h-3.5 w-3.5" />
+                              {formatSlotTime(appt.startTime)} -{' '}
+                              {formatSlotTime(appt.endTime)}
+                            </span>
+                            <span className="text-(--text-muted)">•</span>
+                            <span className="flex items-center gap-1.5">
+                              <Calendar className="h-3.5 w-3.5 text-(--text-muted)" />
+                              {formatDate(appt.date, 'short')}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <span
-                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusBadge[appt.status] ?? statusBadge.Pending}`}
-                      >
-                        {getStatusDisplay(appt.status)}
-                      </span>
+                      <div className="flex flex-col items-end gap-1.5">
+                        <span
+                          className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold tracking-tight uppercase shadow-xs ${statusBadge[appt.status] ?? statusBadge.Pending}`}
+                        >
+                          {getStatusDisplay(appt.status)}
+                        </span>
+                        {appt.orderId && (
+                          <div className="flex justify-end">
+                            {appt.orderStatus === 'Pending' && (
+                              <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 uppercase tracking-tighter">
+                                <Clock3 className="w-3 h-3" />
+                                Pending
+                              </span>
+                            )}
+                            {appt.orderStatus === 'Confirmed' && (
+                              <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 uppercase tracking-tighter">
+                                <CreditCard className="w-3 h-3" />
+                                Đã đặt cọc
+                              </span>
+                            )}
+                            {appt.orderStatus === 'Completed' && (
+                              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 uppercase tracking-tighter">
+                                <CheckCircle className="w-3 h-3" />
+                                Hoàn thành
+                              </span>
+                            )}
+                            {appt.orderStatus === 'Cancelled' && (
+                              <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 uppercase tracking-tighter">
+                                <UserX className="w-3 h-3" />
+                                Đã hủy
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    {appt.visitReason && (
-                      <p className="mb-3 text-xs italic text-(--text-secondary)">
-                        {appt.visitReason}
-                      </p>
+                    {/* Billing Context */}
+                    {(appt.totalAmount || appt.orderId) && (
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-(--border-color) bg-(--bg-secondary) p-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand/10 text-brand">
+                            <Receipt className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-(--text-muted)">
+                              {t('Organisation.billing.summary', 'Billing')}
+                            </p>
+                            <p className="text-sm font-bold text-(--text-primary)">
+                              {appt.totalAmount
+                                ? new Intl.NumberFormat('vi-VN', {
+                                    style: 'currency',
+                                    currency: 'VND',
+                                  }).format(appt.totalAmount)
+                                : '---'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-4 text-right">
+                          {appt.depositAmount && (
+                            <div>
+                              <p className="text-[10px] font-medium text-(--text-muted)">
+                                {t(
+                                  'Organisation.billing.deposit',
+                                  'Paid Deposit'
+                                )}
+                              </p>
+                              <p className="text-xs font-semibold text-emerald-600">
+                                {new Intl.NumberFormat('vi-VN', {
+                                  style: 'currency',
+                                  currency: 'VND',
+                                }).format(appt.depositAmount)}
+                              </p>
+                            </div>
+                          )}
+                          {appt.remainingAmount !== undefined && (
+                            <div>
+                              <p className="text-[10px] font-medium text-(--text-muted)">
+                                {appt.remainingAmount === 0
+                                  ? t(
+                                      'Organisation.billing.fullyPaid',
+                                      'Fully Paid'
+                                    )
+                                  : t(
+                                      'Organisation.billing.remaining',
+                                      'Remaining'
+                                    )}
+                              </p>
+                              <p
+                                className={`text-xs font-bold ${appt.remainingAmount === 0 ? 'text-emerald-600' : 'text-rose-500'}`}
+                              >
+                                {new Intl.NumberFormat('vi-VN', {
+                                  style: 'currency',
+                                  currency: 'VND',
+                                }).format(appt.remainingAmount ?? 0)}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     )}
 
-                    <div className="flex flex-wrap items-center gap-2">
+                    {appt.visitReason && (
+                      <div className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50/50 p-2.5 dark:bg-amber-900/10">
+                        <span className="mt-0.5 text-amber-500">
+                          <Play className="h-3 w-3 rotate-90" />
+                        </span>
+                        <p className="text-xs text-amber-800 dark:text-amber-200">
+                          <span className="font-semibold">Reason:</span>{' '}
+                          {appt.visitReason}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-3">
                       {appt.status === 'Pending' ? (
                         <button
                           type="button"
@@ -750,9 +883,9 @@ export default function ClinicStaffAppointmentsPage() {
                             setScanTargetAppointmentId(appt.id);
                             setIsQrScannerOpen(true);
                           }}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="inline-flex h-9 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          <QrCode className="h-3.5 w-3.5" />
+                          <QrCode className="h-4 w-4" />
                           {t(
                             'Organisation.calendar.actions.scanQrCheckIn',
                             'Scan QR check-in'
@@ -768,13 +901,37 @@ export default function ClinicStaffAppointmentsPage() {
                               primaryAction.successMessage
                             )
                           }
-                          className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${primaryAction.className}`}
+                          className={`inline-flex h-9 items-center gap-2 rounded-xl px-4 text-sm font-bold transition shadow-xs ${primaryAction.className}`}
                         >
-                          <primaryAction.icon className="h-3.5 w-3.5" />
+                          <primaryAction.icon className="h-4 w-4" />
                           {primaryAction.label}
                         </button>
-                      ) : isTerminal ? (
-                        <span className="text-xs italic text-(--text-muted)">
+                      ) : null}
+
+                      {/* Payment Action for Staff */}
+                      {appt.orderId &&
+                        (appt.remainingAmount ?? 0) > 0 &&
+                        ['CheckedIn', 'InProgress'].includes(appt.status) && (
+                          <button
+                            type="button"
+                            disabled={isMutating}
+                            onClick={() => {
+                              setAppointmentToPay(appt);
+                              setIsPaymentModalOpen(true);
+                            }}
+                            className="inline-flex h-9 items-center gap-2 rounded-xl border-2 border-emerald-600 bg-white px-4 text-sm font-bold text-emerald-600 transition hover:bg-emerald-50 disabled:opacity-50 dark:bg-transparent dark:hover:bg-emerald-900/20"
+                          >
+                            <Banknote className="h-4 w-4" />
+                            {t(
+                              'Organisation.calendar.actions.payRemaining',
+                              'Pay Remaining'
+                            )}
+                          </button>
+                        )}
+
+                      {isTerminal ? (
+                        <span className="text-xs font-medium italic text-(--text-muted) flex items-center gap-1.5">
+                          <CheckCircle className="h-3.5 w-3.5" />
                           {appt.status === 'Completed' &&
                             t(
                               'Organisation.calendar.states.terminal.completed',
@@ -791,9 +948,7 @@ export default function ClinicStaffAppointmentsPage() {
                               'Appointment cancelled'
                             )}
                         </span>
-                      ) : null}
-
-                      {canMarkNoShow(appt.status) && (
+                      ) : (
                         <button
                           type="button"
                           disabled={isMutating}
@@ -801,15 +956,18 @@ export default function ClinicStaffAppointmentsPage() {
                             void runAction(
                               () => noShowMutation.mutateAsync(appt.id),
                               t(
-                                'Organisation.calendar.toast.markedNoShow',
+                                'Organisation.calendar.toast.noShowMarked',
                                 'Marked as no-show.'
                               )
                             )
                           }
-                          className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs text-red-600 transition hover:bg-red-50 disabled:opacity-40 dark:border-red-800 dark:text-red-400"
+                          className="inline-flex h-9 items-center gap-2 rounded-xl px-3 text-xs font-bold text-rose-500 transition hover:bg-rose-50 disabled:opacity-50 dark:hover:bg-rose-950/20"
                         >
                           <UserX className="h-3.5 w-3.5" />
-                          {t('Organisation.calendar.actions.noShow', 'No-show')}
+                          {t(
+                            'Organisation.calendar.actions.markNoShow',
+                            'No-show'
+                          )}
                         </button>
                       )}
                     </div>
@@ -857,6 +1015,24 @@ export default function ClinicStaffAppointmentsPage() {
           </div>
         </div>
       )}
+      {/* Payment Confirmation Modal */}
+      <PaymentConfirmationModal
+        open={isPaymentModalOpen}
+        onClose={() => {
+          setIsPaymentModalOpen(false);
+          setAppointmentToPay(null);
+        }}
+        appointment={appointmentToPay}
+        isProcessing={payRemainingMutation.isPending}
+        onConfirm={async (method) => {
+          if (!appointmentToPay?.orderId) return;
+
+          return payRemainingMutation.mutateAsync({
+            orderId: appointmentToPay.orderId,
+            method,
+          });
+        }}
+      />
     </ClinicStaffLayout>
   );
 }
