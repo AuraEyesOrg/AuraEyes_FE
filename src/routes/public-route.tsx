@@ -84,9 +84,11 @@ const PublicRoute: React.FC<Props> = ({ children }) => {
     ? '/system-admin/dashboard'
     : roles.includes('OrgAdmin') || roles.includes('Organization')
       ? '/organisation/dashboard'
-      : roles.includes('Ophthalmologist')
-        ? '/ophthalmologist/dashboard'
-        : '/patient/dashboard';
+      : roles.includes('ClinicStaff')
+        ? '/clinic-staff/dashboard'
+        : roles.includes('Ophthalmologist')
+          ? '/ophthalmologist/dashboard'
+          : '/patient/dashboard';
 
   return <Navigate to={resolvePathWithLocale(dashboardPath)} replace />;
 };

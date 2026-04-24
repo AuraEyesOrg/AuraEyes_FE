@@ -1875,15 +1875,15 @@
   },
   "Contact": {
     "toast": {
-      "success": "Request submitted successfully. The System Admin has been notified by email.",
+      "success": "Your message has been sent successfully. Our team will get back to you soon.",
       "error": "Unable to submit request. Please try again."
     },
     "hero": {
-      "badge": "Join Our Network",
-      "titlePrefix": "Partner with",
-      "titleSuffix": "to Improve Vision Health Worldwide",
-      "description": "Whether you're a hospital or a clinic network, AURA provides the tools and support to bring advanced retinal screening to your patients.",
-      "primaryCta": "Apply for Partnership"
+      "badge": "Contact the AURA Team",
+      "titlePrefix": "Get in touch with",
+      "titleSuffix": "for quick support",
+      "description": "Need technical help, product guidance, or want to share feedback? Send us a message and our team will respond as soon as possible.",
+      "primaryCta": "Send a Message"
     },
     "partnerCard": {
       "title": "Medical Organization (Hospitals/Clinics)",
@@ -1896,8 +1896,8 @@
     },
     "info": {
       "badge": "Contact Information",
-      "title": "Let's Talk Partnership",
-      "description": "Reach out to our team for onboarding guidance, support, and partnership consultation.",
+      "title": "Connect with us",
+      "description": "Our team is here to help with platform questions, user support, and general inquiries about AURA.",
       "emailSupport": "Email Support",
       "responseTime": "Response Time",
       "responseTimeValue": "Within 24-48 business hours",
@@ -1905,11 +1905,11 @@
       "headquartersValue": "FPT University, HCM, VN"
     },
     "form": {
-      "title": "Partner with AURA",
-      "description": "Fill out the form to discuss volume licensing and API integrations",
-      "contactPerson": "Contact Person",
+      "title": "Send us a message",
+      "description": "Fill out the form below and we will get back to you shortly",
+      "contactPerson": "Contact details",
       "fullName": "Full Name",
-      "role": "Job Title / Role",
+      "role": "Subject",
       "workEmail": "Work Email",
       "workEmailPlaceholder": "contact@organization.com",
       "phone": "Phone Number",
@@ -1933,8 +1933,8 @@
       "termsOfService": "Terms of Service",
       "and": "and",
       "privacyPolicy": "Privacy Policy",
-      "sending": "Sending Request...",
-      "send": "Send Partnership Request"
+      "sending": "Sending message...",
+      "send": "Send message"
     },
     "impact": {
       "title": "Our Growing Impact",
@@ -1948,12 +1948,12 @@
       "title": "Frequently Asked Questions",
       "items": {
         "cost": {
-          "question": "Is there a cost to partner with AURA?",
-          "answer": "For individual clinicians and non-profit organizations, AURA is completely free. For large commercial enterprises, we offer tiered pricing based on volume."
+          "question": "When will I receive a response?",
+          "answer": "Our team typically responds within 24-48 business hours. Urgent requests are prioritized whenever possible."
         },
         "onboarding": {
-          "question": "How long does the onboarding process take?",
-          "answer": "Most organizations can be set up and running within 2-4 weeks depending on integration complexity."
+          "question": "What can I contact AURA about?",
+          "answer": "You can contact us about account support, technical issues, product feedback, collaboration opportunities, or any general platform question."
         }
       }
     }

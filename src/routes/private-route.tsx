@@ -57,7 +57,67 @@ const PrivateRoute: React.FC<Props> = ({
     return <Navigate to={resolvePathWithLocale('/')} replace />;
   }
 
-  const isClinicStaff = hasAnyRole(['ClinicStaff']);
+  const isClinicStaff = hasAnyRole(['ClinicStaff', 'OrgAdmin', 'Organization']);
+  const canReadContracts = user?.permissions?.includes('contracts:read');
+  const mustChangePassword = isClinicStaff && user?.mustChangePassword;
+  const isOrganisationContractPath =
+    normalizedPath === '/organisation/contract';
+
+  const organisationContractQuery = useQuery({
+    queryKey: ['organisation', 'my-contract', 'gate'],
+    queryFn: organisationContractApi.getMyContract,
+    enabled: isClinicStaff && canReadContracts,
+    staleTime: 30_000,
+    retry: 1,
+  });
+
+  const hasActiveOrganisationContract =
+    organisationContractQuery.data?.status === 'Active';
+  const isOrgContractGateResolved =
+    !isClinicStaff ||
+    !canReadContracts ||
+    organisationContractQuery.isSuccess ||
+    organisationContractQuery.isError;
+
+  if (
+    isClinicStaff &&
+    !isOrganisationContractPath &&
+    !isOrgContractGateResolved
+  ) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
+      </div>
+    );
+  }
+
+  const isOnChangePasswordTab =
+    isOrganisationContractPath &&
+    new URLSearchParams(location.search).get('tab') === 'change-password';
+
+  if (
+    isClinicStaff &&
+    canReadContracts &&
+    !hasActiveOrganisationContract &&
+    !isOrganisationContractPath
+  ) {
+    return (
+      <Navigate to={resolvePathWithLocale('/organisation/contract')} replace />
+    );
+  }
+
+  if (
+    mustChangePassword &&
+    hasActiveOrganisationContract &&
+    !isOnChangePasswordTab
+  ) {
+    return (
+      <Navigate
+        to={resolvePathWithLocale('/organisation/contract?tab=change-password')}
+        replace
+      />
+    );
+  }
 
   // Redirect unverified ophthalmologists to pending approval page
   const isOphthalmologist = hasAnyRole(['Ophthalmologist']);

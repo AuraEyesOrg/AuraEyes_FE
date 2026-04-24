@@ -1874,15 +1874,15 @@
   },
   "Contact": {
     "toast": {
-      "success": "Gửi yêu cầu thành công. Quản trị hệ thống đã được thông báo qua email.",
+      "success": "Gửi liên hệ thành công. Chúng tôi sẽ phản hồi sớm nhất có thể.",
       "error": "Không thể gửi yêu cầu. Vui lòng thử lại."
     },
     "hero": {
-      "badge": "Tham gia mạng lưới của chúng tôi",
-      "titlePrefix": "Đồng hành cùng",
-      "titleSuffix": "để nâng cao chăm sóc thị lực toàn cầu",
-      "description": "Dù bạn là bệnh viện hay chuỗi phòng khám, AURA cung cấp công cụ và hỗ trợ cần thiết để triển khai sàng lọc võng mạc tiên tiến.",
-      "primaryCta": "Đăng ký hợp tác"
+      "badge": "Liên hệ với đội ngũ AURA",
+      "titlePrefix": "Liên hệ cùng",
+      "titleSuffix": "để được hỗ trợ nhanh chóng",
+      "description": "Bạn cần hỗ trợ kỹ thuật, tư vấn sản phẩm, hoặc góp ý cho AURA? Hãy để lại thông tin, chúng tôi sẽ phản hồi trong thời gian sớm nhất.",
+      "primaryCta": "Gửi liên hệ"
     },
     "partnerCard": {
       "title": "Tổ chức y tế (Bệnh viện/Phòng khám)",
@@ -1895,8 +1895,8 @@
     },
     "info": {
       "badge": "Thông tin liên hệ",
-      "title": "Trao đổi về hợp tác",
-      "description": "Liên hệ đội ngũ của chúng tôi để được tư vấn onboarding, hỗ trợ kỹ thuật và chiến lược hợp tác.",
+      "title": "Kết nối với chúng tôi",
+      "description": "Đội ngũ AURA luôn sẵn sàng hỗ trợ các câu hỏi về nền tảng, trải nghiệm sử dụng và định hướng triển khai.",
       "emailSupport": "Hỗ trợ qua email",
       "responseTime": "Thời gian phản hồi",
       "responseTimeValue": "Trong vòng 24-48 giờ làm việc",
@@ -1904,11 +1904,11 @@
       "headquartersValue": "Đại học FPT, TP.HCM, Việt Nam"
     },
     "form": {
-      "title": "Hợp tác cùng AURA",
-      "description": "Điền biểu mẫu để trao đổi về giấy phép theo sản lượng và tích hợp API",
-      "contactPerson": "Người liên hệ",
+      "title": "Gửi yêu cầu liên hệ",
+      "description": "Điền biểu mẫu bên dưới để gửi câu hỏi hoặc nội dung bạn cần chúng tôi hỗ trợ",
+      "contactPerson": "Thông tin người liên hệ",
       "fullName": "Họ và tên",
-      "role": "Chức danh / Vai trò",
+      "role": "Chủ đề",
       "workEmail": "Email công việc",
       "workEmailPlaceholder": "contact@organization.com",
       "phone": "Số điện thoại",
@@ -1932,8 +1932,8 @@
       "termsOfService": "Điều khoản dịch vụ",
       "and": "và",
       "privacyPolicy": "Chính sách quyền riêng tư",
-      "sending": "Đang gửi yêu cầu...",
-      "send": "Gửi yêu cầu hợp tác"
+      "sending": "Đang gửi liên hệ...",
+      "send": "Gửi liên hệ"
     },
     "impact": {
       "title": "Tác động đang mở rộng",
@@ -1947,12 +1947,12 @@
       "title": "Câu hỏi thường gặp",
       "items": {
         "cost": {
-          "question": "Hợp tác với AURA có mất phí không?",
-          "answer": "Đối với bác sĩ cá nhân và tổ chức phi lợi nhuận, AURA hoàn toàn miễn phí. Với doanh nghiệp quy mô lớn, chúng tôi có các gói theo sản lượng."
+          "question": "Khi nào tôi sẽ nhận được phản hồi?",
+          "answer": "Đội ngũ hỗ trợ thường phản hồi trong vòng 24-48 giờ làm việc. Các yêu cầu khẩn cấp sẽ được ưu tiên xử lý."
         },
         "onboarding": {
-          "question": "Quy trình onboarding mất bao lâu?",
-          "answer": "Hầu hết tổ chức có thể triển khai trong 2-4 tuần tùy mức độ tích hợp."
+          "question": "Tôi có thể liên hệ vì vấn đề gì?",
+          "answer": "Bạn có thể liên hệ về tài khoản, lỗi kỹ thuật, góp ý sản phẩm, hợp tác truyền thông hoặc các thắc mắc liên quan đến nền tảng AURA."
         }
       }
     }
