@@ -20,6 +20,26 @@ export const getAllOrders = async (
   });
   return data;
 };
-export const completeOrder = async (orderId: string): Promise<void> => {
-  await api.post(`/financial/orders/${orderId}/complete`);
+
+export const getOrderById = async (orderId: string): Promise<OrderDto> => {
+  const { data } = await api.get<any>(`/financial/orders/${orderId}`);
+  return data.data;
+};
+
+export interface CompleteOrderResponse {
+  orderId: string;
+  paymentId: string;
+  paymentStatus: string;
+  paymentUrl?: string;
+  paymentOrderCode?: string;
+}
+
+export const completeOrder = async (
+  orderId: string,
+  method: 'Cash' | 'PayOS' = 'Cash'
+): Promise<CompleteOrderResponse> => {
+  const { data } = await api.post<any>(
+    `/financial/orders/${orderId}/complete?method=${method}`
+  );
+  return data.data;
 };

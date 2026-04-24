@@ -25,3 +25,18 @@ export const useCompleteOrder = () => {
     },
   });
 };
+
+export const useOrderDetails = (
+  orderId: string | null,
+  intervalMs: number = 0
+) => {
+  return useQuery({
+    queryKey: ['clinic-staff-order', orderId],
+    queryFn: () =>
+      orderId
+        ? import('../api/billing.api').then((m) => m.getOrderById(orderId))
+        : Promise.reject('No ID'),
+    enabled: !!orderId,
+    refetchInterval: intervalMs > 0 ? intervalMs : false,
+  });
+};

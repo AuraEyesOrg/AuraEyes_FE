@@ -86,3 +86,27 @@ export const useMarkNoShowClinicAppointment = () => {
     },
   });
 };
+
+export const useCompleteOrderPayment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      orderId,
+      method = 'Cash',
+    }: {
+      orderId: string;
+      method?: 'Cash' | 'PayOS';
+    }) =>
+      import('@/features/clinic-staff/api/billing.api').then((m) =>
+        m.completeOrder(orderId, method)
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: organisationClinicBookingKeys.all,
+      });
+      // Also invalidate billing/financial queries if they exist
+      queryClient.invalidateQueries({ queryKey: ['financial'] });
+      queryClient.invalidateQueries({ queryKey: ['system-admin', 'orders'] });
+    },
+  });
+};
