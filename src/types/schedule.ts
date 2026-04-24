@@ -236,6 +236,7 @@ export interface UpdateScheduleTemplateRequest {
   endTime: string;
   slotDuration: number;
   maxCapacity?: number;
+  isActive?: boolean;
 }
 
 // ============ QUERY PARAMS ============

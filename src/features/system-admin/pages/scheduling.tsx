@@ -14,6 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Pencil,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react';
 import {
   format,
@@ -31,7 +33,7 @@ import CreateTemplateModal from '../components/CreateTemplateModal';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import Spinner from '@/components/ui/spinner';
 
-import { ScheduleTemplateDto } from '@/types/schedule';
+import { ScheduleTemplateDto, DAY_OF_WEEK_LABELS } from '@/types/schedule';
 
 type Tab = 'appointments' | 'templates';
 
@@ -121,8 +123,84 @@ export default function SystemAdminScheduling() {
     },
   });
 
+  const toggleTemplateStatusMutation = useMutation({
+    mutationFn: ({
+      templateId,
+      isActive,
+      template,
+    }: {
+      templateId: string;
+      isActive: boolean;
+      template: ScheduleTemplateDto;
+    }) =>
+      schedulingApi.updateTemplate(templateId, {
+        dayOfWeek: Object.keys(DAY_OF_WEEK_LABELS).find(
+          (key) => DAY_OF_WEEK_LABELS[parseInt(key)] === template.dayOfWeek
+        )
+          ? parseInt(
+              Object.keys(DAY_OF_WEEK_LABELS).find(
+                (key) =>
+                  DAY_OF_WEEK_LABELS[parseInt(key)] === template.dayOfWeek
+              )!
+            )
+          : 0,
+        startTime: template.startTime,
+        endTime: template.endTime,
+        slotDuration: template.slotDuration,
+        maxCapacity: template.maxCapacity,
+        isActive: isActive,
+      }),
+    onSuccess: () => {
+      toast.success(
+        t(
+          'SystemAdmin.scheduling.toasts.statusUpdateSuccess',
+          'Template status updated successfully.'
+        )
+      );
+      queryClient.invalidateQueries({
+        queryKey: ['system-admin', 'schedule-templates'],
+      });
+    },
+    onError: (error) => {
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.scheduling.toasts.statusUpdateError',
+            'Failed to update template status.'
+          )
+        )
+      );
+    },
+  });
+
   const templates = templatesData?.data?.items ?? [];
   const slots = slotsData?.data?.items ?? [];
+
+  // Sort templates by Day of Week (Monday first)
+  const sortedTemplates = useMemo(() => {
+    const dayOrder = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    return [...templates].sort((a, b) => {
+      // First sort by Active status (Active first, Inactive last)
+      if (a.isActive !== b.isActive) {
+        return a.isActive ? -1 : 1;
+      }
+
+      const indexA = dayOrder.indexOf(a.dayOfWeek);
+      const indexB = dayOrder.indexOf(b.dayOfWeek);
+      if (indexA !== indexB) return indexA - indexB;
+      // If same day, sort by start time
+      return a.startTime.localeCompare(b.startTime);
+    });
+  }, [templates]);
 
   // Week Calendar Logic
   const weekDays = useMemo(() => {
@@ -623,10 +701,12 @@ export default function SystemAdminScheduling() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {templates.map((template) => (
+                  {sortedTemplates.map((template) => (
                     <div
                       key={template.id}
-                      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none transition-all group"
+                      className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none transition-all group ${
+                        !template.isActive ? 'opacity-70 grayscale-[0.3]' : ''
+                      }`}
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -646,6 +726,29 @@ export default function SystemAdminScheduling() {
                         </div>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                           <button
+                            onClick={() =>
+                              toggleTemplateStatusMutation.mutate({
+                                templateId: template.id,
+                                isActive: !template.isActive,
+                                template,
+                              })
+                            }
+                            title={
+                              template.isActive ? 'Deactivate' : 'Activate'
+                            }
+                            className={`p-2 rounded-lg transition-all ${
+                              template.isActive
+                                ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                                : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
+                            }`}
+                          >
+                            {template.isActive ? (
+                              <ToggleRight className="w-5 h-5" />
+                            ) : (
+                              <ToggleLeft className="w-5 h-5" />
+                            )}
+                          </button>
+                          <button
                             onClick={() => {
                               setEditTemplate(template);
                               setIsModalOpen(true);
@@ -663,6 +766,19 @@ export default function SystemAdminScheduling() {
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
+                      </div>
+
+                      {/* Status indicator badge */}
+                      <div className="mb-4">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            template.isActive
+                              ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
+                              : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
+                          }`}
+                        >
+                          {template.isActive ? 'Active' : 'Inactive'}
+                        </span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
