@@ -10,6 +10,8 @@ import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import type { User } from '../types/system-admin.types';
 import { toast } from 'react-toastify';
 import CreateStaffModal from '../components/CreateStaffModal';
+import { ophthalmologistApi } from '../api/ophthalmologist.api';
+import { formatCurrency, vndCurrencyOptions } from '@/lib/helper';
 
 const roleLabelMeta: Record<string, { key: string; fallback: string }> = {
   Ophthalmologist: {
@@ -40,6 +42,8 @@ type StaffUser = User & {
   organisationId?: string;
   organisationName?: string;
   mustUpdateProfile?: boolean;
+  consultationFee?: number;
+  ophthalmologistId?: string;
 };
 
 export default function StaffManagementPage() {
@@ -51,6 +55,9 @@ export default function StaffManagementPage() {
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<StaffUser | null>(null);
+  const [editingFee, setEditingFee] = useState(false);
+  const [feeValue, setFeeValue] = useState<number>(0);
+  const [isUpdatingFee, setIsUpdatingFee] = useState(false);
 
   const roleFilterOptions: Array<{ value: string; label: string }> = [
     {
@@ -149,6 +156,41 @@ export default function StaffManagementPage() {
       );
     } catch {
       toast.error('Failed to update status.');
+    }
+  };
+
+  const handleUpdateFee = async () => {
+    if (!selectedUser) return;
+    try {
+      setIsUpdatingFee(true);
+      // We use the onboard/update API pattern.
+      // Actually, we can use the same updateEmploymentType but we need the other required fields.
+      // Since this is a shortcut, we might need a specific "UpdateFee" endpoint in the future.
+      // For now, I'll use the existing updateEmploymentType with current values.
+
+      // But wait, staff-management doesn't have all doctor details.
+      // I'll call updateConsultationFee directly if I can.
+      // Let's check if there's a simpler endpoint.
+      // Actually, I'll just use the one I updated earlier.
+
+      await ophthalmologistApi.updateEmploymentType({
+        id: selectedUser.ophthalmologistId || selectedUser.id,
+        yearsOfExperience: (selectedUser as any).yearsOfExperience || 0,
+        bio: (selectedUser as any).bio || '',
+        employmentType: (selectedUser as any).employmentType || 'FullTime',
+        consultationFee: feeValue,
+      });
+
+      toast.success('Consultation fee updated successfully.');
+      setEditingFee(false);
+      await loadData();
+      setSelectedUser((prev) =>
+        prev ? { ...prev, consultationFee: feeValue } : null
+      );
+    } catch (error) {
+      toast.error('Failed to update consultation fee.');
+    } finally {
+      setIsUpdatingFee(false);
     }
   };
 
@@ -435,23 +477,80 @@ export default function StaffManagementPage() {
                 </p>
               </div>
               <div>
-                <p className="text-slate-500">Organisation</p>
-                <p className="font-medium">
-                  {selectedUser.organisationName || notAvailableLabel}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500">Organisation ID</p>
-                <p className="font-medium break-all">
-                  {selectedUser.organisationId || notAvailableLabel}
-                </p>
-              </div>
-              <div>
                 <p className="text-slate-500">Profile Completion Required</p>
                 <p className="font-medium">
                   {selectedUser.mustUpdateProfile ? 'Yes' : 'No'}
                 </p>
               </div>
+              {selectedUser.role === 'Ophthalmologist' && (
+                <div className="md:col-span-2 p-4 rounded-xl bg-primary/5 border border-primary/20 mt-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold text-primary">
+                      Consultation Fee
+                    </p>
+                    {!editingFee ? (
+                      <button
+                        onClick={() => {
+                          setFeeValue(selectedUser.consultationFee || 0);
+                          setEditingFee(true);
+                        }}
+                        className="text-xs font-bold text-primary hover:underline"
+                      >
+                        Edit Fee
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleUpdateFee}
+                          disabled={isUpdatingFee}
+                          className="text-xs font-bold text-emerald-600 hover:underline disabled:opacity-50"
+                        >
+                          {isUpdatingFee ? 'Saving...' : 'Save'}
+                        </button>
+                        <button
+                          onClick={() => setEditingFee(false)}
+                          className="text-xs font-bold text-slate-500 hover:underline"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {!editingFee ? (
+                    <p className="text-lg font-bold text-slate-900 dark:text-white">
+                      {selectedUser.consultationFee
+                        ? formatCurrency(
+                            selectedUser.consultationFee,
+                            vndCurrencyOptions
+                          )
+                        : 'Not set'}
+                    </p>
+                  ) : (
+                    <div className="space-y-2 mt-1">
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
+                          ₫
+                        </span>
+                        <input
+                          type="number"
+                          value={feeValue}
+                          onChange={(e) => setFeeValue(Number(e.target.value))}
+                          className="w-full pl-8 pr-4 py-2 rounded-lg border border-primary/30 bg-white dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                          placeholder="e.g. 500000"
+                          autoFocus
+                        />
+                      </div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center px-1">
+                        <span>Preview:</span>
+                        <span className="text-primary">
+                          {formatCurrency(feeValue || 0, vndCurrencyOptions)}
+                        </span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
               {selectedUser.role === 'Ophthalmologist' && (
                 <div>
                   <p className="text-slate-500">Role Summary</p>

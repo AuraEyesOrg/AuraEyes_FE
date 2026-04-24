@@ -43,6 +43,7 @@ export interface OphthalmologistListItem {
   degrees?: OphthalmologistCredentialItem[];
   rejectionReason?: string;
   organisationName?: string;
+  consultationFee: number;
   isActive: boolean;
   createdAt: string;
   ratingAverage?: number;
@@ -61,6 +62,7 @@ export interface UpdateOphthalmologistEmploymentPayload {
   yearsOfExperience: number;
   bio?: string;
   employmentType: 'FullTime' | 'PartTime';
+  consultationFee?: number;
 }
 
 interface PagedResult<T> {

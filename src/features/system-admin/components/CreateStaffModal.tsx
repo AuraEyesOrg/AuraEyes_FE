@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import type { UserRole } from '../types/system-admin.types';
 import { userApi } from '../api/user.api';
+import { formatCurrency, vndCurrencyOptions } from '@/lib/helper';
 
 const AURA_LOGO = '/logo.png';
 
@@ -21,6 +22,7 @@ interface FormValues {
   email: string;
   phone: string;
   role: UserRole;
+  consultationFee?: number;
 }
 
 const schema = yup.object().shape({
@@ -40,6 +42,14 @@ const schema = yup.object().shape({
     .string()
     .oneOf(['Ophthalmologist', 'ClinicStaff'])
     .required('Role is required') as yup.Schema<UserRole>,
+  consultationFee: yup.number().when('role', {
+    is: 'Ophthalmologist',
+    then: (schema) =>
+      schema
+        .min(0, 'Fee cannot be negative')
+        .required('Consultation fee is required'),
+    otherwise: (schema) => schema.optional(),
+  }),
 });
 
 export default function CreateStaffModal({
@@ -54,6 +64,7 @@ export default function CreateStaffModal({
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: yupResolver(schema) as any,
@@ -62,8 +73,11 @@ export default function CreateStaffModal({
       email: '',
       phone: '',
       role: 'ClinicStaff',
+      consultationFee: 0,
     },
   });
+
+  const selectedRole = watch('role');
 
   if (!isOpen) return null;
 
@@ -216,6 +230,50 @@ export default function CreateStaffModal({
               <p className="text-sm text-red-500">{errors.role.message}</p>
             )}
           </div>
+
+          {/* Consultation Fee (Conditional) */}
+          {selectedRole === 'Ophthalmologist' && (
+            <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-200">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                {t(
+                  'SystemAdmin.staff.fields.consultationFee',
+                  'Consultation Fee (VND)'
+                )}{' '}
+                <span className="text-red-500">*</span>
+              </label>
+              <div className="space-y-2">
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
+                    ₫
+                  </span>
+                  <input
+                    {...register('consultationFee')}
+                    type="number"
+                    placeholder="500000"
+                    className={`w-full pl-8 pr-4 py-2.5 rounded-lg border bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-all font-medium ${
+                      errors.consultationFee
+                        ? 'border-red-500 focus:ring-2 focus:ring-red-500/20'
+                        : 'border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/20'
+                    }`}
+                  />
+                </div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center px-1">
+                  <span>Preview:</span>
+                  <span className="text-primary">
+                    {formatCurrency(
+                      watch('consultationFee') || 0,
+                      vndCurrencyOptions
+                    )}
+                  </span>
+                </p>
+              </div>
+              {errors.consultationFee && (
+                <p className="text-sm text-red-500">
+                  {errors.consultationFee.message}
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-200 dark:border-slate-800">
             <button
