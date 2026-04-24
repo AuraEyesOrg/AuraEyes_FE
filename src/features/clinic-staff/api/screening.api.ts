@@ -54,14 +54,14 @@ export const clinicScreeningApi = {
   async createSession(request: CreateClinicScreeningRequest) {
     const response = await api.post<
       ApiResponse<ClinicScreeningSessionResponse>
-    >(API_ENDPOINTS.ORGANISATION.SCREENING.CREATE_SESSION, request);
+    >(API_ENDPOINTS.CLINIC_SCREENINGS.CREATE_SESSION, request);
     return response.data;
   },
 
   /** Get screening history for this clinic's organisation */
   async getHistory(take = 50) {
     const response = await api.get<ApiResponse<ClinicScreeningHistoryItem[]>>(
-      API_ENDPOINTS.ORGANISATION.SCREENING.HISTORY,
+      API_ENDPOINTS.CLINIC_SCREENINGS.HISTORY,
       { params: { take } }
     );
     return unwrapApiData<ClinicScreeningHistoryItem[]>(response.data);
@@ -132,7 +132,7 @@ export const clinicScreeningApi = {
           assessedAt: string;
         };
       }>
-    >(API_ENDPOINTS.ORGANISATION.SCREENING.DETAIL(screeningId));
+    >(API_ENDPOINTS.CLINIC_SCREENINGS.DETAIL(screeningId));
     return response.data;
   },
 
@@ -143,14 +143,14 @@ export const clinicScreeningApi = {
   ) {
     const response = await api.post<
       ApiResponse<ShareClinicScreeningResultResponse>
-    >(API_ENDPOINTS.ORGANISATION.SCREENING.SHARE(screeningId), payload);
+    >(API_ENDPOINTS.CLINIC_SCREENINGS.SHARE(screeningId), payload);
     return response.data;
   },
 
   /** Download clinic screening report as PDF */
   async downloadSessionReportPdf(screeningId: string) {
     const response = await api.get<Blob>(
-      API_ENDPOINTS.ORGANISATION.SCREENING.EXPORT_PDF(screeningId),
+      API_ENDPOINTS.CLINIC_SCREENINGS.EXPORT_PDF(screeningId),
       { responseType: 'blob' }
     );
     return {

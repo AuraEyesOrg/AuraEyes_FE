@@ -305,6 +305,15 @@ export const API_ENDPOINTS = {
       `/clinic-appointments/${appointmentId}/no-show`,
   },
 
+  CLINIC_SCREENINGS: {
+    CREATE_SESSION: '/clinic-screenings/create-session',
+    DETAIL: (screeningId: string) => `/clinic-screenings/${screeningId}`,
+    EXPORT_PDF: (screeningId: string) =>
+      `/clinic-screenings/${screeningId}/report-pdf`,
+    SHARE: (screeningId: string) => `/clinic-screenings/${screeningId}/share`,
+    HISTORY: '/clinic-screenings/history',
+  },
+
   FEEDBACK: {
     WEBSITE: '/feedback/website',
     ORGANISATION: (organisationId: string) =>

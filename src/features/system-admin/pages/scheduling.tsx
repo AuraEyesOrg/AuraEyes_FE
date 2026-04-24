@@ -13,6 +13,9 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
+  Pencil,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react';
 import {
   format,
@@ -30,12 +33,17 @@ import CreateTemplateModal from '../components/CreateTemplateModal';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import Spinner from '@/components/ui/spinner';
 
+import { ScheduleTemplateDto, DAY_OF_WEEK_LABELS } from '@/types/schedule';
+
 type Tab = 'appointments' | 'templates';
 
 export default function SystemAdminScheduling() {
   const { t } = useSafeTranslation();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editTemplate, setEditTemplate] = useState<ScheduleTemplateDto | null>(
+    null
+  );
   const [activeTab, setActiveTab] = useState<Tab>('appointments');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(
@@ -115,8 +123,84 @@ export default function SystemAdminScheduling() {
     },
   });
 
+  const toggleTemplateStatusMutation = useMutation({
+    mutationFn: ({
+      templateId,
+      isActive,
+      template,
+    }: {
+      templateId: string;
+      isActive: boolean;
+      template: ScheduleTemplateDto;
+    }) =>
+      schedulingApi.updateTemplate(templateId, {
+        dayOfWeek: Object.keys(DAY_OF_WEEK_LABELS).find(
+          (key) => DAY_OF_WEEK_LABELS[parseInt(key)] === template.dayOfWeek
+        )
+          ? parseInt(
+              Object.keys(DAY_OF_WEEK_LABELS).find(
+                (key) =>
+                  DAY_OF_WEEK_LABELS[parseInt(key)] === template.dayOfWeek
+              )!
+            )
+          : 0,
+        startTime: template.startTime,
+        endTime: template.endTime,
+        slotDuration: template.slotDuration,
+        maxCapacity: template.maxCapacity,
+        isActive: isActive,
+      }),
+    onSuccess: () => {
+      toast.success(
+        t(
+          'SystemAdmin.scheduling.toasts.statusUpdateSuccess',
+          'Template status updated successfully.'
+        )
+      );
+      queryClient.invalidateQueries({
+        queryKey: ['system-admin', 'schedule-templates'],
+      });
+    },
+    onError: (error) => {
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.scheduling.toasts.statusUpdateError',
+            'Failed to update template status.'
+          )
+        )
+      );
+    },
+  });
+
   const templates = templatesData?.data?.items ?? [];
   const slots = slotsData?.data?.items ?? [];
+
+  // Sort templates by Day of Week (Monday first)
+  const sortedTemplates = useMemo(() => {
+    const dayOrder = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    return [...templates].sort((a, b) => {
+      // First sort by Active status (Active first, Inactive last)
+      if (a.isActive !== b.isActive) {
+        return a.isActive ? -1 : 1;
+      }
+
+      const indexA = dayOrder.indexOf(a.dayOfWeek);
+      const indexB = dayOrder.indexOf(b.dayOfWeek);
+      if (indexA !== indexB) return indexA - indexB;
+      // If same day, sort by start time
+      return a.startTime.localeCompare(b.startTime);
+    });
+  }, [templates]);
 
   // Week Calendar Logic
   const weekDays = useMemo(() => {
@@ -155,12 +239,42 @@ export default function SystemAdminScheduling() {
   };
 
   // Summary Metrics based on slots
-  const totalSlots = slots.length;
-  const availableSlots = slots.filter(
-    (s: any) => s.status === 'Available'
-  ).length;
-  const bookedSlots = slots.filter((s: any) => s.status === 'Booked').length;
-  const inProgressSlots = 0; // Using slots data, we might not have in progress exactly, mock or map appropriately. Wait, slots don't have InProgress. I will keep it as 0 to match visual.
+  const metrics = useMemo(() => {
+    const now = new Date();
+    const stats = {
+      total: slots.length,
+      attended: 0,
+      expired: 0,
+      full: 0,
+      partial: 0,
+      available: 0,
+      blocked: 0,
+      totalBookings: 0,
+    };
+
+    slots.forEach((slot) => {
+      const slotDateStr = `${slot.date}T${slot.startTime}`;
+      const slotDateTime = new Date(slotDateStr);
+      const isPast = slotDateTime < now;
+      const isBlocked = slot.status === 'Blocked';
+      const isFullyBooked = slot.bookedCount >= slot.maxCapacity;
+      const hasBookings = slot.bookedCount > 0;
+
+      stats.totalBookings += slot.bookedCount;
+
+      if (isPast) {
+        if (hasBookings) stats.attended++;
+        else stats.expired++;
+      } else {
+        if (isBlocked) stats.blocked++;
+        else if (isFullyBooked) stats.full++;
+        else if (hasBookings) stats.partial++;
+        else stats.available++;
+      }
+    });
+
+    return stats;
+  }, [slots]);
 
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
@@ -192,7 +306,10 @@ export default function SystemAdminScheduling() {
                   )}
                 </button>
                 <button
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={() => {
+                    setEditTemplate(null);
+                    setIsModalOpen(true);
+                  }}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-medium transition-all shadow-lg shadow-primary-500/20"
                 >
                   <Plus className="w-4 h-4" />
@@ -318,40 +435,58 @@ export default function SystemAdminScheduling() {
                 {/* Summary Card */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 rounded-2xl p-5 shadow-sm shadow-slate-200/20 dark:shadow-none">
                   <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4">
-                    {format(selectedDate, 'EEE, MMM d')}
+                    {format(selectedDate, 'EEE, MMM d')} Summary
                   </h4>
-                  <div className="grid grid-cols-2 gap-y-6 gap-x-4">
+                  <div className="grid grid-cols-2 gap-y-5 gap-x-4">
                     <div>
                       <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
                         Total Slots
                       </p>
                       <p className="text-xl font-bold text-slate-800 dark:text-slate-200">
-                        {totalSlots}
+                        {metrics.total}
                       </p>
                     </div>
                     <div>
                       <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                        Booked
+                        Bookings
                       </p>
-                      <p className="text-xl font-bold text-orange-500">
-                        {bookedSlots}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                        Available
-                      </p>
-                      <p className="text-xl font-bold text-emerald-500">
-                        {availableSlots}
+                      <p className="text-xl font-bold text-blue-500">
+                        {metrics.totalBookings}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                        In progress
-                      </p>
-                      <p className="text-xl font-bold text-purple-500">
-                        {inProgressSlots}
-                      </p>
+                    <div className="col-span-2 border-t border-slate-50 dark:border-slate-800/50 my-1 pt-4 grid grid-cols-2 gap-y-4 gap-x-4">
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                          Available
+                        </p>
+                        <p className="text-lg font-bold text-emerald-500">
+                          {metrics.available}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                          Full/Partial
+                        </p>
+                        <p className="text-lg font-bold text-orange-500">
+                          {metrics.full + metrics.partial}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                          Attended
+                        </p>
+                        <p className="text-lg font-bold text-blue-400">
+                          {metrics.attended}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                          Expired
+                        </p>
+                        <p className="text-lg font-bold text-slate-400">
+                          {metrics.expired}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -382,43 +517,131 @@ export default function SystemAdminScheduling() {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {slots.map((slot: any) => (
-                      <div
-                        key={slot.id}
-                        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow group"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-xl bg-slate-50 dark:bg-slate-800 flex flex-col items-center justify-center border border-slate-100 dark:border-slate-700/50">
-                            <Clock className="w-4 h-4 text-slate-400 mb-1" />
-                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300 leading-none">
-                              {slot.startTime.substring(0, 5)}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-900 dark:text-white mb-1">
-                              Clinic Slot
-                            </p>
-                            <p className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 uppercase tracking-wider">
-                              <Users className="w-3 h-3" />
-                              Capacity: {slot.bookedCount} / {slot.maxCapacity}
-                            </p>
-                          </div>
-                        </div>
+                  <div className="space-y-3">
+                    {slots.map((slot) => {
+                      // Determine if the slot time has already passed (using local time)
+                      const now = new Date();
+                      const slotDateStr = `${slot.date}T${slot.startTime}`;
+                      const slotDateTime = new Date(slotDateStr);
+                      const isPast = slotDateTime < now;
+                      const isBlocked = slot.status === 'Blocked';
+                      const isFullyBooked =
+                        slot.bookedCount >= slot.maxCapacity;
+                      const hasBookings = slot.bookedCount > 0;
 
+                      // Derived display state
+                      let statusLabel = slot.status;
+                      let statusClass = '';
+                      let cardClass = '';
+                      let timeClass = '';
+
+                      if (isBlocked && hasBookings) {
+                        // Past but had/has booking — show as "Attended"
+                        statusLabel = 'Attended';
+                        statusClass =
+                          'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400';
+                        cardClass = 'border-blue-100 dark:border-blue-900/30';
+                        timeClass = 'text-blue-600 dark:text-blue-400';
+                      } else if (isBlocked) {
+                        // Past, no booking — expired
+                        statusLabel = isPast ? 'Expired' : 'Blocked';
+                        statusClass =
+                          'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500';
+                        cardClass =
+                          'border-slate-100 dark:border-slate-800 opacity-60';
+                        timeClass = 'text-slate-400';
+                      } else if (isPast && hasBookings) {
+                        // Available status but time passed with booking (job hasn't run yet)
+                        statusLabel = 'Attended';
+                        statusClass =
+                          'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400';
+                        cardClass = 'border-blue-100 dark:border-blue-900/30';
+                        timeClass = 'text-blue-600 dark:text-blue-400';
+                      } else if (isPast) {
+                        // Available but time passed, no booking (job hasn't cleaned yet)
+                        statusLabel = 'Expired';
+                        statusClass =
+                          'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500';
+                        cardClass =
+                          'border-slate-100 dark:border-slate-800 opacity-60';
+                        timeClass = 'text-slate-400';
+                      } else if (isFullyBooked) {
+                        statusLabel = 'Full';
+                        statusClass =
+                          'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400';
+                        cardClass =
+                          'border-orange-100 dark:border-orange-900/30';
+                        timeClass = 'text-orange-600 dark:text-orange-400';
+                      } else if (hasBookings) {
+                        statusLabel = 'Partial';
+                        statusClass =
+                          'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400';
+                        cardClass = '';
+                        timeClass = 'text-amber-600 dark:text-amber-400';
+                      } else {
+                        // Available, future
+                        statusLabel = 'Available';
+                        statusClass =
+                          'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400';
+                        cardClass =
+                          'border-emerald-100 dark:border-emerald-900/30';
+                        timeClass = 'text-emerald-600 dark:text-emerald-400';
+                      }
+
+                      return (
                         <div
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider ${
-                            slot.status === 'Available'
-                              ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
-                              : slot.status === 'Booked'
-                                ? 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'
-                                : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                          }`}
+                          key={slot.id}
+                          className={`bg-white dark:bg-slate-900 rounded-2xl border p-4 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow group ${cardClass || 'border-slate-200 dark:border-slate-800'}`}
                         >
-                          {slot.status}
+                          <div className="flex items-center gap-4">
+                            <div
+                              className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center border ${isBlocked || (isPast && !hasBookings) ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700/50' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700/50'}`}
+                            >
+                              <Clock
+                                className={`w-3.5 h-3.5 mb-0.5 ${timeClass || 'text-slate-400'}`}
+                              />
+                              <span
+                                className={`text-xs font-bold leading-none ${timeClass || 'text-slate-700 dark:text-slate-300'}`}
+                              >
+                                {slot.startTime.substring(0, 5)}
+                              </span>
+                              <span className="text-[9px] text-slate-400 leading-none mt-0.5">
+                                {slot.endTime.substring(0, 5)}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="font-bold text-slate-900 dark:text-white text-sm">
+                                  Clinic Slot
+                                </p>
+                                {isPast && (
+                                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                    Past
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 uppercase tracking-wider">
+                                <Users className="w-3 h-3" />
+                                {slot.bookedCount} / {slot.maxCapacity} booked
+                                {slot.availableCapacity > 0 &&
+                                  !isPast &&
+                                  !isBlocked && (
+                                    <span className="text-emerald-500">
+                                      · {slot.availableCapacity} open
+                                    </span>
+                                  )}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider ${statusClass}`}
+                          >
+                            {statusLabel}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -478,10 +701,12 @@ export default function SystemAdminScheduling() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {templates.map((template: any) => (
+                  {sortedTemplates.map((template) => (
                     <div
                       key={template.id}
-                      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none transition-all group"
+                      className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none transition-all group ${
+                        !template.isActive ? 'opacity-70 grayscale-[0.3]' : ''
+                      }`}
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -499,14 +724,61 @@ export default function SystemAdminScheduling() {
                             </div>
                           </div>
                         </div>
-                        <button
-                          onClick={() =>
-                            deleteTemplateMutation.mutate(template.id)
-                          }
-                          className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100"
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                          <button
+                            onClick={() =>
+                              toggleTemplateStatusMutation.mutate({
+                                templateId: template.id,
+                                isActive: !template.isActive,
+                                template,
+                              })
+                            }
+                            title={
+                              template.isActive ? 'Deactivate' : 'Activate'
+                            }
+                            className={`p-2 rounded-lg transition-all ${
+                              template.isActive
+                                ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                                : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
+                            }`}
+                          >
+                            {template.isActive ? (
+                              <ToggleRight className="w-5 h-5" />
+                            ) : (
+                              <ToggleLeft className="w-5 h-5" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditTemplate(template);
+                              setIsModalOpen(true);
+                            }}
+                            className="p-2 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:text-primary-400 dark:hover:bg-primary-900/20 transition-all"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() =>
+                              deleteTemplateMutation.mutate(template.id)
+                            }
+                            className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Status indicator badge */}
+                      <div className="mb-4">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            template.isActive
+                              ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
+                              : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
+                          }`}
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                          {template.isActive ? 'Active' : 'Inactive'}
+                        </span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
@@ -559,12 +831,16 @@ export default function SystemAdminScheduling() {
 
       <CreateTemplateModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditTemplate(null);
+        }}
         onSuccess={() =>
           queryClient.invalidateQueries({
             queryKey: ['system-admin', 'schedule-templates'],
           })
         }
+        editTemplate={editTemplate}
       />
     </div>
   );
