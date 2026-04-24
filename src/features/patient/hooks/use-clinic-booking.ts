@@ -5,7 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { walletKeys } from './use-wallet';
+import { financialKeys } from './use-financial';
 import {
   cancelClinicAppointment,
   checkInClinicAppointment,
@@ -180,7 +180,8 @@ export const useCreateClinicAppointment = () => {
       queryClient.invalidateQueries({
         queryKey: clinicBookingKeys.availableSlots(variables.organisationId),
       });
-      queryClient.invalidateQueries({ queryKey: walletKeys.all });
+      // Invalidate payment order history so the wallet page reflects new deposit
+      queryClient.invalidateQueries({ queryKey: financialKeys.all });
     },
   });
 };
