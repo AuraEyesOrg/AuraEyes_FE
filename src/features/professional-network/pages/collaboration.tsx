@@ -10,7 +10,6 @@ import {
   Send,
   Calendar,
   ExternalLink,
-  Info,
   X,
   Check,
   Image as ImageIcon,
@@ -253,14 +252,9 @@ export default function CollaborationPage() {
     try {
       setLoading(true);
       const data = await internalChatApi.getGroups();
-      const enriched = data.map((group) => ({
-        ...group,
-        memberCount:
-          groupMembersMap[group.id]?.length ?? group.memberCount ?? 0,
-      }));
-      setGroups(enriched);
-      if (enriched.length > 0 && !selectedGroupId) {
-        setSelectedGroupId(enriched[0].id);
+      setGroups(data);
+      if (data.length > 0 && !selectedGroupId) {
+        setSelectedGroupId(data[0].id);
       }
     } catch (error) {
       console.error('Failed to load groups', error);
@@ -423,22 +417,28 @@ export default function CollaborationPage() {
       message: `Select all ${role} accounts into this group?`,
       confirmLabel: 'Confirm',
       tone: 'default',
-      onConfirm: () => {
-        const matchedIds = candidateUsers
-          .filter((candidate) =>
-            candidate.roles.some(
-              (r) => normalizeRole(r) === normalizeRole(role)
+      onConfirm: async () => {
+        try {
+          const matchedIds = candidateUsers
+            .filter((candidate) =>
+              candidate.roles.some(
+                (r) => normalizeRole(r) === normalizeRole(role)
+              )
             )
-          )
-          .map((candidate) => candidate.id);
+            .map((candidate) => candidate.id);
 
-        setGroupMembersMap((prev) => ({
-          ...prev,
-          [selectedGroupId]: Array.from(
-            new Set([...(prev[selectedGroupId] ?? []), ...matchedIds])
-          ),
-        }));
-        toast.success(`Member list updated by role ${role}.`);
+          const newMemberIds = Array.from(
+            new Set([...selectedGroupMembers, ...matchedIds])
+          );
+
+          await internalChatApi.updateMembers(selectedGroupId, newMemberIds);
+
+          toast.success(`Member list updated by role ${role}.`);
+          void loadGroups();
+        } catch (error) {
+          console.error('Failed to update members', error);
+          toast.error('Failed to update members.');
+        }
       },
     });
   };
@@ -453,18 +453,31 @@ export default function CollaborationPage() {
     openConfirm({
       title: inGroup ? 'Confirm member removal' : 'Confirm member selection',
       message: inGroup
-        ? `Unselect ${memberName} from this group member list?`
-        : `Select ${memberName} for this group member list?`,
+        ? `Unselect ${memberName} from this group?`
+        : `Select ${memberName} for this group?`,
       confirmLabel: 'Confirm',
       tone: inGroup ? 'danger' : 'default',
-      onConfirm: () => {
-        setGroupMembersMap((prev) => ({
-          ...prev,
-          [selectedGroupId]: inGroup
-            ? (prev[selectedGroupId] ?? []).filter((id) => id !== memberId)
-            : Array.from(new Set([...(prev[selectedGroupId] ?? []), memberId])),
-        }));
-        toast.success('Member selection updated successfully.');
+      onConfirm: async () => {
+        try {
+          const newMemberIds = inGroup
+            ? selectedGroupMembers.filter((id) => id !== memberId)
+            : Array.from(new Set([...selectedGroupMembers, memberId]));
+
+          await internalChatApi.updateMembers(selectedGroupId, newMemberIds);
+
+          setGroups((prev) =>
+            prev.map((g) =>
+              g.id === selectedGroupId
+                ? { ...g, memberCount: newMemberIds.length }
+                : g
+            )
+          );
+          toast.success('Member selection updated successfully.');
+          void loadGroups(); // reload to get updated member list if needed
+        } catch (error) {
+          console.error('Failed to update members', error);
+          toast.error('Failed to update members.');
+        }
       },
     });
   };
@@ -495,7 +508,7 @@ export default function CollaborationPage() {
             memberIds: selectedMemberIdsForCreate,
           });
 
-          setGroupMembersMap((prev) => ({
+          setGroupMembersMap((prev: GroupMembersMap) => ({
             ...prev,
             [createdGroupId]: Array.from(
               new Set([
@@ -596,16 +609,20 @@ export default function CollaborationPage() {
       message: `Rename this group to "${trimmedName}"?`,
       confirmLabel: 'Rename',
       tone: 'default',
-      onConfirm: () => {
-        setGroupSettings((prev) => ({
-          ...prev,
-          [selectedGroupId]: {
-            ...prev[selectedGroupId],
-            displayName: trimmedName,
-          },
-        }));
-        setIsRenameModalOpen(false);
-        toast.success('Group renamed successfully.');
+      onConfirm: async () => {
+        try {
+          await internalChatApi.renameGroup(selectedGroupId, trimmedName);
+          setGroups((prev) =>
+            prev.map((g) =>
+              g.id === selectedGroupId ? { ...g, name: trimmedName } : g
+            )
+          );
+          setIsRenameModalOpen(false);
+          toast.success('Group renamed successfully.');
+        } catch (error) {
+          console.error('Failed to rename group', error);
+          toast.error('Failed to rename group.');
+        }
       },
     });
   };
@@ -616,33 +633,29 @@ export default function CollaborationPage() {
     openConfirm({
       title: 'Confirm group deletion',
       message:
-        'Delete this group from current UI state? Backend delete endpoint is not available yet.',
+        'Are you sure you want to delete this group? This action cannot be undone.',
       confirmLabel: 'Delete Group',
       tone: 'danger',
-      onConfirm: () => {
-        const groupIdToDelete = selectedGroupId;
-        setGroups((prev) =>
-          prev.filter((group) => group.id !== groupIdToDelete)
-        );
-        setGroupSettings((prev) => {
-          const next = { ...prev };
-          delete next[groupIdToDelete];
-          return next;
-        });
-        setGroupMembersMap((prev) => {
-          const next = { ...prev };
-          delete next[groupIdToDelete];
-          return next;
-        });
-        setSelectedGroupId((prev) => {
-          if (prev !== groupIdToDelete) return prev;
-          const remaining = groups.filter(
-            (group) => group.id !== groupIdToDelete
+      onConfirm: async () => {
+        try {
+          const groupIdToDelete = selectedGroupId;
+          await internalChatApi.deleteGroup(groupIdToDelete);
+          setGroups((prev) =>
+            prev.filter((group) => group.id !== groupIdToDelete)
           );
-          return remaining[0]?.id ?? null;
-        });
-        setIsGroupMenuOpen(false);
-        toast.success('Group deleted from local view.');
+          setSelectedGroupId((prev) => {
+            if (prev !== groupIdToDelete) return prev;
+            const remaining = groups.filter(
+              (group) => group.id !== groupIdToDelete
+            );
+            return remaining[0]?.id ?? null;
+          });
+          setIsGroupMenuOpen(false);
+          toast.success('Group deleted successfully.');
+        } catch (error) {
+          console.error('Failed to delete group', error);
+          toast.error('Failed to delete group.');
+        }
       },
     });
   };
@@ -654,12 +667,8 @@ export default function CollaborationPage() {
   };
 
   const selectedGroup = groups.find((g) => g.id === selectedGroupId);
-  const selectedGroupName = selectedGroup
-    ? groupSettings[selectedGroup.id]?.displayName || selectedGroup.name
-    : '';
-  const selectedGroupMembers = selectedGroupId
-    ? (groupMembersMap[selectedGroupId] ?? [])
-    : [];
+  const selectedGroupName = selectedGroup?.name || '';
+  const selectedGroupMembers = selectedGroup?.memberIds || [];
 
   const isConsultationAllowed = selectedGroup?.type === 'ClinicalCase';
 
@@ -745,9 +754,8 @@ export default function CollaborationPage() {
 
         <div className="flex-1 overflow-y-auto px-2 space-y-1">
           {filteredGroups.map((group) => {
-            const label = groupSettings[group.id]?.displayName || group.name;
-            const localCount = groupMembersMap[group.id]?.length;
-            const count = localCount ?? group.memberCount ?? 0;
+            const label = group.name;
+            const count = group.memberCount ?? 0;
 
             return (
               <button
@@ -755,7 +763,7 @@ export default function CollaborationPage() {
                 onClick={() => setSelectedGroupId(group.id)}
                 className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
                   selectedGroupId === group.id
-                    ? 'bg-primary/10 text-primary'
+                    ? 'bg-primary/10 text-primary shadow-sm'
                     : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -784,8 +792,8 @@ export default function CollaborationPage() {
                   <p className="text-[10px] opacity-50 mt-0.5">
                     {count} members •{' '}
                     {group.type === 'ClinicalCase'
-                      ? 'Clinical Case Group'
-                      : 'General Group'}
+                      ? 'Clinical Case'
+                      : 'General'}
                   </p>
                 </div>
               </button>
@@ -888,14 +896,6 @@ export default function CollaborationPage() {
                 </div>
 
                 <button
-                  onClick={() => setIsMediaPanelOpen((prev) => !prev)}
-                  className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  title="Group media"
-                >
-                  <Info className="w-5 h-5 text-slate-400" />
-                </button>
-
-                <button
                   onClick={() => setIsGroupMenuOpen((prev) => !prev)}
                   className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   title="Group settings"
@@ -904,7 +904,7 @@ export default function CollaborationPage() {
                 </button>
 
                 {isGroupMenuOpen && (
-                  <div className="absolute right-0 top-11 w-52 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl z-50">
+                  <div className="absolute right-0 top-11 w-52 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl z-50 overflow-hidden">
                     <button
                       type="button"
                       onClick={() => {
@@ -912,26 +912,49 @@ export default function CollaborationPage() {
                         setIsGroupMenuOpen(false);
                         void loadCandidateUsers();
                       }}
-                      className="w-full px-3 py-2.5 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2"
+                      className="w-full px-4 py-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors"
                     >
-                      <Users className="w-4 h-4" />
-                      Members
+                      <Users className="w-4 h-4 text-primary" />
+                      {t(
+                        'ProfessionalNetwork.collaboration.menu.members',
+                        'Members'
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMediaPanelOpen(true);
+                        setIsGroupMenuOpen(false);
+                      }}
+                      className="w-full px-4 py-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors"
+                    >
+                      <ImageIcon className="w-4 h-4 text-primary" />
+                      {t(
+                        'ProfessionalNetwork.collaboration.menu.media',
+                        'Group Media'
+                      )}
                     </button>
                     <button
                       type="button"
                       onClick={openRenameModal}
-                      className="w-full px-3 py-2.5 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2"
+                      className="w-full px-4 py-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors border-t border-slate-100 dark:border-slate-700"
                     >
-                      <Pencil className="w-4 h-4" />
-                      Rename group
+                      <Pencil className="w-4 h-4 text-primary" />
+                      {t(
+                        'ProfessionalNetwork.collaboration.menu.rename',
+                        'Rename group'
+                      )}
                     </button>
                     <button
                       type="button"
                       onClick={handleDissolveGroup}
-                      className="w-full px-3 py-2.5 text-left text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center gap-2"
+                      className="w-full px-4 py-3 text-left text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center gap-3 transition-colors border-t border-slate-100 dark:border-slate-700"
                     >
                       <Trash2 className="w-4 h-4" />
-                      Delete group
+                      {t(
+                        'ProfessionalNetwork.collaboration.menu.delete',
+                        'Delete group'
+                      )}
                     </button>
                   </div>
                 )}
@@ -1439,49 +1462,50 @@ export default function CollaborationPage() {
                   placeholder="Search users..."
                   className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border-none focus:ring-2 focus:ring-primary text-sm"
                 />
-              </div>
-
-              <div className="space-y-1 max-h-72 overflow-y-auto">
-                {filteredCandidateUsers.map((candidate) => {
-                  const inGroup = selectedGroupMembers.includes(candidate.id);
-                  return (
-                    <div
-                      key={candidate.id}
-                      className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                          {candidate.fullName}
-                        </p>
-                        <p className="text-xs text-slate-500 truncate">
-                          {candidate.email} • {candidate.roles.join(', ')}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
+                <div className="space-y-1 max-h-72 overflow-y-auto pr-1">
+                  {filteredCandidateUsers.map((candidate) => {
+                    const inGroup = selectedGroupMembers.includes(candidate.id);
+                    return (
+                      <div
+                        key={candidate.id}
                         onClick={() =>
                           requestToggleMemberInSelectedGroup(
                             candidate.id,
                             candidate.fullName
                           )
                         }
-                        className={`h-6 w-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all border ${
                           inGroup
-                            ? 'border-primary bg-primary text-white'
-                            : 'border-slate-300 dark:border-slate-600'
+                            ? 'border-primary/30 bg-primary/5 shadow-sm'
+                            : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'
                         }`}
                       >
-                        {inGroup ? <Check className="w-3.5 h-3.5" /> : null}
-                      </button>
-                    </div>
-                  );
-                })}
+                        <div className="min-w-0">
+                          <p
+                            className={`text-sm font-bold truncate ${inGroup ? 'text-primary' : 'text-slate-900 dark:text-white'}`}
+                          >
+                            {candidate.fullName}
+                          </p>
+                          <p className="text-[11px] text-slate-500 truncate">
+                            {candidate.email} • {candidate.roles.join(', ')}
+                          </p>
+                        </div>
+                        <div
+                          className={`h-6 w-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-all ${
+                            inGroup
+                              ? 'border-primary bg-primary text-white scale-110 shadow-md shadow-primary/20'
+                              : 'border-slate-300 dark:border-slate-600'
+                          }`}
+                        >
+                          {inGroup ? (
+                            <Check className="w-4 h-4 stroke-[3px]" />
+                          ) : null}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-
-              <p className="text-[11px] text-slate-500">
-                Member management is currently persisted on UI state for this
-                route until dedicated backend endpoints are exposed.
-              </p>
             </div>
           </div>
         </div>
