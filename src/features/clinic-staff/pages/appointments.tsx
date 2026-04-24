@@ -13,6 +13,7 @@ import {
   Receipt,
   CheckCircle,
   Clock3,
+  AlertCircle,
 } from 'lucide-react';
 import { useQueries } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
@@ -68,42 +69,46 @@ const STATUS_STEP_INDEX: Record<string, number> = {
 
 const statusBadge: Record<string, string> = {
   Pending:
-    'bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
-  Confirmed: 'bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+    'bg-amber-100/50 text-amber-700 border border-amber-200/50 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800/30',
+  Confirmed:
+    'bg-blue-100/50 text-blue-700 border border-blue-200/50 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800/30',
   CheckedIn:
-    'bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
+    'bg-emerald-100/50 text-emerald-700 border border-emerald-200/50 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800/30',
   InProgress:
-    'bg-violet-50 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300',
+    'bg-violet-100/50 text-violet-700 border border-violet-200/50 dark:bg-violet-900/20 dark:text-violet-300 dark:border-violet-800/30',
   Completed:
-    'bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300',
-  Cancelled: 'bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+    'bg-slate-100/80 text-slate-600 border border-slate-200/50 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700/30',
+  Cancelled:
+    'bg-rose-100/50 text-rose-700 border border-rose-200/50 dark:bg-rose-900/20 dark:text-rose-300 dark:border-rose-800/30',
   NoShow:
-    'bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300',
+    'bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
 };
 
 const cardAccent: Record<string, string> = {
-  Pending: 'border-l-amber-400',
-  Confirmed: 'border-l-blue-400',
-  CheckedIn: 'border-l-emerald-500',
-  InProgress: 'border-l-violet-500',
-  Completed: 'border-l-(--border-color)',
-  Cancelled: 'border-l-red-300',
-  NoShow: 'border-l-(--border-color)',
+  Pending: 'before:bg-amber-400',
+  Confirmed: 'before:bg-blue-400',
+  CheckedIn: 'before:bg-emerald-500',
+  InProgress: 'before:bg-violet-500',
+  Completed: 'before:bg-slate-300',
+  Cancelled: 'before:bg-rose-400',
+  NoShow: 'before:bg-slate-400',
 };
 
 const avatarColors: Record<string, string> = {
   Pending:
-    'bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
-  Confirmed: 'bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+    'bg-gradient-to-br from-amber-50 to-amber-100 text-amber-700 dark:from-amber-900/40 dark:to-amber-900/60 dark:text-amber-300',
+  Confirmed:
+    'bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 dark:from-blue-900/40 dark:to-blue-900/60 dark:text-blue-300',
   CheckedIn:
-    'bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
+    'bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-700 dark:from-emerald-900/40 dark:to-emerald-900/60 dark:text-emerald-300',
   InProgress:
-    'bg-violet-50 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300',
+    'bg-gradient-to-br from-violet-50 to-violet-100 text-violet-700 dark:from-violet-900/40 dark:to-violet-900/60 dark:text-violet-300',
   Completed:
-    'bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300',
-  Cancelled: 'bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+    'bg-gradient-to-br from-slate-50 to-slate-100 text-slate-600 dark:from-slate-800/40 dark:to-slate-800/60 dark:text-slate-400',
+  Cancelled:
+    'bg-gradient-to-br from-rose-50 to-rose-100 text-rose-700 dark:from-rose-900/40 dark:to-rose-900/60 dark:text-rose-300',
   NoShow:
-    'bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300',
+    'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500 dark:from-slate-800/60 dark:to-slate-800/80 dark:text-slate-400',
 };
 
 function getInitials(value: string) {
@@ -490,29 +495,32 @@ export default function ClinicStaffAppointmentsPage() {
   return (
     <ClinicStaffLayout>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <div className="flex flex-col gap-3">
-          <div className="rounded-xl border border-(--border-color) bg-(--bg-primary) p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setCurrentWeekOffset((p) => p - 1)}
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-(--border-color) text-(--text-secondary) hover:bg-(--bg-secondary)"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <span className="text-xs font-medium text-(--text-primary)">
-                {weekWindow.label}
-              </span>
-              <button
-                type="button"
-                onClick={() => setCurrentWeekOffset((p) => p + 1)}
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-(--border-color) text-(--text-secondary) hover:bg-(--bg-secondary)"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+        <aside className="flex flex-col gap-6">
+          {/* Week Calendar Card */}
+          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="bg-slate-50/50 p-4 dark:bg-slate-800/50">
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setCurrentWeekOffset((p) => p - 1)}
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-all hover:bg-slate-50 hover:shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  {weekWindow.label}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentWeekOffset((p) => p + 1)}
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-all hover:bg-slate-50 hover:shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col p-2">
               {weekDaySummaries.map((day) => {
                 const isSelected = day.dateKey === selectedDate;
                 return (
@@ -521,33 +529,39 @@ export default function ClinicStaffAppointmentsPage() {
                     type="button"
                     onClick={() => setSelectedDate(day.dateKey)}
                     className={[
-                      'flex items-center justify-between rounded-lg px-2.5 py-2 transition',
+                      'group flex items-center justify-between rounded-2xl px-4 py-3 transition-all duration-300',
                       isSelected
-                        ? 'bg-cyan-50 dark:bg-cyan-900/20'
-                        : 'hover:bg-(--bg-secondary)',
+                        ? 'bg-brand text-white shadow-lg shadow-brand/20'
+                        : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800',
                     ].join(' ')}
                   >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`w-6 text-center text-base font-medium ${isSelected ? 'text-cyan-700 dark:text-cyan-300' : 'text-(--text-primary)'}`}
-                      >
-                        {day.dayNumber}
-                      </span>
-                      <span
-                        className={`text-xs ${isSelected ? 'text-cyan-600 dark:text-cyan-400' : 'text-(--text-secondary)'}`}
-                      >
-                        {day.dayLabel}
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-col items-center">
+                        <span
+                          className={`text-[10px] font-bold uppercase tracking-tighter ${isSelected ? 'text-white/70' : 'text-slate-400'}`}
+                        >
+                          {day.dayLabel}
+                        </span>
+                        <span className="text-lg font-black leading-none">
+                          {day.dayNumber}
+                        </span>
+                      </div>
                       {day.isToday && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
+                        <div
+                          className={`h-1.5 w-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-brand'}`}
+                        />
                       )}
                     </div>
                     {day.pending > 0 ? (
-                      <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                        {day.pending}
+                      <span
+                        className={`rounded-lg px-2 py-1 text-[10px] font-black ${isSelected ? 'bg-white/20 text-white' : 'bg-amber-500/10 text-amber-600'}`}
+                      >
+                        {day.pending}P
                       </span>
                     ) : day.total > 0 ? (
-                      <span className="rounded-full bg-(--bg-secondary) px-2 py-0.5 text-[10px] text-(--text-muted)">
+                      <span
+                        className={`text-[10px] font-bold ${isSelected ? 'text-white/60' : 'text-slate-400'}`}
+                      >
                         {day.total}
                       </span>
                     ) : null}
@@ -556,41 +570,48 @@ export default function ClinicStaffAppointmentsPage() {
               })}
             </div>
 
-            <div className="mt-3 border-t border-(--border-color) pt-3">
+            <div className="border-t border-slate-100 p-4 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => {
                   setCurrentWeekOffset(0);
                   setSelectedDate(todayKey);
                 }}
-                className="w-full rounded-lg border border-cyan-200 bg-cyan-50 py-1.5 text-xs font-medium text-cyan-700 transition hover:bg-cyan-100 dark:border-cyan-800/60 dark:bg-cyan-900/20 dark:text-cyan-300"
+                className="w-full rounded-xl bg-slate-900 py-2.5 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-slate-800 dark:bg-brand dark:hover:bg-brand/90"
               >
                 {t('Organisation.common.today', 'Today')}
               </button>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => handleDateSelect(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-(--border-color) bg-(--bg-secondary) px-2 py-1.5 text-xs text-(--text-primary)"
-              />
+              <div className="mt-3 relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => handleDateSelect(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs font-bold text-slate-700 outline-none transition-all focus:border-brand/50 focus:ring-4 focus:ring-brand/5 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="rounded-xl border border-(--border-color) bg-(--bg-primary) p-4">
-            <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-(--text-muted)">
+          {/* Stats Card */}
+          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <p className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
               {formatDate(selectedDate, 'short')}
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-3">
               {[
                 {
                   label: t('Organisation.calendar.stats.total', 'Total'),
                   value: stats.total,
-                  color: 'text-(--text-primary)',
+                  color:
+                    'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white',
+                  icon: Calendar,
                 },
                 {
                   label: t('Organisation.calendar.stats.pending', 'Pending'),
                   value: stats.pending,
-                  color: 'text-amber-600 dark:text-amber-400',
+                  color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+                  icon: Clock,
                 },
                 {
                   label: t(
@@ -598,7 +619,9 @@ export default function ClinicStaffAppointmentsPage() {
                     'Checked in'
                   ),
                   value: stats.checkedIn,
-                  color: 'text-emerald-600 dark:text-emerald-400',
+                  color:
+                    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+                  icon: CheckCircle,
                 },
                 {
                   label: t(
@@ -606,58 +629,82 @@ export default function ClinicStaffAppointmentsPage() {
                     'In progress'
                   ),
                   value: stats.inProgress,
-                  color: 'text-violet-600 dark:text-violet-400',
+                  color:
+                    'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+                  icon: Play,
                 },
               ].map((s) => (
                 <div
                   key={s.label}
-                  className="rounded-lg bg-(--bg-secondary) p-2.5"
+                  className={`flex items-center justify-between rounded-2xl p-3 ${s.color}`}
                 >
-                  <p className="text-[10px] text-(--text-muted)">{s.label}</p>
-                  <p className={`mt-0.5 text-xl font-medium ${s.color}`}>
-                    {s.value}
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <s.icon className="h-4 w-4 opacity-50" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">
+                      {s.label}
+                    </span>
+                  </div>
+                  <span className="text-lg font-black">{s.value}</span>
                 </div>
               ))}
             </div>
           </div>
-        </div>
+        </aside>
 
-        <div>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="text-base font-medium text-(--text-primary)">
-              {formatDate(selectedDate, 'long')}
-            </h2>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-(--text-muted)">
-                {t(
-                  'Organisation.calendar.summary.records',
-                  '{{count}} records',
-                  {
-                    count: appointments.length,
-                  }
-                )}
-              </span>
+        <main className="space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 px-2">
+            <div className="space-y-1">
+              <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+                {formatDate(selectedDate, 'long')}
+              </h2>
+              <div className="flex items-center gap-2">
+                <span className="h-1 w-6 rounded-full bg-brand" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  {t(
+                    'Organisation.calendar.summary.records',
+                    '{{count}} total appointments',
+                    {
+                      count: appointments.length,
+                    }
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex -space-x-2">
+                {/* Visual flair: stack of avatars or something */}
+              </div>
             </div>
           </div>
 
           {isLoading ? (
-            <div className="flex items-center gap-3 py-12 text-(--text-secondary)">
-              <Spinner />
-              {t(
-                'Organisation.calendar.states.loadingAppointments',
-                'Loading appointments...'
-              )}
+            <div className="flex flex-col items-center justify-center py-20 rounded-[2.5rem] border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/50">
+              <Spinner className="h-10 w-10 text-brand" />
+              <p className="mt-4 text-xs font-black uppercase tracking-widest text-slate-400 animate-pulse">
+                {t(
+                  'Organisation.calendar.states.loadingAppointments',
+                  'Syncing appointments...'
+                )}
+              </p>
             </div>
           ) : appointments.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-(--border-color) py-14 text-center text-sm text-(--text-muted)">
-              {t(
-                'Organisation.calendar.states.noAppointments',
-                'No appointments on this day.'
-              )}
+            <div className="flex flex-col items-center justify-center py-24 rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
+              <div className="h-20 w-20 rounded-full bg-slate-100 flex items-center justify-center dark:bg-slate-800 mb-6">
+                <Calendar className="h-8 w-8 text-slate-300" />
+              </div>
+              <p className="text-lg font-bold text-slate-900 dark:text-white">
+                {t(
+                  'Organisation.calendar.states.noAppointments',
+                  'Quiet day today'
+                )}
+              </p>
+              <p className="mt-1 text-sm text-slate-400">
+                No appointments have been scheduled for this date.
+              </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 gap-4">
               {appointments.map((appt) => {
                 const primaryAction = getPrimaryAction(appt);
                 const stepIdx = STATUS_STEP_INDEX[appt.status] ?? 0;
@@ -679,126 +726,135 @@ export default function ClinicStaffAppointmentsPage() {
                 const patientAvatarUrl = appt.patientAvatarUrl?.trim() || '';
 
                 return (
-                  <div
+                  <article
                     key={appt.id}
                     className={[
-                      'rounded-xl border border-l-4 bg-(--bg-primary) p-4 transition hover:border-r-cyan-100',
-                      cardAccent[appt.status] ?? 'border-l-(--border-color)',
-                      'border-t border-r border-b border-(--border-color)',
+                      'group relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-6 transition-all duration-300 hover:border-brand/40 hover:shadow-xl hover:shadow-brand/5 dark:border-slate-800 dark:bg-slate-900/80',
+                      'before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1.5',
+                      cardAccent[appt.status] ?? 'before:bg-slate-200',
                     ].join(' ')}
                   >
                     {!isTerminal && (
-                      <div className="mb-3 flex items-center gap-1 overflow-x-auto pb-1">
+                      <div className="mb-6 flex items-center gap-1">
                         {PIPELINE_STEPS.map((step, i) => (
                           <div
                             key={step}
-                            className="flex shrink-0 items-center gap-1"
+                            className="flex items-center gap-1 flex-1 max-w-[120px]"
                           >
-                            <span
+                            <div
                               className={[
-                                'rounded-full px-2 py-0.5 text-[10px] font-medium',
+                                'h-1.5 flex-1 rounded-full transition-all duration-500',
                                 i < stepIdx
-                                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300'
+                                  ? 'bg-emerald-500 shadow-sm shadow-emerald-500/20'
                                   : i === stepIdx
-                                    ? 'bg-violet-50 text-violet-700 dark:bg-violet-900/20 dark:text-violet-300'
-                                    : 'bg-(--bg-secondary) text-(--text-muted)',
+                                    ? 'bg-brand shadow-sm shadow-brand/20 animate-pulse'
+                                    : 'bg-slate-100 dark:bg-slate-800',
                               ].join(' ')}
-                            >
-                              {getStatusDisplay(step)}
-                            </span>
-                            {i < PIPELINE_STEPS.length - 1 && (
-                              <span className="text-[10px] text-(--text-muted)">
-                                ›
+                            />
+                            {i === stepIdx && (
+                              <span className="text-[8px] font-black uppercase tracking-tighter text-brand absolute -top-4">
+                                {getStatusDisplay(step)}
                               </span>
                             )}
                           </div>
                         ))}
                       </div>
                     )}
-                    <div className="mb-4 flex items-start justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-sm font-bold shadow-sm ${avatarColors[appt.status] ?? avatarColors.Pending}`}
-                        >
-                          <span>{initials}</span>
-                          {patientAvatarUrl && (
-                            <img
-                              src={patientAvatarUrl}
-                              alt={patientDisplayName}
-                              className="absolute inset-0 h-full w-full object-cover"
-                              onError={(event) => {
-                                event.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          )}
+
+                    <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
+                      <div className="flex items-center gap-5 min-w-0 flex-1">
+                        {/* Avatar Section */}
+                        <div className="relative shrink-0">
+                          <div
+                            className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-[1.25rem] text-lg font-black shadow-inner transition-transform group-hover:scale-105 ${avatarColors[appt.status] ?? avatarColors.Pending}`}
+                          >
+                            <span>{initials}</span>
+                            {patientAvatarUrl && (
+                              <img
+                                src={patientAvatarUrl}
+                                alt={patientDisplayName}
+                                className="absolute inset-0 h-full w-full object-cover"
+                                onError={(event) => {
+                                  event.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            )}
+                          </div>
+                          <div
+                            className={`absolute -bottom-1 -right-1 h-6 w-6 rounded-lg border-4 border-white dark:border-slate-900 flex items-center justify-center ${statusBadge[appt.status]}`}
+                          >
+                            <Clock className="h-3 w-3" />
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="text-base font-bold text-(--text-primary)">
+
+                        <div className="min-w-0 space-y-1">
+                          <h3 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
                             {patientDisplayName}
                           </h3>
-                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-(--text-secondary)">
-                            <span className="flex items-center gap-1.5 font-medium text-cyan-600 dark:text-cyan-400">
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                            <div className="flex items-center gap-2 bg-brand/5 text-brand px-3 py-1 rounded-full border border-brand/10">
                               <Clock className="h-3.5 w-3.5" />
                               {formatSlotTime(appt.startTime)} -{' '}
                               {formatSlotTime(appt.endTime)}
-                            </span>
-                            <span className="text-(--text-muted)">•</span>
-                            <span className="flex items-center gap-1.5">
-                              <Calendar className="h-3.5 w-3.5 text-(--text-muted)" />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-3.5 w-3.5" />
                               {formatDate(appt.date, 'short')}
-                            </span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-1.5">
+
+                      <div className="flex flex-col items-end gap-3 shrink-0">
                         <span
-                          className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold tracking-tight uppercase shadow-xs ${statusBadge[appt.status] ?? statusBadge.Pending}`}
+                          className={`rounded-xl px-4 py-1.5 text-[10px] font-black tracking-[0.1em] uppercase shadow-sm ${statusBadge[appt.status] ?? statusBadge.Pending}`}
                         >
                           {getStatusDisplay(appt.status)}
                         </span>
+
                         {appt.orderId && (
-                          <div className="flex justify-end">
+                          <div className="flex flex-wrap justify-end gap-2">
                             {appt.orderStatus === 'Pending' && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 uppercase tracking-tighter">
-                                <Clock3 className="w-3 h-3" />
-                                Pending
-                              </span>
+                              <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-amber-600 border border-amber-500/20">
+                                <Clock3 className="w-3.5 h-3.5" />
+                                Pending Payment
+                              </div>
                             )}
                             {appt.orderStatus === 'Confirmed' && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 uppercase tracking-tighter">
-                                <CreditCard className="w-3 h-3" />
-                                Đã đặt cọc
-                              </span>
+                              <div className="flex items-center gap-2 rounded-xl bg-blue-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-blue-600 border border-blue-500/20">
+                                <CreditCard className="w-3.5 h-3.5" />
+                                Deposit Paid
+                              </div>
                             )}
                             {appt.orderStatus === 'Completed' && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 uppercase tracking-tighter">
-                                <CheckCircle className="w-3 h-3" />
-                                Hoàn thành
-                              </span>
+                              <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-600 border border-emerald-500/20">
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                Fully Paid
+                              </div>
                             )}
                             {appt.orderStatus === 'Cancelled' && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 uppercase tracking-tighter">
-                                <UserX className="w-3 h-3" />
-                                Đã hủy
-                              </span>
+                              <div className="flex items-center gap-2 rounded-xl bg-rose-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-rose-600 border border-rose-500/20">
+                                <UserX className="w-3.5 h-3.5" />
+                                Cancelled
+                              </div>
                             )}
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Billing Context */}
+                    {/* Bento Billing Box */}
                     {(appt.totalAmount || appt.orderId) && (
-                      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-(--border-color) bg-(--bg-secondary) p-3">
+                      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 rounded-3xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand/10 text-brand">
-                            <Receipt className="h-4 w-4" />
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-slate-700">
+                            <Receipt className="h-5 w-5 text-brand" />
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-(--text-muted)">
-                              {t('Organisation.billing.summary', 'Billing')}
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                              Total Bill
                             </p>
-                            <p className="text-sm font-bold text-(--text-primary)">
+                            <p className="text-sm font-black text-slate-900 dark:text-white">
                               {appt.totalAmount
                                 ? new Intl.NumberFormat('vi-VN', {
                                     style: 'currency',
@@ -809,174 +865,183 @@ export default function ClinicStaffAppointmentsPage() {
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap gap-4 text-right">
-                          {appt.depositAmount && (
-                            <div>
-                              <p className="text-[10px] font-medium text-(--text-muted)">
-                                {t(
-                                  'Organisation.billing.deposit',
-                                  'Paid Deposit'
-                                )}
-                              </p>
-                              <p className="text-xs font-semibold text-emerald-600">
-                                {new Intl.NumberFormat('vi-VN', {
-                                  style: 'currency',
-                                  currency: 'VND',
-                                }).format(appt.depositAmount)}
-                              </p>
-                            </div>
-                          )}
-                          {appt.remainingAmount !== undefined && (
-                            <div>
-                              <p className="text-[10px] font-medium text-(--text-muted)">
-                                {appt.remainingAmount === 0
-                                  ? t(
-                                      'Organisation.billing.fullyPaid',
-                                      'Fully Paid'
-                                    )
-                                  : t(
-                                      'Organisation.billing.remaining',
-                                      'Remaining'
-                                    )}
-                              </p>
-                              <p
-                                className={`text-xs font-bold ${appt.remainingAmount === 0 ? 'text-emerald-600' : 'text-rose-500'}`}
-                              >
-                                {new Intl.NumberFormat('vi-VN', {
-                                  style: 'currency',
-                                  currency: 'VND',
-                                }).format(appt.remainingAmount ?? 0)}
-                              </p>
-                            </div>
-                          )}
+                        <div className="flex items-center gap-3 border-l border-slate-200 dark:border-slate-700 md:pl-4">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-slate-700">
+                            <CheckCircle className="h-5 w-5 text-emerald-500" />
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                              Paid Amount
+                            </p>
+                            <p className="text-sm font-black text-emerald-600">
+                              {new Intl.NumberFormat('vi-VN', {
+                                style: 'currency',
+                                currency: 'VND',
+                              }).format(appt.depositAmount || 0)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 border-l border-slate-200 dark:border-slate-700 md:pl-4">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-slate-700">
+                            <Banknote
+                              className={`h-5 w-5 ${appt.remainingAmount === 0 ? 'text-emerald-500' : 'text-rose-500'}`}
+                            />
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                              {appt.remainingAmount === 0
+                                ? 'Balance'
+                                : 'Remaining'}
+                            </p>
+                            <p
+                              className={`text-sm font-black ${appt.remainingAmount === 0 ? 'text-emerald-600' : 'text-rose-600 animate-pulse'}`}
+                            >
+                              {new Intl.NumberFormat('vi-VN', {
+                                style: 'currency',
+                                currency: 'VND',
+                              }).format(appt.remainingAmount ?? 0)}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     )}
 
                     {appt.visitReason && (
-                      <div className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50/50 p-2.5 dark:bg-amber-900/10">
-                        <span className="mt-0.5 text-amber-500">
-                          <Play className="h-3 w-3 rotate-90" />
-                        </span>
-                        <p className="text-xs text-amber-800 dark:text-amber-200">
-                          <span className="font-semibold">Reason:</span>{' '}
-                          {appt.visitReason}
-                        </p>
+                      <div className="mt-4 flex items-start gap-3 rounded-2xl bg-amber-500/5 p-4 border border-amber-500/10">
+                        <div className="mt-0.5 rounded-lg bg-amber-500/10 p-1.5">
+                          <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70">
+                            Visit Reason
+                          </p>
+                          <p className="text-xs font-bold text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
+                            {appt.visitReason}
+                          </p>
+                        </div>
                       </div>
                     )}
 
-                    <div className="flex flex-wrap items-center gap-3">
-                      {appt.status === 'Pending' ? (
-                        <button
-                          type="button"
-                          disabled={isMutating || selectedDate > todayKey}
-                          onClick={() => {
-                            if (selectedDate > todayKey) {
-                              toast.error(
-                                t(
-                                  'Organisation.calendar.toast.qrBeforeAppointmentDate',
-                                  'Cannot check in before the appointment date.'
-                                )
-                              );
-                              return;
-                            }
-                            setScanTargetAppointmentId(appt.id);
-                            setIsQrScannerOpen(true);
-                          }}
-                          className="inline-flex h-9 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          <QrCode className="h-4 w-4" />
-                          {t(
-                            'Organisation.calendar.actions.scanQrCheckIn',
-                            'Scan QR check-in'
-                          )}
-                        </button>
-                      ) : primaryAction ? (
-                        <button
-                          type="button"
-                          disabled={isMutating}
-                          onClick={() =>
-                            void runAction(
-                              primaryAction.action,
-                              primaryAction.successMessage
-                            )
-                          }
-                          className={`inline-flex h-9 items-center gap-2 rounded-xl px-4 text-sm font-bold transition shadow-xs ${primaryAction.className}`}
-                        >
-                          <primaryAction.icon className="h-4 w-4" />
-                          {primaryAction.label}
-                        </button>
-                      ) : null}
-
-                      {/* Payment Action for Staff */}
-                      {appt.orderId &&
-                        (appt.remainingAmount ?? 0) > 0 &&
-                        ['CheckedIn', 'InProgress'].includes(appt.status) && (
+                    {/* Actions Row */}
+                    <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-6 dark:border-slate-800">
+                      <div className="flex flex-wrap items-center gap-3">
+                        {appt.status === 'Pending' ? (
+                          <button
+                            type="button"
+                            disabled={isMutating || selectedDate > todayKey}
+                            onClick={() => {
+                              if (selectedDate > todayKey) {
+                                toast.error(
+                                  t(
+                                    'Organisation.calendar.toast.qrBeforeAppointmentDate',
+                                    'Cannot check in before the appointment date.'
+                                  )
+                                );
+                                return;
+                              }
+                              setScanTargetAppointmentId(appt.id);
+                              setIsQrScannerOpen(true);
+                            }}
+                            className="inline-flex h-11 items-center gap-2 rounded-2xl bg-emerald-600 px-6 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <QrCode className="h-4 w-4" />
+                            {t(
+                              'Organisation.calendar.actions.scanQrCheckIn',
+                              'Scan QR check-in'
+                            )}
+                          </button>
+                        ) : primaryAction ? (
                           <button
                             type="button"
                             disabled={isMutating}
-                            onClick={() => {
-                              setAppointmentToPay(appt);
-                              setIsPaymentModalOpen(true);
-                            }}
-                            className="inline-flex h-9 items-center gap-2 rounded-xl border-2 border-emerald-600 bg-white px-4 text-sm font-bold text-emerald-600 transition hover:bg-emerald-50 disabled:opacity-50 dark:bg-transparent dark:hover:bg-emerald-900/20"
+                            onClick={() =>
+                              void runAction(
+                                primaryAction.action,
+                                primaryAction.successMessage
+                              )
+                            }
+                            className={`inline-flex h-11 items-center gap-2 rounded-2xl px-6 text-xs font-black uppercase tracking-widest text-white transition-all hover:shadow-lg disabled:opacity-50 ${primaryAction.className.includes('bg-violet') ? 'bg-violet-600 hover:bg-violet-700 hover:shadow-violet-500/20' : 'bg-cyan-600 hover:bg-cyan-700 hover:shadow-cyan-500/20'}`}
                           >
-                            <Banknote className="h-4 w-4" />
+                            <primaryAction.icon className="h-4 w-4" />
+                            {primaryAction.label}
+                          </button>
+                        ) : null}
+
+                        {/* Payment Action for Staff */}
+                        {appt.orderId &&
+                          (appt.remainingAmount ?? 0) > 0 &&
+                          ['CheckedIn', 'InProgress'].includes(appt.status) && (
+                            <button
+                              type="button"
+                              disabled={isMutating}
+                              onClick={() => {
+                                setAppointmentToPay(appt);
+                                setIsPaymentModalOpen(true);
+                              }}
+                              className="inline-flex h-11 items-center gap-2 rounded-2xl border-2 border-emerald-600 bg-white px-6 text-xs font-black uppercase tracking-widest text-emerald-600 transition-all hover:bg-emerald-50 hover:shadow-lg hover:shadow-emerald-500/10 disabled:opacity-50 dark:bg-slate-900 dark:hover:bg-emerald-950/30"
+                            >
+                              <Banknote className="h-4 w-4" />
+                              {t(
+                                'Organisation.calendar.actions.payRemaining',
+                                'Pay Balance'
+                              )}
+                            </button>
+                          )}
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        {isTerminal ? (
+                          <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-2 dark:bg-slate-800">
+                            <CheckCircle className="h-4 w-4 text-slate-400" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                              {appt.status === 'Completed' &&
+                                t(
+                                  'Organisation.calendar.states.terminal.completed',
+                                  'Visit archived'
+                                )}
+                              {appt.status === 'NoShow' &&
+                                t(
+                                  'Organisation.calendar.states.terminal.noShow',
+                                  'No-show recorded'
+                                )}
+                              {appt.status === 'Cancelled' &&
+                                t(
+                                  'Organisation.calendar.states.terminal.cancelled',
+                                  'Cancelled'
+                                )}
+                            </span>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={isMutating}
+                            onClick={() =>
+                              void runAction(
+                                () => noShowMutation.mutateAsync(appt.id),
+                                t(
+                                  'Organisation.calendar.toast.noShowMarked',
+                                  'Marked as no-show.'
+                                )
+                              )
+                            }
+                            className="inline-flex h-11 items-center gap-2 rounded-2xl px-4 text-[10px] font-black uppercase tracking-widest text-rose-500 transition-all hover:bg-rose-500/10 disabled:opacity-50"
+                          >
+                            <UserX className="h-4 w-4" />
                             {t(
-                              'Organisation.calendar.actions.payRemaining',
-                              'Pay Remaining'
+                              'Organisation.calendar.actions.markNoShow',
+                              'No-show'
                             )}
                           </button>
                         )}
-
-                      {isTerminal ? (
-                        <span className="text-xs font-medium italic text-(--text-muted) flex items-center gap-1.5">
-                          <CheckCircle className="h-3.5 w-3.5" />
-                          {appt.status === 'Completed' &&
-                            t(
-                              'Organisation.calendar.states.terminal.completed',
-                              'Visit completed'
-                            )}
-                          {appt.status === 'NoShow' &&
-                            t(
-                              'Organisation.calendar.states.terminal.noShow',
-                              'Marked as no-show'
-                            )}
-                          {appt.status === 'Cancelled' &&
-                            t(
-                              'Organisation.calendar.states.terminal.cancelled',
-                              'Appointment cancelled'
-                            )}
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled={isMutating}
-                          onClick={() =>
-                            void runAction(
-                              () => noShowMutation.mutateAsync(appt.id),
-                              t(
-                                'Organisation.calendar.toast.noShowMarked',
-                                'Marked as no-show.'
-                              )
-                            )
-                          }
-                          className="inline-flex h-9 items-center gap-2 rounded-xl px-3 text-xs font-bold text-rose-500 transition hover:bg-rose-50 disabled:opacity-50 dark:hover:bg-rose-950/20"
-                        >
-                          <UserX className="h-3.5 w-3.5" />
-                          {t(
-                            'Organisation.calendar.actions.markNoShow',
-                            'No-show'
-                          )}
-                        </button>
-                      )}
+                      </div>
                     </div>
-                  </div>
+                  </article>
                 );
               })}
             </div>
           )}
-        </div>
+        </main>
       </div>
 
       {isQrScannerOpen && (
