@@ -219,7 +219,7 @@ export interface ScheduleTemplateDto {
   id: string;
   ophthalmologistId?: string;
   organisationId?: string | null;
-  dayOfWeek: number; // 0=Sunday, 1=Monday, etc.
+  dayOfWeek: number | string; // BE might return string like "Friday"
   startTime: string;
   endTime: string;
   slotDuration: number; // minutes

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { toast } from 'react-toastify';
-import { X, Clock, Calendar, Users } from 'lucide-react';
+import { X, Clock, Calendar } from 'lucide-react';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import schedulingApi from '../api/scheduling.api';
 import { DAY_OF_WEEK_LABELS, ScheduleTemplateDto } from '@/types/schedule';
@@ -38,11 +38,11 @@ export default function CreateTemplateModal({
   useEffect(() => {
     if (editTemplate) {
       setFormData({
-        dayOfWeek: getDayOfWeekNumber(editTemplate.dayOfWeek),
+        dayOfWeek: Number(editTemplate.dayOfWeek),
         startTime: editTemplate.startTime.substring(0, 5),
         endTime: editTemplate.endTime.substring(0, 5),
-        slotDuration: editTemplate.slotDuration,
-        maxCapacity: editTemplate.maxCapacity,
+        slotDuration: Number(editTemplate.slotDuration),
+        maxCapacity: Number(editTemplate.maxCapacity),
       });
     } else {
       setFormData({
@@ -188,46 +188,25 @@ export default function CreateTemplateModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-primary-500" />
-                {t('SystemAdmin.scheduling.fields.duration', 'Duration (min)')}
-              </label>
-              <input
-                type="number"
-                min="5"
-                step="5"
-                value={formData.slotDuration}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    slotDuration: parseInt(e.target.value),
-                  })
-                }
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none"
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                <Users className="w-4 h-4 text-primary-500" />
-                {t('SystemAdmin.scheduling.fields.capacity', 'Capacity')}
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={formData.maxCapacity}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    maxCapacity: parseInt(e.target.value),
-                  })
-                }
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none"
-                required
-              />
-            </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-primary-500" />
+              {t('SystemAdmin.scheduling.fields.duration', 'Duration (min)')}
+            </label>
+            <input
+              type="number"
+              min="5"
+              step="5"
+              value={formData.slotDuration}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  slotDuration: parseInt(e.target.value),
+                })
+              }
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none"
+              required
+            />
           </div>
 
           <div className="pt-4 flex gap-3">

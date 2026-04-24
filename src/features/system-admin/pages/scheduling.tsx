@@ -134,20 +134,11 @@ export default function SystemAdminScheduling() {
       template: ScheduleTemplateDto;
     }) =>
       schedulingApi.updateTemplate(templateId, {
-        dayOfWeek: Object.keys(DAY_OF_WEEK_LABELS).find(
-          (key) => DAY_OF_WEEK_LABELS[parseInt(key)] === template.dayOfWeek
-        )
-          ? parseInt(
-              Object.keys(DAY_OF_WEEK_LABELS).find(
-                (key) =>
-                  DAY_OF_WEEK_LABELS[parseInt(key)] === template.dayOfWeek
-              )!
-            )
-          : 0,
+        dayOfWeek: Number(template.dayOfWeek),
         startTime: template.startTime,
         endTime: template.endTime,
-        slotDuration: template.slotDuration,
-        maxCapacity: template.maxCapacity,
+        slotDuration: Number(template.slotDuration),
+        maxCapacity: Number(template.maxCapacity),
         isActive: isActive,
       }),
     onSuccess: () => {
@@ -194,8 +185,23 @@ export default function SystemAdminScheduling() {
         return a.isActive ? -1 : 1;
       }
 
-      const indexA = dayOrder.indexOf(a.dayOfWeek);
-      const indexB = dayOrder.indexOf(b.dayOfWeek);
+      const getDayIndex = (day: string | number) => {
+        if (typeof day === 'number') return day === 0 ? 7 : day;
+        const days = [
+          'Sunday',
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+        ];
+        const idx = days.indexOf(day as string);
+        return idx === 0 ? 7 : idx === -1 ? 99 : idx;
+      };
+
+      const indexA = getDayIndex(a.dayOfWeek);
+      const indexB = getDayIndex(b.dayOfWeek);
       if (indexA !== indexB) return indexA - indexB;
       // If same day, sort by start time
       return a.startTime.localeCompare(b.startTime);
@@ -701,127 +707,134 @@ export default function SystemAdminScheduling() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {sortedTemplates.map((template) => (
-                    <div
-                      key={template.id}
-                      className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none transition-all group ${
-                        !template.isActive ? 'opacity-70 grayscale-[0.3]' : ''
-                      }`}
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-950/50 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold">
-                            {template.dayOfWeek.substring(0, 2)}
-                          </div>
-                          <div>
-                            <h5 className="font-bold text-slate-900 dark:text-white">
-                              {template.dayOfWeek}
-                            </h5>
-                            <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                              <Clock className="w-3 h-3" />
-                              {template.startTime.substring(0, 5)} -{' '}
-                              {template.endTime.substring(0, 5)}
+                  {sortedTemplates.map((template) => {
+                    const dayString =
+                      typeof template.dayOfWeek === 'string'
+                        ? template.dayOfWeek
+                        : DAY_OF_WEEK_LABELS[template.dayOfWeek as number] ||
+                          String(template.dayOfWeek);
+
+                    return (
+                      <div
+                        key={template.id}
+                        className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none transition-all group ${
+                          !template.isActive ? 'opacity-70 grayscale-[0.3]' : ''
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-950/50 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold text-sm">
+                              {dayString.substring(0, 3)}
+                            </div>
+                            <div>
+                              <h5 className="font-bold text-slate-900 dark:text-white">
+                                {dayString}
+                              </h5>
+                              <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                                <Clock className="w-3 h-3" />
+                                {template.startTime.substring(0, 5)} -{' '}
+                                {template.endTime.substring(0, 5)}
+                              </div>
                             </div>
                           </div>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                            <button
+                              onClick={() =>
+                                toggleTemplateStatusMutation.mutate({
+                                  templateId: template.id,
+                                  isActive: !template.isActive,
+                                  template,
+                                })
+                              }
+                              title={
+                                template.isActive ? 'Deactivate' : 'Activate'
+                              }
+                              className={`p-2 rounded-lg transition-all ${
+                                template.isActive
+                                  ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                                  : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
+                              }`}
+                            >
+                              {template.isActive ? (
+                                <ToggleRight className="w-5 h-5" />
+                              ) : (
+                                <ToggleLeft className="w-5 h-5" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditTemplate(template);
+                                setIsModalOpen(true);
+                              }}
+                              className="p-2 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:text-primary-400 dark:hover:bg-primary-900/20 transition-all"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() =>
+                                deleteTemplateMutation.mutate(template.id)
+                              }
+                              className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                          <button
-                            onClick={() =>
-                              toggleTemplateStatusMutation.mutate({
-                                templateId: template.id,
-                                isActive: !template.isActive,
-                                template,
-                              })
-                            }
-                            title={
-                              template.isActive ? 'Deactivate' : 'Activate'
-                            }
-                            className={`p-2 rounded-lg transition-all ${
+
+                        {/* Status indicator badge */}
+                        <div className="mb-4">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                               template.isActive
-                                ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
-                                : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
+                                : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
                             }`}
                           >
-                            {template.isActive ? (
-                              <ToggleRight className="w-5 h-5" />
-                            ) : (
-                              <ToggleLeft className="w-5 h-5" />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditTemplate(template);
-                              setIsModalOpen(true);
-                            }}
-                            className="p-2 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:text-primary-400 dark:hover:bg-primary-900/20 transition-all"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              deleteTemplateMutation.mutate(template.id)
-                            }
-                            className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Status indicator badge */}
-                      <div className="mb-4">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            template.isActive
-                              ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
-                              : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
-                          }`}
-                        >
-                          {template.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">
-                            {t(
-                              'SystemAdmin.scheduling.templates.duration',
-                              'Slot Duration'
-                            )}
-                          </p>
-                          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                            {template.slotDuration} min
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">
-                            {t(
-                              'SystemAdmin.scheduling.templates.capacity',
-                              'Max Capacity'
-                            )}
-                          </p>
-                          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                            {template.maxCapacity}{' '}
-                            {t(
-                              'SystemAdmin.scheduling.templates.patients',
-                              'patients'
-                            )}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex items-center justify-end">
-                        <div className="flex items-center gap-1">
-                          <div
-                            className={`w-2 h-2 rounded-full ${template.isActive ? 'bg-green-500' : 'bg-slate-300'}`}
-                          />
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">
                             {template.isActive ? 'Active' : 'Inactive'}
                           </span>
                         </div>
+
+                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">
+                              {t(
+                                'SystemAdmin.scheduling.templates.duration',
+                                'Slot Duration'
+                              )}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                              {template.slotDuration} min
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">
+                              {t(
+                                'SystemAdmin.scheduling.templates.capacityMode',
+                                'Capacity Mode'
+                              )}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                              {t(
+                                'SystemAdmin.scheduling.templates.dynamic',
+                                'Dynamic (By Doctor)'
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 flex items-center justify-end">
+                          <div className="flex items-center gap-1">
+                            <div
+                              className={`w-2 h-2 rounded-full ${template.isActive ? 'bg-green-500' : 'bg-slate-300'}`}
+                            />
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">
+                              {template.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
