@@ -37,6 +37,12 @@ const PersonalDataPage = lazy(
 const PrivacyPage = lazy(() => import('@/features/guest/pages/Privacy'));
 const SecurityPage = lazy(() => import('@/features/guest/pages/Security'));
 const TermsOfUsePage = lazy(() => import('@/features/guest/pages/TermsofUse'));
+const ErmFormPage = lazy(
+  () => import('@/features/medical-records/pages/ErmForm')
+);
+const ErmFormPatientPage = lazy(
+  () => import('@/features/medical-records/pages/ErmFormPatient')
+);
 
 // Auth pages
 const LoginPage = lazy(() => import('@/features/auth/pages/login'));
@@ -451,6 +457,8 @@ const Router = () => (
           }
         />
         <Route path="/404" element={<LocalizedRedirect target="/404" />} />
+        <Route path="/erm-test" element={<ErmFormPage />} />
+        <Route path="/erm-patient" element={<ErmFormPatientPage />} />
         <Route
           path="/system-admin/staff-management"
           element={
@@ -504,6 +512,7 @@ const Router = () => (
           path="/:locale/two-factor-verify"
           element={<LocalizedPublicRoute element={<TwoFactorVerifyPage />} />}
         />
+        <Route path="/:locale/erm-test" element={<ErmFormPage />} />
         <Route
           path="/:locale/force-change-password"
           element={
