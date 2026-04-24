@@ -38,7 +38,7 @@ import {
   type FeedbackRatingSummary,
   type OphthalmologistListItem,
 } from '../api/ophthalmologist.api';
-import { formatCurrency } from '@/lib/helper';
+import { formatCurrency, vndCurrencyOptions } from '@/lib/helper';
 import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { toast } from 'react-toastify';
@@ -213,6 +213,8 @@ export default function OphthalmologistsPage() {
   const [selectedEmploymentType, setSelectedEmploymentType] = useState<
     'FullTime' | 'PartTime'
   >('PartTime');
+  const [selectedConsultationFee, setSelectedConsultationFee] =
+    useState<number>(0);
 
   // Load data from real API
   const loadData = useCallback(async () => {
@@ -277,6 +279,7 @@ export default function OphthalmologistsPage() {
   useEffect(() => {
     if (!selectedDoctor) return;
     setSelectedEmploymentType(selectedDoctor.employmentType);
+    setSelectedConsultationFee(selectedDoctor.consultationFee ?? 0);
   }, [selectedDoctor]);
 
   // Calculate stats
@@ -378,11 +381,14 @@ export default function OphthalmologistsPage() {
   const handleUpdateEmploymentType = async () => {
     if (!selectedDoctor) return;
 
-    if (selectedEmploymentType === selectedDoctor.employmentType) {
+    if (
+      selectedEmploymentType === selectedDoctor.employmentType &&
+      selectedConsultationFee === selectedDoctor.consultationFee
+    ) {
       toast.info(
         t(
-          'SystemAdmin.ophthalmologists.toasts.employmentTypeUnchanged',
-          'Employment type is unchanged.'
+          'SystemAdmin.ophthalmologists.toasts.noChanges',
+          'No changes detected.'
         )
       );
       return;
@@ -395,15 +401,26 @@ export default function OphthalmologistsPage() {
         yearsOfExperience: selectedDoctor.yearsOfExperience,
         bio: selectedDoctor.bio ?? undefined,
         employmentType: selectedEmploymentType,
+        consultationFee: selectedConsultationFee,
       });
 
       setSelectedDoctor((prev) =>
-        prev ? { ...prev, employmentType: selectedEmploymentType } : prev
+        prev
+          ? {
+              ...prev,
+              employmentType: selectedEmploymentType,
+              consultationFee: selectedConsultationFee,
+            }
+          : prev
       );
       setOphthalmologists((prev) =>
         prev.map((doctor) =>
           doctor.id === selectedDoctor.id
-            ? { ...doctor, employmentType: selectedEmploymentType }
+            ? {
+                ...doctor,
+                employmentType: selectedEmploymentType,
+                consultationFee: selectedConsultationFee,
+              }
             : doctor
         )
       );
@@ -656,12 +673,6 @@ export default function OphthalmologistsPage() {
     }
   };
 
-  const vndCurrencyOptions = {
-    locale,
-    currency: 'VND',
-    minimumFractionDigits: 0,
-  } as const;
-
   const ophthalmologistColumns: TableColumn<Ophthalmologist>[] = [
     {
       header: t('SystemAdmin.ophthalmologists.table.columns.doctor', 'Doctor'),
@@ -794,12 +805,12 @@ export default function OphthalmologistsPage() {
                 ? `${row.commissionRate}%`
                 : t('SystemAdmin.common.notAvailable', 'N/A')}
             </span>
-            <span className="text-xs text-slate-500">
-              {commissionAmount != null
-                ? formatCurrency(commissionAmount, vndCurrencyOptions)
+            <span className="text-xs text-primary font-medium">
+              {row.consultationFee
+                ? formatCurrency(row.consultationFee, vndCurrencyOptions)
                 : t(
-                    'SystemAdmin.ophthalmologists.table.values.commissionPending',
-                    'Commission pending'
+                    'SystemAdmin.ophthalmologists.table.values.feePending',
+                    'Fee pending'
                   )}
             </span>
           </div>
@@ -1822,6 +1833,30 @@ export default function OphthalmologistsPage() {
                         )}
                       </p>
                     )}
+                  </div>
+                  <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <p className="text-xs text-slate-500 mb-1">
+                      {t(
+                        'SystemAdmin.ophthalmologists.detail.contract.consultationFee',
+                        'Consultation Fee'
+                      )}
+                    </p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                          type="number"
+                          value={selectedConsultationFee}
+                          onChange={(e) =>
+                            setSelectedConsultationFee(Number(e.target.value))
+                          }
+                          className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-slate-400">
+                        VND
+                      </span>
+                    </div>
                   </div>
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                     <p className="text-xs text-slate-500 mb-1">
