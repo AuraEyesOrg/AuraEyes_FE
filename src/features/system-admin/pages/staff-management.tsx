@@ -1,13 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import {
-  Users,
-  Search,
-  MoreVertical,
-  Lock,
-  Unlock,
-  Shield,
-} from 'lucide-react';
-const AURA_LOGO = '/logo.png';
+import { Users, Search, Eye, X, Lock, Unlock, Shield } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
@@ -37,15 +29,28 @@ const roleColors: Record<string, string> = {
     'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
 };
 
+type StaffUser = User & {
+  phoneNumber?: string | null;
+  isActive?: boolean;
+  emailConfirmed?: boolean;
+  fullName?: string;
+  createdAt?: string;
+  lastLoginAt?: string | null;
+  roles?: string[];
+  organisationId?: string;
+  organisationName?: string;
+  mustUpdateProfile?: boolean;
+};
+
 export default function StaffManagementPage() {
   const { t } = useSafeTranslation();
   const notAvailableLabel = t('SystemAdmin.common.notAvailable', 'N/A');
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<StaffUser[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [stats, setStats] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<StaffUser | null>(null);
 
   const roleFilterOptions: Array<{ value: string; label: string }> = [
     {
@@ -61,20 +66,33 @@ export default function StaffManagementPage() {
     return meta ? t(meta.key, meta.fallback) : role;
   };
 
+  const isLockedStatus = (status?: string) => {
+    const normalized = (status || '').toLowerCase();
+    return (
+      normalized === 'locked' ||
+      normalized === 'suspended' ||
+      normalized === 'inactive'
+    );
+  };
+
+  const formatDateTime = (value?: string | null) => {
+    if (!value) return notAvailableLabel;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString();
+  };
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [usersData, statsData] = await Promise.all([
-        userApi.getUsers(1, 100), // Get a larger batch for now
-        userApi.getUserStats(),
-      ]);
+      const usersData = await userApi.getUsers(1, 100); // Get a larger batch for now
 
       // Only keep staff roles (ClinicStaff, Ophthalmologist)
       const staffUsers = (usersData?.items || []).filter(
-        (u: User) => u.role === 'ClinicStaff' || u.role === 'Ophthalmologist'
+        (u: StaffUser) =>
+          u.role === 'ClinicStaff' || u.role === 'Ophthalmologist'
       );
       setUsers(staffUsers);
-      setStats(statsData);
     } catch (error) {
       console.error('Failed to load staff data', error);
     } finally {
@@ -86,15 +104,11 @@ export default function StaffManagementPage() {
     loadData();
   }, [loadData]);
 
-  // Use stats from API if available, fallback to local count
-  const totalStaff = stats
-    ? (stats.usersByRole?.ClinicStaff || 0) +
-      (stats.usersByRole?.Ophthalmologist || 0)
-    : users.length;
-  const activeStaff = stats
-    ? stats.activeUsers
-    : users.filter((u) => u.status === 'Active' || u.status === 'active')
-        .length;
+  const totalStaff = users.length;
+  const activeStaff = users.filter((u) => {
+    const status = (u.status || '').toLowerCase();
+    return status === 'active' || status === 'online';
+  }).length;
   const pendingStaff = users.filter(
     (u) => u.status === 'Pending' || (u as any).mustUpdateProfile
   ).length;
@@ -116,20 +130,29 @@ export default function StaffManagementPage() {
 
   const handleToggleLock = async (userId: string, currentStatus: string) => {
     try {
-      if (currentStatus === 'locked') {
+      if (isLockedStatus(currentStatus)) {
         await userApi.unlockUser(userId);
         toast.success('Account unlocked.');
       } else {
         await userApi.lockUser(userId);
         toast.success('Account locked.');
       }
-      loadData();
-    } catch (error) {
+      await loadData();
+      setSelectedUser((prev) =>
+        prev && prev.id === userId
+          ? {
+              ...prev,
+              status: isLockedStatus(currentStatus) ? 'Active' : 'Suspended',
+              isActive: isLockedStatus(currentStatus),
+            }
+          : prev
+      );
+    } catch {
       toast.error('Failed to update status.');
     }
   };
 
-  const userColumns: TableColumn<User>[] = [
+  const userColumns: TableColumn<StaffUser>[] = [
     {
       header: 'Staff',
       accessor: 'name',
@@ -178,6 +201,8 @@ export default function StaffManagementPage() {
           active: 'success',
           Active: 'success',
           Online: 'success',
+          suspended: 'error',
+          Suspended: 'error',
           inactive: 'warning',
           Inactive: 'warning',
           locked: 'error',
@@ -199,18 +224,22 @@ export default function StaffManagementPage() {
           <button
             onClick={() => handleToggleLock(row.id, row.status)}
             className="text-slate-500 hover:text-primary transition-colors p-1"
+            title={
+              isLockedStatus(row.status) ? 'Unlock account' : 'Lock account'
+            }
           >
-            {row.status === 'locked' ? (
+            {isLockedStatus(row.status) ? (
               <Unlock className="w-4 h-4" />
             ) : (
               <Lock className="w-4 h-4" />
             )}
           </button>
           <button
+            onClick={() => setSelectedUser(row)}
             className="text-slate-500 hover:text-primary transition-colors p-1"
             title="View Detail"
           >
-            <MoreVertical className="w-5 h-5" />
+            <Eye className="w-5 h-5" />
           </button>
         </div>
       ),
@@ -230,13 +259,8 @@ export default function StaffManagementPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20"
+                className="flex items-center px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20"
               >
-                <img
-                  src={AURA_LOGO}
-                  alt="Aura"
-                  className="w-5 h-5 object-contain"
-                />
                 {t('SystemAdmin.staff.actions.addNew', 'Add New Staff')}
               </button>
             </div>
@@ -310,7 +334,7 @@ export default function StaffManagementPage() {
             </div>
 
             <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-              <DataTable<User>
+              <DataTable<StaffUser>
                 columns={userColumns}
                 data={filteredUsers}
                 keyExtractor={(row) => row.id}
@@ -327,6 +351,152 @@ export default function StaffManagementPage() {
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={loadData}
       />
+
+      {selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-2xl rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                Staff Detail
+              </h3>
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="p-1 text-slate-500 hover:text-slate-900 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="px-5 py-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-slate-500">User ID</p>
+                <p className="font-medium break-all">{selectedUser.id}</p>
+              </div>
+              <div>
+                <p className="text-slate-500">Full Name</p>
+                <p className="font-medium">
+                  {selectedUser.fullName ||
+                    selectedUser.name ||
+                    notAvailableLabel}
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-500">Email</p>
+                <p className="font-medium">
+                  {selectedUser.email || notAvailableLabel}
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-500">Phone Number</p>
+                <p className="font-medium">
+                  {selectedUser.phoneNumber || notAvailableLabel}
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-500">Primary Role</p>
+                <p className="font-medium">{getRoleLabel(selectedUser.role)}</p>
+              </div>
+              <div>
+                <p className="text-slate-500">All Roles</p>
+                <p className="font-medium">
+                  {(selectedUser.roles || [selectedUser.role]).join(', ')}
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-500">Status</p>
+                <p className="font-medium">
+                  {selectedUser.status || notAvailableLabel}
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-500">Active</p>
+                <p className="font-medium">
+                  {selectedUser.isActive ? 'Yes' : 'No'}
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-500">Email Confirmed</p>
+                <p className="font-medium">
+                  {selectedUser.emailConfirmed ? 'Yes' : 'No'}
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-500">Created At</p>
+                <p className="font-medium">
+                  {formatDateTime(selectedUser.createdAt)}
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-500">Last Login</p>
+                <p className="font-medium">
+                  {formatDateTime(
+                    selectedUser.lastLoginAt || selectedUser.lastLogin
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-500">Organisation</p>
+                <p className="font-medium">
+                  {selectedUser.organisationName || notAvailableLabel}
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-500">Organisation ID</p>
+                <p className="font-medium break-all">
+                  {selectedUser.organisationId || notAvailableLabel}
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-500">Profile Completion Required</p>
+                <p className="font-medium">
+                  {selectedUser.mustUpdateProfile ? 'Yes' : 'No'}
+                </p>
+              </div>
+              {selectedUser.role === 'Ophthalmologist' && (
+                <div>
+                  <p className="text-slate-500">Role Summary</p>
+                  <p className="font-medium">
+                    Clinical ophthalmologist account
+                  </p>
+                </div>
+              )}
+              {selectedUser.role === 'ClinicStaff' && (
+                <div>
+                  <p className="text-slate-500">Role Summary</p>
+                  <p className="font-medium">
+                    Internal clinic operations staff
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="px-5 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setSelectedUser(null)}
+                className="px-4 py-2 text-sm font-semibold rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleToggleLock(selectedUser.id, selectedUser.status || '')
+                }
+                className={`px-4 py-2 text-sm font-semibold rounded-lg text-white ${
+                  isLockedStatus(selectedUser.status)
+                    ? 'bg-emerald-600 hover:bg-emerald-700'
+                    : 'bg-rose-600 hover:bg-rose-700'
+                }`}
+              >
+                {isLockedStatus(selectedUser.status)
+                  ? 'Unlock Account'
+                  : 'Lock Account'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
