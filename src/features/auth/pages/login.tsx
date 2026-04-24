@@ -39,7 +39,6 @@ import {
 } from '../api';
 import type { TwoFactorRequiredResponse } from '../types';
 import useAuthStore from '@/store/auth-store';
-import { shouldRedirectToContract } from '../utils/contract-status';
 
 type AuthMode = 'login' | 'register';
 
@@ -207,15 +206,6 @@ const LoginPage = () => {
     navigate(toLocalizedAuthPath('/email-verification-required'));
   };
 
-  const isPendingVerification = (user?: {
-    isVerified?: boolean | null;
-    verificationStatus?: string | null;
-  }) =>
-    user?.verificationStatus === 'PendingVerification' ||
-    (user?.isVerified === false &&
-      (!user?.verificationStatus ||
-        user?.verificationStatus === 'PendingVerification'));
-
   const {
     register: registerLogin,
     handleSubmit: handleLoginSubmit,
@@ -273,13 +263,7 @@ const LoginPage = () => {
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
-          if (isPendingVerification(response.user)) {
-            navigate(toLocalizedAuthPath('/ophthalmologist/pending-approval'));
-          } else if (shouldRedirectToContract(response.user?.contractStatus)) {
-            navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
-          } else {
-            navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
-          }
+          navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
         } else if (roles.includes('OrgAdmin')) {
           navigate('/organisation/dashboard');
         } else if (roles.includes('ClinicStaff')) {
@@ -440,13 +424,7 @@ const LoginPage = () => {
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
-          if (isPendingVerification(loggedInUser)) {
-            navigate(toLocalizedAuthPath('/ophthalmologist/pending-approval'));
-          } else if (shouldRedirectToContract(loggedInUser?.contractStatus)) {
-            navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
-          } else {
-            navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
-          }
+          navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
         } else if (roles.includes('ClinicStaff')) {
           navigate('/clinic-staff/dashboard');
         } else {

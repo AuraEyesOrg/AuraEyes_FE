@@ -1,8 +1,7 @@
 import { type ReactElement } from 'react';
-import { Navigate, useLocation } from 'react-router';
+import { Navigate } from 'react-router';
 import useAuthStore from '@/store/auth-store';
 import { resolvePathWithLocale } from '@/i18n/middleware';
-import { stripLocaleFromPathname } from '@/i18n/locales';
 import { NoIndexMeta } from '@/hooks/useSeoMeta';
 
 interface Props {
@@ -17,14 +16,6 @@ const PrivateRoute: React.FC<Props> = ({
   requiredPermissions,
 }) => {
   const { isAuthenticated, user } = useAuthStore((state) => state);
-  const location = useLocation();
-  const normalizedPath = stripLocaleFromPathname(location.pathname);
-
-  const isPendingVerification =
-    user?.verificationStatus === 'PendingVerification' ||
-    (user?.isVerified === false &&
-      (!user?.verificationStatus ||
-        user?.verificationStatus === 'PendingVerification'));
 
   if (!isAuthenticated) {
     return <Navigate to={resolvePathWithLocale('/')} replace />;
@@ -55,42 +46,6 @@ const PrivateRoute: React.FC<Props> = ({
     )
   ) {
     return <Navigate to={resolvePathWithLocale('/')} replace />;
-  }
-
-  const isClinicStaff = hasAnyRole(['ClinicStaff']);
-
-  // Redirect unverified ophthalmologists to pending approval page
-  const isOphthalmologist = hasAnyRole(['Ophthalmologist']);
-  const isPendingApproval = isOphthalmologist && isPendingVerification;
-
-  if (
-    isPendingApproval &&
-    normalizedPath !== '/ophthalmologist/pending-approval'
-  ) {
-    return (
-      <Navigate
-        to={resolvePathWithLocale('/ophthalmologist/pending-approval')}
-        replace
-      />
-    );
-  }
-
-  // Redirect ophthalmologists with unsigned contract to the contract page.
-  // Use !== false (not strict true) so that null/undefined isVerified also triggers
-  // the contract gate — prevents edge-case bypass when the ophthalmologist row
-  // doesn't exist yet.
-  const needsContract =
-    isOphthalmologist &&
-    user?.isVerified !== false &&
-    user?.contractStatus !== 'Active';
-
-  if (needsContract && normalizedPath !== '/ophthalmologist/contract') {
-    return (
-      <Navigate
-        to={resolvePathWithLocale('/ophthalmologist/contract')}
-        replace
-      />
-    );
   }
 
   return (

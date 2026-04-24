@@ -14,7 +14,6 @@ import {
 import Spinner from '@/components/ui/spinner';
 import { verifyTwoFactorLogin } from '../api/auth.api';
 import useAuthStore from '@/store/auth-store';
-import { shouldRedirectToContract } from '../utils/contract-status';
 import '@/styles/auth-animations.css';
 
 interface TwoFactorVerifyForm {
@@ -38,15 +37,6 @@ const TwoFactorVerifyPage = () => {
     null
   );
   const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
-
-  const isPendingVerification = (user?: {
-    isVerified?: boolean | null;
-    verificationStatus?: string | null;
-  }) =>
-    user?.verificationStatus === 'PendingVerification' ||
-    (user?.isVerified === false &&
-      (!user?.verificationStatus ||
-        user?.verificationStatus === 'PendingVerification'));
 
   const {
     register,
@@ -124,13 +114,7 @@ const TwoFactorVerifyPage = () => {
         } else if (roles.includes('Patient')) {
           nextPath = '/patient/dashboard';
         } else if (roles.includes('Ophthalmologist')) {
-          if (isPendingVerification(response.user)) {
-            nextPath = '/ophthalmologist/pending-approval';
-          } else if (shouldRedirectToContract(response.user?.contractStatus)) {
-            nextPath = '/ophthalmologist/contract';
-          } else {
-            nextPath = '/ophthalmologist/dashboard';
-          }
+          nextPath = '/ophthalmologist/dashboard';
         } else if (roles.includes('OrgAdmin')) {
           nextPath = '/organisation/dashboard';
         } else if (roles.includes('ClinicStaff')) {

@@ -7,14 +7,10 @@ import {
   Users,
   Eye,
   Wallet,
-  Calendar,
-  CalendarClock,
   CalendarX,
-  ArrowRightLeft,
   LogOut,
   Settings,
   MessagesSquare,
-  FileText,
   Globe,
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
@@ -42,9 +38,6 @@ interface AuthMeApiResponse {
   success: boolean;
   data?: {
     employmentType?: string | null;
-    contractStatus?: string | null;
-    isVerified?: boolean | null;
-    verificationStatus?: string | null;
   };
 }
 
@@ -88,28 +81,10 @@ const navItems = [
     requiredPermission: Permissions.ScreeningRead,
   },
   {
-    labelKey: 'Ophthalmologist.sidebar.appointments',
-    icon: Calendar,
-    path: '/ophthalmologist/appointments',
-    requiredPermission: Permissions.AppointmentsRead,
-  },
-  {
-    labelKey: 'Ophthalmologist.sidebar.schedules',
-    icon: CalendarClock,
-    path: '/ophthalmologist/schedules',
-    requiredPermission: Permissions.SchedulesManage,
-  },
-  {
     labelKey: 'Ophthalmologist.sidebar.leaveRequests',
     icon: CalendarX,
     path: '/ophthalmologist/leave-requests',
     requiredPermission: Permissions.SchedulesManage,
-  },
-  {
-    labelKey: 'Ophthalmologist.sidebar.employmentTypeChangeRequests',
-    icon: ArrowRightLeft,
-    path: '/ophthalmologist/employment-type-change-requests',
-    requiredPermission: Permissions.OphthalmologistsUpdate,
   },
   {
     labelKey: 'Ophthalmologist.sidebar.consultations',
@@ -122,12 +97,6 @@ const navItems = [
     labelKey: 'Common.sidebar.auraNetwork',
     icon: Globe,
     path: '/network',
-  },
-  {
-    labelKey: 'Ophthalmologist.sidebar.contract',
-    icon: FileText,
-    path: '/ophthalmologist/contract',
-    requiredPermission: Permissions.ContractsRead,
   },
   {
     labelKey: 'Ophthalmologist.sidebar.wallet',
@@ -182,18 +151,8 @@ export default function DoctorSidebar({
     );
     const currentEmploymentType = normalizeEmploymentType(user.employmentType);
     const nextEmploymentType = latestEmploymentType ?? currentEmploymentType;
-    const nextContractStatus =
-      latestAuthSnapshot.contractStatus ?? user.contractStatus ?? null;
-    const nextVerificationStatus =
-      latestAuthSnapshot.verificationStatus ?? user.verificationStatus ?? null;
-    const nextIsVerified =
-      latestAuthSnapshot.isVerified ?? user.isVerified ?? null;
 
-    const hasAuthDrift =
-      nextEmploymentType !== currentEmploymentType ||
-      nextContractStatus !== (user.contractStatus ?? null) ||
-      nextVerificationStatus !== (user.verificationStatus ?? null) ||
-      nextIsVerified !== (user.isVerified ?? null);
+    const hasAuthDrift = nextEmploymentType !== currentEmploymentType;
 
     if (!hasAuthDrift) {
       return;
@@ -202,9 +161,6 @@ export default function DoctorSidebar({
     setUser({
       ...user,
       employmentType: nextEmploymentType,
-      contractStatus: nextContractStatus,
-      verificationStatus: nextVerificationStatus,
-      isVerified: nextIsVerified,
     });
   }, [latestAuthSnapshot, setUser, user]);
 
@@ -215,19 +171,14 @@ export default function DoctorSidebar({
   const isFullTimeDoctor =
     (latestEmploymentType ?? authEmploymentType) === 'FullTime';
 
-  // Only show full nav when contract is active; otherwise lock to contract page only
-  const contractApproved =
-    (latestAuthSnapshot?.contractStatus ?? user?.contractStatus) === 'Active';
-  const visibleNavItems = (
-    contractApproved
-      ? navItems.filter(
-          (item) =>
-            item.path !== '/ophthalmologist/leave-requests' || isFullTimeDoctor
-        )
-      : navItems.filter((item) => item.path === '/ophthalmologist/contract')
-  ).filter((item) =>
-    item.requiredPermission ? hasPermission(item.requiredPermission) : true
-  );
+  const visibleNavItems = navItems
+    .filter(
+      (item) =>
+        item.path !== '/ophthalmologist/leave-requests' || isFullTimeDoctor
+    )
+    .filter((item) =>
+      item.requiredPermission ? hasPermission(item.requiredPermission) : true
+    );
 
   const handleLogout = () => {
     logout();
