@@ -107,7 +107,7 @@ export default function OrganisationSchedulePage() {
         onSuccess: (data) => {
           if (data.paymentUrl) {
             toast.info(
-              `Đặt lịch thành công! Đang chuyển đến trang thanh toán đặt cọc ${data.depositAmount.toLocaleString('vi-VN')} VND...`
+              `Đặt lịch thành công! Đang chuyển đến trang thanh toán đặt cọc ${(data.depositAmount ?? 0).toLocaleString('vi-VN')} VND...`
             );
             // Small delay so user sees the toast before redirect
             setTimeout(() => {

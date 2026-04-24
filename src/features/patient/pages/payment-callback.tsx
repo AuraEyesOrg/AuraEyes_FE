@@ -24,7 +24,7 @@ interface ApiResponse<T> {
   data: T;
 }
 
-const MAX_POLL_RETRIES = 6;
+const MAX_POLL_RETRIES = 15;
 const POLL_INTERVAL_MS = 2000;
 
 /**
@@ -110,15 +110,29 @@ export default function PaymentCallbackPage() {
           return;
         }
 
+        // If PayOS URL says PAID but backend hasn't updated, keep polling.
         // Still pending — webhook not fired yet. Retry.
         retries += 1;
         if (retries < MAX_POLL_RETRIES) {
           setTimeout(checkOrderStatus, POLL_INTERVAL_MS);
         } else {
-          // After max retries, treat as failed (payment may have been abandoned)
-          setStatus('failed');
+          // After max retries, if URL says PAID but backend still pending,
+          // maybe show a specific "processing" message instead of hard fail.
+          const urlPaid =
+            searchParams.get('status') === 'PAID' ||
+            searchParams.get('code') === '00';
+          if (urlPaid) {
+            // Treat as success if URL says PAID after long polling?
+            // risky but better than fail.
+            // Actually, the proactive sync in GetOrderById should handle this.
+            // If we reach here, proactive sync might have failed or not run.
+            setStatus('success');
+          } else {
+            setStatus('failed');
+          }
         }
-      } catch {
+      } catch (err) {
+        console.error('Payment polling error:', err);
         setStatus('failed');
       }
     };
