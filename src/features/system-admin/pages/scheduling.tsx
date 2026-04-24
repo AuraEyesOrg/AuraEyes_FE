@@ -156,8 +156,10 @@ export default function SystemAdminScheduling() {
 
   // Summary Metrics based on slots
   const totalSlots = slots.length;
-  const availableSlots = slots.filter((s) => s.status === 'Available').length;
-  const bookedSlots = slots.filter((s) => s.status === 'Booked').length;
+  const availableSlots = slots.filter(
+    (s: any) => s.status === 'Available'
+  ).length;
+  const bookedSlots = slots.filter((s: any) => s.status === 'Booked').length;
   const inProgressSlots = 0; // Using slots data, we might not have in progress exactly, mock or map appropriately. Wait, slots don't have InProgress. I will keep it as 0 to match visual.
 
   return (
@@ -368,7 +370,7 @@ export default function SystemAdminScheduling() {
 
                 {isLoadingSlots ? (
                   <div className="flex items-center justify-center h-64">
-                    <Spinner size="lg" />
+                    <Spinner size={40} />
                   </div>
                 ) : slots.length === 0 ? (
                   <div className="border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-16 flex items-center justify-center bg-white/50 dark:bg-slate-900/30">
@@ -381,7 +383,7 @@ export default function SystemAdminScheduling() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {slots.map((slot) => (
+                    {slots.map((slot: any) => (
                       <div
                         key={slot.id}
                         className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow group"
@@ -462,7 +464,7 @@ export default function SystemAdminScheduling() {
 
               {isLoadingTemplates ? (
                 <div className="h-64 flex items-center justify-center">
-                  <Spinner size="lg" />
+                  <Spinner size={40} />
                 </div>
               ) : templates.length === 0 ? (
                 <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-12 text-center">
@@ -476,7 +478,7 @@ export default function SystemAdminScheduling() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {templates.map((template) => (
+                  {templates.map((template: any) => (
                     <div
                       key={template.id}
                       className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none transition-all group"
