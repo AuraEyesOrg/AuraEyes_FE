@@ -161,10 +161,42 @@ export default function SystemAdminScheduling() {
   };
 
   // Summary Metrics based on slots
-  const totalSlots = slots.length;
-  const availableSlots = slots.filter((s) => s.status === 'Available').length;
-  const bookedSlots = slots.filter((s) => s.status === 'Booked').length;
-  const inProgressSlots = 0; // Using slots data, we might not have in progress exactly, mock or map appropriately. Wait, slots don't have InProgress. I will keep it as 0 to match visual.
+  const metrics = useMemo(() => {
+    const now = new Date();
+    const stats = {
+      total: slots.length,
+      attended: 0,
+      expired: 0,
+      full: 0,
+      partial: 0,
+      available: 0,
+      blocked: 0,
+      totalBookings: 0,
+    };
+
+    slots.forEach((slot) => {
+      const slotDateStr = `${slot.date}T${slot.startTime}`;
+      const slotDateTime = new Date(slotDateStr);
+      const isPast = slotDateTime < now;
+      const isBlocked = slot.status === 'Blocked';
+      const isFullyBooked = slot.bookedCount >= slot.maxCapacity;
+      const hasBookings = slot.bookedCount > 0;
+
+      stats.totalBookings += slot.bookedCount;
+
+      if (isPast) {
+        if (hasBookings) stats.attended++;
+        else stats.expired++;
+      } else {
+        if (isBlocked) stats.blocked++;
+        else if (isFullyBooked) stats.full++;
+        else if (hasBookings) stats.partial++;
+        else stats.available++;
+      }
+    });
+
+    return stats;
+  }, [slots]);
 
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
@@ -325,40 +357,58 @@ export default function SystemAdminScheduling() {
                 {/* Summary Card */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 rounded-2xl p-5 shadow-sm shadow-slate-200/20 dark:shadow-none">
                   <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4">
-                    {format(selectedDate, 'EEE, MMM d')}
+                    {format(selectedDate, 'EEE, MMM d')} Summary
                   </h4>
-                  <div className="grid grid-cols-2 gap-y-6 gap-x-4">
+                  <div className="grid grid-cols-2 gap-y-5 gap-x-4">
                     <div>
                       <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
                         Total Slots
                       </p>
                       <p className="text-xl font-bold text-slate-800 dark:text-slate-200">
-                        {totalSlots}
+                        {metrics.total}
                       </p>
                     </div>
                     <div>
                       <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                        Booked
+                        Bookings
                       </p>
-                      <p className="text-xl font-bold text-orange-500">
-                        {bookedSlots}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                        Available
-                      </p>
-                      <p className="text-xl font-bold text-emerald-500">
-                        {availableSlots}
+                      <p className="text-xl font-bold text-blue-500">
+                        {metrics.totalBookings}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                        In progress
-                      </p>
-                      <p className="text-xl font-bold text-purple-500">
-                        {inProgressSlots}
-                      </p>
+                    <div className="col-span-2 border-t border-slate-50 dark:border-slate-800/50 my-1 pt-4 grid grid-cols-2 gap-y-4 gap-x-4">
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                          Available
+                        </p>
+                        <p className="text-lg font-bold text-emerald-500">
+                          {metrics.available}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                          Full/Partial
+                        </p>
+                        <p className="text-lg font-bold text-orange-500">
+                          {metrics.full + metrics.partial}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                          Attended
+                        </p>
+                        <p className="text-lg font-bold text-blue-400">
+                          {metrics.attended}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                          Expired
+                        </p>
+                        <p className="text-lg font-bold text-slate-400">
+                          {metrics.expired}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
