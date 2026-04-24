@@ -7,24 +7,17 @@ import {
   ChevronRight,
   CheckCircle2,
   Clock,
-  Eye,
   FileText,
   MessageSquareHeart,
   PlusCircle,
-  Stethoscope,
-  Video,
   XCircle,
   Building2,
-  User,
 } from 'lucide-react';
+import { format } from 'date-fns';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import { Link } from 'react-router-dom';
-import {
-  useCancelSession,
-  useConsultationSessions,
-  useConsultationSessionCounts,
-} from '@/features/consultation/hooks';
+
 import {
   usePatientClinicAppointments,
   usePatientClinicAppointmentCounts,
@@ -34,16 +27,9 @@ import {
   FeedbackModal,
   FeedbackSubmittedBadge,
 } from '@/features/patient/components';
-import ConfirmModal from '@/components/ui/confirm-modal';
 import useAuthStore from '@/store/auth-store';
-import {
-  formatDate,
-  formatSlotTime,
-  formatShortDate,
-  formatShortTime,
-} from '@/lib/date-utils';
-import { SessionStatus, ConsultationSessionType } from '@/types/consultation';
-import type { ConsultationSessionListDto } from '@/types/consultation';
+import { formatSlotTime } from '@/lib/date-utils';
+import { SessionStatus } from '@/types/consultation';
 import type {
   ClinicAppointmentDto,
   PatientAppointmentTab,
@@ -114,17 +100,6 @@ const AppointmentsPage = () => {
     setSessionPage(1);
   };
 
-  const sessionStatus = SESSION_TAB_STATUS[filter];
-  const sessionsQuery = useConsultationSessions(
-    {
-      patientId: patientId ?? undefined,
-      pageNumber: sessionPage,
-      pageSize: PAGE_SIZE,
-      ...(sessionStatus !== undefined ? { status: sessionStatus } : {}),
-    },
-    { enabled: !!patientId }
-  );
-
   const clinicAppointmentsQuery = usePatientClinicAppointments(
     patientId ?? '',
     {
@@ -135,21 +110,11 @@ const AppointmentsPage = () => {
     !!patientId
   );
 
-  const { counts: sessionCounts } = useConsultationSessionCounts(
-    patientId ?? undefined
-  );
   const { counts: clinicCounts } = usePatientClinicAppointmentCounts(
     patientId ?? ''
   );
 
-  const cancelMutation = useCancelSession();
   const createOrganisationFeedbackMutation = useCreateOrganisationFeedback();
-
-  const sessions = sessionsQuery.data?.items ?? [];
-  const sessionTotalPages = sessionsQuery.data?.totalPages ?? 1;
-  const sessionTotalCount = sessionsQuery.data?.totalCount ?? 0;
-  const isLoadingSessions = sessionsQuery.isLoading;
-  const isFetchingSessions = sessionsQuery.isFetching;
 
   const clinicAppointments = clinicAppointmentsQuery.data?.items ?? [];
   const clinicTotalPages = clinicAppointmentsQuery.data?.totalPages ?? 1;
@@ -162,61 +127,33 @@ const AppointmentsPage = () => {
       {
         key: 'upcoming' as const,
         label: t('PatientAppointments.stats.upcoming'),
-        value: sessionCounts.upcoming + clinicCounts.Upcoming,
+        value: clinicCounts.Upcoming,
         icon: <CalendarDays className="h-4 w-4" strokeWidth={1.6} />,
       },
       {
         key: 'completed' as const,
         label: t('PatientAppointments.stats.completed'),
-        value: sessionCounts.completed + clinicCounts.Completed,
+        value: clinicCounts.Completed,
         icon: <CheckCircle2 className="h-4 w-4" strokeWidth={1.6} />,
       },
       {
         key: 'cancelled' as const,
         label: t('PatientAppointments.stats.cancelled'),
-        value: sessionCounts.cancelled + clinicCounts.Cancelled,
+        value: clinicCounts.Cancelled,
         icon: <XCircle className="h-4 w-4" strokeWidth={1.6} />,
       },
       {
         key: 'total' as const,
         label: t('PatientAppointments.stats.total'),
-        value: sessionCounts.all + clinicCounts.All,
+        value: clinicCounts.All,
         icon: <FileText className="h-4 w-4" strokeWidth={1.6} />,
       },
     ],
-    [sessionCounts, clinicCounts, t]
+    [clinicCounts, t]
   );
 
   const getFilterLabel = (status: FilterTab) =>
     t(`PatientAppointments.filters.${status}`);
-
-  const getSessionStatusLabel = (status: SessionStatus) => {
-    switch (status) {
-      case SessionStatus.Pending:
-        return t('PatientAppointments.sessionStatus.pending');
-      case SessionStatus.Confirmed:
-        return t('PatientAppointments.sessionStatus.confirmed');
-      case SessionStatus.Completed:
-        return t('PatientAppointments.sessionStatus.completed');
-      case SessionStatus.Cancelled:
-        return t('PatientAppointments.sessionStatus.cancelled');
-      default:
-        return '';
-    }
-  };
-
-  const getSessionTypeLabel = (type: ConsultationSessionType) => {
-    switch (type) {
-      case ConsultationSessionType.Verification:
-        return t('PatientAppointments.sessionType.verification');
-      case ConsultationSessionType.VideoCall:
-        return t('PatientAppointments.sessionType.videoCall');
-      case ConsultationSessionType.ClinicBooking:
-        return t('PatientAppointments.sessionType.clinicBooking');
-      default:
-        return '';
-    }
-  };
 
   const getClinicStatusLabel = (status: string) => {
     const mappedKey = CLINIC_STATUS_LABEL_KEYS[status];
@@ -224,32 +161,6 @@ const AppointmentsPage = () => {
     return t(`PatientAppointments.clinicStatus.${mappedKey}`, {
       defaultValue: status,
     });
-  };
-
-  const canCancelSession = (session: ConsultationSessionListDto) => {
-    if (session.status !== SessionStatus.Confirmed) return false;
-    if (!session.appointmentTime) return true;
-    const msUntilStart =
-      new Date(session.appointmentTime).getTime() - Date.now();
-    const threeHoursMs = 3 * 60 * 60 * 1000;
-    return msUntilStart > threeHoursMs;
-  };
-
-  const confirmCancelSession = () => {
-    if (!cancelSessionId) return;
-    if (!currentUserId) {
-      toast.error(t('PatientAppointments.toast.cancelSigninRequired'));
-      setCancelSessionId(null);
-      return;
-    }
-    cancelMutation.mutate(
-      {
-        sessionId: cancelSessionId,
-        cancelledByUserId: currentUserId,
-        reason: 'Cancelled by patient',
-      },
-      { onSettled: () => setCancelSessionId(null) }
-    );
   };
 
   const submitClinicFeedback = async (rating: number, comment?: string) => {
@@ -277,99 +188,120 @@ const AppointmentsPage = () => {
     }
   };
 
-  const bothEmpty =
-    !isLoadingClinic &&
-    !isLoadingSessions &&
-    clinicAppointments.length === 0 &&
-    sessions.length === 0;
+  const bothEmpty = !isLoadingClinic && clinicAppointments.length === 0;
 
   return (
     <PatientLayout>
-      <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="mb-1 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
-            {t('PatientAppointments.page.eyebrow')}
-          </p>
-          <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
-            {t('PatientAppointments.page.title')}
-          </h1>
-          <p className="text-(--text-secondary)">
-            {t('PatientAppointments.page.subtitle')}
-          </p>
-        </div>
+      <div className="relative mb-10 overflow-hidden rounded-3xl bg-slate-900 px-6 py-10 md:px-10">
+        {/* Abstract Background Element */}
+        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-brand/20 blur-3xl" />
+        <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl" />
 
-        <Link
-          to="/patient/clinics"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-brand hover:bg-brand/90 text-white rounded-xl text-sm font-semibold transition-colors active:scale-[0.98]"
-        >
-          <PlusCircle className="h-4 w-4" strokeWidth={1.8} />
-          {t('PatientAppointments.actions.bookNew')}
-        </Link>
-      </header>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <dl className="contents">
-          {stats.map((stat) => (
-            <div key={stat.key} className="medical-card p-4">
-              <div className="flex items-center gap-3">
-                <span className="w-10 h-10 bg-brand-soft rounded-lg flex items-center justify-center text-brand">
-                  {stat.icon}
-                </span>
-                <div>
-                  <dt className="text-xs text-[var(--text-muted)]">
-                    {stat.label}
-                  </dt>
-                  <dd className="text-2xl font-bold text-[var(--text-primary)]">
-                    {stat.value}
-                  </dd>
-                </div>
-              </div>
+        <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="mb-2 flex items-center gap-2">
+              <span className="h-1 w-8 rounded-full bg-brand" />
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand">
+                {t('PatientAppointments.page.eyebrow')}
+              </p>
             </div>
-          ))}
-        </dl>
+            <h1 className="text-4xl font-black tracking-tight text-white md:text-5xl">
+              {t('PatientAppointments.page.title')}
+            </h1>
+            <p className="mt-2 max-w-md text-lg font-medium text-slate-400">
+              {t('PatientAppointments.page.subtitle')}
+            </p>
+          </div>
+
+          <Link
+            to="/patient/clinics"
+            className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-brand px-8 py-4 text-sm font-bold text-white transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-brand/40"
+          >
+            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+            <PlusCircle className="relative z-10 h-5 w-5" strokeWidth={2.5} />
+            <span className="relative z-10 uppercase tracking-wider">
+              {t('PatientAppointments.actions.bookNew')}
+            </span>
+          </Link>
+        </div>
       </div>
 
-      <div
-        role="tablist"
-        aria-label={t('PatientAppointments.filters.label')}
-        className="mb-8 flex items-center gap-2 overflow-x-auto pb-2"
-      >
-        {FILTER_TABS.map((tab) => {
-          const active = filter === tab;
-          const badge =
-            sessionCounts[tab === 'all' ? 'all' : tab] +
-            clinicCounts[CLINIC_TAB_MAP[tab]];
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        {stats.map((stat) => {
+          const colorMap: Record<string, string> = {
+            upcoming: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+            completed:
+              'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+            cancelled: 'text-rose-500 bg-rose-500/10 border-rose-500/20',
+            total: 'text-slate-500 bg-slate-500/10 border-slate-500/20',
+          };
+          const colorClass = colorMap[stat.key] || colorMap.total;
+
           return (
-            <button
-              key={tab}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => onFilterChange(tab)}
-              className={[
-                'inline-flex min-w-fit items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap',
-                active
-                  ? 'bg-brand text-white'
-                  : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border-color)]',
-              ].join(' ')}
+            <div
+              key={stat.key}
+              className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 transition-all hover:shadow-lg hover:-translate-y-1"
             >
-              <span>{getFilterLabel(tab)}</span>
-              <span
-                className={[
-                  'inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
-                  active
-                    ? 'bg-white/20 text-white'
-                    : 'bg-[var(--bg-tertiary)] text-[var(--text-muted)]',
-                ].join(' ')}
-              >
-                {badge}
-              </span>
-            </button>
+              <div className="relative z-10 flex items-center justify-between mb-4">
+                <div className={`p-2.5 rounded-xl border ${colorClass}`}>
+                  {stat.icon}
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  {stat.label}
+                </span>
+              </div>
+              <div className="relative z-10 flex items-baseline gap-1">
+                <span className="text-3xl font-black text-slate-900 dark:text-white">
+                  {stat.value}
+                </span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                  Records
+                </span>
+              </div>
+              {/* Decorative accent */}
+              <div
+                className={`absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-500 ${colorClass.split(' ')[0].replace('text-', 'bg-')}`}
+              />
+            </div>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+      <div className="mb-10 flex items-center justify-center">
+        <div className="inline-flex p-1.5 bg-slate-100 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+          {FILTER_TABS.map((tab) => {
+            const active = filter === tab;
+            const badge = clinicCounts[CLINIC_TAB_MAP[tab]];
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => onFilterChange(tab)}
+                className={[
+                  'relative flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap',
+                  active
+                    ? 'bg-white dark:bg-slate-700 text-brand shadow-md'
+                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300',
+                ].join(' ')}
+              >
+                <span>{getFilterLabel(tab)}</span>
+                <span
+                  className={[
+                    'inline-flex min-w-[1.2rem] items-center justify-center rounded-lg px-1 py-0.5 text-[9px] font-black',
+                    active
+                      ? 'bg-brand text-white'
+                      : 'bg-slate-200 dark:bg-slate-700 text-slate-500',
+                  ].join(' ')}
+                >
+                  {badge}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-6">
         <section aria-labelledby="clinic-section-title">
           <SectionHeader
             id="clinic-section-title"
@@ -447,119 +379,42 @@ const AppointmentsPage = () => {
             />
           )}
         </section>
-
-        <section aria-labelledby="doctor-section-title">
-          <SectionHeader
-            id="doctor-section-title"
-            icon={<Stethoscope className="h-4 w-4" strokeWidth={1.8} />}
-            title={t('PatientAppointments.sections.doctorSlots')}
-            totalCount={sessionTotalCount}
-            refreshing={!isLoadingSessions && isFetchingSessions}
-          />
-
-          {isLoadingSessions ? (
-            <SkeletonList />
-          ) : sessions.length === 0 ? (
-            <EmptyState
-              icon={<Stethoscope className="h-6 w-6" strokeWidth={1.5} />}
-              title={
-                filter === 'all'
-                  ? t('PatientAppointments.empty.doctorAll')
-                  : t('PatientAppointments.empty.doctorByFilter', {
-                      filter: getFilterLabel(filter),
-                    })
-              }
-            />
-          ) : (
-            <div className="space-y-3">
-              {sessions.map((session) => (
-                <SessionCard
-                  key={session.id}
-                  session={session}
-                  typeLabel={getSessionTypeLabel(session.type)}
-                  statusLabel={getSessionStatusLabel(session.status)}
-                  labels={{
-                    notScheduledYet: t(
-                      'PatientAppointments.labels.notScheduledYet'
-                    ),
-                    doctor: session.ophthalmologistName
-                      ? t('PatientAppointments.labels.doctorName', {
-                          name: session.ophthalmologistName,
-                        })
-                      : getSessionStatusLabel(session.status),
-                    videoConsultation: t(
-                      'PatientAppointments.labels.videoConsultation'
-                    ),
-                    videoConsultationReady: t(
-                      'PatientAppointments.labels.videoConsultationReady'
-                    ),
-                    viewChat: t('PatientAppointments.actions.viewChat'),
-                    joinCall: t('PatientAppointments.actions.joinCall'),
-                    cancel: t('PatientAppointments.actions.cancel'),
-                    viewDetails: t('PatientAppointments.actions.viewDetails'),
-                  }}
-                  canCancel={canCancelSession(session)}
-                  isCancelling={cancelMutation.isPending}
-                  onCancel={() => setCancelSessionId(session.id)}
-                />
-              ))}
-            </div>
-          )}
-
-          {sessionTotalPages > 1 && (
-            <Pagination
-              page={sessionPage}
-              totalPages={sessionTotalPages}
-              onChange={setSessionPage}
-              labels={{
-                prev: t('PatientAppointments.pagination.prev'),
-                next: t('PatientAppointments.pagination.next'),
-                status: t('PatientAppointments.pagination.pageOf', {
-                  page: sessionPage,
-                  total: sessionTotalPages,
-                }),
-              }}
-            />
-          )}
-        </section>
       </div>
 
       {bothEmpty && (
-        <div className="mt-10 rounded-2xl border border-dashed border-[var(--border-color)] bg-[var(--bg-secondary)]/30 p-10 text-center">
-          <CalendarDays
-            className="mx-auto mb-3 h-8 w-8 text-[var(--text-muted)]"
-            strokeWidth={1.5}
-          />
-          <h3 className="mb-1 text-lg font-semibold tracking-tight text-[var(--text-primary)]">
-            {t('PatientAppointments.empty.noAppointmentsTitle')}
-          </h3>
-          <p className="mx-auto mb-5 max-w-[50ch] text-sm text-[var(--text-secondary)]">
-            {filter === 'all'
-              ? t('PatientAppointments.empty.noAppointmentsAll')
-              : t('PatientAppointments.empty.noAppointmentsByFilter', {
-                  filter: getFilterLabel(filter),
-                })}
-          </p>
-          <Link
-            to="/patient/clinics"
-            className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-brand/90 active:scale-[0.98]"
-          >
-            {t('PatientAppointments.actions.bookFirstAppointment')}
-          </Link>
+        <div className="relative mt-12 overflow-hidden rounded-[2.5rem] bg-slate-50 dark:bg-slate-900/40 p-12 text-center border border-slate-200 dark:border-slate-800">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand/20 to-transparent" />
+
+          <div className="relative z-10 flex flex-col items-center">
+            <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-white dark:bg-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700">
+              <CalendarDays
+                className="h-10 w-10 text-brand"
+                strokeWidth={1.5}
+              />
+            </div>
+
+            <h3 className="mb-3 text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              {t('PatientAppointments.empty.noAppointmentsTitle')}
+            </h3>
+
+            <p className="mx-auto mb-8 max-w-md text-base font-medium leading-relaxed text-slate-500 dark:text-slate-400">
+              {filter === 'all'
+                ? t('PatientAppointments.empty.noAppointmentsAll')
+                : t('PatientAppointments.empty.noAppointmentsByFilter', {
+                    filter: getFilterLabel(filter),
+                  })}
+            </p>
+
+            <Link
+              to="/patient/clinics"
+              className="group flex items-center gap-3 rounded-2xl bg-brand px-10 py-4 text-sm font-black uppercase tracking-widest text-white transition-all hover:scale-105 hover:shadow-2xl hover:shadow-brand/30 active:scale-95 shadow-xl shadow-brand/20"
+            >
+              <PlusCircle className="h-5 w-5" />
+              {t('PatientAppointments.actions.bookFirstAppointment')}
+            </Link>
+          </div>
         </div>
       )}
-
-      <ConfirmModal
-        open={!!cancelSessionId}
-        title={t('PatientAppointments.cancelModal.title')}
-        message={t('PatientAppointments.cancelModal.message')}
-        confirmLabel={t('PatientAppointments.cancelModal.confirmLabel')}
-        cancelLabel={t('PatientAppointments.cancelModal.cancelLabel')}
-        tone="danger"
-        isLoading={cancelMutation.isPending}
-        onCancel={() => setCancelSessionId(null)}
-        onConfirm={confirmCancelSession}
-      />
 
       <FeedbackModal
         open={!!clinicFeedbackTarget}
@@ -598,19 +453,32 @@ const SectionHeader = ({
   refreshing,
   action,
 }: SectionHeaderProps) => (
-  <div className="mb-4 flex items-center justify-between gap-3">
-    <div className="flex items-center gap-3">
-      <span className="w-10 h-10 bg-brand-soft rounded-xl flex items-center justify-center text-brand">
-        {icon}
-      </span>
+  <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="flex items-center gap-4">
+      <div className="relative group">
+        <div className="absolute inset-0 bg-brand/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+        <span className="relative z-10 w-12 h-12 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center text-brand transition-transform group-hover:scale-110">
+          {icon}
+        </span>
+      </div>
       <div>
-        <h2 id={id} className="text-xl font-bold text-[var(--text-primary)]">
+        <h2
+          id={id}
+          className="text-2xl font-black tracking-tight text-slate-900 dark:text-white"
+        >
           {title}
         </h2>
-        <p className="text-xs text-[var(--text-muted)]">
-          {totalCount}
-          {refreshing ? ' · …' : ''}
-        </p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            {totalCount} Total
+          </span>
+          {refreshing && (
+            <span className="flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-1.5 w-1.5 rounded-full bg-brand opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand"></span>
+            </span>
+          )}
+        </div>
       </div>
     </div>
     {action}
@@ -634,258 +502,121 @@ const ClinicAppointmentCard = ({
   rateLabel,
   submittedLabel,
   reasonLabel,
-  organisationLabel,
   clinicLabel,
   onRate,
-}: ClinicAppointmentCardProps) => {
+}: Omit<ClinicAppointmentCardProps, 'organisationLabel'>) => {
   const dimmed =
     appointment.status === 'Cancelled' || appointment.status === 'NoShow';
 
   return (
     <article
       className={[
-        'medical-card p-6 hover:border-brand/30 transition-colors',
-        dimmed ? 'opacity-60' : '',
+        'group relative overflow-hidden medical-card p-0 hover:border-brand/40 transition-all duration-300 hover:shadow-xl hover:shadow-brand/5',
+        dimmed ? 'opacity-70 grayscale-[0.5]' : '',
       ].join(' ')}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-lg font-bold text-(--text-primary)">
-              {appointment.organisationName ?? clinicLabel}
-            </h3>
+      <div className="flex flex-col md:flex-row">
+        {/* Date Side Column */}
+        <div className="flex flex-row md:flex-col items-center justify-center p-4 md:w-28 bg-slate-50 dark:bg-slate-800/40 border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 transition-colors group-hover:bg-brand-soft/30">
+          <span className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tighter md:mb-1">
+            {format(new Date(appointment.date), 'MMM')}
+          </span>
+          <span className="text-3xl md:text-4xl font-black text-slate-800 dark:text-white leading-none px-3 md:px-0">
+            {format(new Date(appointment.date), 'dd')}
+          </span>
+          <span className="text-xs font-bold text-brand md:mt-1 opacity-80">
+            {format(new Date(appointment.date), 'yyyy')}
+          </span>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="flex-1 p-5 md:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <Building2 className="h-3.5 w-3.5 text-brand opacity-60" />
+                <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">
+                  {appointment.organisationName
+                    ? 'Clinic Appointment'
+                    : 'General Appointment'}
+                </span>
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-900 dark:text-white truncate">
+                {appointment.organisationName ?? clinicLabel}
+              </h3>
+            </div>
+
             <span
               className={[
-                'inline-flex rounded-full px-3 py-1 text-xs font-medium',
+                'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide shadow-sm',
                 CLINIC_STATUS_STYLES[appointment.status] ??
                   CLINIC_STATUS_STYLES.Pending,
               ].join(' ')}
             >
+              <div className="w-1.5 h-1.5 rounded-full bg-current opacity-80 animate-pulse" />
               {statusLabel}
             </span>
           </div>
 
-          <dl className="grid grid-cols-1 gap-1.5 text-sm text-[var(--text-secondary)] sm:grid-cols-2">
-            <div className="flex items-center gap-2">
-              <CalendarDays className="h-3.5 w-3.5" strokeWidth={1.6} />
-              <span className="font-mono tabular-nums">
-                {formatDate(appointment.date)}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-3.5 w-3.5" strokeWidth={1.6} />
-              <span className="font-mono tabular-nums">
-                {formatSlotTime(appointment.startTime)} –{' '}
-                {formatSlotTime(appointment.endTime)}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 sm:col-span-2">
-              <Building2 className="h-3.5 w-3.5" strokeWidth={1.6} />
-              <span className="truncate">{organisationLabel}</span>
-            </div>
-            {appointment.visitReason ? (
-              <div className="flex items-start gap-2 sm:col-span-2">
-                <FileText className="mt-0.5 h-3.5 w-3.5" strokeWidth={1.6} />
-                <span className="line-clamp-2">{reasonLabel}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                  <Clock className="h-4 w-4" />
+                </div>
+                <span className="text-sm font-semibold tabular-nums">
+                  {formatSlotTime(appointment.startTime)} –{' '}
+                  {formatSlotTime(appointment.endTime)}
+                </span>
               </div>
-            ) : null}
-          </dl>
-        </div>
-      </div>
 
-      {appointment.status === 'Completed' && (
-        <div className="mt-4 flex justify-end">
-          {appointment.hasFeedback ? (
-            <FeedbackSubmittedBadge label={submittedLabel} />
-          ) : (
-            <button
-              type="button"
-              onClick={onRate}
-              className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
-            >
-              <MessageSquareHeart className="h-3.5 w-3.5" strokeWidth={1.8} />
-              {rateLabel}
-            </button>
-          )}
-        </div>
-      )}
-    </article>
-  );
-};
+              {appointment.visitReason && (
+                <div className="flex items-start gap-3 text-slate-500 dark:text-slate-500">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                    <FileText className="h-4 w-4" />
+                  </div>
+                  <p className="text-xs leading-relaxed line-clamp-2 italic pt-0.5">
+                    "{appointment.visitReason}"
+                  </p>
+                </div>
+              )}
+            </div>
 
-interface SessionCardProps {
-  session: ConsultationSessionListDto;
-  typeLabel: string;
-  statusLabel: string;
-  labels: {
-    notScheduledYet: string;
-    doctor: string;
-    videoConsultation: string;
-    videoConsultationReady: string;
-    viewChat: string;
-    joinCall: string;
-    cancel: string;
-    viewDetails: string;
-  };
-  canCancel: boolean;
-  isCancelling: boolean;
-  onCancel: () => void;
-}
-
-const SessionCard = ({
-  session,
-  typeLabel,
-  statusLabel,
-  labels,
-  canCancel,
-  isCancelling,
-  onCancel,
-}: SessionCardProps) => {
-  const statusChip = (() => {
-    switch (session.status) {
-      case SessionStatus.Pending:
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-            <Clock className="h-3 w-3" strokeWidth={1.8} />
-            {statusLabel}
-          </span>
-        );
-      case SessionStatus.Confirmed:
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-700 dark:bg-sky-900/30 dark:text-sky-300">
-            <Clock className="h-3 w-3" strokeWidth={1.8} />
-            {statusLabel}
-          </span>
-        );
-      case SessionStatus.Completed:
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-            <CheckCircle2 className="h-3 w-3" strokeWidth={1.8} />
-            {statusLabel}
-          </span>
-        );
-      case SessionStatus.Cancelled:
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-medium text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
-            <XCircle className="h-3 w-3" strokeWidth={1.8} />
-            {statusLabel}
-          </span>
-        );
-      default:
-        return null;
-    }
-  })();
-
-  const icon =
-    session.type === ConsultationSessionType.Verification ? (
-      <Eye className="h-4 w-4" strokeWidth={1.8} />
-    ) : session.type === ConsultationSessionType.VideoCall ? (
-      <Video className="h-4 w-4" strokeWidth={1.8} />
-    ) : (
-      <CalendarDays className="h-4 w-4" strokeWidth={1.8} />
-    );
-
-  const dimmed = session.status === SessionStatus.Cancelled;
-
-  return (
-    <article
-      className={[
-        'medical-card p-6 hover:border-brand/30 transition-colors',
-        dimmed ? 'opacity-60' : '',
-      ].join(' ')}
-    >
-      <div className="flex items-start gap-3">
-        <span className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 bg-brand-soft text-brand">
-          {icon}
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-lg font-bold text-(--text-primary)">
-              {typeLabel}
-            </h3>
-            {statusChip}
+            <div className="flex justify-end pt-2 sm:pt-0">
+              {appointment.status === 'Completed' && (
+                <div>
+                  {appointment.hasFeedback ? (
+                    <FeedbackSubmittedBadge label={submittedLabel} />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={onRate}
+                      className="group/btn relative px-5 py-2.5 bg-brand text-white rounded-xl text-xs font-bold transition-all hover:bg-brand/90 hover:scale-105 active:scale-95 shadow-lg shadow-brand/20 overflow-hidden"
+                    >
+                      <span className="relative z-10 flex items-center gap-2">
+                        <MessageSquareHeart className="h-3.5 w-3.5" />
+                        {rateLabel}
+                      </span>
+                      <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-
-          <dl className="grid grid-cols-1 gap-1.5 text-sm text-[var(--text-secondary)] sm:grid-cols-2">
-            <div className="flex items-center gap-2">
-              <CalendarDays className="h-3.5 w-3.5" strokeWidth={1.6} />
-              <span className="font-mono tabular-nums">
-                {session.appointmentTime
-                  ? formatShortDate(session.appointmentTime)
-                  : labels.notScheduledYet}
-              </span>
-            </div>
-            {session.appointmentTime ? (
-              <div className="flex items-center gap-2">
-                <Clock className="h-3.5 w-3.5" strokeWidth={1.6} />
-                <span className="font-mono tabular-nums">
-                  {formatShortTime(session.appointmentTime)}
-                </span>
-              </div>
-            ) : null}
-            <div className="flex items-center gap-2 sm:col-span-2">
-              <User className="h-3.5 w-3.5" strokeWidth={1.6} />
-              <span className="truncate">{labels.doctor}</span>
-            </div>
-            {session.type === ConsultationSessionType.VideoCall ? (
-              <div className="flex items-center gap-2 sm:col-span-2">
-                <Video className="h-3.5 w-3.5 text-brand" strokeWidth={1.8} />
-                <span className="truncate text-brand">
-                  {session.meetingLink
-                    ? labels.videoConsultationReady
-                    : labels.videoConsultation}
-                </span>
-              </div>
-            ) : null}
-          </dl>
         </div>
       </div>
 
-      {(session.status === SessionStatus.Confirmed ||
-        session.status === SessionStatus.Completed) && (
-        <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
-          {session.status === SessionStatus.Confirmed && (
-            <>
-              <Link
-                to="/patient/chat"
-                className="flex-1 lg:flex-none px-4 py-2 bg-brand hover:bg-brand/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-              >
-                <Eye className="h-3.5 w-3.5" strokeWidth={1.8} />
-                {labels.viewChat}
-              </Link>
-              {session.type === ConsultationSessionType.VideoCall && (
-                <button
-                  type="button"
-                  className="flex-1 lg:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                >
-                  <Video className="h-3.5 w-3.5" strokeWidth={1.8} />
-                  {labels.joinCall}
-                </button>
-              )}
-              {canCancel && (
-                <button
-                  type="button"
-                  onClick={onCancel}
-                  disabled={isCancelling}
-                  className="flex-1 lg:flex-none px-4 py-2 bg-transparent border border-red-500/30 text-red-500 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                >
-                  {labels.cancel}
-                </button>
-              )}
-            </>
-          )}
-          {session.status === SessionStatus.Completed && (
-            <Link
-              to="/patient/chat"
-              className="px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-            >
-              <FileText className="h-3.5 w-3.5" strokeWidth={1.8} />
-              {labels.viewDetails}
-              <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
-            </Link>
-          )}
-        </div>
-      )}
+      {/* Subtle Progress/Accent Line */}
+      <div
+        className={`absolute bottom-0 left-0 h-1 transition-all duration-500 group-hover:w-full ${
+          appointment.status === 'Completed'
+            ? 'bg-emerald-500 w-full'
+            : appointment.status === 'Cancelled'
+              ? 'bg-rose-500 w-full'
+              : 'bg-brand w-1/4'
+        }`}
+      />
     </article>
   );
 };
@@ -908,28 +639,38 @@ const Pagination = ({
   return (
     <nav
       aria-label="Pagination"
-      className="mt-4 flex items-center justify-between"
+      className="mt-8 flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800"
     >
       <button
         type="button"
         disabled={!canPrev}
         onClick={() => canPrev && onChange(page - 1)}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-40"
+        className="group inline-flex items-center gap-2 rounded-xl bg-white dark:bg-slate-800 px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 shadow-sm border border-slate-100 dark:border-slate-700 transition-all hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:grayscale"
       >
-        <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
+        <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
         {labels.prev}
       </button>
-      <span className="font-mono text-xs tabular-nums text-[var(--text-muted)]">
-        {labels.status}
-      </span>
+
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+          Page
+        </span>
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-xs font-black text-white shadow-lg shadow-brand/20">
+          {page}
+        </span>
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+          of {totalPages}
+        </span>
+      </div>
+
       <button
         type="button"
         disabled={!canNext}
         onClick={() => canNext && onChange(page + 1)}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-40"
+        className="group inline-flex items-center gap-2 rounded-xl bg-white dark:bg-slate-800 px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 shadow-sm border border-slate-100 dark:border-slate-700 transition-all hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:grayscale"
       >
         {labels.next}
-        <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
+        <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
       </button>
     </nav>
   );
