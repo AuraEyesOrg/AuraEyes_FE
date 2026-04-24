@@ -9,7 +9,9 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import ClinicStaffLayout from '../components/ClinicStaffLayout';
 
 // ─── Stat Card ─────────────────────────────────────────────────────────────
@@ -142,6 +144,7 @@ function QuickAction({
  * Shows key operational metrics: appointments, patients, tasks, and activity feed.
  */
 export default function ClinicStaffDashboardPage() {
+  const navigate = useNavigate();
   const { t: i18nT } = useTranslation();
   const t = (key: string, defaultValue?: string) =>
     i18nT(key as never, { defaultValue } as never) as unknown as string;
@@ -211,6 +214,8 @@ export default function ClinicStaffDashboardPage() {
         'ClinicStaffDashboard.quickActions.newAppointmentDesc',
         'Schedule a new patient appointment'
       ),
+      onClick: () =>
+        navigate(resolvePathWithLocale('/clinic-staff/appointments')),
     },
     {
       icon: Users,
@@ -222,6 +227,7 @@ export default function ClinicStaffDashboardPage() {
         'ClinicStaffDashboard.quickActions.registerPatientDesc',
         'Add a new patient to the system'
       ),
+      onClick: () => navigate(resolvePathWithLocale('/clinic-staff/patients')),
     },
     {
       icon: ClipboardList,
@@ -233,6 +239,7 @@ export default function ClinicStaffDashboardPage() {
         'ClinicStaffDashboard.quickActions.viewScheduleDesc',
         "See today's full schedule"
       ),
+      onClick: () => navigate(resolvePathWithLocale('/clinic-staff/schedules')),
     },
     {
       icon: TrendingUp,
@@ -244,6 +251,7 @@ export default function ClinicStaffDashboardPage() {
         'ClinicStaffDashboard.quickActions.billingOverviewDesc',
         'Review pending invoices and payments'
       ),
+      onClick: () => navigate(resolvePathWithLocale('/clinic-staff/billing')),
     },
   ];
 
