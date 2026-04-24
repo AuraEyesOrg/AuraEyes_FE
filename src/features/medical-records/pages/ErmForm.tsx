@@ -7,10 +7,11 @@ import {
   Eye,
   Activity,
   RotateCcw,
-  Stethoscope,
   User,
   Zap,
   FileText,
+  MousePointer2,
+  Table as TableIcon,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -64,20 +65,9 @@ interface FullErmFormData {
   leftEyeField: string;
   rightEye: Record<string, DetailedEyeItem>;
   leftEye: Record<string, DetailedEyeItem>;
-  hocMatNormal: boolean;
-  hocMatDetail: string;
-  vanNhanNormal: boolean;
-  vanNhanDetail: string;
-  generalHealthNormal: boolean;
-  generalHealthDetail: string;
-  testsNeeded: string;
-  summary: string;
+  doctorName: string;
   finalDiagnosisMain: string;
   finalDiagnosisExtra: string;
-  finalDiagnosisDiff: string;
-  prognosis: string;
-  treatmentPlan: string;
-  doctorName: string;
 }
 
 const SECTION_KEYS = [
@@ -114,10 +104,108 @@ const INITIAL_VALUES: Partial<FullErmFormData> = {
   admissionDate: new Date().toISOString().split('T')[0],
   rightEye: createInitialEyeData(),
   leftEye: createInitialEyeData(),
-  hocMatNormal: true,
-  vanNhanNormal: true,
-  generalHealthNormal: true,
   doctorName: '',
+};
+
+const sectionConfig: Record<
+  string,
+  { label: string; checks: Record<string, string> }
+> = {
+  miMat: {
+    label: 'Mi mắt',
+    checks: { phuNe: 'Phù nề', phanUngTheMi: 'Phản ứng thể mi' },
+  },
+  ketMac: {
+    label: 'Kết mạc',
+    checks: {
+      cuongTuNong: 'Cương tụ nông',
+      cuongTuSau: 'Cương tụ sâu',
+      xuatHuyet: 'Xuất huyết',
+      seoKM: 'Sẹo KM',
+    },
+  },
+  giacMac: {
+    label: 'Giác mạc',
+    checks: {
+      trong: 'Trong',
+      seo: 'Sẹo',
+      phu: 'Phù',
+      tuaMoi: 'Tủa mới',
+      tuaMoCuu: 'Tủa mỡ cừu',
+      tuaSacTo: 'Tủa sắc tố',
+      tuaCu: 'Tủa cũ',
+      seoGM: 'Sẹo GM',
+    },
+  },
+  cungMac: { label: 'Củng mạc', checks: { seoCM: 'Sẹo CM' } },
+  tienPhong: {
+    label: 'Tiền phòng',
+    checks: {
+      sauSach: 'Sâu sạch',
+      xepTienPhong: 'Xẹp tiền phòng',
+      xuatHuyet: 'Xuất huyết',
+      mu: 'Mủ, xuất tiết',
+      tyndall: 'Tyndall',
+      dinh: 'Dính',
+      sacTo: 'Sắc tố',
+      tanMach: 'Tân mạch',
+    },
+  },
+  mongMat: {
+    label: 'Mống mắt',
+    checks: {
+      thoaiHoa: 'Thoái hóa',
+      tanMachMmongMat: 'Tân mạch mống mắt',
+      hatKoeppi: 'Hạt Koeppi',
+      hatBusaca: 'Hạt Busaca',
+      tron: 'Tròn',
+      meo: 'Méo',
+      dinh: 'Dính',
+      pxdtCo: 'PXĐT: Có',
+      pxdtKhong: 'PXĐT: Không',
+      gianLiet: 'Giãn liệt',
+    },
+  },
+  theThuyTinh: {
+    label: 'Thể thủy tinh',
+    checks: {
+      trong: 'Trong',
+      duc: 'Đục',
+      ducVoT3: 'Đục vỡ T3',
+      saLech: 'Sa lệch',
+      raTienPhong: 'Ra tiền phòng',
+      vaoBuongDK: 'Vào buồng dịch kính',
+      dinhSacToMatTruoc: 'Dính sắc tố mặt trước',
+      viêmMu: 'Viêm mủ',
+    },
+  },
+  dichKinh: {
+    label: 'Dịch kính',
+    checks: {
+      sach: 'Sạch',
+      tyndall: 'Tyndall',
+      viêmMu: 'Viêm mủ',
+      xuatHuyet: 'Xuất huyết',
+      toChucHoa: 'Tổ chức hóa',
+      bongDKSau: 'Bong dịch kính sau',
+    },
+  },
+  vongMac: {
+    label: 'Võng mạc',
+    checks: {
+      heMachBT: 'Hệ mạch BT',
+      tacDM: 'Tắc ĐM',
+      tacTM: 'Tắc TM',
+      phu: 'Phù',
+      thieuMau: 'Thiếu máu',
+      tanMachVM: 'Tân mạch VM',
+      diaThiPhu: 'Đĩa thị phù',
+      diaThiTeo: 'Teo',
+      hoangDiemBT: 'Hoàng điểm BT',
+      bongVM: 'Bong VM',
+      rachVM: 'Rách VM',
+    },
+  },
 };
 
 export default function ErmForm() {
@@ -136,9 +224,6 @@ export default function ErmForm() {
       setValue(`rightEye.${key}`, JSON.parse(JSON.stringify(INITIAL_ITEM)));
       setValue(`leftEye.${key}`, JSON.parse(JSON.stringify(INITIAL_ITEM)));
     });
-    setValue('hocMatNormal', true);
-    setValue('vanNhanNormal', true);
-    setValue('generalHealthNormal', true);
     toast.success('Đã thiết lập trạng thái: Tất cả bình thường');
   };
 
@@ -151,197 +236,50 @@ export default function ErmForm() {
     navigate('/erm-patient', { state: { formData: formData } });
   };
 
-  const sectionConfig: Record<
-    string,
-    {
-      label: string;
-      checks: Record<string, string>;
-      inputs: Record<string, string>;
-    }
-  > = {
-    miMat: {
-      label: 'Mi mắt',
-      checks: { phuNe: 'Phù nề', phanUngTheMi: 'Phản ứng thể mi' },
-      inputs: {},
-    },
-    ketMac: {
-      label: 'Kết mạc',
-      checks: {
-        cuongTuNong: 'Cương tụ nông',
-        cuongTuSau: 'Cương tụ sâu',
-        xuatHuyet: 'Xuất huyết',
-        seoKM: 'Sẹo KM',
-      },
-      inputs: {},
-    },
-    giacMac: {
-      label: 'Giác mạc',
-      checks: {
-        trong: 'Trong',
-        seo: 'Sẹo',
-        phu: 'Phù',
-        tuaMoi: 'Tủa mới',
-        tuaMoCuu: 'Tủa mỡ cừu',
-        tuaSacTo: 'Tủa sắc tố',
-        tuaCu: 'Tủa cũ',
-        seoGM: 'Sẹo GM',
-      },
-      inputs: { viTriTua: 'Vị trí tủa' },
-    },
-    cungMac: { label: 'Củng mạc', checks: { seoCM: 'Sẹo CM' }, inputs: {} },
-    tienPhong: {
-      label: 'Tiền phòng',
-      checks: {
-        sauSach: 'Sâu sạch',
-        xepTienPhong: 'Xẹp tiền phòng',
-        xuatHuyet: 'Xuất huyết',
-        mu: 'Mủ, xuất tiết',
-        tyndall: 'Tyndall',
-        dinh: 'Dính',
-        sacTo: 'Sắc tố',
-        tanMach: 'Tân mạch',
-      },
-      inputs: { doXuatHuyet: 'Độ', mucDoMu: 'Mức độ', doTyndall: 'Độ' },
-    },
-    mongMat: {
-      label: 'Mống mắt',
-      checks: {
-        thoaiHoa: 'Thoái hóa',
-        tanMachMmongMat: 'Tân mạch mống mắt',
-        hatKoeppi: 'Hạt Koeppi',
-        hatBusaca: 'Hạt Busaca',
-        tron: 'Tròn',
-        meo: 'Méo',
-        dinh: 'Dính',
-        pxdtCo: 'PXĐT: Có',
-        pxdtKhong: 'PXĐT: Không',
-        gianLiet: 'Giãn liệt',
-      },
-      inputs: {
-        anhDongTu: 'Ánh đồng tử',
-        kichThuoc: 'Kích thước',
-        viTriDinh: 'Vị trí dính',
-      },
-    },
-    theThuyTinh: {
-      label: 'Thể thủy tinh',
-      checks: {
-        trong: 'Trong',
-        duc: 'Đục',
-        ducVoT3: 'Đục vỡ T3',
-        saLech: 'Sa lệch',
-        raTienPhong: 'Ra tiền phòng',
-        vaoBuongDK: 'Vào buồng dịch kính',
-        dinhSacToMatTruoc: 'Dính sắc tố mặt trước',
-        viêmMu: 'Viêm mủ',
-      },
-      inputs: {},
-    },
-    dichKinh: {
-      label: 'Dịch kính',
-      checks: {
-        sach: 'Sạch',
-        tyndall: 'Tyndall',
-        viêmMu: 'Viêm mủ',
-        xuatHuyet: 'Xuất huyết',
-        toChucHoa: 'Tổ chức hóa',
-        bongDKSau: 'Bong dịch kính sau',
-      },
-      inputs: { doTyndall: 'Độ' },
-    },
-    vongMac: {
-      label: 'Võng mạc',
-      checks: {
-        heMachBinhThuong: 'Hệ mạch: Bình thường',
-        tacDMTrungTam: 'Tắc ĐM : trung tâm',
-        tacDMNhanh: 'Tắc ĐM : nhánh',
-        tacDMmiVM: 'Tắc ĐM : mi VM',
-        tacTMTrungTam: 'Tắc TM : trung tâm',
-        tacTMNhanh: 'Tắc TM : nhánh',
-        phu: 'phù',
-        thieuMau: 'thiếu máu',
-        honHop: 'hỗn hợp',
-        viemMaoMach: 'Viêm mao mạch',
-        tanMachVM: 'Tân mạch võng mạc',
-        tanMachHMcDuoi: 'Tân mạch hắc mạc: dưới HĐ',
-        tanMachHMcNgoai: 'Tân mạch hắc mạc: ngoài HĐ',
-        diaThiBT: 'Đĩa thị: Bình thường',
-        diaThiPhu: 'Phù',
-        diaThiTeo: 'Teo',
-        diaThiBacMau: 'Bạc màu',
-        tanMachGai: 'Tân mạch gai',
-        hoangDiemBT: 'Hoàng điểm: Bình thường',
-        matAnhHD: 'Mất ánh HĐ',
-        phuKhuTru: 'Phù : Khu trú',
-        phuToaLan: 'Phù : Tỏa lan',
-        loLop: 'lỗ lớp',
-        giaLo: 'giả lỗ',
-        seoHDco: 'Sẹo HĐ có',
-        seoHDkhong: 'Sẹo HĐ không',
-        thoaiHoaVMChuBien: 'Thoái hóa VM: chu biên',
-        thoaiHoaVMTrungTam: 'Thoái hóa VM: trung tâm',
-        xhVMNong: 'Xuất huyết: VM nông',
-        xhVMSau: 'Xuất huyết: VM sâu',
-        xhHM: 'Xuất huyết: Hắc mạc',
-        xietCung: 'Xuất tiết : Cứng',
-        xietDangBong: 'Xuất tiết : Dạng bông',
-        bongThanhDich: 'Bong thanh dịch',
-        bongBMST: 'Bong BMST',
-        hoatTinh: 'Hoạt tính',
-        seoHM: 'Sẹo',
-        bongVM: 'Bong võng mạc',
-        rachVM: 'Rách võng mạc',
-      },
-      inputs: {
-        doLo: 'Độ',
-        hinhThaiThoaiHoa: 'Hình thái thoái hóa',
-        slViemHM: 'Số lượng',
-        viTriHM: 'Vị trí',
-        mucDoBong: 'Mức độ',
-        slRach: 'Số lượng',
-        viTriRach: 'Vị trí vết rách',
-        hinhThaiRach: 'Hình thái',
-      },
-    },
-  };
-
-  const renderSection = (eye: 'rightEye' | 'leftEye', field: string) => {
+  const renderEyeCell = (
+    eye: 'rightEye' | 'leftEye',
+    field: string,
+    idx: number
+  ) => {
     const config = sectionConfig[field];
     const itemData = (eye === 'rightEye' ? rightEyeData : leftEyeData)?.[
       field
     ] as DetailedEyeItem;
+    const isRight = eye === 'rightEye';
 
     return (
-      <div className="bg-white p-4 rounded-2xl border border-slate-100 hover:border-primary/20 hover:shadow-lg transition-all duration-300">
-        <div className="flex items-center justify-between mb-3">
-          <span className="font-bold text-slate-800 text-xs">
-            {config.label}
+      <div
+        className={`p-4 transition-all duration-300 ${itemData?.normal ? 'bg-white' : isRight ? 'bg-primary/5' : 'bg-rose-50'}`}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-black text-[11px] text-slate-800 uppercase tracking-tighter">
+            {idx}. {config.label}
           </span>
           <button
             type="button"
             onClick={() =>
               setValue(`${eye}.${field}.normal`, !itemData?.normal)
             }
-            className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase transition-all ${itemData?.normal ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}
+            className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-all shadow-sm ${itemData?.normal ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600'}`}
           >
             {itemData?.normal ? 'Bình thường' : 'Bệnh lý'}
           </button>
         </div>
 
         {!itemData?.normal && (
-          <div className="space-y-4 pt-2 animate-in fade-in duration-500">
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-3 pt-2 animate-in slide-in-from-top-2 duration-300">
+            <div className="grid grid-cols-1 gap-1.5">
               {Object.entries(config.checks).map(([key, label]) => (
                 <label
                   key={key}
-                  className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100 cursor-pointer hover:bg-white hover:border-primary/30 transition-all"
+                  className="flex items-center gap-2 group cursor-pointer"
                 >
                   <input
                     type="checkbox"
-                    className="w-4 h-4 text-primary rounded border-slate-300"
+                    className="w-3.5 h-3.5 rounded border-slate-300 text-primary focus:ring-primary/20"
                     {...register(`${eye}.${field}.checks.${key}`)}
                   />
-                  <span className="text-[10px] font-bold text-slate-600">
+                  <span className="text-[10px] font-bold text-slate-600 group-hover:text-primary transition-colors">
                     {label}
                   </span>
                 </label>
@@ -349,8 +287,8 @@ export default function ErmForm() {
             </div>
             <textarea
               {...register(`${eye}.${field}.other`)}
-              placeholder="Mô tả chi tiết tổn thương..."
-              className="w-full bg-slate-50 border-none p-3 rounded-xl text-xs font-medium outline-none focus:ring-1 focus:ring-primary/20 min-h-[60px]"
+              placeholder="Mô tả tổn thương..."
+              className="w-full bg-white/50 border border-slate-200 p-2 rounded-lg text-[10px] font-medium outline-none focus:border-primary/50 min-h-[50px]"
             />
           </div>
         )}
@@ -359,243 +297,260 @@ export default function ErmForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
-      {/* HEADER NAV */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <img src="/logo.png" alt="AURA" className="h-10" />
+    <div className="min-h-screen bg-[#F1F5F9] text-slate-900 font-sans selection:bg-primary/20">
+      {/* MODERN DYNAMIC HEADER */}
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200 px-8 py-3 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="bg-primary w-8 h-8 rounded-xl flex items-center justify-center">
+              <Zap className="w-5 h-5 text-white fill-white" />
+            </div>
+            <span className="font-black text-xl tracking-tighter text-slate-900">
+              AURA <span className="text-primary">EMR</span>
+            </span>
+          </div>
           <div className="h-6 w-px bg-slate-200" />
-          <div className="flex items-center gap-2 text-primary font-black uppercase tracking-tighter text-xs">
-            <Zap className="w-4 h-4 fill-primary" />
-            Doctor Speed Input
+          <div className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest">
+            <MousePointer2 className="w-4 h-4" />
+            Chế độ nhập liệu siêu tốc
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handlePreviewPatient}
-            className="flex items-center gap-2 bg-slate-900 text-white px-6 py-2.5 rounded-2xl font-black text-xs hover:bg-black transition-all"
-          >
-            <Eye className="w-4 h-4" /> BẢN IN BỆNH NHÂN
-          </button>
+        <div className="flex items-center gap-3">
           <button
             onClick={handleSetAllNormal}
-            className="flex items-center gap-2 bg-emerald-500 text-white px-6 py-2.5 rounded-2xl font-black text-xs hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20"
+            className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-5 py-2 rounded-xl font-black text-[11px] hover:bg-emerald-500 hover:text-white transition-all"
           >
             <CheckCircle2 className="w-4 h-4" /> TẤT CẢ BÌNH THƯỜNG
           </button>
           <button
+            onClick={handlePreviewPatient}
+            className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2 rounded-xl font-black text-[11px] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-black/10"
+          >
+            <Eye className="w-4 h-4" /> XEM BẢN IN
+          </button>
+          <button
             onClick={handleSubmit(onSubmit)}
-            className="flex items-center gap-2 bg-primary text-white px-8 py-2.5 rounded-2xl font-black text-xs hover:bg-primary-dark transition-all shadow-lg shadow-primary/20"
+            className="flex items-center gap-2 bg-primary text-white px-8 py-2.5 rounded-xl font-black text-[11px] hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/20 transition-all"
           >
             <Save className="w-4 h-4" /> LƯU HỒ SƠ
           </button>
         </div>
       </nav>
 
-      <main className="max-w-[1500px] mx-auto p-10 grid grid-cols-12 gap-10">
-        {/* LEFT COLUMN: I. HÀNH CHÍNH & II. QUẢN LÝ */}
-        <div className="col-span-12 lg:col-span-4 space-y-8">
-          <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="bg-slate-900 p-2 rounded-xl">
-                <User className="w-5 h-5 text-white" />
-              </div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-slate-800">
-                I. Hành chính & II. Quản lý
+      <main className="max-w-[1600px] mx-auto p-8 grid grid-cols-12 gap-8">
+        {/* LEFT SIDEBAR: PATIENT INFO & DIAGNOSIS */}
+        <div className="col-span-12 xl:col-span-3 space-y-6">
+          <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-200 overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-4 opacity-5">
+              <User className="w-20 h-20" />
+            </div>
+            <div className="flex items-center gap-3 mb-6">
+              <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                Thông tin hành chính
               </h2>
             </div>
 
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  Họ và tên
+            <div className="space-y-5">
+              <div className="group">
+                <label className="text-[9px] font-black text-slate-400 uppercase ml-1">
+                  Họ và tên bệnh nhân
                 </label>
                 <input
                   {...register('fullName')}
-                  className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold uppercase text-slate-800"
+                  className="w-full bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white p-3 rounded-xl outline-none font-bold uppercase text-slate-800 transition-all"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Ngày sinh
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[9px] font-black text-slate-400 uppercase ml-1">
+                    Tuổi
                   </label>
                   <input
-                    {...register('birthDate')}
-                    className="w-full bg-slate-50 p-4 rounded-2xl outline-none text-sm font-bold"
+                    {...register('age')}
+                    className="w-full bg-slate-50 p-3 rounded-xl outline-none font-bold"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <div>
+                  <label className="text-[9px] font-black text-slate-400 uppercase ml-1">
                     Giới tính
                   </label>
                   <select
                     {...register('gender')}
-                    className="w-full bg-slate-50 p-4 rounded-2xl outline-none text-sm font-bold"
+                    className="w-full bg-slate-50 p-3 rounded-xl outline-none font-bold appearance-none"
                   >
                     <option value="Nam">Nam</option>
                     <option value="Nữ">Nữ</option>
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Mã YT
-                  </label>
-                  <input
-                    {...register('maYT')}
-                    className="w-full bg-slate-50 p-4 rounded-2xl outline-none text-sm font-black"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Vào khoa
-                  </label>
-                  <input
-                    {...register('khoa')}
-                    className="w-full bg-slate-50 p-4 rounded-2xl outline-none text-sm font-bold"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <div>
+                <label className="text-[9px] font-black text-slate-400 uppercase ml-1">
                   Lý do vào viện
                 </label>
                 <textarea
                   {...register('admissionReason')}
-                  className="w-full h-24 bg-slate-50 p-4 rounded-2xl outline-none text-xs font-medium"
+                  className="w-full h-24 bg-slate-50 p-3 rounded-xl outline-none text-xs font-medium resize-none focus:bg-white transition-all"
                 />
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="bg-white/10 p-2 rounded-xl">
-                <FileText className="w-5 h-5" />
+          <div className="bg-slate-900 rounded-[2rem] p-6 text-white shadow-xl relative group">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[2rem]" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-6">
+                <FileText className="w-4 h-4 text-primary" />
+                <h2 className="text-[11px] font-black uppercase tracking-widest">
+                  Chẩn đoán sau cùng
+                </h2>
               </div>
-              <h2 className="text-sm font-black uppercase tracking-widest">
-                III. Chẩn đoán ra viện
-              </h2>
-            </div>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase">
-                  Bệnh chính (tổn thương)
-                </label>
-                <input
-                  {...register('finalDiagnosisMain')}
-                  className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none text-sm font-bold uppercase"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase">
-                  Bệnh kèm theo
-                </label>
-                <input
-                  {...register('finalDiagnosisExtra')}
-                  className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none text-sm font-medium"
-                />
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-slate-500 uppercase">
+                    Bệnh chính
+                  </label>
+                  <input
+                    {...register('finalDiagnosisMain')}
+                    className="w-full bg-white/5 border border-white/10 focus:border-primary/50 p-3 rounded-xl outline-none text-xs font-bold uppercase transition-all"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-slate-500 uppercase">
+                    Bệnh kèm theo
+                  </label>
+                  <input
+                    {...register('finalDiagnosisExtra')}
+                    className="w-full bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-xs font-medium transition-all"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: III. KHÁM BỆNH (SIDE BY SIDE) */}
-        <div className="col-span-12 lg:col-span-8 space-y-10">
-          <div className="flex items-center gap-3">
-            <Activity className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-black uppercase tracking-tighter">
-              III. Khám chuyên khoa mắt
-            </h2>
-          </div>
-
-          {/* VISION & PRESSURE */}
-          <div className="grid grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
-              <p className="text-[10px] font-black text-slate-400 uppercase">
-                Thị lực & Nhãn áp MP
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  {...register('rightEyeVisionNoGlass')}
-                  placeholder="V (không kính)"
-                  className="bg-slate-50 p-3 rounded-xl text-center text-xs font-black outline-none focus:ring-1 focus:ring-primary/20"
-                />
-                <input
-                  {...register('rightEyePressure')}
-                  placeholder="Nhãn áp"
-                  className="bg-slate-50 p-3 rounded-xl text-center text-xs font-black outline-none focus:ring-1 focus:ring-primary/20"
-                />
-              </div>
+        {/* MAIN AREA: SIDE-BY-SIDE EYE TABLE (MODERNIZED) */}
+        <div className="col-span-12 xl:col-span-9 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Activity className="w-5 h-5 text-primary" />
+              <h2 className="text-xl font-black uppercase tracking-tighter">
+                III. Khám chuyên khoa mắt
+              </h2>
             </div>
-            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
-              <p className="text-[10px] font-black text-slate-400 uppercase">
-                Thị lực & Nhãn áp MT
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  {...register('leftEyeVisionNoGlass')}
-                  placeholder="V (không kính)"
-                  className="bg-slate-50 p-3 rounded-xl text-center text-xs font-black outline-none focus:ring-1 focus:ring-rose-500/20"
-                />
-                <input
-                  {...register('leftEyePressure')}
-                  placeholder="Nhãn áp"
-                  className="bg-slate-50 p-3 rounded-xl text-center text-xs font-black outline-none focus:ring-1 focus:ring-rose-500/20"
-                />
-              </div>
+            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">
+              <TableIcon className="w-4 h-4 text-slate-400" />
+              <span className="text-[10px] font-black text-slate-600 uppercase">
+                Bố cục bảng đối xứng
+              </span>
             </div>
           </div>
 
-          {/* PATHOLOGY GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 relative">
-            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-slate-200 -translate-x-1/2" />
-
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Stethoscope className="w-4 h-4 text-primary" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Mắt phải
-                </span>
+          {/* VISION & PRESSURE - COMPACT BAR */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-6">
+              <div className="px-3 py-1 bg-primary/10 rounded-lg font-black text-primary text-[10px]">
+                MP
               </div>
-              {SECTION_KEYS.map((key) => renderSection('rightEye', key))}
+              <div className="flex-1 flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-[8px] font-black text-slate-400 uppercase">
+                    Thị lực
+                  </label>
+                  <input
+                    {...register('rightEyeVisionNoGlass')}
+                    placeholder="V"
+                    className="w-full font-black text-sm outline-none"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-[8px] font-black text-slate-400 uppercase">
+                    Nhãn áp
+                  </label>
+                  <input
+                    {...register('rightEyePressure')}
+                    placeholder="mmHg"
+                    className="w-full font-black text-sm outline-none"
+                  />
+                </div>
+              </div>
             </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Stethoscope className="w-4 h-4 text-rose-500" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Mắt trái
-                </span>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-6">
+              <div className="px-3 py-1 bg-rose-100 rounded-lg font-black text-rose-500 text-[10px]">
+                MT
               </div>
-              {SECTION_KEYS.map((key) => renderSection('leftEye', key))}
+              <div className="flex-1 flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-[8px] font-black text-slate-400 uppercase">
+                    Thị lực
+                  </label>
+                  <input
+                    {...register('leftEyeVisionNoGlass')}
+                    placeholder="V"
+                    className="w-full font-black text-sm outline-none"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-[8px] font-black text-slate-400 uppercase">
+                    Nhãn áp
+                  </label>
+                  <input
+                    {...register('leftEyePressure')}
+                    placeholder="mmHg"
+                    className="w-full font-black text-sm outline-none"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* DOCTOR NAME */}
-          <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-            <div className="max-w-md ml-auto space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                Bác sĩ làm bệnh án
+          {/* THE MASTER TABLE */}
+          <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden">
+            <div className="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200 bg-slate-50/50">
+              <div className="p-4 text-center font-black text-xs uppercase tracking-widest text-slate-500">
+                Mắt Phải (Right)
+              </div>
+              <div className="p-4 text-center font-black text-xs uppercase tracking-widest text-slate-500">
+                Mắt Trái (Left)
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 divide-x divide-slate-200 divide-y-reverse">
+              <div className="divide-y divide-slate-100">
+                {SECTION_KEYS.map((key, i) =>
+                  renderEyeCell('rightEye', key, i + 1)
+                )}
+              </div>
+              <div className="divide-y divide-slate-100">
+                {SECTION_KEYS.map((key, i) =>
+                  renderEyeCell('leftEye', key, i + 1)
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* SIGNATURE AREA */}
+          <div className="flex justify-end p-4">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm w-full max-w-sm">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 text-center">
+                Bác sĩ khám
               </label>
               <input
                 {...register('doctorName')}
-                placeholder="Họ và tên bác sĩ..."
-                className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-black text-slate-800 text-center"
+                placeholder="Ký và ghi rõ họ tên"
+                className="w-full text-center font-black text-lg text-slate-800 outline-none placeholder:text-slate-200"
               />
             </div>
           </div>
         </div>
       </main>
 
+      {/* RESET BUTTON */}
       <button
         onClick={() => reset(INITIAL_VALUES as FullErmFormData)}
-        className="fixed bottom-10 right-10 p-5 bg-white text-slate-300 hover:text-rose-500 rounded-full shadow-2xl border border-slate-200 transition-all active:scale-95 group"
+        className="fixed bottom-8 left-8 p-4 bg-white text-slate-400 hover:text-rose-500 rounded-full shadow-lg border border-slate-200 transition-all hover:rotate-180 duration-500"
       >
-        <RotateCcw className="w-6 h-6 group-hover:rotate-180 transition-transform duration-500" />
+        <RotateCcw className="w-5 h-5" />
       </button>
     </div>
   );
