@@ -452,10 +452,8 @@ function UploadSection({
 
 function ContractChangePasswordSection({
   canChangePassword,
-  mustChangePassword,
 }: {
   canChangePassword: boolean;
-  mustChangePassword: boolean;
 }) {
   const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
@@ -515,9 +513,7 @@ function ContractChangePasswordSection({
 
       const refreshedUser = await getCurrentUser();
       setUser({
-        ...(user ?? refreshedUser),
         ...refreshedUser,
-        mustChangePassword: false,
       });
 
       toast.success(
@@ -603,15 +599,10 @@ function ContractChangePasswordSection({
             )}
           </h3>
           <p className="mt-1 text-sm text-slate-600">
-            {mustChangePassword
-              ? t(
-                  'Organisation.contract.password.description.required',
-                  'You are signing in with a temporary password. Please update it now to continue.'
-                )
-              : t(
-                  'Organisation.contract.password.description.optional',
-                  'Update your password to keep your organisation account secure.'
-                )}
+            {t(
+              'Organisation.contract.password.description.optional',
+              'Update your password to keep your organisation account secure.'
+            )}
           </p>
         </div>
       </div>
@@ -747,7 +738,6 @@ export default function OrganisationContractPage() {
   }, [contract?.status, navigate, setUser, user]);
 
   const canOpenChangePasswordTab = contract?.status === 'Active';
-  const mustChangePassword = !!user?.mustChangePassword;
 
   useEffect(() => {
     if (!canOpenChangePasswordTab && activeTab === 'change-password') {
@@ -760,27 +750,7 @@ export default function OrganisationContractPage() {
       );
       return;
     }
-
-    if (
-      mustChangePassword &&
-      canOpenChangePasswordTab &&
-      activeTab !== 'change-password'
-    ) {
-      navigate(
-        {
-          pathname: location.pathname,
-          search: `?${TAB_PARAM}=change-password`,
-        },
-        { replace: true }
-      );
-    }
-  }, [
-    activeTab,
-    canOpenChangePasswordTab,
-    location.pathname,
-    mustChangePassword,
-    navigate,
-  ]);
+  }, [activeTab, canOpenChangePasswordTab, location.pathname, navigate]);
 
   const setActiveTab = (nextTab: ContractFlowTab) => {
     const nextSearch =
@@ -1170,7 +1140,6 @@ export default function OrganisationContractPage() {
               {activeTab === 'change-password' && (
                 <ContractChangePasswordSection
                   canChangePassword={canOpenChangePasswordTab}
-                  mustChangePassword={mustChangePassword}
                 />
               )}
             </>

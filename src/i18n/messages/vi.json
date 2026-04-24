@@ -6868,5 +6868,40 @@
         "viewFile": "Xem tệp"
       }
     }
+  },
+  "SystemAdmin": {
+    "common": {
+      "systemAdmin": "Quản trị hệ thống"
+    },
+    "sidebar": {
+      "dashboard": "Bảng điều khiển",
+      "groups": {
+        "user-directory": {
+          "label": "Danh bạ người dùng",
+          "description": "Quản lý người dùng và nhân viên"
+        }
+      },
+      "items": {
+        "staff-management": "Quản lý nhân viên"
+      }
+    },
+    "staff": {
+      "modal": {
+        "title": "Thêm nhân viên mới"
+      },
+      "fields": {
+        "fullName": "Họ và tên",
+        "email": "Địa chỉ Email",
+        "phone": "Số điện thoại",
+        "role": "Vai trò nhân viên"
+      },
+      "actions": {
+        "create": "Tạo nhân viên"
+      },
+      "toasts": {
+        "createSuccess": "Đã tạo nhân viên thành công. Mật khẩu tạm thời đã được gửi.",
+        "createError": "Không thể tạo nhân viên"
+      }
+    }
   }
 }

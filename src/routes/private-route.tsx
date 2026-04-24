@@ -1,11 +1,9 @@
 import { type ReactElement } from 'react';
 import { Navigate, useLocation } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth-store';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { stripLocaleFromPathname } from '@/i18n/locales';
 import { NoIndexMeta } from '@/hooks/useSeoMeta';
-import { organisationContractApi } from '@/features/organisation/api/contract.api';
 
 interface Props {
   children: ReactElement;

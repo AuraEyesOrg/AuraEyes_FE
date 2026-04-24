@@ -61,9 +61,6 @@ const ResetPasswordPage = lazy(
 const ForceChangePasswordPage = lazy(
   () => import('@/features/auth/pages/force-change-password')
 );
-const RegisterDoctorPage = lazy(
-  () => import('@/features/auth/pages/register-doctor')
-);
 const RegisterOrganisationPage = lazy(
   () => import('@/features/auth/pages/register-organisation')
 );
@@ -88,6 +85,9 @@ const ProfilePage = lazy(() => import('@/features/patient/pages/profile'));
 const SettingsPage = lazy(() => import('@/features/patient/pages/settings'));
 const ClinicsPage = lazy(() => import('@/features/patient/pages/clinics'));
 const DoctorsPage = lazy(() => import('@/features/patient/pages/doctors'));
+const OrganisationSchedulePage = lazy(
+  () => import('@/features/patient/pages/organisation-schedule')
+);
 
 const RoadmapPage = lazy(() => import('@/features/patient/pages/roadmap'));
 const ChatPage = lazy(() => import('@/features/patient/pages/chat'));
@@ -270,6 +270,9 @@ const SystemAdminContracts = lazy(
 const SystemAdminCashflow = lazy(
   () => import('@/features/system-admin/pages/cashflow')
 );
+const SchedulingPage = lazy(
+  () => import('@/features/system-admin/pages/scheduling')
+);
 
 // Professional Network pages
 const NetworkLayout = lazy(() =>
@@ -294,6 +297,9 @@ const NetworkProfilePage = lazy(
 );
 const NetworkOrganisationPage = lazy(
   () => import('@/features/professional-network/pages/organisation')
+);
+const NetworkCollaborationPage = lazy(
+  () => import('@/features/professional-network/pages/collaboration')
 );
 
 /**
@@ -438,6 +444,12 @@ const Router = () => (
         />
         <Route path="/404" element={<LocalizedRedirect target="/404" />} />
         <Route
+          path="/system-admin/staff-management"
+          element={
+            <LocalizedRedirect target="/system-admin/staff-management" />
+          }
+        />
+        <Route
           path="/ophthalmologist/analytics"
           element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
         />
@@ -459,10 +471,6 @@ const Router = () => (
         <Route
           path="/:locale/reset-password"
           element={<LocalizedPublicRoute element={<ResetPasswordPage />} />}
-        />
-        <Route
-          path="/:locale/register-doctor"
-          element={<LocalizedPublicRoute element={<RegisterDoctorPage />} />}
         />
         <Route
           path="/:locale/register-organisation"
@@ -781,6 +789,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/patient/schedule"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient']}
+              element={<OrganisationSchedulePage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/patient/doctors"
           element={
             <LocalizedPrivateRoute
@@ -1082,6 +1099,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/system-admin/scheduling"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin']}
+              element={<SchedulingPage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/system-admin/leave-requests"
           element={
             <LocalizedPrivateRoute
@@ -1220,14 +1246,6 @@ const Router = () => (
           element={
             <PublicRoute>
               <ResetPasswordPage />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/register-doctor"
-          element={
-            <PublicRoute>
-              <RegisterDoctorPage />
             </PublicRoute>
           }
         />
@@ -1903,6 +1921,7 @@ const Router = () => (
             path="organisation/:id"
             element={<NetworkOrganisationPage />}
           />
+          <Route path="collaboration" element={<NetworkCollaborationPage />} />
         </Route>
 
         <Route
@@ -1932,6 +1951,7 @@ const Router = () => (
             path="organisation/:id"
             element={<NetworkOrganisationPage />}
           />
+          <Route path="collaboration" element={<NetworkCollaborationPage />} />
         </Route>
 
         <Route path="*" element={<LocalizedRedirect target="/404" />} />

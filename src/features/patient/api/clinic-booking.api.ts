@@ -11,6 +11,7 @@ import type {
   CreateClinicAppointmentRequest,
   CreateClinicAppointmentResult,
   OrganisationAvailableSlotDto,
+  OrganisationScheduleDto,
   OrganisationSummaryDto,
   PatientClinicAppointmentsQuery,
 } from '../types/clinic-booking.types';
@@ -163,4 +164,20 @@ export const markNoShowClinicAppointment = async (
   appointmentId: string
 ): Promise<void> => {
   await api.put(API_ENDPOINTS.CLINIC_APPOINTMENTS.NO_SHOW(appointmentId));
+};
+
+export const getOrganisationSchedule = async (
+  organisationId: string,
+  params?: { fromDate?: string; toDate?: string }
+): Promise<OrganisationScheduleDto> => {
+  const response = await api.get<PatientApiResponse<OrganisationScheduleDto>>(
+    API_ENDPOINTS.CLINIC_BOOKING.ORGANISATION_SCHEDULE(organisationId),
+    { params }
+  );
+
+  if (!response.data.data) {
+    throw new Error('Organisation schedule not found.');
+  }
+
+  return response.data.data;
 };
