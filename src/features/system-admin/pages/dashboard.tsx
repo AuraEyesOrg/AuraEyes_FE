@@ -3,19 +3,15 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
-  Activity,
   AlertTriangle,
   CalendarDays,
-  Building2,
   ChevronRight,
   Download,
   FileText,
-  Landmark,
   Radio,
   Search,
   Stethoscope,
   Users,
-  Wallet,
 } from 'lucide-react';
 import {
   Bar,
@@ -218,19 +214,17 @@ export default function SystemAdminDashboard() {
 
   const monthlyChartData = useMemo(() => {
     if (!metrics) return [];
-    return metrics.monthlyRevenue.map((row, i) => ({
+    return metrics.monthlyRevenue.map((row) => ({
       label: row.label,
       topUps: row.value,
-      commission: metrics.monthlyPlatformCommission[i]?.value ?? 0,
     }));
   }, [metrics]);
 
   const dailyChartData = useMemo(() => {
     if (!metrics) return [];
-    return metrics.dailyRevenue.map((row, i) => ({
+    return metrics.dailyRevenue.map((row) => ({
       label: row.label,
       topUps: row.value,
-      commission: metrics.dailyPlatformCommission[i]?.value ?? 0,
     }));
   }, [metrics]);
 
@@ -364,29 +358,6 @@ export default function SystemAdminDashboard() {
           sparklineColor: '#0ea5e9',
         },
         {
-          title: t(
-            'SystemAdmin.dashboard.cards.organisations.title',
-            'Organizations'
-          ),
-          value: metrics.organisations.total,
-          change: metrics.organisations.growthPercentage,
-          trend: resolveTrend(metrics.organisations.growthPercentage),
-          description: t(
-            'SystemAdmin.dashboard.cards.organisations.description',
-            'This month: {{current}} - Prev: {{previous}}',
-            {
-              current:
-                metrics.organisations.currentMonth.toLocaleString(locale),
-              previous:
-                metrics.organisations.previousMonth.toLocaleString(locale),
-            }
-          ),
-          icon: Building2,
-          variant: 'success' as const,
-          sparklineData: metrics.monthlyNewOrganisationCounts,
-          sparklineColor: '#22c55e',
-        },
-        {
           title: t('SystemAdmin.dashboard.cards.patients.title', 'Patients'),
           value: metrics.patients.total,
           change: metrics.patients.growthPercentage,
@@ -420,40 +391,7 @@ export default function SystemAdminDashboard() {
       ]
     : [];
 
-  const revenueKpiCards = metrics
-    ? [
-        {
-          title: t(
-            'SystemAdmin.dashboard.cards.walletTopUps.title',
-            'Wallet top-ups (YTD)'
-          ),
-          value: formatCurrency(metrics.totalDepositRevenueYear, locale),
-          description: t(
-            'SystemAdmin.dashboard.cards.walletTopUps.description',
-            'Completed deposits (calendar year)'
-          ),
-          icon: Wallet,
-          variant: 'primary' as const,
-          sparklineData: metrics.monthlyRevenue.map((m) => m.value),
-          sparklineColor: '#0ea5e9',
-        },
-        {
-          title: t(
-            'SystemAdmin.dashboard.cards.consultationCommission.title',
-            'Consultation commission (YTD)'
-          ),
-          value: formatCurrency(metrics.totalPlatformCommissionYear, locale),
-          description: t(
-            'SystemAdmin.dashboard.cards.consultationCommission.description',
-            'Platform share to system wallet'
-          ),
-          icon: Landmark,
-          variant: 'success' as const,
-          sparklineData: metrics.monthlyPlatformCommission.map((m) => m.value),
-          sparklineColor: '#14b8a6',
-        },
-      ]
-    : [];
+  const revenueKpiCards = [] as const;
 
   const dashboardExportRows = useMemo(() => {
     if (!metrics) return [];
@@ -562,17 +500,6 @@ export default function SystemAdminDashboard() {
         ),
         value: metrics.totalDepositRevenueYear,
       },
-      {
-        section: t(
-          'SystemAdmin.dashboard.export.rows.section.revenueYtd',
-          'Revenue (YTD)'
-        ),
-        metric: t(
-          'SystemAdmin.dashboard.export.rows.metric.consultationCommissionCalendarYear',
-          'Consultation commission (calendar year)'
-        ),
-        value: metrics.totalPlatformCommissionYear,
-      },
       ...metrics.paymentMethods.map((item) => ({
         section: t(
           'SystemAdmin.dashboard.export.rows.section.paymentMethods',
@@ -589,26 +516,10 @@ export default function SystemAdminDashboard() {
         metric: item.label,
         value: item.value,
       })),
-      ...metrics.monthlyPlatformCommission.map((item) => ({
-        section: t(
-          'SystemAdmin.dashboard.export.rows.section.monthlyPlatformCommission',
-          'Monthly platform commission'
-        ),
-        metric: item.label,
-        value: item.value,
-      })),
       ...metrics.dailyRevenue.map((item) => ({
         section: t(
           'SystemAdmin.dashboard.export.rows.section.dailyRevenue',
           'Daily Revenue'
-        ),
-        metric: item.label,
-        value: item.value,
-      })),
-      ...metrics.dailyPlatformCommission.map((item) => ({
-        section: t(
-          'SystemAdmin.dashboard.export.rows.section.dailyPlatformCommission',
-          'Daily platform commission'
         ),
         metric: item.label,
         value: item.value,
@@ -866,7 +777,7 @@ export default function SystemAdminDashboard() {
                       <p className="text-slate-500 dark:text-slate-400 text-xs mb-4">
                         {t(
                           'SystemAdmin.dashboard.charts.monthlyRevenue.description',
-                          'Wallet top-ups vs platform commission'
+                          'Wallet top-ups by month'
                         )}
                       </p>
 
@@ -901,15 +812,6 @@ export default function SystemAdminDashboard() {
                                   'Wallet top-ups'
                                 )}
                                 fill="#0ea5e9"
-                                radius={[4, 4, 0, 0]}
-                              />
-                              <Bar
-                                dataKey="commission"
-                                name={t(
-                                  'SystemAdmin.dashboard.charts.common.consultationCommission',
-                                  'Consultation commission'
-                                )}
-                                fill="#14b8a6"
                                 radius={[4, 4, 0, 0]}
                               />
                             </BarChart>
@@ -974,7 +876,7 @@ export default function SystemAdminDashboard() {
                     <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-0.5">
                       {t(
                         'SystemAdmin.dashboard.charts.dailyRevenue.title',
-                        'Last 7 days - top-ups & commission'
+                        'Last 7 days - wallet top-ups'
                       )}
                     </h3>
                     <p className="text-slate-500 dark:text-slate-400 text-xs mb-4">
@@ -1016,18 +918,6 @@ export default function SystemAdminDashboard() {
                                 'Wallet top-ups'
                               )}
                               stroke="#0ea5e9"
-                              strokeWidth={2}
-                              dot={{ r: 3 }}
-                              activeDot={{ r: 5 }}
-                            />
-                            <Line
-                              type="monotone"
-                              dataKey="commission"
-                              name={t(
-                                'SystemAdmin.dashboard.charts.common.consultationCommission',
-                                'Consultation commission'
-                              )}
-                              stroke="#14b8a6"
                               strokeWidth={2}
                               dot={{ r: 3 }}
                               activeDot={{ r: 5 }}
@@ -1749,99 +1639,6 @@ export default function SystemAdminDashboard() {
 
                 <aside className="lg:col-span-4 space-y-4">
                   <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
-                    <h3 className="text-slate-900 dark:text-white text-sm font-bold flex items-center gap-2">
-                      <Activity className="w-4 h-4 text-amber-500" />
-                      {t(
-                        'SystemAdmin.dashboard.pendingActions.title',
-                        'Pending actions'
-                      )}
-                    </h3>
-                    <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-3">
-                      {t(
-                        'SystemAdmin.dashboard.pendingActions.description',
-                        'Queues that need your attention'
-                      )}
-                    </p>
-                    <ul className="space-y-1">
-                      <li>
-                        <Link
-                          to="/system-admin/verifications"
-                          className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
-                        >
-                          <span>
-                            {t(
-                              'SystemAdmin.dashboard.pendingActions.items.doctorProfileReviews.title',
-                              'Doctor profile reviews'
-                            )}
-                            <span className="text-slate-500 dark:text-slate-400 block text-xs font-normal">
-                              {t(
-                                'SystemAdmin.dashboard.pendingActions.items.doctorProfileReviews.subtitle',
-                                'Pending verification'
-                              )}
-                            </span>
-                          </span>
-                          <span className="flex items-center gap-1 font-semibold tabular-nums">
-                            {
-                              metrics.pendingActions
-                                .pendingOphthalmologistVerifications
-                            }
-                            <ChevronRight className="w-4 h-4 text-slate-400" />
-                          </span>
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/system-admin/withdrawal-requests"
-                          className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
-                        >
-                          <span>
-                            {t(
-                              'SystemAdmin.dashboard.pendingActions.items.withdrawalRequests.title',
-                              'Withdrawal requests'
-                            )}
-                            <span className="text-slate-500 dark:text-slate-400 block text-xs font-normal">
-                              {t(
-                                'SystemAdmin.dashboard.pendingActions.items.withdrawalRequests.subtitle',
-                                'Pending / processing'
-                              )}
-                            </span>
-                          </span>
-                          <span className="flex items-center gap-1 font-semibold tabular-nums">
-                            {metrics.pendingActions.pendingWithdrawalRequests}
-                            <ChevronRight className="w-4 h-4 text-slate-400" />
-                          </span>
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/system-admin/organisations"
-                          className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
-                        >
-                          <span>
-                            {t(
-                              'SystemAdmin.dashboard.pendingActions.items.organisationOnboarding.title',
-                              'Organisation onboarding'
-                            )}
-                            <span className="text-slate-500 dark:text-slate-400 block text-xs font-normal">
-                              {t(
-                                'SystemAdmin.dashboard.pendingActions.items.organisationOnboarding.subtitle',
-                                'Awaiting approval'
-                              )}
-                            </span>
-                          </span>
-                          <span className="flex items-center gap-1 font-semibold tabular-nums">
-                            {
-                              metrics.pendingActions
-                                .pendingOrganisationOnboarding
-                            }
-                            <ChevronRight className="w-4 h-4 text-slate-400" />
-                          </span>
-                        </Link>
-                      </li>
-                    </ul>
-                  </section>
-
-                  <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
                     <h3 className="text-sm font-bold mb-3">
                       <Link
                         to="/system-admin/status"
@@ -1973,51 +1770,6 @@ export default function SystemAdminDashboard() {
                             </li>
                           )
                         )}
-                      </ol>
-                    )}
-                  </section>
-
-                  <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
-                    <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-1">
-                      {t(
-                        'SystemAdmin.dashboard.topOrganisations.title',
-                        'Top organisations'
-                      )}
-                    </h3>
-                    <p className="text-slate-500 dark:text-slate-400 text-xs mb-3">
-                      {t(
-                        'SystemAdmin.dashboard.topOrganisations.description',
-                        'By average rating'
-                      )}
-                    </p>
-                    {metrics.topOrganisationsByRating.length === 0 ? (
-                      <p className="text-slate-500 text-xs">
-                        {t(
-                          'SystemAdmin.dashboard.topOrganisations.states.empty',
-                          'No data yet'
-                        )}
-                      </p>
-                    ) : (
-                      <ol className="space-y-2">
-                        {metrics.topOrganisationsByRating.map((o, idx) => (
-                          <li
-                            key={o.organisationId}
-                            className="flex items-center justify-between gap-2 text-xs"
-                          >
-                            <span className="text-slate-700 dark:text-slate-300 truncate">
-                              <span className="text-slate-400 mr-1.5">
-                                {idx + 1}.
-                              </span>
-                              {o.name}
-                            </span>
-                            <span className="text-slate-600 dark:text-slate-400 tabular-nums shrink-0">
-                              * {o.ratingAverage.toFixed(1)}
-                              <span className="text-slate-400 ml-1">
-                                ({o.ratingCount})
-                              </span>
-                            </span>
-                          </li>
-                        ))}
                       </ol>
                     )}
                   </section>

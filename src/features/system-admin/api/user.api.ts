@@ -95,9 +95,9 @@ export const userApi = {
    */
   async lockUser(id: string, reason?: string) {
     try {
-      const response = await api.post<ApiResponse<User>>(
-        API_ENDPOINTS.SYSTEM_ADMIN.USERS.LOCK(id),
-        { reason }
+      const response = await api.patch<ApiResponse<User>>(
+        API_ENDPOINTS.SYSTEM_ADMIN.USERS.STATUS(id),
+        { action: 'suspend', reason }
       );
       return response.data.data;
     } catch (error) {
@@ -111,8 +111,9 @@ export const userApi = {
    */
   async unlockUser(id: string) {
     try {
-      const response = await api.post<ApiResponse<User>>(
-        API_ENDPOINTS.SYSTEM_ADMIN.USERS.UNLOCK(id)
+      const response = await api.patch<ApiResponse<User>>(
+        API_ENDPOINTS.SYSTEM_ADMIN.USERS.STATUS(id),
+        { action: 'activate' }
       );
       return response.data.data;
     } catch (error) {
@@ -127,9 +128,24 @@ export const userApi = {
   async getUserStats() {
     try {
       const response = await api.get<ApiResponse<UserStats>>(
-        API_ENDPOINTS.SYSTEM_ADMIN.USERS.STATS
+        API_ENDPOINTS.SYSTEM_ADMIN.USERS.METRICS
       );
-      return response.data.data;
+      const metrics = response.data.data as any;
+
+      return {
+        totalUsers: metrics?.totalUsers ?? 0,
+        activeUsers: metrics?.activeUsers ?? metrics?.activeDoctors ?? 0,
+        lockedUsers: metrics?.lockedUsers ?? 0,
+        usersByRole: {
+          Patient: metrics?.usersByRole?.Patient ?? 0,
+          Ophthalmologist:
+            metrics?.usersByRole?.Ophthalmologist ??
+            metrics?.activeDoctors ??
+            0,
+          ClinicStaff: metrics?.usersByRole?.ClinicStaff ?? 0,
+          SystemAdmin: metrics?.usersByRole?.SystemAdmin ?? 0,
+        },
+      } satisfies UserStats;
     } catch (error) {
       console.error('Failed to fetch user stats:', error);
       throw error;

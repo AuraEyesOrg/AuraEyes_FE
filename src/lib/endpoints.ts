@@ -58,9 +58,10 @@ export const API_ENDPOINTS = {
       LIST: '/system-admin/users',
       DETAIL: (id: string) => `/system-admin/users/${id}`,
       UPDATE_ROLE: (id: string) => `/system-admin/users/${id}/role`,
-      LOCK: (id: string) => `/system-admin/users/${id}/lock`,
-      UNLOCK: (id: string) => `/system-admin/users/${id}/unlock`,
-      STATS: '/system-admin/users/stats',
+      STATUS: (id: string) => `/system-admin/users/${id}/status`,
+      METRICS: '/system-admin/users/metrics',
+      // Backward-compatible alias for older callers.
+      STATS: '/system-admin/users/metrics',
     },
 
     // Ophthalmologist Management

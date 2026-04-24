@@ -1,18 +1,15 @@
+/*
+Original backup:
+
 import type { ComponentType } from 'react';
 import {
-  ArrowRightLeft,
   BarChart3,
-  Building2,
   CalendarDays,
   CalendarX,
-  ClipboardCheck,
-  FileCheck,
   FileText,
   Globe,
   KeyRound,
-  ScrollText,
   Settings,
-  Stethoscope,
   Users,
   Wallet,
 } from 'lucide-react';
@@ -56,20 +53,6 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
         requiredPermission: Permissions.UsersRead,
       },
       {
-        id: 'organisations',
-        label: 'Organisations',
-        path: '/system-admin/organisations',
-        icon: Building2,
-        requiredPermission: Permissions.OrganisationsRead,
-      },
-      {
-        id: 'ophthalmologists',
-        label: 'Ophthalmologists',
-        path: '/system-admin/ophthalmologists',
-        icon: Stethoscope,
-        requiredPermission: Permissions.OphthalmologistsRead,
-      },
-      {
         id: 'leave-requests',
         label: 'Leave Requests',
         path: '/system-admin/leave-requests',
@@ -77,47 +60,11 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
         requiredPermission: Permissions.SchedulesManage,
       },
       {
-        id: 'employment-type-change-requests',
-        label: 'Employment Type Changes',
-        path: '/system-admin/employment-type-change-requests',
-        icon: ArrowRightLeft,
-        requiredPermission: Permissions.OphthalmologistsUpdate,
-      },
-      {
         id: 'patients',
         label: 'Patients',
         path: '/system-admin/patients',
         icon: Users,
         requiredPermission: Permissions.PatientsRead,
-      },
-      {
-        id: 'verifications',
-        label: 'Verifications',
-        path: '/system-admin/verifications',
-        icon: ClipboardCheck,
-        requiredPermission: Permissions.OphthalmologistsUpdate,
-      },
-    ],
-  },
-  {
-    id: 'contract-management',
-    label: 'Contract Management',
-    description: 'Manage contracts',
-    icon: FileCheck,
-    items: [
-      {
-        id: 'contract-templates',
-        label: 'Contract Templates',
-        path: '/system-admin/contract-templates',
-        icon: ScrollText,
-        requiredPermission: Permissions.ContractsRead,
-      },
-      {
-        id: 'contracts',
-        label: 'Contracts',
-        path: '/system-admin/contracts',
-        icon: FileCheck,
-        requiredPermission: Permissions.ContractsRead,
       },
     ],
   },
@@ -185,5 +132,100 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
         icon: Globe,
       },
     ],
+  },
+];
+*/
+
+import type { ComponentType } from 'react';
+import {
+  BarChart3,
+  CalendarDays,
+  CalendarX,
+  FileText,
+  Globe,
+  KeyRound,
+  Settings,
+  Users,
+  Wallet,
+} from 'lucide-react';
+import { Permissions } from '@/constants/permissions';
+
+export interface SidebarNavItem {
+  id: string;
+  label: string;
+  path: string;
+  icon: ComponentType<{ className?: string }>;
+  requiredPermission?: string;
+}
+
+export const dashboardNavItem: SidebarNavItem = {
+  id: 'dashboard',
+  label: 'Dashboard',
+  path: '/system-admin/dashboard',
+  icon: BarChart3,
+};
+
+export const sidebarNavItems: SidebarNavItem[] = [
+  {
+    id: 'staff-management',
+    label: 'Staff Management',
+    path: '/system-admin/staff-management',
+    icon: Users,
+    requiredPermission: Permissions.UsersRead,
+  },
+  {
+    id: 'leave-requests',
+    label: 'Leave Requests',
+    path: '/system-admin/leave-requests',
+    icon: CalendarX,
+    requiredPermission: Permissions.SchedulesManage,
+  },
+  {
+    id: 'patients',
+    label: 'Patients',
+    path: '/system-admin/patients',
+    icon: Users,
+    requiredPermission: Permissions.PatientsRead,
+  },
+  {
+    id: 'transaction-ledger',
+    label: 'Payment Transactions',
+    path: '/system-admin/cashflow',
+    icon: Wallet,
+    requiredPermission: Permissions.CashflowRead,
+  },
+  {
+    id: 'scheduling',
+    label: 'Scheduling',
+    path: '/system-admin/scheduling',
+    icon: CalendarDays,
+    requiredPermission: Permissions.SchedulesManage,
+  },
+  {
+    id: 'permissions',
+    label: 'Permissions',
+    path: '/system-admin/permissions',
+    icon: KeyRound,
+    requiredPermission: Permissions.PermissionsRead,
+  },
+  {
+    id: 'audit-logs',
+    label: 'Audit Logs',
+    path: '/system-admin/audit-logs',
+    icon: FileText,
+    requiredPermission: Permissions.AuditLogsRead,
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    path: '/system-admin/settings',
+    icon: Settings,
+    requiredPermission: Permissions.SettingsRead,
+  },
+  {
+    id: 'aura-network',
+    label: 'Aura Network',
+    path: '/network',
+    icon: Globe,
   },
 ];

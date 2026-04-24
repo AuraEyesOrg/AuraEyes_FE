@@ -11,6 +11,7 @@ const INTERNAL_CHAT_HUB_URL =
   (import.meta.env.VITE_API_END_POINT as string) + '/hubs/internal-chat';
 const RECONNECT_DELAYS = [0, 2000, 5000, 10000, 30000];
 const TOKEN_EXPIRY_BUFFER_MS = 15_000;
+let activeInternalChatConnection: HubConnection | null = null;
 
 export const SIGNALR_INTERNAL_MESSAGE_EVENT = 'signalr:internal-message';
 export const SIGNALR_INTERNAL_GROUP_UPDATE_EVENT =
@@ -18,6 +19,38 @@ export const SIGNALR_INTERNAL_GROUP_UPDATE_EVENT =
 
 const sanitizeToken = (value: string | null): string =>
   value?.replace(/['"]+/g, '') || '';
+
+export const joinInternalChatGroup = async (groupId: string): Promise<void> => {
+  if (!groupId) return;
+  if (activeInternalChatConnection?.state !== HubConnectionState.Connected) {
+    return;
+  }
+
+  try {
+    await activeInternalChatConnection.invoke('JoinGroup', groupId);
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('[InternalChatHub] Failed to join group:', error);
+    }
+  }
+};
+
+export const leaveInternalChatGroup = async (
+  groupId: string
+): Promise<void> => {
+  if (!groupId) return;
+  if (activeInternalChatConnection?.state !== HubConnectionState.Connected) {
+    return;
+  }
+
+  try {
+    await activeInternalChatConnection.invoke('LeaveGroup', groupId);
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('[InternalChatHub] Failed to leave group:', error);
+    }
+  }
+};
 
 export function useSignalRInternalChat(): void {
   const connectionRef = useRef<HubConnection | null>(null);
@@ -104,9 +137,11 @@ export function useSignalRInternalChat(): void {
       }
 
       await connectionRef.current.start();
+      activeInternalChatConnection = connectionRef.current;
       console.log('[InternalChatHub] Connected successfully');
     } catch (error) {
       console.error('[InternalChatHub] Connection failed:', error);
+      activeInternalChatConnection = null;
       connectionRef.current = null;
     }
   }, [buildConnection, isAuthenticated]);
@@ -120,6 +155,7 @@ export function useSignalRInternalChat(): void {
     } catch (error) {
       console.error('[InternalChatHub] Error stopping connection:', error);
     } finally {
+      activeInternalChatConnection = null;
       connectionRef.current = null;
     }
   }, []);
