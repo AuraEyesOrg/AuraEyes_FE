@@ -214,7 +214,7 @@ const AppointmentsPage = () => {
           </div>
 
           <Link
-            to="/patient/clinics"
+            to="/patient/schedule"
             className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-brand px-8 py-4 text-sm font-bold text-white transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-brand/40"
           >
             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
@@ -311,7 +311,7 @@ const AppointmentsPage = () => {
             refreshing={!isLoadingClinic && isFetchingClinic}
             action={
               <Link
-                to="/patient/clinics"
+                to="/patient/schedule"
                 className="inline-flex items-center gap-1 text-sm font-semibold text-brand transition-colors hover:text-brand/80"
               >
                 {t('PatientAppointments.actions.bookMoreSlot')}
@@ -337,7 +337,7 @@ const AppointmentsPage = () => {
                   ? t('PatientAppointments.actions.bookMoreSlot')
                   : undefined
               }
-              ctaHref="/patient/clinics"
+              ctaHref="/patient/schedule"
             />
           ) : (
             <div className="space-y-3">
@@ -353,9 +353,6 @@ const AppointmentsPage = () => {
                   reasonLabel={t('PatientAppointments.labels.reason', {
                     reason: appointment.visitReason ?? '',
                   })}
-                  organisationLabel={t(
-                    'PatientAppointments.labels.organisationAppointment'
-                  )}
                   clinicLabel={t('PatientAppointments.labels.clinicVisit')}
                   onRate={() => setClinicFeedbackTarget(appointment)}
                 />
@@ -406,7 +403,7 @@ const AppointmentsPage = () => {
             </p>
 
             <Link
-              to="/patient/clinics"
+              to="/patient/schedule"
               className="group flex items-center gap-3 rounded-2xl bg-brand px-10 py-4 text-sm font-black uppercase tracking-widest text-white transition-all hover:scale-105 hover:shadow-2xl hover:shadow-brand/30 active:scale-95 shadow-xl shadow-brand/20"
             >
               <PlusCircle className="h-5 w-5" />
@@ -491,7 +488,6 @@ interface ClinicAppointmentCardProps {
   rateLabel: string;
   submittedLabel: string;
   reasonLabel: string;
-  organisationLabel: string;
   clinicLabel: string;
   onRate: () => void;
 }
@@ -504,7 +500,7 @@ const ClinicAppointmentCard = ({
   reasonLabel,
   clinicLabel,
   onRate,
-}: Omit<ClinicAppointmentCardProps, 'organisationLabel'>) => {
+}: ClinicAppointmentCardProps) => {
   const dimmed =
     appointment.status === 'Cancelled' || appointment.status === 'NoShow';
 
@@ -559,27 +555,55 @@ const ClinicAppointmentCard = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                  <Clock className="h-4 w-4" />
-                </div>
-                <span className="text-sm font-semibold tabular-nums">
-                  {formatSlotTime(appointment.startTime)} –{' '}
-                  {formatSlotTime(appointment.endTime)}
-                </span>
-              </div>
-
-              {appointment.visitReason && (
-                <div className="flex items-start gap-3 text-slate-500 dark:text-slate-500">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                    <FileText className="h-4 w-4" />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+              <div className="space-y-3 flex-1">
+                <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                    <Clock className="h-4 w-4" />
                   </div>
-                  <p className="text-xs leading-relaxed line-clamp-2 italic pt-0.5">
-                    "{appointment.visitReason}"
-                  </p>
+                  <span className="text-sm font-semibold tabular-nums">
+                    {formatSlotTime(appointment.startTime)} –{' '}
+                    {formatSlotTime(appointment.endTime)}
+                  </span>
                 </div>
-              )}
+
+                {/* Doctor Info Section */}
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/50 w-fit min-w-[240px]">
+                  <div className="relative">
+                    {appointment.ophthalAvatarUrl ? (
+                      <img
+                        src={appointment.ophthalAvatarUrl}
+                        alt={appointment.ophthalFullName ?? ''}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold border-2 border-white dark:border-slate-700 shadow-sm">
+                        {appointment.ophthalFullName?.charAt(0) ?? 'D'}
+                      </div>
+                    )}
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
+                      Consulting Doctor
+                    </p>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-none">
+                      {appointment.ophthalFullName ?? 'Clinic Doctor'}
+                    </h4>
+                  </div>
+                </div>
+
+                {appointment.visitReason && (
+                  <div className="flex items-start gap-3 text-slate-500 dark:text-slate-500">
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                      <FileText className="h-4 w-4" />
+                    </div>
+                    <p className="text-xs leading-relaxed line-clamp-2 italic pt-0.5">
+                      "{appointment.visitReason}"
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex justify-end pt-2 sm:pt-0">

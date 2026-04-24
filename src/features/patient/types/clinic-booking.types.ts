@@ -66,6 +66,9 @@ export interface ClinicAppointmentDto {
   visitReason?: string | null;
   status: ClinicAppointmentStatus;
   createdAt?: string;
+  ophthalId?: string | null;
+  ophthalFullName?: string | null;
+  ophthalAvatarUrl?: string | null;
   cost?: number | null;
   /**
    * True when the current patient has already submitted feedback for this

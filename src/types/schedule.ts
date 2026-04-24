@@ -126,6 +126,8 @@ export interface AppointmentSlotListDto {
   maxCapacity: number;
   bookedCount: number;
   availableCapacity: number;
+  ophthalFullName?: string;
+  ophthalAvatarUrl?: string;
   cost: number | null;
   reservationExpireAt?: string | null;
   createdAt: string;
@@ -143,6 +145,8 @@ export interface AppointmentSlotDto {
   maxCapacity: number;
   bookedCount: number;
   availableCapacity: number;
+  ophthalFullName?: string;
+  ophthalAvatarUrl?: string;
   cost: number | null;
   reservationExpireAt?: string | null;
   createdAt: string;
