@@ -121,6 +121,12 @@ export default function CollaborationPage() {
     InternalChatCandidateUser[]
   >([]);
   const [candidateLoading, setCandidateLoading] = useState(false);
+  const [groupSettings, setGroupSettings] = useState<GroupUiSettingsMap>(() =>
+    loadJson(GROUP_SETTINGS_KEY, {})
+  );
+  const [groupMembersMap, setGroupMembersMap] = useState<GroupMembersMap>(() =>
+    loadJson(GROUP_MEMBERS_KEY, {})
+  );
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const previousJoinedGroupRef = useRef<string | null>(null);
@@ -502,7 +508,7 @@ export default function CollaborationPage() {
             memberIds: selectedMemberIdsForCreate,
           });
 
-          setGroupMembersMap((prev) => ({
+          setGroupMembersMap((prev: GroupMembersMap) => ({
             ...prev,
             [createdGroupId]: Array.from(
               new Set([
