@@ -33,6 +33,7 @@ export default function CreateTemplateModal({
     endTime: '17:00',
     slotDuration: 30,
     maxCapacity: 1,
+    isActive: true,
   });
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export default function CreateTemplateModal({
         endTime: editTemplate.endTime.substring(0, 5),
         slotDuration: editTemplate.slotDuration,
         maxCapacity: editTemplate.maxCapacity,
+        isActive: editTemplate.isActive,
       });
     } else {
       setFormData({
@@ -51,6 +53,7 @@ export default function CreateTemplateModal({
         endTime: '17:00',
         slotDuration: 30,
         maxCapacity: 1,
+        isActive: true,
       });
     }
   }, [editTemplate, isOpen]);
