@@ -158,6 +158,9 @@ const ClinicStaffSchedulesPage = lazy(
 const ClinicStaffBillingPage = lazy(
   () => import('@/features/clinic-staff/pages/billing')
 );
+const ClinicStaffCashierPage = lazy(
+  () => import('@/features/clinic-staff/pages/cashier')
+);
 const ClinicStaffWalletPage = lazy(
   () => import('@/features/clinic-staff/pages/wallet')
 );
@@ -247,6 +250,14 @@ const OphthalmologistLeaveRequestsPage = lazy(
 const OphthalmologistEmploymentTypeChangeRequestsPage = lazy(
   () =>
     import('@/features/ophthalmologist/pages/employment-type-change-requests')
+);
+const OphthalmologistPatientCarePlanPage = lazy(
+  () => import('@/features/ophthalmologist/pages/patient-care-plan')
+);
+
+// Care Plan pages (shared)
+const PatientCarePlanPage = lazy(
+  () => import('@/features/patient/pages/care-plan')
 );
 
 // System Admin pages
@@ -579,6 +590,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/ophthalmologist/patients/:patientId/care-plan"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Ophthalmologist']}
+              element={<OphthalmologistPatientCarePlanPage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/ophthalmologist/screenings"
           element={
             <LocalizedPrivateRoute
@@ -820,6 +840,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/patient/care-plan"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient']}
+              element={<PatientCarePlanPage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/patient/chat"
           element={
             <LocalizedPrivateRoute
@@ -962,6 +991,15 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<ClinicStaffSchedulesPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/cashier"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffCashierPage />}
             />
           }
         />
@@ -1550,6 +1588,14 @@ const Router = () => (
           }
         />
         <Route
+          path="/patient/care-plan"
+          element={
+            <PrivateRoute allowedRoles={['Patient']}>
+              <PatientCarePlanPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/patient/chat"
           element={
             <PrivateRoute allowedRoles={['Patient']}>
@@ -1678,6 +1724,16 @@ const Router = () => (
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
             >
               <ClinicStaffSchedulesPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/cashier"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffCashierPage />
             </PrivateRoute>
           }
         />
@@ -1846,6 +1902,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['Ophthalmologist']}>
               <OphthalmologistPatientsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/ophthalmologist/patients/:patientId/care-plan"
+          element={
+            <PrivateRoute allowedRoles={['Ophthalmologist']}>
+              <OphthalmologistPatientCarePlanPage />
             </PrivateRoute>
           }
         />

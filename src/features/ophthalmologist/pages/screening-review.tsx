@@ -8,7 +8,6 @@ import {
   Move,
   RotateCcw,
   Maximize2,
-  Download,
   FileText,
   Eye,
   User,
@@ -44,6 +43,11 @@ import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 // import { mergeBoxesIntoRawJson } from '@/features/organisation/utils/screening-result.util';
 import type { DetectionBox } from '@/features/organisation/types/screening-result.types';
+import type { RxItem } from '../types/drug.type';
+import {
+  PrescriptionTable,
+  validatePrescriptionItems,
+} from '../components/PrescriptionTable';
 
 type RiskLevel = 'None' | 'Low' | 'Moderate' | 'High' | 'Critical';
 type EyeSide = 'Left' | 'Right' | 'Both';
@@ -81,6 +85,8 @@ type ShareAssetOption = {
   kind: ShareAssetKind;
   sourceImageUrl?: string;
 };
+
+type DiagnosisModalTab = 'diagnosis' | 'prescription' | 'plan';
 
 const DIAGNOSIS_CODE_PRESETS = [
   { value: 'H35.9', label: 'H35.9 - Retinal disorder, unspecified' },
@@ -343,11 +349,19 @@ export default function ScreeningReviewPage() {
   const [severityLevel, setSeverityLevel] = useState('Moderate');
   const [treatmentPlan, setTreatmentPlan] = useState('');
   const [recommendations, setRecommendations] = useState('');
+  const [prescriptionItems, setPrescriptionItems] = useState<RxItem[]>([]);
+  const [prescriptionErrors, setPrescriptionErrors] = useState<
+    Record<string, (keyof Omit<RxItem, 'id'>)[]>
+  >({});
+  const [prescriptionNote, setPrescriptionNote] = useState('');
+  const [noMedicationPrescribed, setNoMedicationPrescribed] = useState(false);
   const [isUrgent, setIsUrgent] = useState(false);
   const [diagnosisStatus, setDiagnosisStatus] = useState('Draft');
   const [referralRequired, setReferralRequired] = useState(false);
   const [followUpDate, setFollowUpDate] = useState('');
   const [isDiagnosisLocked, setIsDiagnosisLocked] = useState(false);
+  const [diagnosisModalTab, setDiagnosisModalTab] =
+    useState<DiagnosisModalTab>('diagnosis');
   const [sharingImages, setSharingImages] = useState(false);
   const [showShareImagePicker, setShowShareImagePicker] = useState(false);
   const [shareCandidateAssetId, setShareCandidateAssetId] = useState<
@@ -1134,7 +1148,6 @@ export default function ScreeningReviewPage() {
     }
   };
 
-  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const aiFindingsNarrative = useMemo(() => {
     if (sidebarFindings.length === 0) return '';
     const locale = resolveFindingLocale();
@@ -1154,60 +1167,6 @@ export default function ScreeningReviewPage() {
 
     return lines.join('\n');
   }, [sidebarFindings]);
-
-  const handleDownloadPdf = useCallback(async () => {
-    if (downloadingPdf || !screeningId) return;
-    setDownloadingPdf(true);
-    try {
-      const { api } = await import('@/lib/api');
-      const { downloadBlobFile, getFileNameFromContentDisposition } =
-        await import('@/lib/file-export');
-
-      // Attempt to download from common endpoint
-      const response = reportableSessionId
-        ? await api
-            .get(`/consultation-sessions/${reportableSessionId}/report-pdf`, {
-              responseType: 'blob',
-            })
-            .catch(() =>
-              api.get(`/screenings/${screeningId}/report-pdf`, {
-                responseType: 'blob',
-              })
-            )
-        : await api
-            .get(`/screenings/${screeningId}/report-pdf`, {
-              responseType: 'blob',
-            })
-            .catch(() =>
-              api.get(`/organisations/screenings/${screeningId}/report-pdf`, {
-                responseType: 'blob',
-              })
-            );
-
-      const fallbackFileName = `screening-report-${screeningId.slice(0, 8)}.pdf`;
-      const fileName =
-        getFileNameFromContentDisposition(
-          response.headers?.['content-disposition'] as string
-        ) || fallbackFileName;
-
-      downloadBlobFile(response.data as Blob, fileName);
-      ophthalToast.success(
-        t(
-          'Ophthalmologist.screeningReview.toast.downloadReportSuccess',
-          'Đã tải báo cáo PDF.'
-        )
-      );
-    } catch (error) {
-      ophthalToast.error(
-        t(
-          'Ophthalmologist.screeningReview.toast.downloadReportError',
-          'Không thể tải báo cáo PDF.'
-        )
-      );
-    } finally {
-      setDownloadingPdf(false);
-    }
-  }, [screeningId, downloadingPdf, reportableSessionId, t]);
 
   useEffect(() => {
     const effectiveCode =
@@ -1231,7 +1190,15 @@ export default function ScreeningReviewPage() {
     didAutoFillClinicalFindingsRef.current = true;
   }, [showDiagnosisModal, clinicalFindings, aiFindingsNarrative]);
 
-  const handleSubmitDiagnosis = async () => {
+  useEffect(() => {
+    if (showDiagnosisModal) {
+      setDiagnosisModalTab('diagnosis');
+    }
+  }, [showDiagnosisModal]);
+
+  const handleSubmitDiagnosis = async (
+    statusOverride?: 'Draft' | 'Finalized'
+  ) => {
     if (isFinalizedDiagnosis) {
       ophthalToast.info(
         t(
@@ -1279,6 +1246,30 @@ export default function ScreeningReviewPage() {
 
     const normalizedDiagnosisCode = diagnosisCode.trim();
     const normalizedFindings = clinicalFindings.trim();
+    const effectiveDiagnosisStatus = statusOverride ?? diagnosisStatus;
+    const isFinalizing =
+      effectiveDiagnosisStatus.trim().toLowerCase() === 'finalized';
+    const { valid: prescriptionValid, errors: nextPrescriptionErrors } =
+      validatePrescriptionItems(prescriptionItems, noMedicationPrescribed);
+    const normalizedPrescriptionItems = prescriptionItems
+      .map((item) => ({
+        medicineName: item.medicineName.trim(),
+        unit: item.unit.trim() || undefined,
+        dosage: item.dosage.trim(),
+        frequency: item.frequency.trim(),
+        duration: item.duration.trim(),
+        instruction: item.instruction.trim() || undefined,
+      }))
+      .filter(
+        (item) =>
+          item.medicineName ||
+          item.unit ||
+          item.dosage ||
+          item.frequency ||
+          item.duration ||
+          item.instruction
+      );
+    const trimmedPrescriptionNote = prescriptionNote.trim();
 
     if (!normalizedDiagnosisCode || !normalizedFindings) {
       const message = t(
@@ -1288,6 +1279,19 @@ export default function ScreeningReviewPage() {
       ophthalToast.error(message);
       return;
     }
+
+    if (isFinalizing && !noMedicationPrescribed && !prescriptionValid) {
+      setPrescriptionErrors(nextPrescriptionErrors);
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.screeningReview.validation.incompletePrescriptionItem',
+          'Each medicine row must include medicine name, dosage, frequency, and duration.'
+        )
+      );
+      return;
+    }
+
+    setPrescriptionErrors({});
 
     try {
       await submitVerificationReportMutation.mutateAsync({
@@ -1301,22 +1305,32 @@ export default function ScreeningReviewPage() {
         severityLevel: severityLevel.trim() || undefined,
         treatmentPlan: treatmentPlan.trim() || undefined,
         recommendations: recommendations.trim() || undefined,
+        prescriptionItems:
+          normalizedPrescriptionItems.length > 0
+            ? normalizedPrescriptionItems
+            : undefined,
+        prescriptionNote: trimmedPrescriptionNote || undefined,
+        noMedicationPrescribed,
         isUrgent,
-        status: diagnosisStatus.trim() || undefined,
+        status: effectiveDiagnosisStatus.trim() || undefined,
         followUpDate: followUpDate
           ? new Date(`${followUpDate}T00:00:00`).toISOString()
           : undefined,
         isReferralNeeded: referralRequired,
         finalizedAt:
-          diagnosisStatus.trim().toLowerCase() === 'finalized'
+          effectiveDiagnosisStatus.trim().toLowerCase() === 'finalized'
             ? new Date().toISOString()
             : undefined,
       });
 
       // Persist bbox/heatmap edits vào rawJsonOutput (nếu có chỉnh sửa và rawJson tồn tại)
       const hasBoxEdits = Object.keys(boxOverrides).length > 0;
+      const shouldPersistPrescriptionSnapshot =
+        normalizedPrescriptionItems.length > 0 ||
+        noMedicationPrescribed ||
+        Boolean(trimmedPrescriptionNote);
       if (
-        (hasBoxEdits || hasHeatmapEdits) &&
+        (hasBoxEdits || hasHeatmapEdits || shouldPersistPrescriptionSnapshot) &&
         detail?.rawJsonOutput &&
         screeningId
       ) {
@@ -1351,6 +1365,14 @@ export default function ScreeningReviewPage() {
             parsed.heatmap_data = heatmapData;
           }
 
+          if (shouldPersistPrescriptionSnapshot) {
+            parsed.doctor_prescription = {
+              noMedicationPrescribed,
+              note: trimmedPrescriptionNote || null,
+              items: normalizedPrescriptionItems,
+            };
+          }
+
           parsed.doctor_manual_findings = sidebarFindings.filter((sf) =>
             sf.id.startsWith('manual-find-')
           );
@@ -1378,7 +1400,7 @@ export default function ScreeningReviewPage() {
           'Diagnosis report saved successfully.'
         )
       );
-      if (diagnosisStatus.trim().toLowerCase() === 'finalized') {
+      if (effectiveDiagnosisStatus.trim().toLowerCase() === 'finalized') {
         setIsDiagnosisLocked(true);
       }
       setShowDiagnosisModal(false);
@@ -1678,17 +1700,17 @@ export default function ScreeningReviewPage() {
   ];
 
   return (
-    <div className="flex h-screen w-full bg-(--bg-primary)">
+    <div className="flex min-h-[100dvh] w-full bg-(--bg-primary)">
       {/* Sidebar */}
       <DoctorSidebar pendingCount={0} />
 
       {/* Main Content */}
-      <div className="flex-1 h-full overflow-y-auto">
+      <div className="flex-1 min-h-[100dvh] overflow-y-auto">
         {/* Header */}
         <DoctorHeader />
 
         {/* Review Content */}
-        <main className="p-4">
+        <main className="mx-auto w-full max-w-[1600px] p-4 md:p-5">
           {loading ? (
             <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
               <Spinner size={40} />
@@ -1716,7 +1738,7 @@ export default function ScreeningReviewPage() {
           ) : detail ? (
             <>
               {/* Top Bar */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="mb-4 flex items-center justify-between rounded-2xl border border-gray-200/80 bg-white/80 p-3 shadow-sm backdrop-blur-sm dark:border-[#1e3a5f] dark:bg-[#0a1f44]/70">
                 <div className="flex items-center gap-4">
                   <button
                     type="button"
@@ -1763,9 +1785,9 @@ export default function ScreeningReviewPage() {
               </div>
 
               {/* Main Grid */}
-              <div className="grid grid-cols-12 gap-4 h-[calc(100vh-180px)]">
+              <div className="grid h-[calc(100dvh-195px)] grid-cols-12 gap-4">
                 {/* Left Sidebar - Patient Info */}
-                <div className="col-span-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden flex flex-col">
+                <div className="col-span-2 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_10px_30px_-20px_rgba(15,23,42,0.55)] dark:border-[#1e3a5f] dark:bg-[#0a1f44]">
                   {/* Patient Header */}
                   <div className="p-4 border-b border-gray-200 dark:border-[#1e3a5f]">
                     <div className="flex items-center gap-3">
@@ -1992,7 +2014,7 @@ export default function ScreeningReviewPage() {
                 {/* Center - Image Viewer */}
                 <div
                   ref={imageContainerRef}
-                  className="col-span-7 bg-[#0d1117] rounded-xl border border-gray-800 overflow-hidden flex flex-col fullscreen:border-none fullscreen:rounded-none"
+                  className="col-span-7 flex flex-col overflow-hidden rounded-2xl border border-gray-800 bg-[#0d1117] shadow-[0_14px_32px_-22px_rgba(2,12,28,0.9)] fullscreen:border-none fullscreen:rounded-none"
                 >
                   {/* Toolbar */}
                   <div className="flex items-center justify-between p-3 border-b border-gray-800">
@@ -2417,7 +2439,7 @@ export default function ScreeningReviewPage() {
                             }`}
                             title="Toggle AI heatmap (Grad-CAM)"
                           >
-                            🌡 Heatmap
+                            Heatmap
                           </button>
                           {showHeatmap && (
                             <div className="flex items-center gap-4 flex-wrap border-l border-gray-700 pl-4 relative">
@@ -2634,7 +2656,7 @@ export default function ScreeningReviewPage() {
                 </div>
 
                 {/* Right Panel - AI screening */}
-                <div className="col-span-3 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden flex flex-col">
+                <div className="col-span-3 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_10px_30px_-20px_rgba(15,23,42,0.55)] dark:border-[#1e3a5f] dark:bg-[#0a1f44]">
                   {/* Detected Findings */}
                   <div className="flex-1 overflow-y-auto p-4">
                     <div className="flex items-center justify-between mb-3">
@@ -3072,351 +3094,400 @@ export default function ScreeningReviewPage() {
                       {detail?.latestResult?.riskLevel ?? riskLevelUi}
                     </strong>
                   </span>
-                  <span className="text-sm text-cyan-600 dark:text-cyan-400">
-                    {t(
-                      'Ophthalmologist.screeningReview.modal.confidence',
-                      'Confidence'
-                    )}
-                    : <strong>{aiConfidencePct}%</strong>
-                  </span>
                 </div>
               </div>
 
-              {/* Diagnosis core */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                  {t(
-                    'Ophthalmologist.screeningReview.modal.diagnosisCore',
-                    'Diagnosis Core'
-                  )}
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <select
-                    value={diagnosisCodePreset}
-                    onChange={(e) =>
-                      setDiagnosisCodePreset(
-                        e.target
-                          .value as (typeof DIAGNOSIS_CODE_PRESETS)[number]['value']
-                      )
+              <div className="rounded-xl border border-gray-200 bg-gray-50/90 p-1 dark:border-[#1e3a5f] dark:bg-[#10294f]/70">
+                <div className="grid grid-cols-3 gap-1">
+                  {(
+                    [
+                      {
+                        id: 'diagnosis',
+                        label: t(
+                          'Ophthalmologist.screeningReview.modal.tabDiagnosis',
+                          'Diagnosis'
+                        ),
+                      },
+                      {
+                        id: 'prescription',
+                        label: t(
+                          'Ophthalmologist.screeningReview.modal.tabPrescription',
+                          'Prescription'
+                        ),
+                      },
+                      {
+                        id: 'plan',
+                        label: t(
+                          'Ophthalmologist.screeningReview.modal.tabPlan',
+                          'Care Plan'
+                        ),
+                      },
+                    ] as { id: DiagnosisModalTab; label: string }[]
+                  ).map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setDiagnosisModalTab(tab.id)}
+                      className={`h-10 rounded-lg text-sm font-semibold transition-colors ${
+                        diagnosisModalTab === tab.id
+                          ? 'bg-white text-cyan-700 shadow-sm dark:bg-[#0a1f44] dark:text-cyan-300'
+                          : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {diagnosisModalTab === 'diagnosis' && (
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                      {t(
+                        'Ophthalmologist.screeningReview.modal.diagnosisCore',
+                        'Diagnosis Core'
+                      )}
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <select
+                        value={diagnosisCodePreset}
+                        onChange={(e) =>
+                          setDiagnosisCodePreset(
+                            e.target
+                              .value as (typeof DIAGNOSIS_CODE_PRESETS)[number]['value']
+                          )
+                        }
+                        className="md:col-span-2 px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                      >
+                        {DIAGNOSIS_CODE_PRESETS.map((item) => (
+                          <option key={item.value} value={item.value}>
+                            {item.label}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={codingSystem}
+                        onChange={(e) => setCodingSystem(e.target.value)}
+                        className="px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                      >
+                        <option value="ICD-10">ICD-10</option>
+                        <option value="SNOMED CT">SNOMED CT</option>
+                        <option value="Other">
+                          {t('Ophthalmologist.common.other', 'Other')}
+                        </option>
+                      </select>
+                    </div>
+                    {diagnosisCodePreset === 'OTHER' && (
+                      <input
+                        type="text"
+                        value={customDiagnosisCode}
+                        onChange={(e) => setCustomDiagnosisCode(e.target.value)}
+                        placeholder={t(
+                          'Ophthalmologist.screeningReview.modal.diagnosisCode',
+                          'Diagnosis code'
+                        )}
+                        className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                      />
+                    )}
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                      {t(
+                        'Ophthalmologist.screeningReview.modal.clinicalFindings',
+                        'Clinical Findings'
+                      )}
+                    </h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                      {t(
+                        'Ophthalmologist.screeningReview.modal.clinicalFindingsHint',
+                        'Auto-filled from AI findings. You can adjust before saving.'
+                      )}
+                    </p>
+                    <textarea
+                      value={clinicalFindings}
+                      onChange={(e) => setClinicalFindings(e.target.value)}
+                      placeholder={t(
+                        'Ophthalmologist.screeningReview.modal.clinicalFindingsPlaceholder',
+                        'Document physician findings and interpretation...'
+                      )}
+                      rows={4}
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4 space-y-2">
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {t(
+                          'Ophthalmologist.screeningReview.modal.severityLevel',
+                          'Severity Level'
+                        )}
+                      </p>
+                      <select
+                        value={severityLevel}
+                        onChange={(e) => setSeverityLevel(e.target.value)}
+                        className="w-full px-3 py-2 bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                      >
+                        <option value="Mild">
+                          {t('Ophthalmologist.common.severity.mild', 'Mild')}
+                        </option>
+                        <option value="Moderate">
+                          {t(
+                            'Ophthalmologist.common.severity.moderate',
+                            'Moderate'
+                          )}
+                        </option>
+                        <option value="Severe">
+                          {t(
+                            'Ophthalmologist.common.severity.severe',
+                            'Severe'
+                          )}
+                        </option>
+                        <option value="Critical">
+                          {t(
+                            'Ophthalmologist.common.severity.critical',
+                            'Critical'
+                          )}
+                        </option>
+                      </select>
+                    </div>
+
+                    <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {t(
+                              'Ophthalmologist.screeningReview.modal.urgentCase',
+                              'Urgent Case'
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {t(
+                              'Ophthalmologist.screeningReview.modal.urgentCaseHint',
+                              'Mark if immediate attention is required'
+                            )}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setIsUrgent(!isUrgent)}
+                          className={`w-12 h-6 rounded-full transition-colors relative ${
+                            isUrgent
+                              ? 'bg-red-500'
+                              : 'bg-gray-300 dark:bg-gray-600'
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                              isUrgent ? 'left-7' : 'left-1'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {diagnosisModalTab === 'prescription' && (
+                <PrescriptionTable
+                  items={prescriptionItems}
+                  onChange={(items) => {
+                    setPrescriptionItems(items);
+                    if (Object.keys(prescriptionErrors).length > 0) {
+                      setPrescriptionErrors({});
                     }
-                    className="md:col-span-2 px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                  >
-                    {DIAGNOSIS_CODE_PRESETS.map((item) => (
-                      <option key={item.value} value={item.value}>
-                        {item.label}
+                  }}
+                  noMedicationPrescribed={noMedicationPrescribed}
+                  onNoMedicationChange={(value) => {
+                    setNoMedicationPrescribed(value);
+                    setPrescriptionErrors({});
+                  }}
+                  prescriptionNote={prescriptionNote}
+                  onNoteChange={setPrescriptionNote}
+                  locked={isFinalizedDiagnosis}
+                  validationErrors={prescriptionErrors}
+                />
+              )}
+
+              {diagnosisModalTab === 'plan' && (
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                      {t(
+                        'Ophthalmologist.screeningReview.modal.treatmentAdvice',
+                        'Treatment and Advice'
+                      )}
+                    </h4>
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value) setTreatmentPlan(e.target.value);
+                      }}
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                    >
+                      <option value="">
+                        {t(
+                          'Ophthalmologist.screeningReview.modal.selectTreatmentTemplate',
+                          'Select a treatment template'
+                        )}
                       </option>
-                    ))}
-                  </select>
-                  <select
-                    value={codingSystem}
-                    onChange={(e) => setCodingSystem(e.target.value)}
-                    className="px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                  >
-                    <option value="ICD-10">ICD-10</option>
-                    <option value="SNOMED CT">SNOMED CT</option>
-                    <option value="Other">
-                      {t('Ophthalmologist.common.other', 'Other')}
-                    </option>
-                  </select>
-                </div>
-                {diagnosisCodePreset === 'OTHER' && (
-                  <input
-                    type="text"
-                    value={customDiagnosisCode}
-                    onChange={(e) => setCustomDiagnosisCode(e.target.value)}
-                    placeholder={t(
-                      'Ophthalmologist.screeningReview.modal.diagnosisCode',
-                      'Diagnosis code'
-                    )}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                  />
-                )}
-                <select
-                  value={diagnosisStatus}
-                  onChange={(e) => setDiagnosisStatus(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                >
-                  <option value="Draft">
-                    {t('Ophthalmologist.common.status.draft', 'Draft')}
-                  </option>
-                  <option value="Reviewed">
-                    {t('Ophthalmologist.common.status.reviewed', 'Reviewed')}
-                  </option>
-                  <option value="Finalized">
-                    {t('Ophthalmologist.common.status.finalized', 'Finalized')}
-                  </option>
-                </select>
-              </div>
-
-              {/* Clinical findings */}
-              <div>
-                <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
-                  {t(
-                    'Ophthalmologist.screeningReview.modal.clinicalFindings',
-                    'Clinical Findings'
-                  )}
-                </h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                  {t(
-                    'Ophthalmologist.screeningReview.modal.clinicalFindingsHint',
-                    'Auto-filled from AI findings. You can adjust before saving.'
-                  )}
-                </p>
-                <textarea
-                  value={clinicalFindings}
-                  onChange={(e) => setClinicalFindings(e.target.value)}
-                  placeholder={t(
-                    'Ophthalmologist.screeningReview.modal.clinicalFindingsPlaceholder',
-                    'Document physician findings and interpretation...'
-                  )}
-                  rows={4}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
-                />
-              </div>
-
-              {/* Severity and urgency */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4 space-y-2">
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    {t(
-                      'Ophthalmologist.screeningReview.modal.severityLevel',
-                      'Severity Level'
-                    )}
-                  </p>
-                  <select
-                    value={severityLevel}
-                    onChange={(e) => setSeverityLevel(e.target.value)}
-                    className="w-full px-3 py-2 bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                  >
-                    <option value="Mild">
-                      {t('Ophthalmologist.common.severity.mild', 'Mild')}
-                    </option>
-                    <option value="Moderate">
-                      {t(
-                        'Ophthalmologist.common.severity.moderate',
-                        'Moderate'
+                      {TREATMENT_PLAN_PRESETS.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                    <textarea
+                      value={treatmentPlan}
+                      onChange={(e) => setTreatmentPlan(e.target.value)}
+                      placeholder={t(
+                        'Ophthalmologist.screeningReview.modal.treatmentPlan',
+                        'Treatment plan...'
                       )}
-                    </option>
-                    <option value="Severe">
-                      {t('Ophthalmologist.common.severity.severe', 'Severe')}
-                    </option>
-                    <option value="Critical">
-                      {t(
-                        'Ophthalmologist.common.severity.critical',
-                        'Critical'
-                      )}
-                    </option>
-                  </select>
-                </div>
+                      rows={3}
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
+                    />
+                  </div>
 
-                <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {t(
-                          'Ophthalmologist.screeningReview.modal.urgentCase',
-                          'Urgent Case'
-                        )}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {t(
-                          'Ophthalmologist.screeningReview.modal.urgentCaseHint',
-                          'Mark if immediate attention is required'
-                        )}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setIsUrgent(!isUrgent)}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${
-                        isUrgent ? 'bg-red-500' : 'bg-gray-300 dark:bg-gray-600'
-                      }`}
+                  <div className="space-y-3">
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value) setRecommendations(e.target.value);
+                      }}
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     >
-                      <span
-                        className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                          isUrgent ? 'left-7' : 'left-1'
-                        }`}
+                      <option value="">
+                        {t(
+                          'Ophthalmologist.screeningReview.modal.selectRecommendationTemplate',
+                          'Select a recommendation template'
+                        )}
+                      </option>
+                      {RECOMMENDATION_PRESETS.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                    <textarea
+                      value={recommendations}
+                      onChange={(e) => setRecommendations(e.target.value)}
+                      placeholder={t(
+                        'Ophthalmologist.screeningReview.modal.recommendations',
+                        'Recommendations for patient and follow-up care...'
+                      )}
+                      rows={3}
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {t(
+                              'Ophthalmologist.screeningReview.modal.referralRequired',
+                              'Referral Required'
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {t(
+                              'Ophthalmologist.screeningReview.modal.referralHint',
+                              'Recommend specialist consultation'
+                            )}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setReferralRequired(!referralRequired)}
+                          className={`w-12 h-6 rounded-full transition-colors relative ${
+                            referralRequired
+                              ? 'bg-cyan-500'
+                              : 'bg-gray-300 dark:bg-gray-600'
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                              referralRequired ? 'left-7' : 'left-1'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4">
+                      <p className="font-medium text-gray-900 dark:text-white mb-2">
+                        {t(
+                          'Ophthalmologist.screeningReview.modal.followUpDate',
+                          'Follow-up Date'
+                        )}
+                      </p>
+                      <input
+                        type="date"
+                        value={followUpDate}
+                        onChange={(e) => setFollowUpDate(e.target.value)}
+                        className="w-full px-3 py-2 bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                       />
-                    </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Treatment and recommendations */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                  {t(
-                    'Ophthalmologist.screeningReview.modal.treatmentAdvice',
-                    'Treatment and Advice'
-                  )}
-                </h4>
-                <select
-                  value=""
-                  onChange={(e) => {
-                    if (e.target.value) setTreatmentPlan(e.target.value);
-                  }}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                >
-                  <option value="">
-                    {t(
-                      'Ophthalmologist.screeningReview.modal.selectTreatmentTemplate',
-                      'Select a treatment template'
-                    )}
-                  </option>
-                  {TREATMENT_PLAN_PRESETS.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-                <textarea
-                  value={treatmentPlan}
-                  onChange={(e) => setTreatmentPlan(e.target.value)}
-                  placeholder={t(
-                    'Ophthalmologist.screeningReview.modal.treatmentPlan',
-                    'Treatment plan...'
-                  )}
-                  rows={3}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
-                />
-                <select
-                  value=""
-                  onChange={(e) => {
-                    if (e.target.value) setRecommendations(e.target.value);
-                  }}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                >
-                  <option value="">
-                    {t(
-                      'Ophthalmologist.screeningReview.modal.selectRecommendationTemplate',
-                      'Select a recommendation template'
-                    )}
-                  </option>
-                  {RECOMMENDATION_PRESETS.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-                <textarea
-                  value={recommendations}
-                  onChange={(e) => setRecommendations(e.target.value)}
-                  placeholder={t(
-                    'Ophthalmologist.screeningReview.modal.recommendations',
-                    'Recommendations for patient and follow-up care...'
-                  )}
-                  rows={3}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
-                />
-              </div>
-
-              {/* Follow-up and referral */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {t(
-                          'Ophthalmologist.screeningReview.modal.referralRequired',
-                          'Referral Required'
-                        )}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {t(
-                          'Ophthalmologist.screeningReview.modal.referralHint',
-                          'Recommend specialist consultation'
-                        )}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setReferralRequired(!referralRequired)}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${
-                        referralRequired
-                          ? 'bg-cyan-500'
-                          : 'bg-gray-300 dark:bg-gray-600'
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                          referralRequired ? 'left-7' : 'left-1'
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4">
-                  <p className="font-medium text-gray-900 dark:text-white mb-2">
-                    {t(
-                      'Ophthalmologist.screeningReview.modal.followUpDate',
-                      'Follow-up Date'
-                    )}
-                  </p>
-                  <input
-                    type="date"
-                    value={followUpDate}
-                    onChange={(e) => setFollowUpDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                  />
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Modal Footer */}
             <div className="p-6 border-t border-gray-200 dark:border-[#1e3a5f] flex items-center justify-between">
               <button
                 onClick={() => setShowDiagnosisModal(false)}
-                className="px-6 py-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors"
+                className="h-11 px-6 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors"
               >
                 {t('Ophthalmologist.common.cancel', 'Cancel')}
               </button>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={handleDownloadPdf}
-                  disabled={downloadingPdf}
-                  className="px-6 py-2.5 bg-gray-100 dark:bg-[#1e3a5f] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2d4a6f] rounded-xl font-medium transition-colors flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {downloadingPdf ? (
-                    <Spinner size={16} />
-                  ) : (
-                    <Download className="w-4 h-4" />
-                  )}
-                  {downloadingPdf
-                    ? t(
-                        'Ophthalmologist.screeningReview.modal.exportingPdf',
-                        'Exporting...'
-                      )
-                    : t(
-                        'Ophthalmologist.screeningReview.modal.exportPdf',
-                        'Export PDF'
-                      )}
-                </button>
-                <button
-                  onClick={handleSubmitDiagnosis}
+                  onClick={() => {
+                    setDiagnosisStatus('Draft');
+                    void handleSubmitDiagnosis('Draft');
+                  }}
                   disabled={
                     submitVerificationReportMutation.isPending ||
                     consultationSessionsQuery.isLoading ||
                     consultationSessionsQuery.isFetching
                   }
-                  className="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors flex items-center gap-2"
+                  className="h-11 px-6 bg-slate-600 hover:bg-slate-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors flex items-center gap-2"
                 >
                   <Save className="w-4 h-4" />
                   {submitVerificationReportMutation.isPending
                     ? t('Ophthalmologist.common.saving', 'Saving...')
-                    : consultationSessionsQuery.isLoading ||
-                        consultationSessionsQuery.isFetching
-                      ? t(
-                          'Ophthalmologist.screeningReview.modal.linkingSession',
-                          'Linking session...'
-                        )
-                      : diagnosisStatus === 'Finalized'
-                        ? t(
-                            'Ophthalmologist.screeningReview.modal.sendToCashier',
-                            'Finalize & Send to Cashier'
-                          )
-                        : t(
-                            'Ophthalmologist.screeningReview.modal.confirmAndSave',
-                            'Confirm & Save'
-                          )}
+                    : t(
+                        'Ophthalmologist.screeningReview.modal.saveDraft',
+                        'Save Draft'
+                      )}
+                </button>
+                <button
+                  onClick={() => {
+                    setDiagnosisStatus('Finalized');
+                    void handleSubmitDiagnosis('Finalized');
+                  }}
+                  disabled={
+                    submitVerificationReportMutation.isPending ||
+                    consultationSessionsQuery.isLoading ||
+                    consultationSessionsQuery.isFetching
+                  }
+                  className="h-11 px-6 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  {consultationSessionsQuery.isLoading ||
+                  consultationSessionsQuery.isFetching
+                    ? t(
+                        'Ophthalmologist.screeningReview.modal.linkingSession',
+                        'Linking session...'
+                      )
+                    : t(
+                        'Ophthalmologist.screeningReview.modal.sendToCashier',
+                        'Finalize & Send to Cashier'
+                      )}
                 </button>
               </div>
             </div>

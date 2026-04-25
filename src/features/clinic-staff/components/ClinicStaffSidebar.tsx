@@ -96,6 +96,12 @@ export default function ClinicStaffSidebar() {
     },
     {
       icon: CreditCard,
+      label: t('ClinicStaffSidebar.nav.cashier', 'Cashier'),
+      path: '/clinic-staff/cashier',
+      requiredPermission: Permissions.OrdersRead,
+    },
+    {
+      icon: CreditCard,
       label: t('ClinicStaffSidebar.nav.billing', 'Billing'),
       path: '/clinic-staff/billing',
       requiredPermission: Permissions.OrdersRead,

@@ -318,6 +318,17 @@ export const API_ENDPOINTS = {
     GET: '/clinic-queue',
     SEND_TO_DOCTOR: (visitId: string) =>
       `/clinic-queue/${visitId}/send-to-doctor`,
+    PAYMENT_CONTEXT: (visitId: string) =>
+      `/clinic-queue/${visitId}/payment-context`,
+  },
+
+  // Healthcare Roadmap (doctor-authored care plan timeline)
+  HEALTH_ROADMAP: {
+    GET_BY_PATIENT: (patientId: string) => `/roadmap/${patientId}`,
+    CREATE_STEP: '/roadmap/steps',
+    UPDATE_STEP: (stepId: string) => `/roadmap/steps/${stepId}`,
+    COMPLETE_STEP: (stepId: string) => `/roadmap/steps/${stepId}/complete`,
+    DELETE_STEP: (stepId: string) => `/roadmap/steps/${stepId}`,
   },
 
   FEEDBACK: {

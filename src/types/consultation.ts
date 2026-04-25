@@ -132,6 +132,10 @@ export interface CreateVideoCallSessionRequest {
 export interface SubmitVerificationReportRequest {
   doctorId: string;
 
+  prescriptionItems?: PrescriptionItemRequest[];
+  prescriptionNote?: string;
+  noMedicationPrescribed?: boolean;
+
   // New payload fields.
   diagnosisCode?: string;
   codingSystem?: string;
@@ -150,6 +154,15 @@ export interface SubmitVerificationReportRequest {
   // Backward-compatible aliases for legacy clients.
   diagnosesCode?: string;
   diagnosesText?: string;
+}
+
+export interface PrescriptionItemRequest {
+  medicineName: string;
+  unit?: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  instruction?: string;
 }
 
 export interface SendMessageRequest {

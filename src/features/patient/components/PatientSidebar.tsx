@@ -11,6 +11,7 @@ import {
   MessageSquareHeart,
   Globe,
   FileText,
+  Stethoscope,
 } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
@@ -75,6 +76,12 @@ export default function PatientSidebar() {
       icon: MapPin,
       label: t('PatientSidebar.nav.clinicSchedule', 'Clinic Schedule'),
       path: '/patient/schedule',
+    },
+    {
+      icon: Stethoscope,
+      label: t('PatientSidebar.nav.carePlan', 'Care Plan'),
+      path: '/patient/care-plan',
+      requiredPermission: Permissions.ScreeningRead,
     },
     {
       icon: Milestone,

@@ -11,9 +11,12 @@ import {
   Stethoscope,
   X,
   Sparkles,
+  Printer,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 
 import { postsApi } from '@/features/professional-network/api/network.api';
 import { resolveAuthorType } from '@/features/professional-network/utils/authorType';
@@ -30,7 +33,11 @@ import useAuthStore from '@/store/auth-store';
 import { unwrapApiData } from '@/types/api-response';
 
 import { clinicScreeningApi } from '../api/screening.api';
-import { clinicQueueApi, type AvailableDoctor } from '../api/queue.api';
+import {
+  clinicQueueApi,
+  type AvailableDoctor,
+  type ClinicPaymentContext,
+} from '../api/queue.api';
 import { ClinicRetinalViewerCard } from '../components/ClinicRetinalViewerCard';
 import ClinicStaffLayout from '../components/ClinicStaffLayout';
 import { ClinicScreeningStepper } from '../components/ClinicScreeningStepper';
@@ -159,6 +166,13 @@ export default function ClinicStaffScreeningResultPage() {
     sessionData?.patientName?.trim() ||
     locationPatientName ||
     t('ClinicStaff.screeningResult.patientFallback', 'Patient');
+
+  const paymentContextQuery = useQuery<ClinicPaymentContext>({
+    queryKey: ['clinic-staff', 'payment-context', queueVisitId],
+    queryFn: () => clinicQueueApi.getPaymentContext(queueVisitId!),
+    enabled: Boolean(queueVisitId),
+    staleTime: 10_000,
+  });
 
   const hydrateVisualArtifacts = useCallback(
     (imageWidth: number, imageHeight: number) => {
@@ -1271,6 +1285,146 @@ export default function ClinicStaffScreeningResultPage() {
                     rows={5}
                     className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
                   />
+                </div>
+
+                <div className="space-y-3 rounded-2xl border border-(--border-primary) bg-(--bg-secondary) p-5">
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-(--text-primary)">
+                    <Stethoscope className="h-4 w-4 text-primary" />
+                    {t(
+                      'ClinicStaff.screeningResult.cards.doctorDiagnosisTitle',
+                      'Doctor diagnosis & prescription'
+                    )}
+                  </h3>
+
+                  {paymentContextQuery.isLoading ? (
+                    <p className="text-sm text-(--text-secondary)">
+                      {t(
+                        'ClinicStaff.screeningResult.cards.loadingDoctorDiagnosis',
+                        'Loading finalized doctor report...'
+                      )}
+                    </p>
+                  ) : paymentContextQuery.data?.diagnosis ? (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
+                        <div className="rounded-xl border border-(--border-primary) bg-(--bg-primary) px-3 py-2">
+                          <p className="text-xs text-(--text-tertiary)">
+                            {t(
+                              'ClinicStaff.screeningResult.cards.diagnosisCode',
+                              'Diagnosis code'
+                            )}
+                          </p>
+                          <p className="font-semibold text-(--text-primary)">
+                            {paymentContextQuery.data.diagnosis.diagnosisCode ||
+                              '—'}
+                          </p>
+                        </div>
+                        <div className="rounded-xl border border-(--border-primary) bg-(--bg-primary) px-3 py-2">
+                          <p className="text-xs text-(--text-tertiary)">
+                            {t(
+                              'ClinicStaff.screeningResult.cards.diagnosedBy',
+                              'Diagnosed by'
+                            )}
+                          </p>
+                          <p className="font-semibold text-(--text-primary)">
+                            {paymentContextQuery.data.diagnosis.diagnosedBy
+                              .doctorName || '—'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <textarea
+                        value={
+                          paymentContextQuery.data.diagnosis.clinicalFindings ||
+                          ''
+                        }
+                        readOnly
+                        rows={3}
+                        placeholder={t(
+                          'ClinicStaff.screeningResult.cards.noClinicalFindings',
+                          'No clinical findings were provided.'
+                        )}
+                        className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
+                      />
+
+                      <div className="space-y-2 rounded-xl border border-(--border-primary) bg-(--bg-primary) p-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-(--text-tertiary)">
+                          {t(
+                            'ClinicStaff.screeningResult.cards.prescriptionForCashier',
+                            'Prescription for cashier pricing'
+                          )}
+                        </p>
+
+                        {paymentContextQuery.data.diagnosis
+                          .noMedicationPrescribed ? (
+                          <p className="text-sm text-(--text-secondary)">
+                            {t(
+                              'ClinicStaff.screeningResult.cards.noMedicationPrescribed',
+                              'Doctor marked no medication prescribed.'
+                            )}
+                          </p>
+                        ) : paymentContextQuery.data.diagnosis.prescriptionItems
+                            ?.length ? (
+                          <div className="space-y-1">
+                            {paymentContextQuery.data.diagnosis.prescriptionItems.map(
+                              (item, index) => (
+                                <div
+                                  key={`${item.medicineName}-${index.toString()}`}
+                                  className="rounded-lg border border-(--border-primary) px-3 py-2 text-sm"
+                                >
+                                  <p className="font-semibold text-(--text-primary)">
+                                    {item.medicineName}
+                                  </p>
+                                  <p className="text-xs text-(--text-secondary)">
+                                    {item.dosage} {item.unit || ''} ·{' '}
+                                    {item.frequency}
+                                    {' · '}
+                                    {item.duration}
+                                  </p>
+                                  {item.instruction && (
+                                    <p className="mt-1 text-xs text-(--text-tertiary)">
+                                      {item.instruction}
+                                    </p>
+                                  )}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-(--text-secondary)">
+                            {t(
+                              'ClinicStaff.screeningResult.cards.noPrescriptionData',
+                              'No prescription data available yet.'
+                            )}
+                          </p>
+                        )}
+
+                        {paymentContextQuery.data.diagnosis
+                          .prescriptionNote && (
+                          <div className="rounded-lg border border-(--border-primary) bg-(--bg-secondary) px-3 py-2">
+                            <p className="text-xs text-(--text-tertiary)">
+                              {t(
+                                'ClinicStaff.screeningResult.cards.prescriptionNote',
+                                'Doctor note'
+                              )}
+                            </p>
+                            <p className="text-sm text-(--text-primary)">
+                              {
+                                paymentContextQuery.data.diagnosis
+                                  .prescriptionNote
+                              }
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-(--text-secondary)">
+                      {t(
+                        'ClinicStaff.screeningResult.cards.doctorDiagnosisNotReady',
+                        'Doctor finalized report is not available yet.'
+                      )}
+                    </p>
+                  )}
                 </div>
               </>
             ) : (
