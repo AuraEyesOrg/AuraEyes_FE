@@ -36,6 +36,7 @@ import type {
 import '@/styles/auth-animations.css';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '@/features/patient/components/PatientLayout';
+import ClinicStaffLayout from '@/features/clinic-staff/components/ClinicStaffLayout';
 import { useChangePassword } from '@/features/patient/hooks/useProfile';
 import {
   changePasswordSchema,
@@ -47,6 +48,7 @@ const TwoFactorSettingsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isPatientContext = location.pathname.startsWith('/patient/');
+  const isClinicStaffContext = location.pathname.startsWith('/clinic-staff/');
 
   const [step, setStep] = useState<TwoFactorStep>('status');
   const [isLoading, setIsLoading] = useState(true);
@@ -232,6 +234,8 @@ const TwoFactorSettingsPage = () => {
   const handleBack = () => {
     if (isPatientContext) {
       navigate('/patient/settings');
+    } else if (isClinicStaffContext) {
+      navigate('/clinic-staff/settings');
     } else {
       navigate(-1);
     }
@@ -921,6 +925,27 @@ const TwoFactorSettingsPage = () => {
           {mainContent}
         </div>
       </PatientLayout>
+    );
+  }
+
+  if (isClinicStaffContext) {
+    return (
+      <ClinicStaffLayout>
+        <div className="max-w-lg mx-auto">
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <Shield className="w-8 h-8 text-brand" />
+              <h1 className="text-3xl font-bold text-[var(--text-primary)]">
+                Security
+              </h1>
+            </div>
+            <p className="text-[var(--text-secondary)]">
+              Manage two-factor authentication for your clinic staff account
+            </p>
+          </div>
+          {mainContent}
+        </div>
+      </ClinicStaffLayout>
     );
   }
 
