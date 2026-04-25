@@ -42,6 +42,12 @@ export default function ClinicStaffHeader() {
       billing: t('ClinicStaffHeader.pages.billing', 'Billing'),
       wallet: t('ClinicStaffHeader.pages.wallet', 'Wallet'),
       settings: t('ClinicStaffHeader.pages.settings', 'Settings'),
+      profile: t('ClinicStaffHeader.pages.profile', 'Profile'),
+      security: t('ClinicStaffHeader.pages.security', 'Security'),
+      notifications: t(
+        'ClinicStaffHeader.pages.notifications',
+        'Notifications'
+      ),
     };
 
     return (
