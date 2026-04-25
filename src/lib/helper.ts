@@ -38,3 +38,10 @@ export const formatCurrency = (
 
   return suffix ? `${formatted}${suffix}` : formatted;
 };
+
+export const vndCurrencyOptions: FormatCurrencyOptions = {
+  locale: 'vi-VN',
+  currency: 'VND',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+};

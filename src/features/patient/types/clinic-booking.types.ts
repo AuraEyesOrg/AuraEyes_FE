@@ -20,15 +20,23 @@ export interface OrganisationSummaryDto {
   avatarUrl?: string | null;
 }
 
-export interface OrganisationAvailableSlotDto {
+export interface DoctorSlotDetailDto {
   slotId: string;
+  doctorId: string;
+  doctorName: string;
+  doctorAvatar?: string | null;
+  isBooked: boolean;
+  price: number;
+}
+
+export interface AggregatedSlotDto {
   date: string;
   startTime: string;
   endTime: string;
-  maxCapacity: number;
-  bookedCount: number;
-  remaining: number;
-  cost?: number | null;
+  doctors: DoctorSlotDetailDto[];
+  totalMaxCapacity: number;
+  totalBookedCount: number;
+  isAvailable: boolean;
 }
 
 export interface OrganisationScheduleDto {
@@ -38,7 +46,7 @@ export interface OrganisationScheduleDto {
   description?: string | null;
   ratingAverage: number;
   ratingCount: number;
-  availableSlots: OrganisationAvailableSlotDto[];
+  aggregatedSlots: AggregatedSlotDto[];
 }
 
 export interface CreateClinicAppointmentRequest {
@@ -59,6 +67,9 @@ export interface ClinicAppointmentDto {
   visitReason?: string | null;
   status: ClinicAppointmentStatus;
   createdAt?: string;
+  ophthalId?: string | null;
+  ophthalFullName?: string | null;
+  ophthalAvatarUrl?: string | null;
   cost?: number | null;
   /**
    * True when the current patient has already submitted feedback for this
@@ -94,4 +105,14 @@ export interface CreateClinicAppointmentResult {
 
 export interface CompleteClinicAppointmentRequest {
   notes?: string;
+}
+
+export interface OrganisationAvailableSlotDto {
+  slotId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  remaining: number;
+  maxCapacity: number;
+  cost?: number | null;
 }

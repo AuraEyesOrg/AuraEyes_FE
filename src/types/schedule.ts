@@ -126,6 +126,8 @@ export interface AppointmentSlotListDto {
   maxCapacity: number;
   bookedCount: number;
   availableCapacity: number;
+  ophthalFullName?: string;
+  ophthalAvatarUrl?: string;
   cost: number | null;
   reservationExpireAt?: string | null;
   createdAt: string;
@@ -143,6 +145,8 @@ export interface AppointmentSlotDto {
   maxCapacity: number;
   bookedCount: number;
   availableCapacity: number;
+  ophthalFullName?: string;
+  ophthalAvatarUrl?: string;
   cost: number | null;
   reservationExpireAt?: string | null;
   createdAt: string;
@@ -219,7 +223,7 @@ export interface ScheduleTemplateDto {
   id: string;
   ophthalmologistId?: string;
   organisationId?: string | null;
-  dayOfWeek: number; // 0=Sunday, 1=Monday, etc.
+  dayOfWeek: number | string; // BE might return string like "Friday"
   startTime: string;
   endTime: string;
   slotDuration: number; // minutes

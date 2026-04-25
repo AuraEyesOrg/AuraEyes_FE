@@ -37,6 +37,12 @@ const PersonalDataPage = lazy(
 const PrivacyPage = lazy(() => import('@/features/guest/pages/Privacy'));
 const SecurityPage = lazy(() => import('@/features/guest/pages/Security'));
 const TermsOfUsePage = lazy(() => import('@/features/guest/pages/TermsofUse'));
+const ErmFormPage = lazy(
+  () => import('@/features/medical-records/pages/ErmForm')
+);
+const ErmFormPatientPage = lazy(
+  () => import('@/features/medical-records/pages/ErmFormPatient')
+);
 
 // Auth pages
 const LoginPage = lazy(() => import('@/features/auth/pages/login'));
@@ -149,6 +155,15 @@ const ClinicStaffWalletPage = lazy(
 );
 const ClinicStaffSettingsPage = lazy(
   () => import('@/features/clinic-staff/pages/settings')
+);
+const ClinicStaffProfilePage = lazy(
+  () => import('@/features/clinic-staff/pages/profile')
+);
+const ClinicStaffSecurityPage = lazy(
+  () => import('@/features/clinic-staff/pages/security')
+);
+const ClinicStaffNotificationsPage = lazy(
+  () => import('@/features/clinic-staff/pages/notifications')
 );
 
 // Organisation pages
@@ -454,6 +469,8 @@ const Router = () => (
           }
         />
         <Route path="/404" element={<LocalizedRedirect target="/404" />} />
+        <Route path="/erm-test" element={<ErmFormPage />} />
+        <Route path="/erm-patient" element={<ErmFormPatientPage />} />
         <Route
           path="/system-admin/staff-management"
           element={
@@ -507,6 +524,7 @@ const Router = () => (
           path="/:locale/two-factor-verify"
           element={<LocalizedPublicRoute element={<TwoFactorVerifyPage />} />}
         />
+        <Route path="/:locale/erm-test" element={<ErmFormPage />} />
         <Route
           path="/:locale/force-change-password"
           element={
@@ -918,6 +936,33 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<ClinicStaffSettingsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/profile"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffProfilePage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/security"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffSecurityPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/notifications"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffNotificationsPage />}
             />
           }
         />
@@ -1610,6 +1655,36 @@ const Router = () => (
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
             >
               <ClinicStaffSettingsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/profile"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffProfilePage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/security"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffSecurityPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/notifications"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffNotificationsPage />
             </PrivateRoute>
           }
         />
