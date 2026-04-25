@@ -103,6 +103,7 @@ export interface ConsultationSessionListDto {
   meetingLink?: string | null;
   lastActivityAt: string;
   createdAt: string;
+  closedAt: string | null;
 
   // Consent flags + lightweight AI snapshot (for list displays).
   isRetinalImagesShared?: boolean;
