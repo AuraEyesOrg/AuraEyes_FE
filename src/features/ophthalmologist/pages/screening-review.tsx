@@ -17,7 +17,6 @@ import {
   Settings2,
   Pencil,
   Save,
-  Share2,
   X,
   Calendar,
   Eraser,
@@ -2908,18 +2907,28 @@ export default function ScreeningReviewPage() {
                         )}
                       </button>
                       <button
-                        onClick={handleOpenShareImagePicker}
-                        disabled={sharingImages}
+                        onClick={() => {
+                          const formData = {
+                            fullName: detail?.patientFullName || '',
+                            age: '', // Age is not in detail, maybe I can find it elsewhere or leave blank
+                            maYT:
+                              detail?.screeningId
+                                .substring(0, 8)
+                                .toUpperCase() || '',
+                            admissionReason:
+                              detail?.latestResult?.summary || '',
+                            finalDiagnosisMain:
+                              detail?.latestResult?.findings || '',
+                            // Add other fields if needed
+                          };
+                          navigate('/erm-test', { state: { formData } });
+                        }}
                         className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm shadow-indigo-600/25 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md hover:shadow-indigo-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        {sharingImages ? (
-                          <Spinner size={16} />
-                        ) : (
-                          <Share2 className="w-4 h-4" />
-                        )}
+                        <FileText className="w-4 h-4" />
                         {t(
-                          'Ophthalmologist.screeningReview.shareButton',
-                          'Share'
+                          'Ophthalmologist.screeningReview.createMedicalRecord',
+                          'Tạo hồ sơ bệnh án'
                         )}
                       </button>
                     </div>

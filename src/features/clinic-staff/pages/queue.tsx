@@ -16,6 +16,7 @@ import {
   X,
   ChevronDown,
   Check,
+  FileText,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
@@ -595,17 +596,45 @@ export default function ClinicStaffQueuePage() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           {item.flowState === 'CheckedIn' && (
-                            <button
-                              type="button"
-                              onClick={() => handleCreateScreening(item)}
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
-                            >
-                              <Sparkles className="h-3.5 w-3.5" />
-                              {t(
-                                'ClinicStaff.queue.actions.createScreening',
-                                'Create Screening'
-                              )}
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigate('/erm-patient', {
+                                    state: {
+                                      formData: {
+                                        patientId: item.patientId,
+                                        fullName: item.patientName,
+                                        maYT: item.visitId
+                                          .substring(0, 8)
+                                          .toUpperCase(),
+                                        gender: item.patientGender,
+                                        age: item.patientAge?.toString() || '',
+                                        citizenId: item.citizenId,
+                                      },
+                                    },
+                                  });
+                                }}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3.5 py-1.5 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100"
+                              >
+                                <FileText className="h-3.5 w-3.5" />
+                                {t(
+                                  'ClinicStaff.queue.actions.fillErm',
+                                  'Fill ERM'
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleCreateScreening(item)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
+                              >
+                                <Sparkles className="h-3.5 w-3.5" />
+                                {t(
+                                  'ClinicStaff.queue.actions.createScreening',
+                                  'Create Screening'
+                                )}
+                              </button>
+                            </div>
                           )}
                           {(item.flowState === 'ScreeningPending' ||
                             item.flowState === 'AICompleted') && (

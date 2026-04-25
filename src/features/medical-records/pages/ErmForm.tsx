@@ -1,6 +1,7 @@
 import React from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import {
   CheckCircle2,
   Save,
@@ -210,10 +211,21 @@ const sectionConfig: Record<
 
 export default function ErmForm() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { register, handleSubmit, setValue, reset, control } =
     useForm<FullErmFormData>({
       defaultValues: INITIAL_VALUES as FullErmFormData,
     });
+
+  useEffect(() => {
+    if (location.state?.formData) {
+      const incoming = location.state.formData;
+      Object.keys(incoming).forEach((key) => {
+        setValue(key as keyof FullErmFormData, incoming[key]);
+      });
+      toast.info('Thông tin đã được điền từ dữ liệu khám sàng lọc');
+    }
+  }, [location.state, setValue]);
 
   const formData = useWatch({ control });
   const rightEyeData = formData.rightEye;

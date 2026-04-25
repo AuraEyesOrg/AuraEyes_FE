@@ -336,7 +336,7 @@ const AppointmentsPage = () => {
             <SkeletonList />
           ) : clinicAppointments.length === 0 ? (
             <EmptyState
-              icon={<Building2 className="h-6 w-6" strokeWidth={1.5} />}
+              icon={<Building2 className="h-10 w-10" strokeWidth={1.5} />}
               title={
                 filter === 'all'
                   ? t('PatientAppointments.empty.clinicAll')
@@ -349,10 +349,10 @@ const AppointmentsPage = () => {
                   ? t('PatientAppointments.actions.bookMoreSlot')
                   : undefined
               }
-              ctaHref="/patient/schedule"
+              ctaHref="/patient/clinics"
             />
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-5">
               {clinicAppointments.map((appointment) => (
                 <ClinicAppointmentCard
                   key={appointment.id}
@@ -365,6 +365,9 @@ const AppointmentsPage = () => {
                   reasonLabel={t('PatientAppointments.labels.reason', {
                     reason: appointment.visitReason ?? '',
                   })}
+                  organisationLabel={t(
+                    'PatientAppointments.labels.organisationAppointment'
+                  )}
                   clinicLabel={t('PatientAppointments.labels.clinicVisit')}
                   onRate={() => setClinicFeedbackTarget(appointment)}
                 />
@@ -372,66 +375,22 @@ const AppointmentsPage = () => {
             </div>
           )}
 
-            {isLoadingClinic ? (
-              <SkeletonList />
-            ) : clinicAppointments.length === 0 ? (
-              <EmptyState
-                icon={<Building2 className="h-10 w-10" strokeWidth={1.5} />}
-                title={
-                  filter === 'all'
-                    ? t('PatientAppointments.empty.clinicAll')
-                    : t('PatientAppointments.empty.clinicByFilter', {
-                        filter: getFilterLabel(filter),
-                      })
-                }
-                ctaLabel={
-                  filter === 'all'
-                    ? t('PatientAppointments.actions.bookMoreSlot')
-                    : undefined
-                }
-                ctaHref="/patient/clinics"
-              />
-            ) : (
-              <div className="grid grid-cols-1 gap-5">
-                {clinicAppointments.map((appointment) => (
-                  <ClinicAppointmentCard
-                    key={appointment.id}
-                    appointment={appointment}
-                    statusLabel={getClinicStatusLabel(appointment.status)}
-                    rateLabel={t('PatientAppointments.actions.rateClinic')}
-                    submittedLabel={t(
-                      'PatientAppointments.feedback.submittedBadge'
-                    )}
-                    reasonLabel={t('PatientAppointments.labels.reason', {
-                      reason: appointment.visitReason ?? '',
-                    })}
-                    organisationLabel={t(
-                      'PatientAppointments.labels.organisationAppointment'
-                    )}
-                    clinicLabel={t('PatientAppointments.labels.clinicVisit')}
-                    onRate={() => setClinicFeedbackTarget(appointment)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {clinicTotalPages > 1 && (
-              <Pagination
-                page={clinicPage}
-                totalPages={clinicTotalPages}
-                onChange={setClinicPage}
-                labels={{
-                  prev: t('PatientAppointments.pagination.prev'),
-                  next: t('PatientAppointments.pagination.next'),
-                  status: t('PatientAppointments.pagination.pageOf', {
-                    page: clinicPage,
-                    total: clinicTotalPages,
-                  }),
-                }}
-              />
-            )}
-          </section>
-        )}
+          {clinicTotalPages > 1 && (
+            <Pagination
+              page={clinicPage}
+              totalPages={clinicTotalPages}
+              onChange={setClinicPage}
+              labels={{
+                prev: t('PatientAppointments.pagination.prev'),
+                next: t('PatientAppointments.pagination.next'),
+                status: t('PatientAppointments.pagination.pageOf', {
+                  page: clinicPage,
+                  total: clinicTotalPages,
+                }),
+              }}
+            />
+          )}
+        </section>
       </div>
 
       {bothEmpty && (
@@ -549,6 +508,7 @@ interface ClinicAppointmentCardProps {
   rateLabel: string;
   submittedLabel: string;
   reasonLabel: string;
+  organisationLabel: string;
   clinicLabel: string;
   onRate: () => void;
 }
@@ -558,6 +518,8 @@ const ClinicAppointmentCard = ({
   statusLabel,
   rateLabel,
   submittedLabel,
+  reasonLabel,
+  organisationLabel,
   clinicLabel,
   onRate,
 }: ClinicAppointmentCardProps) => {
@@ -596,7 +558,7 @@ const ClinicAppointmentCard = ({
                 </div>
                 <span className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">
                   {appointment.organisationName
-                    ? 'Clinic Appointment'
+                    ? organisationLabel
                     : 'General Appointment'}
                 </span>
               </div>
@@ -665,7 +627,7 @@ const ClinicAppointmentCard = ({
                       <FileText className="h-4 w-4" />
                     </div>
                     <p className="text-xs leading-relaxed line-clamp-2 italic pt-0.5">
-                      "{appointment.visitReason}"
+                      {reasonLabel}
                     </p>
                   </div>
                 )}
