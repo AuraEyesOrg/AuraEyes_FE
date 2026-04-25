@@ -40,6 +40,7 @@ export default function ClinicStaffHeader() {
       screenings: t('ClinicStaffHeader.pages.screenings', 'Screenings'),
       schedules: t('ClinicStaffHeader.pages.schedules', 'Schedules'),
       billing: t('ClinicStaffHeader.pages.billing', 'Billing'),
+      cashier: t('ClinicStaffHeader.pages.cashier', 'Cashier'),
       wallet: t('ClinicStaffHeader.pages.wallet', 'Wallet'),
       settings: t('ClinicStaffHeader.pages.settings', 'Settings'),
       profile: t('ClinicStaffHeader.pages.profile', 'Profile'),

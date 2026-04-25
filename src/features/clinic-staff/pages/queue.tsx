@@ -704,10 +704,15 @@ export default function ClinicStaffQueuePage() {
                             </span>
                           )}
                           {item.flowState === 'Finalized' && (
-                            <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-semibold">
-                              <CheckCircle className="h-3.5 w-3.5" />
-                              {t('ClinicStaff.queue.states.completed', 'Done')}
-                            </span>
+                            <div className="flex items-center justify-end gap-2">
+                              <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-semibold">
+                                <CheckCircle className="h-3.5 w-3.5" />
+                                {t(
+                                  'ClinicStaff.queue.states.completed',
+                                  'Done'
+                                )}
+                              </span>
+                            </div>
                           )}
                         </td>
                       </tr>
