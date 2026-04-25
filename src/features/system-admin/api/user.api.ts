@@ -159,6 +159,7 @@ export const userApi = {
     email: string;
     phone: string;
     role: UserRole;
+    consultationFee?: number;
   }) {
     try {
       const response = await api.post<ApiResponse<string>>(

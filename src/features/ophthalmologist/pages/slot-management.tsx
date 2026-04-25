@@ -930,7 +930,7 @@ export default function SlotManagementPage() {
                     >
                       <div className="flex items-center justify-between mb-3">
                         <span className="px-3 py-1 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 rounded-full text-sm font-medium">
-                          {DAY_OF_WEEK_LABELS[template.dayOfWeek]}
+                          {DAY_OF_WEEK_LABELS[Number(template.dayOfWeek)]}
                         </span>
                         <div className="flex items-center gap-2">
                           <button
@@ -1429,8 +1429,8 @@ export default function SlotManagementPage() {
                 'Generate slots from'
               )}{' '}
               &ldquo;
-              {DAY_OF_WEEK_LABELS[selectedTemplate.dayOfWeek]}&rdquo; template (
-              {formatSlotTime(selectedTemplate.startTime)} -{' '}
+              {DAY_OF_WEEK_LABELS[Number(selectedTemplate.dayOfWeek)]}&rdquo;
+              template ({formatSlotTime(selectedTemplate.startTime)} -{' '}
               {formatSlotTime(selectedTemplate.endTime)})
             </p>
 

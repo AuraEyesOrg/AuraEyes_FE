@@ -8,8 +8,10 @@ import {
   Info,
   ArrowRight,
   CheckCircle2,
+  User,
+  RefreshCw,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   format,
   isSameDay,
@@ -33,6 +35,10 @@ import { formatSlotTime } from '@/lib/date-utils';
 import { toast } from 'react-toastify';
 import { mapClinicPatientErrorMessage } from '@/lib/api-error';
 import { useNavigate } from 'react-router-dom';
+import type {
+  AggregatedSlotDto,
+  DoctorSlotDetailDto,
+} from '../types/clinic-booking.types';
 
 const REASON_SUGGESTIONS = [
   'Routine follow-up',
@@ -49,13 +55,18 @@ export default function OrganisationSchedulePage() {
   const navigate = useNavigate();
 
   // 1. Logic
-  const organisationId = '00000000-0000-0000-0000-000000000000';
+  const organisationId = '00000000-0000-0000-0000-000000000000'; // Should be dynamic in production
   const [selectedDate, setSelectedDate] = useState<Date>(
     startOfDay(new Date())
   );
   const [viewDate, setViewDate] = useState<Date>(startOfMonth(new Date()));
   const [visitReason, setVisitReason] = useState('');
-  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+
+  // New states for aggregated selection
+  const [selectedAggregatedSlot, setSelectedAggregatedSlot] =
+    useState<AggregatedSlotDto | null>(null);
+  const [selectedDoctorSlot, setSelectedDoctorSlot] =
+    useState<DoctorSlotDetailDto | null>(null);
 
   const dateParams = useMemo(() => {
     const d = format(selectedDate, 'yyyy-MM-dd');
@@ -81,10 +92,13 @@ export default function OrganisationSchedulePage() {
 
   // 3. Slot Grouping
   const groupedSlots = useMemo(() => {
-    if (!schedule?.availableSlots) return { morning: [], afternoon: [] };
+    if (!schedule?.aggregatedSlots) return { morning: [], afternoon: [] };
 
-    return schedule.availableSlots.reduce(
-      (acc: { morning: any[]; afternoon: any[] }, slot: any) => {
+    return schedule.aggregatedSlots.reduce(
+      (
+        acc: { morning: AggregatedSlotDto[]; afternoon: AggregatedSlotDto[] },
+        slot
+      ) => {
         const hour = parseInt(slot.startTime.split(':')[0], 10);
         if (hour < 12) acc.morning.push(slot);
         else acc.afternoon.push(slot);
@@ -95,12 +109,15 @@ export default function OrganisationSchedulePage() {
   }, [schedule]);
 
   const handleBook = () => {
-    if (!selectedSlotId) return;
+    if (!selectedDoctorSlot) {
+      toast.warn('Vui lòng chọn bác sĩ để tiếp tục.');
+      return;
+    }
 
     createBooking(
       {
         organisationId,
-        slotId: selectedSlotId,
+        slotId: selectedDoctorSlot.slotId,
         visitReason: visitReason || 'Regular eye checkup',
       },
       {
@@ -109,12 +126,10 @@ export default function OrganisationSchedulePage() {
             toast.info(
               `Đặt lịch thành công! Đang chuyển đến trang thanh toán đặt cọc ${(data.depositAmount ?? 0).toLocaleString('vi-VN')} VND...`
             );
-            // Small delay so user sees the toast before redirect
             setTimeout(() => {
               window.location.href = data.paymentUrl!;
             }, 1500);
           } else {
-            // Fallback if no payment URL (e.g., zero-price slot)
             toast.success(t('ClinicBooking.success.booked'));
             navigate('/patient/appointments');
           }
@@ -124,6 +139,11 @@ export default function OrganisationSchedulePage() {
         },
       }
     );
+  };
+
+  const handleTimeSelect = (slot: AggregatedSlotDto) => {
+    setSelectedAggregatedSlot(slot);
+    setSelectedDoctorSlot(null);
   };
 
   return (
@@ -137,7 +157,7 @@ export default function OrganisationSchedulePage() {
           <p className="text-slate-500 text-sm flex items-center gap-2">
             Organisation:{' '}
             <span className="font-semibold text-slate-700 dark:text-slate-300">
-              Aura Eyes Clinic
+              {schedule?.name || 'Aura Eyes Clinic'}
             </span>
           </p>
         </div>
@@ -145,7 +165,6 @@ export default function OrganisationSchedulePage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* LEFT COLUMN: Calendar & Reason */}
           <div className="lg:col-span-5 space-y-6">
-            {/* Calendar Card */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
               <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col gap-1">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -193,7 +212,11 @@ export default function OrganisationSchedulePage() {
                       <button
                         key={idx}
                         disabled={isDisabled}
-                        onClick={() => setSelectedDate(date)}
+                        onClick={() => {
+                          setSelectedDate(date);
+                          setSelectedAggregatedSlot(null);
+                          setSelectedDoctorSlot(null);
+                        }}
                         className={`aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all relative group ${
                           isSelected
                             ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/20'
@@ -213,7 +236,6 @@ export default function OrganisationSchedulePage() {
               </div>
             </div>
 
-            {/* Visit Reason Card */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 space-y-4">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 Visit Reason
@@ -243,23 +265,6 @@ export default function OrganisationSchedulePage() {
                 </div>
               </div>
             </div>
-
-            {/* Summary Floating Bar for Mobile */}
-            <div className="lg:hidden fixed bottom-6 left-6 right-6 z-40">
-              <button
-                disabled={!selectedSlotId || isBooking}
-                onClick={handleBook}
-                className="w-full bg-cyan-600 text-white py-4 rounded-2xl font-bold shadow-2xl flex items-center justify-center gap-3 disabled:bg-slate-300"
-              >
-                {isBooking ? (
-                  <Spinner size={20} />
-                ) : (
-                  <>
-                    Confirm Booking <ArrowRight size={18} />
-                  </>
-                )}
-              </button>
-            </div>
           </div>
 
           {/* RIGHT COLUMN: Slots */}
@@ -268,9 +273,9 @@ export default function OrganisationSchedulePage() {
               <h2 className="text-xl font-black text-slate-900 dark:text-white">
                 {format(selectedDate, 'MMM d, yyyy')}
               </h2>
-              {schedule?.availableSlots && (
+              {schedule?.aggregatedSlots && (
                 <span className="text-xs font-bold text-slate-400">
-                  {schedule.availableSlots.length} slot(s) available
+                  {schedule.aggregatedSlots.length} time frame(s)
                 </span>
               )}
             </div>
@@ -281,10 +286,9 @@ export default function OrganisationSchedulePage() {
                   <Spinner size={32} />
                   <p className="mt-4 text-sm italic">Searching for slots...</p>
                 </div>
-              ) : schedule?.availableSlots &&
-                schedule.availableSlots.length > 0 ? (
-                <>
-                  {/* Morning Section */}
+              ) : schedule?.aggregatedSlots &&
+                schedule.aggregatedSlots.length > 0 ? (
+                <div className="space-y-10">
                   {groupedSlots.morning.length > 0 && (
                     <section className="space-y-4">
                       <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -292,18 +296,20 @@ export default function OrganisationSchedulePage() {
                       </h4>
                       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
                         {groupedSlots.morning.map((slot) => (
-                          <SlotCard
-                            key={slot.id}
+                          <AggregatedSlotCard
+                            key={`${slot.startTime}-${slot.endTime}`}
                             slot={slot}
-                            isSelected={selectedSlotId === slot.id}
-                            onClick={() => setSelectedSlotId(slot.id)}
+                            isSelected={
+                              selectedAggregatedSlot?.startTime ===
+                              slot.startTime
+                            }
+                            onClick={() => handleTimeSelect(slot)}
                           />
                         ))}
                       </div>
                     </section>
                   )}
 
-                  {/* Afternoon Section */}
                   {groupedSlots.afternoon.length > 0 && (
                     <section className="space-y-4">
                       <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -311,17 +317,105 @@ export default function OrganisationSchedulePage() {
                       </h4>
                       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
                         {groupedSlots.afternoon.map((slot) => (
-                          <SlotCard
-                            key={slot.id}
+                          <AggregatedSlotCard
+                            key={`${slot.startTime}-${slot.endTime}`}
                             slot={slot}
-                            isSelected={selectedSlotId === slot.id}
-                            onClick={() => setSelectedSlotId(slot.id)}
+                            isSelected={
+                              selectedAggregatedSlot?.startTime ===
+                              slot.startTime
+                            }
+                            onClick={() => handleTimeSelect(slot)}
                           />
                         ))}
                       </div>
                     </section>
                   )}
-                </>
+
+                  <AnimatePresence mode="wait">
+                    {selectedAggregatedSlot && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="pt-10 border-t border-slate-100 dark:border-slate-800 space-y-6"
+                      >
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <User size={20} className="text-cyan-600" />
+                            Select Ophthalmologist
+                          </h3>
+                          <span className="text-xs font-medium text-slate-400">
+                            For{' '}
+                            {formatSlotTime(selectedAggregatedSlot.startTime)} -{' '}
+                            {formatSlotTime(selectedAggregatedSlot.endTime)}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col gap-4">
+                          {/* Random Doctor Option */}
+                          <button
+                            onClick={() => {
+                              const availableDoctors =
+                                selectedAggregatedSlot.doctors.filter(
+                                  (d) => !d.isBooked
+                                );
+                              if (availableDoctors.length > 0) {
+                                const randomDoc =
+                                  availableDoctors[
+                                    Math.floor(
+                                      Math.random() * availableDoctors.length
+                                    )
+                                  ];
+                                setSelectedDoctorSlot(randomDoc);
+                                toast.info(
+                                  `Đã chọn ngẫu nhiên bác sĩ: ${randomDoc.doctorName}`
+                                );
+                              }
+                            }}
+                            className="flex items-center gap-4 p-4 rounded-2xl border border-dashed border-cyan-300 bg-cyan-50/30 hover:bg-cyan-50 dark:border-cyan-800 dark:bg-cyan-900/10 transition-all group"
+                          >
+                            <div className="w-12 h-12 rounded-full bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center text-cyan-600 dark:text-cyan-400 border-2 border-white dark:border-slate-800 shadow-sm">
+                              <RefreshCw
+                                size={24}
+                                className="group-hover:rotate-180 transition-transform duration-500"
+                              />
+                            </div>
+                            <div className="flex-1 text-left">
+                              <h4 className="text-sm font-bold text-cyan-900 dark:text-cyan-100">
+                                Bất kỳ bác sĩ nào
+                              </h4>
+                              <p className="text-[10px] text-cyan-600/70 dark:text-cyan-400/70 font-medium">
+                                Hệ thống sẽ chọn ngẫu nhiên 1 bác sĩ còn rảnh
+                                cho bạn
+                              </p>
+                            </div>
+                            <ArrowRight
+                              size={18}
+                              className="text-cyan-400 opacity-0 group-hover:opacity-100 transition-all"
+                            />
+                          </button>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {selectedAggregatedSlot.doctors.map((doctor) => (
+                              <DoctorCard
+                                key={doctor.doctorId}
+                                doctor={doctor}
+                                isSelected={
+                                  selectedDoctorSlot?.doctorId ===
+                                  doctor.doctorId
+                                }
+                                onClick={() =>
+                                  !doctor.isBooked &&
+                                  setSelectedDoctorSlot(doctor)
+                                }
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full py-20 text-center space-y-4">
                   <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-full text-slate-300">
@@ -340,7 +434,6 @@ export default function OrganisationSchedulePage() {
               )}
             </div>
 
-            {/* Desktop Action Bar */}
             <div className="hidden lg:block mt-auto pt-8 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between gap-6">
                 <div className="flex-1 flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 px-4 py-3 rounded-2xl border border-blue-100 dark:border-blue-900/30">
@@ -351,7 +444,7 @@ export default function OrganisationSchedulePage() {
                   </p>
                 </div>
                 <button
-                  disabled={!selectedSlotId || isBooking}
+                  disabled={!selectedDoctorSlot || isBooking}
                   onClick={handleBook}
                   className="bg-cyan-600 text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-3 hover:bg-cyan-700 transition-all hover:shadow-xl hover:shadow-cyan-600/20 active:scale-95 disabled:bg-slate-200 disabled:shadow-none"
                 >
@@ -372,16 +465,17 @@ export default function OrganisationSchedulePage() {
   );
 }
 
-function SlotCard({
+function AggregatedSlotCard({
   slot,
   isSelected,
   onClick,
 }: {
-  slot: any;
+  slot: AggregatedSlotDto;
   isSelected: boolean;
   onClick: () => void;
 }) {
-  const isFull = slot.availableCapacity <= 0;
+  const availableCount = slot.doctors.filter((d) => !d.isBooked).length;
+  const isFull = availableCount === 0;
 
   return (
     <button
@@ -402,14 +496,9 @@ function SlotCard({
       </span>
       <div className="flex flex-col gap-0">
         <span
-          className={`text-[10px] font-bold ${isSelected ? 'text-cyan-100' : 'text-slate-400'}`}
+          className={`text-[10px] font-bold ${isSelected ? 'text-cyan-100' : isFull ? 'text-red-400' : 'text-slate-400'}`}
         >
-          {slot.availableCapacity}/{slot.maxCapacity}
-        </span>
-        <span
-          className={`text-[10px] font-black ${isSelected ? 'text-white' : 'text-amber-600 dark:text-amber-400'}`}
-        >
-          250.000đ
+          {isFull ? 'Full' : `${availableCount}/${slot.doctors.length} Dr.`}
         </span>
       </div>
 
@@ -420,6 +509,79 @@ function SlotCard({
         >
           <CheckCircle2 size={12} />
         </motion.div>
+      )}
+    </button>
+  );
+}
+
+function DoctorCard({
+  doctor,
+  isSelected,
+  onClick,
+}: {
+  doctor: DoctorSlotDetailDto;
+  isSelected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      disabled={doctor.isBooked}
+      onClick={onClick}
+      className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${
+        isSelected
+          ? 'bg-cyan-50 border-cyan-200 dark:bg-cyan-900/20 dark:border-cyan-800 shadow-sm'
+          : doctor.isBooked
+            ? 'bg-slate-50 border-slate-100 opacity-60 cursor-not-allowed'
+            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-cyan-200'
+      }`}
+    >
+      <div className="relative">
+        {doctor.doctorAvatar ? (
+          <img
+            src={doctor.doctorAvatar}
+            alt={doctor.doctorName}
+            className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 border-2 border-white shadow-sm">
+            <User size={24} />
+          </div>
+        )}
+        {doctor.isBooked && (
+          <div className="absolute -bottom-1 -right-1 bg-red-500 text-white rounded-full p-1 border-2 border-white">
+            <Info size={10} />
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 text-left">
+        <h4
+          className={`text-sm font-bold ${doctor.isBooked ? 'text-slate-400' : 'text-slate-900 dark:text-white'}`}
+        >
+          {doctor.doctorName}
+        </h4>
+        <div className="flex items-center gap-2 mt-0.5">
+          {doctor.isBooked ? (
+            <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider">
+              Booked
+            </span>
+          ) : (
+            <>
+              <span className="text-[10px] font-medium text-slate-400">
+                Consultation
+              </span>
+              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400">
+                {doctor.price.toLocaleString('vi-VN')}₫
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {isSelected && !doctor.isBooked && (
+        <div className="bg-cyan-600 text-white rounded-full p-1.5 shadow-lg shadow-cyan-600/20">
+          <CheckCircle2 size={16} />
+        </div>
       )}
     </button>
   );

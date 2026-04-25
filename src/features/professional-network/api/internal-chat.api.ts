@@ -11,6 +11,7 @@ export interface InternalGroupChat {
   lastMessage?: string;
   lastMessageAt?: string;
   createdAt: string;
+  memberIds?: string[];
 }
 
 export interface InternalGroupMessage {
@@ -113,6 +114,27 @@ export const internalChatApi = {
       { title }
     );
     return response.data.data;
+  },
+
+  /**
+   * Rename an internal group
+   */
+  async renameGroup(groupId: string, name: string): Promise<void> {
+    await api.put(`/internal-chat/groups/${groupId}`, { name });
+  },
+
+  /**
+   * Delete/Dissolve an internal group
+   */
+  async deleteGroup(groupId: string): Promise<void> {
+    await api.delete(`/internal-chat/groups/${groupId}`);
+  },
+
+  /**
+   * Update members of an internal group
+   */
+  async updateMembers(groupId: string, memberIds: string[]): Promise<void> {
+    await api.put(`/internal-chat/groups/${groupId}/members`, { memberIds });
   },
 
   /**

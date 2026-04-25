@@ -203,12 +203,17 @@ const AppointmentsPage = () => {
               {t('PatientAppointments.page.eyebrow')}
             </p>
           </div>
-          <h1 className="text-5xl font-black tracking-tighter text-white md:text-6xl">
-            {t('PatientAppointments.page.title')}
-          </h1>
-          <p className="max-w-md text-lg font-medium text-slate-400 leading-relaxed">
-            {t('PatientAppointments.page.subtitle')}
-          </p>
+
+          <Link
+            to="/patient/schedule"
+            className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-brand px-8 py-4 text-sm font-bold text-white transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-brand/40"
+          >
+            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+            <PlusCircle className="relative z-10 h-5 w-5" strokeWidth={2.5} />
+            <span className="relative z-10 uppercase tracking-wider">
+              {t('PatientAppointments.actions.bookNew')}
+            </span>
+          </Link>
         </div>
 
         <Link
@@ -308,31 +313,64 @@ const AppointmentsPage = () => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-8">
-        {!bothEmpty && (
-          <section aria-labelledby="clinic-section-title">
-            <SectionHeader
-              id="clinic-section-title"
-              icon={<Building2 className="h-5 w-5" strokeWidth={2} />}
-              title={t('PatientAppointments.sections.organisationSlots')}
-              totalCount={clinicTotalCount}
-              refreshing={!isLoadingClinic && isFetchingClinic}
-              action={
-                <Link
-                  to="/patient/clinics"
-                  className="group inline-flex items-center gap-2 text-sm font-bold text-brand transition-all hover:gap-3"
-                >
-                  <span className="relative">
-                    {t('PatientAppointments.actions.bookMoreSlot')}
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand transition-all group-hover:w-full" />
-                  </span>
-                  <ChevronRight
-                    className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                    strokeWidth={2.5}
-                  />
-                </Link>
+      <div className="flex flex-col gap-6">
+        <section aria-labelledby="clinic-section-title">
+          <SectionHeader
+            id="clinic-section-title"
+            icon={<Building2 className="h-4 w-4" strokeWidth={1.8} />}
+            title={t('PatientAppointments.sections.organisationSlots')}
+            totalCount={clinicTotalCount}
+            refreshing={!isLoadingClinic && isFetchingClinic}
+            action={
+              <Link
+                to="/patient/schedule"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-brand transition-colors hover:text-brand/80"
+              >
+                {t('PatientAppointments.actions.bookMoreSlot')}
+                <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
+              </Link>
+            }
+          />
+
+          {isLoadingClinic ? (
+            <SkeletonList />
+          ) : clinicAppointments.length === 0 ? (
+            <EmptyState
+              icon={<Building2 className="h-6 w-6" strokeWidth={1.5} />}
+              title={
+                filter === 'all'
+                  ? t('PatientAppointments.empty.clinicAll')
+                  : t('PatientAppointments.empty.clinicByFilter', {
+                      filter: getFilterLabel(filter),
+                    })
               }
+              ctaLabel={
+                filter === 'all'
+                  ? t('PatientAppointments.actions.bookMoreSlot')
+                  : undefined
+              }
+              ctaHref="/patient/schedule"
             />
+          ) : (
+            <div className="space-y-3">
+              {clinicAppointments.map((appointment) => (
+                <ClinicAppointmentCard
+                  key={appointment.id}
+                  appointment={appointment}
+                  statusLabel={getClinicStatusLabel(appointment.status)}
+                  rateLabel={t('PatientAppointments.actions.rateClinic')}
+                  submittedLabel={t(
+                    'PatientAppointments.feedback.submittedBadge'
+                  )}
+                  reasonLabel={t('PatientAppointments.labels.reason', {
+                    reason: appointment.visitReason ?? '',
+                  })}
+                  clinicLabel={t('PatientAppointments.labels.clinicVisit')}
+                  onRate={() => setClinicFeedbackTarget(appointment)}
+                />
+              ))}
+            </div>
+          )}
 
             {isLoadingClinic ? (
               <SkeletonList />
@@ -421,8 +459,8 @@ const AppointmentsPage = () => {
             </p>
 
             <Link
-              to="/patient/clinics"
-              className="group flex items-center gap-4 rounded-[2rem] bg-brand px-12 py-5 text-sm font-black uppercase tracking-[0.2em] text-white transition-all hover:scale-105 hover:shadow-[0_20px_50px_rgba(var(--brand-rgb),0.3)] active:scale-95 shadow-xl shadow-brand/20"
+              to="/patient/schedule"
+              className="group flex items-center gap-3 rounded-2xl bg-brand px-10 py-4 text-sm font-black uppercase tracking-widest text-white transition-all hover:scale-105 hover:shadow-2xl hover:shadow-brand/30 active:scale-95 shadow-xl shadow-brand/20"
             >
               <PlusCircle className="h-6 w-6" />
               {t('PatientAppointments.actions.bookFirstAppointment')}
@@ -511,7 +549,6 @@ interface ClinicAppointmentCardProps {
   rateLabel: string;
   submittedLabel: string;
   reasonLabel: string;
-  organisationLabel: string;
   clinicLabel: string;
   onRate: () => void;
 }
@@ -523,7 +560,7 @@ const ClinicAppointmentCard = ({
   submittedLabel,
   clinicLabel,
   onRate,
-}: Omit<ClinicAppointmentCardProps, 'organisationLabel' | 'reasonLabel'>) => {
+}: ClinicAppointmentCardProps) => {
   const dimmed =
     appointment.status === 'Cancelled' || appointment.status === 'NoShow';
 
@@ -583,33 +620,56 @@ const ClinicAppointmentCard = ({
             </span>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-end">
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 text-slate-700 dark:text-slate-300">
-                <div className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center shrink-0">
-                  <Clock className="h-5 w-5 text-brand" strokeWidth={2.5} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
-                    Schedule
-                  </p>
-                  <p className="text-lg font-black tabular-nums tracking-tight">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+              <div className="space-y-3 flex-1">
+                <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                    <Clock className="h-4 w-4" />
+                  </div>
+                  <span className="text-sm font-semibold tabular-nums">
                     {formatSlotTime(appointment.startTime)} –{' '}
                     {formatSlotTime(appointment.endTime)}
-                  </p>
+                  </span>
                 </div>
-              </div>
 
-              {appointment.visitReason && (
-                <div className="group/reason relative p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 transition-all hover:bg-white dark:hover:bg-slate-800 hover:shadow-md">
-                  <div className="absolute -top-2 -left-2 p-1.5 rounded-lg bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600">
-                    <FileText className="h-3 w-3 text-slate-400" />
+                {/* Doctor Info Section */}
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/50 w-fit min-w-[240px]">
+                  <div className="relative">
+                    {appointment.ophthalAvatarUrl ? (
+                      <img
+                        src={appointment.ophthalAvatarUrl}
+                        alt={appointment.ophthalFullName ?? ''}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold border-2 border-white dark:border-slate-700 shadow-sm">
+                        {appointment.ophthalFullName?.charAt(0) ?? 'D'}
+                      </div>
+                    )}
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
                   </div>
-                  <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-400 font-medium italic">
-                    "{appointment.visitReason}"
-                  </p>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
+                      Consulting Doctor
+                    </p>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-none">
+                      {appointment.ophthalFullName ?? 'Clinic Doctor'}
+                    </h4>
+                  </div>
                 </div>
-              )}
+
+                {appointment.visitReason && (
+                  <div className="flex items-start gap-3 text-slate-500 dark:text-slate-500">
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                      <FileText className="h-4 w-4" />
+                    </div>
+                    <p className="text-xs leading-relaxed line-clamp-2 italic pt-0.5">
+                      "{appointment.visitReason}"
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex justify-end pt-4 lg:pt-0">
