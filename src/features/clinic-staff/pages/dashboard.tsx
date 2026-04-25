@@ -243,15 +243,12 @@ export default function ClinicStaffDashboardPage() {
     },
     {
       icon: TrendingUp,
-      label: t(
-        'ClinicStaffDashboard.quickActions.billingOverview',
-        'Billing Overview'
-      ),
+      label: t('ClinicStaffDashboard.quickActions.cashierDesk', 'Cashier desk'),
       description: t(
-        'ClinicStaffDashboard.quickActions.billingOverviewDesc',
-        'Review pending invoices and payments'
+        'ClinicStaffDashboard.quickActions.cashierDeskDesc',
+        'Review finalized visits and collect payment'
       ),
-      onClick: () => navigate(resolvePathWithLocale('/clinic-staff/billing')),
+      onClick: () => navigate(resolvePathWithLocale('/clinic-staff/cashier')),
     },
   ];
 
