@@ -16,7 +16,7 @@ import {
 import PatientLayout from '../components/PatientLayout';
 import { formatDateTimeWithYear } from '@/lib/date-utils';
 import { formatCurrency } from '@/lib/helper';
-import { useMyOrders } from '../hooks/use-financial';
+import { useMyOrders, useSyncOrder } from '../hooks/use-financial';
 import type { OrderStatus, PaymentStatus } from '../types/financial.types';
 import { useTranslation } from 'react-i18next';
 
@@ -50,6 +50,8 @@ export default function WalletPage() {
   const PAGE_SIZE = 10;
 
   const { data: ordersData, isLoading, error } = useMyOrders(page, PAGE_SIZE);
+  const { mutateAsync: syncOrder } = useSyncOrder();
+  const [isSyncingAll, setIsSyncingAll] = useState(false);
 
   const orders = ordersData?.items ?? [];
 
@@ -77,8 +79,26 @@ export default function WalletPage() {
       (o) => o.status === 'Completed' || o.status === 'Confirmed'
     );
     const refundedOrders = orders.filter((o) => o.status === 'Refunded');
-    const totalPaid = completedOrders.reduce((s, o) => s + o.totalAmount, 0);
-    const totalRefund = refundedOrders.reduce((s, o) => s + o.totalAmount, 0);
+    const totalPaid = completedOrders.reduce((sum, order) => {
+      // If we have specific payments, sum their successful amounts
+      // This is more accurate for deposit + future balance flow
+      const paidInOrder = order.payments
+        .filter((p) => p.status === 'Completed')
+        .reduce((pSum, p) => pSum + p.amount, 0);
+
+      // Fallback: if no specific payments recorded but order is confirmed/completed,
+      // count the amount we expected to be paid
+      return (
+        sum +
+        (paidInOrder > 0
+          ? paidInOrder
+          : (order.depositAmount ?? order.totalAmount))
+      );
+    }, 0);
+    const totalRefund = refundedOrders.reduce(
+      (s, o) => s + (o.depositAmount ?? o.totalAmount),
+      0
+    );
 
     return {
       totalPaid,
@@ -90,6 +110,20 @@ export default function WalletPage() {
   const getPaymentUrl = (orderId: string) => {
     const order = orders.find((o) => o.id === orderId);
     return order?.payments?.[0]?.paymentUrl ?? null;
+  };
+
+  const handleSyncAll = async () => {
+    const pendingOrders = orders.filter(
+      (o) => o.status === 'Pending' || o.status === 'Processing'
+    );
+    if (pendingOrders.length === 0) return;
+
+    setIsSyncingAll(true);
+    try {
+      await Promise.all(pendingOrders.map((o) => syncOrder(o.id)));
+    } finally {
+      setIsSyncingAll(false);
+    }
   };
 
   const getOrderStatusIcon = (status: OrderStatus) => {
@@ -148,17 +182,44 @@ export default function WalletPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-4 bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl">
-              <div className="w-14 h-14 rounded-2xl bg-brand/20 flex items-center justify-center text-brand">
-                <History className="w-7 h-7" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-tight">
-                  Lifetime records
-                </p>
-                <p className="text-3xl font-black text-white leading-none mt-1">
-                  {summary.orderCount}
-                </p>
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <button
+                onClick={handleSyncAll}
+                disabled={
+                  isSyncingAll ||
+                  !orders.some(
+                    (o) => o.status === 'Pending' || o.status === 'Processing'
+                  )
+                }
+                className="flex items-center gap-3 bg-white/10 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all border border-white/10 px-6 py-4 rounded-2xl group"
+              >
+                <div
+                  className={`w-10 h-10 rounded-xl bg-brand/20 flex items-center justify-center text-brand ${isSyncingAll ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`}
+                >
+                  <RefreshCw className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">
+                    Update Status
+                  </p>
+                  <p className="text-sm font-black text-white leading-none mt-1">
+                    Sync All
+                  </p>
+                </div>
+              </button>
+
+              <div className="flex items-center gap-4 bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl">
+                <div className="w-14 h-14 rounded-2xl bg-brand/20 flex items-center justify-center text-brand">
+                  <History className="w-7 h-7" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-tight">
+                    Lifetime records
+                  </p>
+                  <p className="text-3xl font-black text-white leading-none mt-1">
+                    {summary.orderCount}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -427,9 +488,12 @@ export default function WalletPage() {
                                       : 'text-amber-500'
                               }`}
                             >
-                              {formatCurrency(order.totalAmount, {
-                                absolute: true,
-                              })}
+                              {formatCurrency(
+                                order.depositAmount ?? order.totalAmount,
+                                {
+                                  absolute: true,
+                                }
+                              )}
                               <span className="text-xs ml-1 opacity-60">đ</span>
                             </p>
 
@@ -452,16 +516,27 @@ export default function WalletPage() {
                           </div>
 
                           {/* Pay now button for pending orders */}
-                          {isPending && paymentUrl && (
-                            <a
-                              href={paymentUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-brand/20 transition-all hover:scale-105 hover:bg-brand/90"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                              Pay Now
-                            </a>
+                          {isPending && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => syncOrder(order.id)}
+                                className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all group/sync"
+                                title="Check payment status"
+                              >
+                                <RefreshCw className="w-4 h-4 text-slate-500 group-hover/sync:rotate-180 transition-transform duration-500" />
+                              </button>
+                              {paymentUrl && (
+                                <a
+                                  href={paymentUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-brand/20 transition-all hover:scale-105 hover:bg-brand/90"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                  Pay Now
+                                </a>
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>

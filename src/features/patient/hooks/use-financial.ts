@@ -2,8 +2,14 @@
  * TanStack Query hooks for the Financial (Order/Payment) system.
  */
 
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { getMyOrders, getOrderById } from '../api/financial.api';
+import { clinicBookingKeys } from './use-clinic-booking';
 
 export const financialKeys = {
   all: ['financial'] as const,
@@ -33,3 +39,16 @@ export const useOrder = (id: string, enabled = true) =>
     enabled: !!id && enabled,
     staleTime: 30_000,
   });
+/**
+ * Syncs order status by fetching details (triggers BE status update logic).
+ */
+export const useSyncOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => getOrderById(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: financialKeys.all });
+      queryClient.invalidateQueries({ queryKey: clinicBookingKeys.all });
+    },
+  });
+};
