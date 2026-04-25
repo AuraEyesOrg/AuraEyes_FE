@@ -14,7 +14,10 @@ import {
   RefreshCw,
   Loader2,
   X,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
 import { resolvePathWithLocale } from '@/i18n/middleware';
@@ -76,6 +79,91 @@ const FLOW_STATE_CONFIG: Record<
     icon: CheckCircle,
   },
 };
+
+// ── Custom Doctor Select Component ──────────────────────────────────────────
+function DoctorSelect({
+  doctors,
+  value,
+  onChange,
+  placeholder,
+}: {
+  doctors: AvailableDoctor[];
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedDoctor = doctors.find((d) => d.id === value);
+
+  return (
+    <div className="relative w-full">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center justify-between rounded-xl border border-(--border-primary) bg-white px-4 py-2.5 text-sm text-(--text-primary) shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:bg-slate-800"
+      >
+        <span
+          className={
+            selectedDoctor ? 'text-(--text-primary)' : 'text-(--text-tertiary)'
+          }
+        >
+          {selectedDoctor
+            ? selectedDoctor.fullName
+            : placeholder || 'Select a doctor'}
+        </span>
+        <ChevronDown
+          className={`h-4 w-4 text-(--text-tertiary) transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop for closing */}
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setIsOpen(false)}
+            />
+
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15 }}
+              className="absolute left-0 right-0 z-20 mt-2 max-h-60 overflow-y-auto rounded-xl border border-(--border-primary) bg-white p-1 shadow-xl dark:bg-slate-800"
+            >
+              {doctors.map((doctor) => (
+                <button
+                  key={doctor.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(doctor.id);
+                    setIsOpen(false);
+                  }}
+                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                    value === doctor.id
+                      ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400'
+                      : 'text-(--text-primary) hover:bg-slate-50 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium">{doctor.fullName}</span>
+                    {doctor.yearsOfExperience && (
+                      <span className="text-[10px] opacity-70">
+                        {doctor.yearsOfExperience} years exp
+                      </span>
+                    )}
+                  </div>
+                  {value === doctor.id && <Check className="h-4 w-4" />}
+                </button>
+              ))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function ClinicStaffQueuePage() {
   const navigate = useNavigate();
@@ -645,24 +733,15 @@ export default function ClinicStaffQueuePage() {
                       )}
                     </div>
                   ) : availableDoctors.length > 0 ? (
-                    <select
-                      id="queue-send-doctor-select"
-                      name="doctorId"
+                    <DoctorSelect
+                      doctors={availableDoctors}
                       value={selectedDoctorId}
-                      onChange={(event) =>
-                        setSelectedDoctorId(event.target.value)
-                      }
-                      className="w-full rounded-xl border border-(--border-primary) bg-(--bg-primary) px-3 py-2.5 text-sm text-(--text-primary) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-                    >
-                      {availableDoctors.map((doctor) => (
-                        <option key={doctor.id} value={doctor.id}>
-                          {doctor.fullName}
-                          {doctor.yearsOfExperience
-                            ? ` · ${doctor.yearsOfExperience} years`
-                            : ''}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setSelectedDoctorId}
+                      placeholder={t(
+                        'ClinicStaff.queue.sendDoctorModal.selectDoctor',
+                        'Select an available doctor'
+                      )}
+                    />
                   ) : (
                     <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-700">
                       {t(
