@@ -14,6 +14,7 @@ import {
   SlidersHorizontal,
   RefreshCw,
   MessageCircle,
+  Radio,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import {
@@ -30,6 +31,8 @@ import useAuthStore from '@/store/auth-store';
 import Spinner from '@/components/ui/spinner';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import useNotificationStore from '@/store/useNotificationStore';
+import { NotificationType, parseNotificationType } from '@/types/notification';
 
 /* ────────────────────── helpers ────────────────────── */
 
@@ -242,6 +245,10 @@ export default function ScreeningsPage() {
   const [items, setItems] = useState<OphthalmologistScreeningListItemDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
+  const latestNotification = useNotificationStore(
+    (state) => state.notifications[0]
+  );
 
   const consultationSessionsQuery = useConsultationSessions(
     {
@@ -251,6 +258,7 @@ export default function ScreeningsPage() {
     },
     { enabled: Boolean(doctorFilterId) }
   );
+  const refetchConsultationSessions = consultationSessionsQuery.refetch;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -258,6 +266,7 @@ export default function ScreeningsPage() {
     try {
       const data = await listOphthalmologistScreenings();
       setItems(data);
+      setLastSyncedAt(new Date());
     } catch {
       setLoadError(
         t(
@@ -274,6 +283,32 @@ export default function ScreeningsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      void load();
+      void refetchConsultationSessions();
+    }, 15_000);
+
+    return () => window.clearInterval(intervalId);
+  }, [load, refetchConsultationSessions]);
+
+  useEffect(() => {
+    if (
+      parseNotificationType(latestNotification?.type) !==
+      NotificationType.NewConsultationRequest
+    ) {
+      return;
+    }
+
+    void load();
+    void refetchConsultationSessions();
+  }, [
+    latestNotification?.id,
+    latestNotification?.type,
+    load,
+    refetchConsultationSessions,
+  ]);
 
   useEffect(() => {
     if (loadError) {
@@ -296,9 +331,7 @@ export default function ScreeningsPage() {
 
     sessionItems.forEach((session) => {
       const sessionScreeningId =
-        session.caseSnapshot?.screeningId ??
-        (session as { aiScreeningId?: string | null }).aiScreeningId ??
-        null;
+        session.caseSnapshot?.screeningId ?? session.aiScreeningId ?? null;
 
       if (!sessionScreeningId) return;
       const screeningKey = sessionScreeningId.toLowerCase();
@@ -520,7 +553,7 @@ export default function ScreeningsPage() {
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
-      <DoctorSidebar pendingCount={0} />
+      <DoctorSidebar pendingCount={stats.pending} />
 
       <div className="flex-1 h-full overflow-y-auto">
         <DoctorHeader
@@ -529,26 +562,46 @@ export default function ScreeningsPage() {
 
         <main className="p-6 max-w-350 mx-auto">
           {/* ── Header ── */}
-          <div className="flex items-end justify-between mb-6">
+          <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-cyan-700 dark:border-cyan-800/60 dark:bg-cyan-900/20 dark:text-cyan-300">
+                <Radio className="h-3.5 w-3.5 animate-pulse" />
+                {t('Ophthalmologist.screenings.liveQueue', 'Live review queue')}
+              </div>
               <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-                {t('Ophthalmologist.screenings.title', 'Screenings')}
+                {t('Ophthalmologist.screenings.title', 'Incoming Screenings')}
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {t(
                   'Ophthalmologist.screenings.subtitle',
-                  'AI screening results for your patients - sorted by urgency'
+                  'Clinic queue cases sent to you for AI image review, report editing, and final verification.'
                 )}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => void load()}
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-[#1e3a5f] dark:bg-[#0a1f44] dark:text-gray-200 dark:hover:bg-[#1e3a5f]"
-            >
-              <RefreshCw className="h-4 w-4" />
-              {t('Ophthalmologist.common.refresh', 'Refresh')}
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="rounded-xl border border-gray-100 bg-white px-3 py-2 text-xs text-gray-500 dark:border-[#1e3a5f] dark:bg-[#0a1f44] dark:text-gray-400">
+                <span className="font-semibold text-gray-700 dark:text-gray-200">
+                  {t('Ophthalmologist.screenings.autoSync', 'Auto-sync')}
+                </span>
+                {lastSyncedAt
+                  ? ` • ${lastSyncedAt.toLocaleTimeString(undefined, {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}`
+                  : ''}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  void load();
+                  void refetchConsultationSessions();
+                }}
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-[#1e3a5f] dark:bg-[#0a1f44] dark:text-gray-200 dark:hover:bg-[#1e3a5f]"
+              >
+                <RefreshCw className="h-4 w-4" />
+                {t('Ophthalmologist.common.refresh', 'Refresh')}
+              </button>
+            </div>
           </div>
 
           {/* ── Compact Stats Pills ── */}
@@ -682,7 +735,7 @@ export default function ScreeningsPage() {
                     )
                   : t(
                       'Ophthalmologist.screenings.empty.default',
-                      'Screenings appear here when a patient books a consultation that includes an AI screening linked to you.'
+                      'Screenings appear here as soon as clinic staff sends an AI screening case from the queue to you.'
                     )}
               </p>
             </div>
@@ -865,7 +918,7 @@ export default function ScreeningsPage() {
                                 <Eye className="w-4 h-4" />
                                 {t(
                                   'Ophthalmologist.screenings.reviewNow',
-                                  'Review Now'
+                                  'Review & Verify'
                                 )}
                               </>
                             ) : isFlagged ? (
@@ -873,7 +926,7 @@ export default function ScreeningsPage() {
                                 <AlertTriangle className="w-4 h-4" />
                                 {t(
                                   'Ophthalmologist.screenings.review',
-                                  'Review'
+                                  'Review & Verify'
                                 )}
                               </>
                             ) : (
@@ -883,29 +936,29 @@ export default function ScreeningsPage() {
                               </>
                             )}
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const patientId = encodeURIComponent(
-                                screening.patientId
-                              );
-                              const sessionId = linkedSession?.id
-                                ? encodeURIComponent(linkedSession.id)
-                                : null;
-                              const base = `/ophthalmologist/consultations?patientId=${patientId}`;
-                              const url = sessionId
-                                ? `${base}&sessionId=${sessionId}`
-                                : base;
-                              navigate(url);
-                            }}
-                            className="flex items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-medium text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-800/60 dark:bg-cyan-900/20 dark:text-cyan-300 dark:hover:bg-cyan-900/30"
-                          >
-                            <MessageCircle className="h-4 w-4" />
-                            {t(
-                              'Ophthalmologist.screenings.openChat',
-                              'Open Chat'
-                            )}
-                          </button>
+                          {!isPending && linkedSession ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const patientId = encodeURIComponent(
+                                  screening.patientId
+                                );
+                                const sessionId = encodeURIComponent(
+                                  linkedSession.id
+                                );
+                                navigate(
+                                  `/ophthalmologist/consultations?patientId=${patientId}&sessionId=${sessionId}`
+                                );
+                              }}
+                              className="flex items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-medium text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-800/60 dark:bg-cyan-900/20 dark:text-cyan-300 dark:hover:bg-cyan-900/30"
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                              {t(
+                                'Ophthalmologist.screenings.openAftercare',
+                                'Post-consultation'
+                              )}
+                            </button>
+                          ) : null}
                         </div>
                       </div>
                     </div>

@@ -447,9 +447,25 @@ export function getNotificationRoute(
       return appendIdQuery(base, 'screeningId', screeningId);
     }
 
+    case NotificationType.NewConsultationRequest: {
+      if (isOphthalmologist && screeningId) {
+        return `/ophthalmologist/screenings/${encodeURIComponent(screeningId)}/review`;
+      }
+
+      const base = isOphthalmologist
+        ? '/ophthalmologist/consultations'
+        : isPatient
+          ? '/patient/chat'
+          : isClinicStaff
+            ? '/organisation/calendar'
+            : isSystemAdmin
+              ? '/system-admin/verifications'
+              : fallbackHome;
+      return appendIdQuery(base, 'sessionId', consultationId);
+    }
+
     case NotificationType.ConsultationAccepted:
     case NotificationType.ConsultationResultProvided:
-    case NotificationType.NewConsultationRequest:
     case NotificationType.NewPatientMessage: {
       const base = isOphthalmologist
         ? '/ophthalmologist/consultations'

@@ -2,10 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   checkInClinicAppointment,
   completeClinicAppointment,
+  createClinicStaffAppointment,
+  getClinicStaffAvailableSlots,
   getOrganisationAppointments,
   markNoShowClinicAppointment,
   startClinicAppointment,
 } from '../api/organisation-clinic-booking.api';
+import type { CreateClinicStaffAppointmentRequest } from '../api/organisation-clinic-booking.api';
 
 export const organisationClinicBookingKeys = {
   all: ['organisation-clinic-booking'] as const,
@@ -16,6 +19,8 @@ export const organisationClinicBookingKeys = {
       organisationId,
       date,
     ] as const,
+  availableSlots: (date?: string) =>
+    [...organisationClinicBookingKeys.all, 'available-slots', date] as const,
 };
 
 export const useOrganisationAppointments = (
@@ -29,6 +34,28 @@ export const useOrganisationAppointments = (
     enabled: enabled && !!organisationId,
     staleTime: 10_000,
   });
+
+export const useClinicStaffAvailableSlots = (date?: string, enabled = true) =>
+  useQuery({
+    queryKey: organisationClinicBookingKeys.availableSlots(date),
+    queryFn: () => getClinicStaffAvailableSlots(date),
+    enabled,
+    staleTime: 15_000,
+  });
+
+export const useCreateClinicStaffAppointment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: CreateClinicStaffAppointmentRequest) =>
+      createClinicStaffAppointment(request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: organisationClinicBookingKeys.all,
+      });
+      queryClient.invalidateQueries({ queryKey: ['clinic-queue'] });
+    },
+  });
+};
 
 export const useCheckInClinicAppointment = () => {
   const queryClient = useQueryClient();

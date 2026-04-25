@@ -314,6 +314,12 @@ export const API_ENDPOINTS = {
     HISTORY: '/clinic-screenings/history',
   },
 
+  CLINIC_QUEUE: {
+    GET: '/clinic-queue',
+    SEND_TO_DOCTOR: (visitId: string) =>
+      `/clinic-queue/${visitId}/send-to-doctor`,
+  },
+
   FEEDBACK: {
     WEBSITE: '/feedback/website',
     ORGANISATION: (organisationId: string) =>

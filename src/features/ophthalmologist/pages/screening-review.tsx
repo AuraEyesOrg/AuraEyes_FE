@@ -468,7 +468,12 @@ export default function ScreeningReviewPage() {
     linkedSessions.find(
       (session) => session.type === ConsultationSessionType.VideoCall
     ) ?? null;
-  const reportableSession = verificationSession ?? videoCallSession;
+  const clinicBookingSession =
+    linkedSessions.find(
+      (session) => session.type === ConsultationSessionType.ClinicBooking
+    ) ?? null;
+  const reportableSession =
+    verificationSession ?? videoCallSession ?? clinicBookingSession;
 
   const reportableSessionId = reportableSession?.id ?? null;
   const isFinalizedDiagnosis =
@@ -1263,11 +1268,11 @@ export default function ScreeningReviewPage() {
       const message = linkedSession
         ? t(
             'Ophthalmologist.screeningReview.validation.invalidLinkedSession',
-            `Linked consultation exists but it is "${linkedSession.typeName}". Only Verification or VideoCall sessions can submit this report.`
+            `Linked consultation exists but it is "${linkedSession.typeName}". Only Verification, VideoCall, or ClinicBooking sessions can submit this report.`
           )
         : t(
             'Ophthalmologist.screeningReview.validation.noLinkedSession',
-            'No linked Verification or VideoCall session was found for this screening.'
+            'No linked Verification, VideoCall, or ClinicBooking session was found for this screening.'
           );
       ophthalToast.error(message);
       return;
@@ -1396,7 +1401,7 @@ export default function ScreeningReviewPage() {
       ophthalToast.error(
         t(
           'Ophthalmologist.screeningReview.validation.noLinkedSession',
-          'No linked Verification or VideoCall session was found for this screening.'
+          'No linked Verification, VideoCall, or ClinicBooking session was found for this screening.'
         )
       );
       return;
@@ -3392,10 +3397,15 @@ export default function ScreeningReviewPage() {
                           'Ophthalmologist.screeningReview.modal.linkingSession',
                           'Linking session...'
                         )
-                      : t(
-                          'Ophthalmologist.screeningReview.modal.confirmAndSave',
-                          'Confirm & Save'
-                        )}
+                      : diagnosisStatus === 'Finalized'
+                        ? t(
+                            'Ophthalmologist.screeningReview.modal.sendToCashier',
+                            'Finalize & Send to Cashier'
+                          )
+                        : t(
+                            'Ophthalmologist.screeningReview.modal.confirmAndSave',
+                            'Confirm & Save'
+                          )}
                 </button>
               </div>
             </div>

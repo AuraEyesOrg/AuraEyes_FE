@@ -3,6 +3,7 @@ export type ClinicAppointmentStatus =
   | 'Confirmed'
   | 'CheckedIn'
   | 'InProgress'
+  | 'WaitingForPayment'
   | 'Completed'
   | 'Cancelled'
   | 'NoShow';
