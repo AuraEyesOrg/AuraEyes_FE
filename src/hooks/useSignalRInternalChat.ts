@@ -115,7 +115,7 @@ export function useSignalRInternalChat(): void {
       )
       .build();
 
-    connection.on('ReceiveInternalMessage', handleMessageReceived);
+    connection.on('ReceiveMessage', handleMessageReceived);
     connection.on('GroupUpdated', handleGroupUpdated);
 
     return connection;

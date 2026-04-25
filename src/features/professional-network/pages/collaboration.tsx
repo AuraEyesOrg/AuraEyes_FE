@@ -755,7 +755,7 @@ export default function CollaborationPage() {
         <div className="flex-1 overflow-y-auto px-2 space-y-1">
           {filteredGroups.map((group) => {
             const label = group.name;
-            const count = group.memberCount ?? 0;
+            const count = group.memberIds?.length ?? group.memberCount ?? 0;
 
             return (
               <button
@@ -915,10 +915,15 @@ export default function CollaborationPage() {
                       className="w-full px-4 py-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors"
                     >
                       <Users className="w-4 h-4 text-primary" />
-                      {t(
-                        'ProfessionalNetwork.collaboration.menu.members',
-                        'Members'
-                      )}
+                      {isSystemAdmin
+                        ? t(
+                            'ProfessionalNetwork.collaboration.menu.manageMembers',
+                            'Manage Members'
+                          )
+                        : t(
+                            'ProfessionalNetwork.collaboration.menu.viewMembers',
+                            'View Members'
+                          )}
                     </button>
                     <button
                       type="button"
@@ -934,28 +939,32 @@ export default function CollaborationPage() {
                         'Group Media'
                       )}
                     </button>
-                    <button
-                      type="button"
-                      onClick={openRenameModal}
-                      className="w-full px-4 py-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors border-t border-slate-100 dark:border-slate-700"
-                    >
-                      <Pencil className="w-4 h-4 text-primary" />
-                      {t(
-                        'ProfessionalNetwork.collaboration.menu.rename',
-                        'Rename group'
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDissolveGroup}
-                      className="w-full px-4 py-3 text-left text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center gap-3 transition-colors border-t border-slate-100 dark:border-slate-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      {t(
-                        'ProfessionalNetwork.collaboration.menu.delete',
-                        'Delete group'
-                      )}
-                    </button>
+                    {isSystemAdmin && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={openRenameModal}
+                          className="w-full px-4 py-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors border-t border-slate-100 dark:border-slate-700"
+                        >
+                          <Pencil className="w-4 h-4 text-primary" />
+                          {t(
+                            'ProfessionalNetwork.collaboration.menu.rename',
+                            'Rename group'
+                          ) || 'Rename group'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleDissolveGroup}
+                          className="w-full px-4 py-3 text-left text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center gap-3 transition-colors border-t border-slate-100 dark:border-slate-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          {t(
+                            'ProfessionalNetwork.collaboration.menu.delete',
+                            'Delete group'
+                          ) || 'Delete group'}
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -1430,28 +1439,30 @@ export default function CollaborationPage() {
             </div>
 
             <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    requestSelectAllByRoleForExistingGroup('Ophthalmologist')
-                  }
-                  className="inline-flex items-center gap-1.5 rounded-md bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300 px-2.5 py-1.5 text-xs font-medium"
-                >
-                  <Users className="w-3.5 h-3.5" />
-                  Select Ophthalmologist
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    requestSelectAllByRoleForExistingGroup('ClinicStaff')
-                  }
-                  className="inline-flex items-center gap-1.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 px-2.5 py-1.5 text-xs font-medium"
-                >
-                  <Users className="w-3.5 h-3.5" />
-                  Select Clinic Staff
-                </button>
-              </div>
+              {isSystemAdmin && (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      requestSelectAllByRoleForExistingGroup('Ophthalmologist')
+                    }
+                    className="inline-flex items-center gap-1.5 rounded-md bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300 px-2.5 py-1.5 text-xs font-medium"
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                    Select Ophthalmologist
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      requestSelectAllByRoleForExistingGroup('ClinicStaff')
+                    }
+                    className="inline-flex items-center gap-1.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 px-2.5 py-1.5 text-xs font-medium"
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                    Select Clinic Staff
+                  </button>
+                </div>
+              )}
 
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -1468,17 +1479,19 @@ export default function CollaborationPage() {
                     return (
                       <div
                         key={candidate.id}
-                        onClick={() =>
-                          requestToggleMemberInSelectedGroup(
-                            candidate.id,
-                            candidate.fullName
-                          )
-                        }
-                        className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all border ${
+                        onClick={() => {
+                          if (isSystemAdmin) {
+                            requestToggleMemberInSelectedGroup(
+                              candidate.id,
+                              candidate.fullName
+                            );
+                          }
+                        }}
+                        className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl transition-all border ${
                           inGroup
                             ? 'border-primary/30 bg-primary/5 shadow-sm'
                             : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'
-                        }`}
+                        } ${isSystemAdmin ? 'cursor-pointer' : 'cursor-default'}`}
                       >
                         <div className="min-w-0">
                           <p

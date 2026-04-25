@@ -5,19 +5,18 @@ import { toast } from 'react-toastify';
 import { medicalRecordApi } from '../api/medical-record.api';
 import { useParams } from 'react-router-dom';
 
-const SECTION_KEYS = [
-  'miMat',
-  'ketMac',
-  'giacMac',
-  'cungMac',
-  'tienPhong',
-  'mongMat',
-  'theThuyTinh',
-  'dichKinh',
-  'vongMac',
-];
-
 export default function ErmFormPatient() {
+  const SECTION_KEYS = [
+    'miMat',
+    'ketMac',
+    'giacMac',
+    'cungMac',
+    'tienPhong',
+    'mongMat',
+    'theThuyTinh',
+    'dichKinh',
+    'vongMac',
+  ];
   const location = useLocation();
   const navigate = useNavigate();
   const { id } = useParams();
@@ -25,7 +24,7 @@ export default function ErmFormPatient() {
 
   useEffect(() => {
     const loadRecord = async () => {
-      if (id) {
+      if (id && id !== 'new') {
         try {
           const response = await medicalRecordApi.getById(id);
           if (response.data.data) {
@@ -33,16 +32,29 @@ export default function ErmFormPatient() {
             const adminData = JSON.parse(record.administrativeDataJson);
             const clinicalData = JSON.parse(record.clinicalDataJson);
 
+            const mappedClinical: any = {};
+            if (clinicalData.rightEye) {
+              SECTION_KEYS.forEach((key) => {
+                if (clinicalData.rightEye[key]) {
+                  mappedClinical[`right_${key}`] = clinicalData.rightEye[key];
+                }
+                if (clinicalData.leftEye && clinicalData.leftEye[key]) {
+                  mappedClinical[`left_${key}`] = clinicalData.leftEye[key];
+                }
+              });
+            }
+
             setData({
               ...adminData,
               ...clinicalData,
+              ...mappedClinical,
               finalDiagnosisMain: record.finalDiagnosis,
               finalDiagnosisExtra: record.treatmentPlan,
               maYT: record.medicalRecordNumber,
             });
           }
-        } catch (error) {
-          console.error(error);
+        } catch (_error) {
+          console.error(_error);
           toast.error('Không thể tải hồ sơ bệnh án');
         }
       } else if (location.state?.formData) {
@@ -57,9 +69,20 @@ export default function ErmFormPatient() {
     setData((prev: any) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    console.log('Saving Staff ERM Data:', data);
-    toast.success('Thông tin hành chính đã được lưu!');
+  const handleSave = async () => {
+    if (!id || id === 'new') {
+      toast.warning('Vui lòng tạo hồ sơ từ luồng tiếp nhận/check-in');
+      return;
+    }
+
+    try {
+      await medicalRecordApi.updateAdministrative(id, {
+        administrativeDataJson: JSON.stringify(data),
+      });
+      toast.success('Thông tin hành chính đã được lưu!');
+    } catch (error) {
+      toast.error('Lỗi khi lưu thông tin');
+    }
   };
 
   const renderSquare = (checked: boolean, field?: string, value?: string) => (

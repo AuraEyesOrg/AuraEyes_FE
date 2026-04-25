@@ -19,6 +19,8 @@ import {
   useMedicalRecord,
   useUpdateDiagnosis,
   useFinalizeRecord,
+  useStartConsultation,
+  useUpdateAdministrative,
 } from '../hooks/useMedicalRecords';
 
 /**
@@ -230,6 +232,8 @@ export default function ErmForm() {
   );
   const updateDiagnosisMutation = useUpdateDiagnosis();
   const finalizeMutation = useFinalizeRecord();
+  const startConsultationMutation = useStartConsultation();
+  const updateAdministrativeMutation = useUpdateAdministrative();
 
   // Role Detection
   const isOphthalmologist = user?.roles.includes('Ophthalmologist');
@@ -240,6 +244,18 @@ export default function ErmForm() {
     useForm<FullErmFormData>({
       defaultValues: INITIAL_VALUES as FullErmFormData,
     });
+
+  // Auto-transition to DoctorFilling if opened by Doctor
+  useEffect(() => {
+    if (
+      id &&
+      isOphthalmologist &&
+      (recordStatus === MedicalRecordStatus.Draft ||
+        recordStatus === MedicalRecordStatus.ClinicFilling)
+    ) {
+      startConsultationMutation.mutate(id);
+    }
+  }, [id, isOphthalmologist, recordStatus]);
 
   useEffect(() => {
     if (record) {
@@ -275,35 +291,85 @@ export default function ErmForm() {
   };
 
   const onSubmit = async (data: FullErmFormData) => {
+    // Basic validation for required fields
+    const missingFields: string[] = [];
+    if (!data.fullName) missingFields.push('Họ tên');
+    if (!data.age) missingFields.push('Tuổi');
+    if (!data.admissionReason) missingFields.push('Lý do vào viện');
+    if (isOphthalmologist && !data.finalDiagnosisMain)
+      missingFields.push('Chẩn đoán chính');
+
+    if (missingFields.length > 0) {
+      toast.error(
+        `Vui lòng điền các trường bắt buộc: ${missingFields.join(', ')}`
+      );
+      return;
+    }
+
     if (!id) {
       toast.warning('Vui lòng tạo hồ sơ từ luồng tiếp nhận/check-in');
       return;
     }
 
-    const clinicalData = {
-      medicalHistory: data.medicalHistory,
-      personalHistory: data.personalHistory,
-      familyHistory: data.familyHistory,
-      rightEyeVisionNoGlass: data.rightEyeVisionNoGlass,
-      leftEyeVisionNoGlass: data.leftEyeVisionNoGlass,
-      rightEyeVisionWithGlass: data.rightEyeVisionWithGlass,
-      leftEyeVisionWithGlass: data.leftEyeVisionWithGlass,
-      rightEyePressure: data.rightEyePressure,
-      leftEyePressure: data.leftEyePressure,
-      rightEyeField: data.rightEyeField,
-      leftEyeField: data.leftEyeField,
-      rightEye: data.rightEye,
-      leftEye: data.leftEye,
-    };
+    if (isStaff && !isOphthalmologist) {
+      // Clinic Staff saving administrative data
+      const adminData = {
+        khoa: data.khoa,
+        giuong: data.giuong,
+        soLuuTru: data.soLuuTru,
+        maYT: data.maYT,
+        fullName: data.fullName,
+        birthDate: data.birthDate,
+        age: data.age,
+        gender: data.gender,
+        job: data.job,
+        ethnicity: data.ethnicity,
+        nationality: data.nationality,
+        address: data.address,
+        workplace: data.workplace,
+        objectType: data.objectType,
+        bhytExpiry: data.bhytExpiry,
+        bhytNumber: data.bhytNumber,
+        relativeName: data.relativeName,
+        relativePhone: data.relativePhone,
+        admissionTime: data.admissionTime,
+        admissionDate: data.admissionDate,
+        admissionType: data.admissionType,
+        referralPlace: data.referralPlace,
+        admissionReason: data.admissionReason,
+      };
 
-    updateDiagnosisMutation.mutate({
-      id,
-      data: {
-        clinicalData: clinicalData,
-        finalDiagnosis: data.finalDiagnosisMain,
-        treatmentPlan: data.finalDiagnosisExtra,
-      },
-    });
+      updateAdministrativeMutation.mutate({
+        id,
+        data: { administrativeDataJson: JSON.stringify(adminData) },
+      });
+    } else if (isOphthalmologist) {
+      // Doctor saving clinical data
+      const clinicalData = {
+        medicalHistory: data.medicalHistory,
+        personalHistory: data.personalHistory,
+        familyHistory: data.familyHistory,
+        rightEyeVisionNoGlass: data.rightEyeVisionNoGlass,
+        leftEyeVisionNoGlass: data.leftEyeVisionNoGlass,
+        rightEyeVisionWithGlass: data.rightEyeVisionWithGlass,
+        leftEyeVisionWithGlass: data.leftEyeVisionWithGlass,
+        rightEyePressure: data.rightEyePressure,
+        leftEyePressure: data.leftEyePressure,
+        rightEyeField: data.rightEyeField,
+        leftEyeField: data.leftEyeField,
+        rightEye: data.rightEye,
+        leftEye: data.leftEye,
+      };
+
+      updateDiagnosisMutation.mutate({
+        id,
+        data: {
+          clinicalData: clinicalData,
+          finalDiagnosis: data.finalDiagnosisMain,
+          treatmentPlan: data.finalDiagnosisExtra,
+        },
+      });
+    }
   };
 
   const handleFinalize = async () => {
@@ -318,7 +384,14 @@ export default function ErmForm() {
   };
 
   const handlePreviewPatient = () => {
-    navigate('/erm-patient', { state: { formData: formData } });
+    if (id) {
+      navigate(`/medical-records/patient/${id}`);
+    } else {
+      // For new records, pass current form data in state
+      navigate('/medical-records/patient/new', {
+        state: { formData: formData },
+      });
+    }
   };
 
   const renderEyeCell = (
@@ -426,11 +499,13 @@ export default function ErmForm() {
             onClick={handleSubmit(onSubmit)}
             disabled={
               updateDiagnosisMutation.isPending ||
+              updateAdministrativeMutation.isPending ||
               recordStatus === MedicalRecordStatus.Locked
             }
             className="flex items-center gap-2 bg-primary text-white px-8 py-2.5 rounded-xl font-black text-[11px] hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/20 transition-all disabled:opacity-50"
           >
-            {updateDiagnosisMutation.isPending ? (
+            {updateDiagnosisMutation.isPending ||
+            updateAdministrativeMutation.isPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <Save className="w-4 h-4" />

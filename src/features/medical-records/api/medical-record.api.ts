@@ -23,7 +23,9 @@ export interface MedicalRecordDto {
 
 export enum MedicalRecordStatus {
   Draft = 'Draft',
-  ClinicalFilled = 'ClinicalFilled',
+  ClinicFilling = 'ClinicFilling',
+  DoctorFilling = 'DoctorFilling',
+  Completed = 'Completed',
   Locked = 'Locked',
 }
 
@@ -44,11 +46,25 @@ export const medicalRecordApi = {
   create: (data: CreateMedicalRecordCommand) =>
     api.post<ApiResponse<string>>('/api/medical-records', data),
 
+  updateAdministrative: (
+    id: string,
+    data: { administrativeDataJson: string }
+  ) =>
+    api.put<ApiResponse<boolean>>(
+      `/api/medical-records/${id}/administrative`,
+      data
+    ),
+
   updateClinical: (
     id: string,
     data: Omit<UpdateMedicalRecordClinicalCommand, 'id'>
   ) =>
-    api.put<ApiResponse<boolean>>(`/api/medical-records/${id}/diagnosis`, data), // Updated to /diagnosis
+    api.put<ApiResponse<boolean>>(`/api/medical-records/${id}/diagnosis`, data),
+
+  startConsultation: (id: string) =>
+    api.post<ApiResponse<boolean>>(
+      `/api/medical-records/${id}/start-consultation`
+    ),
 
   finalize: (id: string) =>
     api.post<ApiResponse<boolean>>(`/api/medical-records/${id}/finalize`), // Updated to POST

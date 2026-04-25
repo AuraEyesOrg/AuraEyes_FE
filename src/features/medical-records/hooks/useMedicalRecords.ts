@@ -62,6 +62,30 @@ export const useCheckIn = () => {
   });
 };
 
+export const useUpdateAdministrative = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: { administrativeDataJson: string };
+    }) => medicalRecordApi.updateAdministrative(id, data),
+    onSuccess: (_, variables) => {
+      toast.success('Cập nhật thông tin hành chính thành công!');
+      queryClient.invalidateQueries({
+        queryKey: medicalRecordKeys.detail(variables.id),
+      });
+    },
+    onError: (error: any) => {
+      toast.error(
+        error.response?.data?.message || 'Lỗi khi cập nhật thông tin hành chính'
+      );
+    },
+  });
+};
+
 export const useUpdateDiagnosis = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -83,6 +107,19 @@ export const useUpdateDiagnosis = () => {
       toast.error(
         error.response?.data?.message || 'Lỗi khi cập nhật chẩn đoán'
       );
+    },
+  });
+};
+
+export const useStartConsultation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => medicalRecordApi.startConsultation(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: medicalRecordKeys.detail(id) });
+    },
+    onError: (error: any) => {
+      console.error('Error starting consultation:', error);
     },
   });
 };

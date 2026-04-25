@@ -24,10 +24,22 @@ const StatusBadge = ({ status }: { status: string }) => {
           <Clock className="w-3 h-3" /> Chờ khám
         </span>
       );
-    case 'ClinicalFilled':
+    case 'ClinicFilling':
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-50 text-amber-600">
-          <FileText className="w-3 h-3" /> Đã khám
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-600">
+          <Clock className="w-3 h-3" /> Đang điền HC
+        </span>
+      );
+    case 'DoctorFilling':
+      return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-600">
+          <Clock className="w-3 h-3" /> Bác sĩ khám
+        </span>
+      );
+    case 'Completed':
+      return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-50 text-emerald-600">
+          <FileText className="w-3 h-3" /> Hoàn thành
         </span>
       );
     case 'Locked':
@@ -96,7 +108,9 @@ export default function MedicalRecordsManagementPage() {
               >
                 <option value="">Tất cả trạng thái</option>
                 <option value="Draft">Chờ khám</option>
-                <option value="ClinicalFilled">Đã khám</option>
+                <option value="ClinicFilling">Đang điền HC</option>
+                <option value="DoctorFilling">Bác sĩ khám</option>
+                <option value="Completed">Hoàn thành</option>
                 <option value="Locked">Hoàn tất</option>
               </select>
               <button className="p-3 bg-slate-900 text-white rounded-2xl hover:scale-105 active:scale-95 transition-all">
