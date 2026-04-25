@@ -6893,6 +6893,53 @@
         "createSuccess": "Staff created successfully. Temporary password sent.",
         "createError": "Failed to create staff"
       }
+    },
+    "cashflow": {
+      "title": "Payment Transactions",
+      "description": "Manage cashflow and system-wide transactions",
+      "stats": {
+        "totalVolume": "Total Volume",
+        "pendingAmount": "Pending Amount",
+        "completedOrders": "Completed Orders",
+        "avgOrderValue": "Avg Order Value"
+      },
+      "filters": {
+        "all": "All Transactions",
+        "pending": "Pending",
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "table": {
+        "orderId": "Order ID",
+        "customer": "Customer",
+        "amount": "Amount",
+        "status": "Status",
+        "date": "Date Created",
+        "actions": "Actions",
+        "list": "Order List",
+        "defaultDescription": "Clinic Payment",
+        "deposited": "Deposited",
+        "remaining": "Remaining",
+        "onlineDeposit": "Online Deposit",
+        "fullPayment": "Full Payment",
+        "patientFallback": "Patient"
+      },
+      "status": {
+        "pending": "Pending Payment",
+        "confirmed": "Confirmed",
+        "processing": "Processing",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "failed": "Failed",
+        "refunded": "Refunded"
+      },
+      "pagination": {
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page"
+      },
+      "noData": "No transactions found",
+      "error": "An error occurred while loading data"
     }
   }
 }

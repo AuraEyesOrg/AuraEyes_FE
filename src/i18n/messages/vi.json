@@ -6902,6 +6902,53 @@
         "createSuccess": "Đã tạo nhân viên thành công. Mật khẩu tạm thời đã được gửi.",
         "createError": "Không thể tạo nhân viên"
       }
+    },
+    "cashflow": {
+      "title": "Giao dịch thanh toán",
+      "description": "Quản lý dòng tiền và các giao dịch trong hệ thống",
+      "stats": {
+        "totalVolume": "Tổng doanh thu",
+        "pendingAmount": "Đang chờ xử lý",
+        "completedOrders": "Đơn hàng hoàn tất",
+        "avgOrderValue": "Giá trị đơn hàng TB"
+      },
+      "filters": {
+        "all": "Tất cả giao dịch",
+        "pending": "Chờ xử lý",
+        "completed": "Đã hoàn tất",
+        "failed": "Thất bại"
+      },
+      "table": {
+        "orderId": "Mã đơn hàng",
+        "customer": "Khách hàng",
+        "amount": "Số tiền",
+        "status": "Trạng thái",
+        "date": "Ngày tạo",
+        "actions": "Thao tác",
+        "list": "Danh sách đơn hàng",
+        "defaultDescription": "Thanh toán phòng khám",
+        "deposited": "Đã cọc",
+        "remaining": "Còn lại",
+        "onlineDeposit": "Đặt cọc trực tuyến",
+        "fullPayment": "Thanh toán toàn bộ",
+        "patientFallback": "Bệnh nhân"
+      },
+      "status": {
+        "pending": "Chờ thanh toán",
+        "confirmed": "Đã xác nhận",
+        "processing": "Đang xử lý",
+        "completed": "Hoàn tất",
+        "cancelled": "Đã hủy",
+        "failed": "Thất bại",
+        "refunded": "Hoàn tiền"
+      },
+      "pagination": {
+        "previous": "Trước",
+        "next": "Sau",
+        "page": "Trang"
+      },
+      "noData": "Không tìm thấy giao dịch nào",
+      "error": "Đã có lỗi xảy ra khi tải dữ liệu"
     }
   }
 }
