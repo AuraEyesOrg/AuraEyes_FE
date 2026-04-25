@@ -152,6 +152,9 @@ const ClinicStaffSchedulesPage = lazy(
 const ClinicStaffBillingPage = lazy(
   () => import('@/features/clinic-staff/pages/billing')
 );
+const ClinicStaffCashierPage = lazy(
+  () => import('@/features/clinic-staff/pages/cashier')
+);
 const ClinicStaffWalletPage = lazy(
   () => import('@/features/clinic-staff/pages/wallet')
 );
@@ -950,6 +953,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/clinic-staff/cashier"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffCashierPage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/clinic-staff/billing"
           element={
             <LocalizedPrivateRoute
@@ -1670,6 +1682,16 @@ const Router = () => (
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
             >
               <ClinicStaffSchedulesPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/cashier"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffCashierPage />
             </PrivateRoute>
           }
         />

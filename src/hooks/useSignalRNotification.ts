@@ -5,6 +5,7 @@ import {
   HubConnectionState,
   LogLevel,
 } from '@microsoft/signalr';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import useNotificationStore from '@/store/useNotificationStore';
 import useAuthStore from '@/store/auth-store';
@@ -35,6 +36,7 @@ export function useSignalRNotification(): {
   const connectionRef = useRef<HubConnection | null>(null);
   const reconnectAttemptRef = useRef(0);
   const userRolesRef = useRef<string[]>([]);
+  const queryClient = useQueryClient();
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   // Stable selector: extract roles array, fall back to a module-level empty array
@@ -118,6 +120,35 @@ export function useSignalRNotification(): {
       // Add to store (will trigger sound and browser notification)
       addNotification(notification);
 
+      const payload = (() => {
+        const raw = notification.payload;
+        if (!raw) return {};
+        if (typeof raw === 'string') {
+          try {
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === 'object'
+              ? (parsed as Record<string, unknown>)
+              : {};
+          } catch {
+            return {};
+          }
+        }
+        return raw as Record<string, unknown>;
+      })();
+
+      const action =
+        typeof payload.action === 'string'
+          ? payload.action.trim().toLowerCase()
+          : '';
+      if (action === 'cashier_payment_ready') {
+        void queryClient.invalidateQueries({
+          queryKey: ['clinic-staff', 'queue'],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ['clinic-staff-orders'],
+        });
+      }
+
       // Show toast notification with navigation action
       toast.info(notification.title + '\n' + notification.message, {
         onClick: () => {
@@ -137,7 +168,7 @@ export function useSignalRNotification(): {
         closeOnClick: true,
       });
     },
-    [addNotification]
+    [addNotification, queryClient]
   );
 
   /**

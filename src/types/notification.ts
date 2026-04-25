@@ -114,6 +114,12 @@ export interface ConsultationNotificationPayload extends BaseNotificationPayload
   doctorName?: string;
   patientName?: string;
   diagnosis?: string;
+  visitId?: string;
+  diagnosisId?: string;
+  screeningId?: string;
+  hasPrescription?: boolean;
+  noMedicationPrescribed?: boolean;
+  action?: string;
 }
 
 /**
@@ -542,6 +548,11 @@ export function getNotificationRoute(
       const action = readString(payload, 'action', 'notificationAction')
         .toLowerCase()
         .trim();
+      const visitId = readString(payload, 'visitId');
+      if (isClinicStaff && action === 'cashier_payment_ready') {
+        const basePath = '/clinic-staff/queue';
+        return appendIdQuery(basePath, 'visitId', visitId);
+      }
       const flowType = readString(
         payload,
         'verificationFlowType',

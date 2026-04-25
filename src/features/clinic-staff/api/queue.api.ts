@@ -52,6 +52,38 @@ export interface AvailableDoctor {
   avatarUrl?: string;
 }
 
+export interface ClinicPaymentContext {
+  visitId: string;
+  patientId: string;
+  patientName: string;
+  consultationSessionId: string;
+  screeningId: string;
+  diagnosis: {
+    diagnosisId: string;
+    diagnosisCode?: string;
+    codingSystem?: string;
+    clinicalFindings?: string;
+    severityLevel?: string;
+    recommendations?: string;
+    followUpDate?: string;
+    diagnosedBy: {
+      doctorId: string;
+      doctorName?: string;
+    };
+    finalizedAt?: string;
+    prescriptionItems: Array<{
+      medicineName: string;
+      unit?: string;
+      dosage: string;
+      frequency: string;
+      duration: string;
+      instruction?: string;
+    }>;
+    prescriptionNote?: string;
+    noMedicationPrescribed: boolean;
+  };
+}
+
 interface AvailableDoctorApiItem {
   id: string;
   fullName?: string | null;
@@ -113,5 +145,13 @@ export const clinicQueueApi = {
       response.data
     );
     return data.items.map(normalizeAvailableDoctor);
+  },
+
+  /** Get payment context (diagnosis + prescription) for cashier */
+  async getPaymentContext(visitId: string) {
+    const response = await api.get<ApiResponse<ClinicPaymentContext>>(
+      API_ENDPOINTS.CLINIC_QUEUE.PAYMENT_CONTEXT(visitId)
+    );
+    return unwrapApiData<ClinicPaymentContext>(response.data);
   },
 };
