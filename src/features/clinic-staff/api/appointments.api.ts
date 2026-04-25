@@ -20,6 +20,7 @@ export interface ClinicStaffAppointmentDto {
     | 'Confirmed'
     | 'CheckedIn'
     | 'InProgress'
+    | 'WaitingForPayment'
     | 'Completed'
     | 'Cancelled'
     | 'NoShow';

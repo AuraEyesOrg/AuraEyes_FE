@@ -6,6 +6,7 @@ export const useAllOrders = (page: number = 1, pageSize: number = 20) => {
   return useQuery({
     queryKey: ['clinic-staff-orders', page, pageSize],
     queryFn: () => getAllOrders(page, pageSize),
+    refetchInterval: 15_000, // Auto-refresh every 15 seconds for real-time cashier experience
   });
 };
 
