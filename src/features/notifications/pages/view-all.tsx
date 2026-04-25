@@ -25,9 +25,12 @@ import OrganisationHeader from '@/features/organisation/components/OrganisationH
 import OrganisationSidebar from '@/features/organisation/components/Sidebar';
 import SystemAdminSidebar from '@/features/system-admin/components/Sidebar';
 import PageHeader from '@/features/system-admin/components/PageHeader';
+import ClinicStaffHeader from '@/features/clinic-staff/components/ClinicStaffHeader';
+import ClinicStaffSidebar from '@/features/clinic-staff/components/ClinicStaffSidebar';
 
 type AppRoleLayout =
   | 'patient'
+  | 'clinic-staff'
   | 'ophthalmologist'
   | 'organisation'
   | 'system-admin';
@@ -133,6 +136,10 @@ export default function ViewAllNotificationsPage() {
       )
     ) {
       return 'ophthalmologist';
+    }
+
+    if (normalizedRoles.some((role) => role === 'clinicstaff')) {
+      return 'clinic-staff';
     }
 
     return 'patient';
@@ -358,6 +365,18 @@ export default function ViewAllNotificationsPage() {
         <DoctorSidebar />
         <div className="flex-1 h-full overflow-y-auto">
           <DoctorHeader pageName="Notifications" />
+          <main className="p-6">{content}</main>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeLayout === 'clinic-staff') {
+    return (
+      <div className="flex h-screen w-full bg-(--bg-primary)">
+        <ClinicStaffSidebar />
+        <div className="flex-1 h-full overflow-y-auto">
+          <ClinicStaffHeader />
           <main className="p-6">{content}</main>
         </div>
       </div>
