@@ -85,6 +85,7 @@ export interface ConsultationSessionListDto {
   id: string;
   patientId: string;
   ophthalmologistId: string | null;
+  aiScreeningId?: string | null;
   // Optional human-readable names coming from BE
   patientName?: string | null;
   patientAvatarUrl?: string | null;

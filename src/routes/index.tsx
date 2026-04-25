@@ -117,6 +117,9 @@ const ViewAllNotificationsPage = lazy(
 const ClinicStaffDashboard = lazy(
   () => import('@/features/clinic-staff/pages/dashboard')
 );
+const ClinicStaffQueuePage = lazy(
+  () => import('@/features/clinic-staff/pages/queue')
+);
 const ClinicStaffScreeningsPage = lazy(
   () => import('@/features/clinic-staff/pages/screenings')
 );
@@ -820,6 +823,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/clinic-staff/queue"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff']}
+              element={<ClinicStaffQueuePage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/clinic-staff/screenings"
           element={
             <LocalizedPrivateRoute
@@ -1488,6 +1500,16 @@ const Router = () => (
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
             >
               <ClinicStaffDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/queue"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffQueuePage />
             </PrivateRoute>
           }
         />
