@@ -17,6 +17,9 @@ export interface ClinicQueueItem {
   visitId: string;
   patientId: string;
   patientName: string;
+  patientGender?: string;
+  patientAge?: number;
+  citizenId?: string;
   appointmentId?: string;
   visitStatus: string;
   checkedInAt: string;

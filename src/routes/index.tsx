@@ -119,6 +119,8 @@ const ViewAllNotificationsPage = lazy(
   () => import('@/features/notifications/pages/view-all')
 );
 
+const FollowUpPage = lazy(() => import('@/features/patient/pages/follow-up'));
+
 // Clinic Staff pages
 const ClinicStaffDashboard = lazy(
   () => import('@/features/clinic-staff/pages/dashboard')
@@ -799,6 +801,15 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['Patient']}
               element={<WalletPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/patient/follow-up"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient']}
+              element={<FollowUpPage />}
             />
           }
         />

@@ -12,12 +12,12 @@ import {
   PlusCircle,
   XCircle,
   Building2,
+  RefreshCw,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { RefreshCw } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import {
   usePatientClinicAppointments,
@@ -30,7 +30,6 @@ import {
 } from '@/features/patient/components';
 import useAuthStore from '@/store/auth-store';
 import { formatSlotTime } from '@/lib/date-utils';
-import { SessionStatus } from '@/types/consultation';
 import { useSyncOrder } from '../hooks/use-financial';
 import type {
   ClinicAppointmentDto,
@@ -48,13 +47,6 @@ const CLINIC_TAB_MAP: Record<FilterTab, PatientAppointmentTab> = {
   upcoming: 'Upcoming',
   completed: 'Completed',
   cancelled: 'Cancelled',
-};
-
-const SESSION_TAB_STATUS: Record<FilterTab, SessionStatus | undefined> = {
-  all: undefined,
-  upcoming: SessionStatus.Confirmed,
-  completed: SessionStatus.Completed,
-  cancelled: SessionStatus.Cancelled,
 };
 
 const CLINIC_STATUS_STYLES: Record<string, string> = {
@@ -82,26 +74,20 @@ const CLINIC_STATUS_LABEL_KEYS: Record<string, string> = {
 
 const AppointmentsPage = () => {
   const { t: i18nT } = useTranslation();
-  const { locale } = useParams();
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
 
   const [filter, setFilter] = useState<FilterTab>('all');
   const [clinicPage, setClinicPage] = useState(1);
-  const [sessionPage, setSessionPage] = useState(1);
-
   const [clinicFeedbackTarget, setClinicFeedbackTarget] =
     useState<ClinicAppointmentDto | null>(null);
-  const [cancelSessionId, setCancelSessionId] = useState<string | null>(null);
 
   const { user } = useAuthStore();
-  const currentUserId = user?.id;
   const patientId = user?.roleId;
 
   const onFilterChange = (next: FilterTab) => {
     setFilter(next);
     setClinicPage(1);
-    setSessionPage(1);
   };
 
   const { mutate: syncOrder, isPending: isSyncing } = useSyncOrder();
@@ -376,6 +362,9 @@ const AppointmentsPage = () => {
                   reasonLabel={t('PatientAppointments.labels.reason', {
                     reason: appointment.visitReason ?? '',
                   })}
+                  organisationLabel={t(
+                    'PatientAppointments.labels.organisationAppointment'
+                  )}
                   clinicLabel={t('PatientAppointments.labels.clinicVisit')}
                   onRate={() => setClinicFeedbackTarget(appointment)}
                   onSync={handleSync}
@@ -518,6 +507,7 @@ interface ClinicAppointmentCardProps {
   rateLabel: string;
   submittedLabel: string;
   reasonLabel: string;
+  organisationLabel: string;
   clinicLabel: string;
   onRate: () => void;
   onSync: (orderId: string) => void;
@@ -529,6 +519,8 @@ const ClinicAppointmentCard = ({
   statusLabel,
   rateLabel,
   submittedLabel,
+  reasonLabel,
+  organisationLabel,
   clinicLabel,
   onRate,
   onSync,
@@ -569,7 +561,7 @@ const ClinicAppointmentCard = ({
                 </div>
                 <span className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">
                   {appointment.organisationName
-                    ? 'Clinic Appointment'
+                    ? organisationLabel
                     : 'General Appointment'}
                 </span>
               </div>
@@ -671,7 +663,7 @@ const ClinicAppointmentCard = ({
                       <FileText className="h-4 w-4" />
                     </div>
                     <p className="text-xs leading-relaxed line-clamp-2 italic pt-0.5">
-                      "{appointment.visitReason}"
+                      {reasonLabel}
                     </p>
                   </div>
                 )}

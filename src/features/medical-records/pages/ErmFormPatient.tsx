@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Printer, ArrowLeft } from 'lucide-react';
+import { Printer, ArrowLeft, Save } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 const SECTION_KEYS = [
   'miMat',
@@ -17,10 +18,36 @@ const SECTION_KEYS = [
 export default function ErmFormPatient() {
   const location = useLocation();
   const navigate = useNavigate();
-  const data = location.state?.formData || {};
+  const [data, setData] = useState(location.state?.formData || {});
 
-  const renderSquare = (checked: boolean) => (
-    <span className="inline-flex items-center justify-center w-3.5 h-3.5 border border-black text-[11px] font-black mr-1 leading-none">
+  useEffect(() => {
+    if (location.state?.formData) {
+      setData(location.state.formData);
+    }
+  }, [location.state]);
+
+  const handleChange = (field: string, value: any) => {
+    setData((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = () => {
+    console.log('Saving Staff ERM Data:', data);
+    toast.success('Thông tin hành chính đã được lưu!');
+  };
+
+  const renderSquare = (checked: boolean, field?: string, value?: string) => (
+    <span
+      onClick={() => {
+        if (field) {
+          if (value) {
+            handleChange(field, value);
+          } else {
+            handleChange(field, !checked);
+          }
+        }
+      }}
+      className="inline-flex items-center justify-center w-3.5 h-3.5 border border-black text-[11px] font-black mr-1 leading-none cursor-pointer"
+    >
       {checked ? 'X' : ''}
     </span>
   );
@@ -31,9 +58,15 @@ export default function ErmFormPatient() {
       <div className="fixed top-5 left-1/2 -translate-x-1/2 flex gap-4 no-print z-50 font-sans">
         <button
           onClick={() => navigate(-1)}
-          className="bg-white border border-black px-6 py-2 font-bold text-xs flex items-center gap-2 hover:bg-slate-50 transition-all"
+          className="bg-white border border-black px-6 py-2 font-bold text-xs flex items-center gap-2 hover:bg-slate-50 transition-all shadow-lg"
         >
           <ArrowLeft className="w-4 h-4" /> QUAY LẠI
+        </button>
+        <button
+          onClick={handleSave}
+          className="bg-primary text-white px-8 py-2 font-bold text-xs flex items-center gap-2 hover:bg-primary/90 shadow-xl transition-all"
+        >
+          <Save className="w-4 h-4" /> LƯU THÔNG TIN
         </button>
         <button
           onClick={() => window.print()}
@@ -54,19 +87,36 @@ export default function ErmFormPatient() {
           <div className="absolute top-0 right-0 text-[11px] font-bold text-right space-y-0.5">
             <p>MS: 23/BV-01</p>
             <p>Số lưu trữ:....................................</p>
-            <p>Mã YT: {data.maYT || '...... /210/20....................'}</p>
+            <p>
+              Mã YT:{' '}
+              <input
+                type="text"
+                value={data.maYT || ''}
+                onChange={(e) => handleChange('maYT', e.target.value)}
+                className="w-40 border-b border-black outline-none bg-transparent"
+                placeholder="...... /210/20......"
+              />
+            </p>
           </div>
 
           <div className="w-full flex justify-between text-[11px] font-bold mt-6">
             <p>
               Khoa:{' '}
-              <span className="border-b border-black min-w-[100px] inline-block text-center">
-                {data.khoa || '................'}
-              </span>{' '}
+              <input
+                type="text"
+                value={data.khoa || ''}
+                onChange={(e) => handleChange('khoa', e.target.value)}
+                className="border-b border-black w-[100px] text-center outline-none bg-transparent"
+                placeholder="................"
+              />{' '}
               Giường:{' '}
-              <span className="border-b border-black min-w-[80px] inline-block text-center">
-                {data.giuong || '............'}
-              </span>
+              <input
+                type="text"
+                value={data.giuong || ''}
+                onChange={(e) => handleChange('giuong', e.target.value)}
+                className="border-b border-black w-[80px] text-center outline-none bg-transparent"
+                placeholder="............"
+              />
             </p>
           </div>
         </div>
@@ -91,10 +141,13 @@ export default function ErmFormPatient() {
           <div className="grid grid-cols-12 text-[12.5px] font-medium leading-relaxed gap-y-1">
             <div className="col-span-8 flex items-end">
               1. Họ và tên:{' '}
-              <span className="uppercase font-bold border-b border-black flex-1 ml-1 px-2 h-5">
-                {data.fullName ||
-                  '..………………………....................................'}
-              </span>
+              <input
+                type="text"
+                value={data.fullName || ''}
+                onChange={(e) => handleChange('fullName', e.target.value)}
+                className="uppercase font-bold border-b border-black flex-1 ml-1 px-2 h-5 outline-none bg-transparent"
+                placeholder="..………………………...................................."
+              />
             </div>
             <div className="col-span-4 flex items-center justify-end gap-2">
               2. Ngày sinh{' '}
@@ -115,12 +168,16 @@ export default function ErmFormPatient() {
             </div>
 
             <div className="col-span-12 flex items-center">
-              3. Giới: {renderSquare(data.gender === 'Nam')} Nam{' '}
-              {renderSquare(data.gender === 'Nữ')} Nữ
+              3. Giới: {renderSquare(data.gender === 'Nam', 'gender')} Nam{' '}
+              {renderSquare(data.gender === 'Nữ', 'gender')} Nữ
               <span className="ml-10">4. Nghề nghiệp:</span>{' '}
-              <span className="border-b border-black flex-1 px-2 mx-2 h-5">
-                ..............................................
-              </span>
+              <input
+                type="text"
+                value={data.job || ''}
+                onChange={(e) => handleChange('job', e.target.value)}
+                className="border-b border-black flex-1 px-2 mx-2 h-5 outline-none bg-transparent"
+                placeholder=".............................................."
+              />
               <div className="flex gap-0.5">
                 <span className="border border-black px-1 min-w-[16px]"> </span>
                 <span className="border border-black px-1 min-w-[16px]"> </span>
@@ -129,27 +186,40 @@ export default function ErmFormPatient() {
 
             <div className="col-span-12 flex items-center">
               5. Dân tộc:{' '}
-              <span className="border-b border-black min-w-[120px] px-2 h-5">
-                …………………………….
-              </span>
+              <input
+                type="text"
+                value={data.ethnicity || ''}
+                onChange={(e) => handleChange('ethnicity', e.target.value)}
+                className="border-b border-black min-w-[120px] px-2 h-5 outline-none bg-transparent"
+                placeholder="……………………………."
+              />
               <div className="flex gap-0.5 mx-2">
                 <span className="border border-black px-1 min-w-[16px]"> </span>
                 <span className="border border-black px-1 min-w-[16px]"> </span>
               </div>
               6. Ngoại kiều:{' '}
-              <span className="border-b border-black flex-1 px-2 h-5">
-                .................................................
-              </span>
+              <input
+                type="text"
+                value={data.nationality || ''}
+                onChange={(e) => handleChange('nationality', e.target.value)}
+                className="border-b border-black flex-1 px-2 h-5 outline-none bg-transparent"
+                placeholder="................................................."
+              />
               <div className="flex gap-0.5 ml-2">
                 <span className="border border-black px-1 min-w-[16px]"> </span>
                 <span className="border border-black px-1 min-w-[16px]"> </span>
               </div>
             </div>
 
-            <div className="col-span-12">
-              7. Địa chỉ: Số nhà …….… Thôn, phố
-              ………...............................…….. Xã, phường
-              …………...........…………..…...
+            <div className="col-span-12 flex items-center">
+              7. Địa chỉ:{' '}
+              <input
+                type="text"
+                value={data.address || ''}
+                onChange={(e) => handleChange('address', e.target.value)}
+                className="border-b border-black flex-1 px-2 h-5 outline-none bg-transparent"
+                placeholder="Số nhà …… Thôn, phố …… Xã, phường ……"
+              />
             </div>
             <div className="col-span-12 flex items-center">
               Huyện (Quận, thị xã) …………….........….....…...{' '}
@@ -167,18 +237,30 @@ export default function ErmFormPatient() {
 
             <div className="col-span-12 flex items-center">
               8. Nơi làm việc:{' '}
-              <span className="border-b border-black flex-1 px-2 h-5">
-                ..................................................................
-              </span>
+              <input
+                type="text"
+                value={data.workplace || ''}
+                onChange={(e) => handleChange('workplace', e.target.value)}
+                className="border-b border-black flex-1 px-2 h-5 outline-none bg-transparent"
+                placeholder=".................................................................."
+              />
               <span className="ml-4 mr-2">
                 9.{' '}
                 <span className="bg-yellow-200 print:bg-transparent">Đối</span>{' '}
                 tượng:
               </span>
-              1.BHYT{renderSquare(data.objectType === 'BHYT')} 2.Thu phí
-              {renderSquare(data.objectType === 'Thu phí')} 3.Miễn
-              {renderSquare(data.objectType === 'Miễn')} 4.Khác
-              {renderSquare(data.objectType === 'Khác')}
+              1.BHYT
+              {renderSquare(data.objectType === 'BHYT', 'objectType', 'BHYT')}{' '}
+              2.Thu phí
+              {renderSquare(
+                data.objectType === 'Thu phí',
+                'objectType',
+                'Thu phí'
+              )}{' '}
+              3.Miễn
+              {renderSquare(data.objectType === 'Miễn', 'objectType', 'Miễn')}{' '}
+              4.Khác
+              {renderSquare(data.objectType === 'Khác', 'objectType', 'Khác')}
             </div>
             <div className="col-span-12">
               10.BHYT giá trị đến ngày…… tháng …… năm 20….. Số thẻ BHYT:

@@ -685,6 +685,20 @@ export default function PatientDashboard() {
                 </div>
                 <ChevronRight className="w-4 h-4 opacity-50 group-hover:translate-x-1 transition-transform" />
               </Link>
+              <Link
+                to="/patient/follow-up"
+                className="flex items-center justify-between w-full p-4 rounded-lg bg-(--bg-secondary) border border-(--border-color) text-(--text-primary) hover:border-brand/50 hover:bg-(--bg-tertiary) transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <History className="w-5 h-5 text-indigo-600" />
+                  <span className="font-bold">
+                    {t('PatientDashboard.quickActions.bookFollowUp', {
+                      defaultValue: 'Đặt lịch tái khám',
+                    })}
+                  </span>
+                </div>
+                <ChevronRight className="w-4 h-4 opacity-50 group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
           </div>
         </div>
