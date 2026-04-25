@@ -188,43 +188,46 @@ const AppointmentsPage = () => {
     }
   };
 
-  const bothEmpty = !isLoadingClinic && clinicAppointments.length === 0;
+  const bothEmpty = !isLoadingClinic && clinicCounts.All === 0;
+
+  const PageHeader = () => (
+    <div className="relative mb-10 overflow-hidden rounded-[2.5rem] bg-slate-900 px-8 py-12 md:px-12 shadow-2xl">
+      <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-brand/30 blur-[100px]" />
+      <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-blue-500/10 blur-[80px]" />
+
+      <div className="relative flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <span className="h-1.5 w-10 rounded-full bg-brand shadow-[0_0_15px_rgba(var(--brand-rgb),0.5)]" />
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-brand/90">
+              {t('PatientAppointments.page.eyebrow')}
+            </p>
+          </div>
+          <h1 className="text-5xl font-black tracking-tighter text-white md:text-6xl">
+            {t('PatientAppointments.page.title')}
+          </h1>
+          <p className="max-w-md text-lg font-medium text-slate-400 leading-relaxed">
+            {t('PatientAppointments.page.subtitle')}
+          </p>
+        </div>
+
+        <Link
+          to="/patient/clinics"
+          className="group relative flex items-center justify-center gap-3 overflow-hidden rounded-2xl bg-brand px-10 py-5 text-sm font-black text-white transition-all hover:scale-[1.03] active:scale-95 shadow-[0_20px_50px_rgba(var(--brand-rgb),0.3)]"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+          <PlusCircle className="h-5 w-5" strokeWidth={2.5} />
+          <span className="uppercase tracking-widest">
+            {t('PatientAppointments.actions.bookNew')}
+          </span>
+        </Link>
+      </div>
+    </div>
+  );
 
   return (
     <PatientLayout>
-      <div className="relative mb-10 overflow-hidden rounded-3xl bg-slate-900 px-6 py-10 md:px-10">
-        {/* Abstract Background Element */}
-        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-brand/20 blur-3xl" />
-        <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl" />
-
-        <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <span className="h-1 w-8 rounded-full bg-brand" />
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand">
-                {t('PatientAppointments.page.eyebrow')}
-              </p>
-            </div>
-            <h1 className="text-4xl font-black tracking-tight text-white md:text-5xl">
-              {t('PatientAppointments.page.title')}
-            </h1>
-            <p className="mt-2 max-w-md text-lg font-medium text-slate-400">
-              {t('PatientAppointments.page.subtitle')}
-            </p>
-          </div>
-
-          <Link
-            to="/patient/clinics"
-            className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-brand px-8 py-4 text-sm font-bold text-white transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-brand/40"
-          >
-            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-            <PlusCircle className="relative z-10 h-5 w-5" strokeWidth={2.5} />
-            <span className="relative z-10 uppercase tracking-wider">
-              {t('PatientAppointments.actions.bookNew')}
-            </span>
-          </Link>
-        </div>
-      </div>
+      <PageHeader />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
         {stats.map((stat) => {
@@ -240,35 +243,37 @@ const AppointmentsPage = () => {
           return (
             <div
               key={stat.key}
-              className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 transition-all hover:shadow-lg hover:-translate-y-1"
+              className="group relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 transition-all hover:shadow-2xl hover:shadow-slate-200/50 dark:hover:shadow-brand/5 hover:-translate-y-1.5"
             >
-              <div className="relative z-10 flex items-center justify-between mb-4">
-                <div className={`p-2.5 rounded-xl border ${colorClass}`}>
+              <div className="relative z-10 flex items-center justify-between mb-5">
+                <div
+                  className={`p-3 rounded-2xl border ${colorClass} shadow-inner`}
+                >
                   {stat.icon}
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                   {stat.label}
                 </span>
               </div>
-              <div className="relative z-10 flex items-baseline gap-1">
-                <span className="text-3xl font-black text-slate-900 dark:text-white">
+              <div className="relative z-10 flex items-baseline gap-2">
+                <span className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                   {stat.value}
                 </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                  Records
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                  Slots
                 </span>
               </div>
               {/* Decorative accent */}
               <div
-                className={`absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-500 ${colorClass.split(' ')[0].replace('text-', 'bg-')}`}
+                className={`absolute bottom-0 left-0 h-1.5 w-0 group-hover:w-full transition-all duration-700 ease-out ${colorClass.split(' ')[0].replace('text-', 'bg-')}`}
               />
             </div>
           );
         })}
       </div>
 
-      <div className="mb-10 flex items-center justify-center">
-        <div className="inline-flex p-1.5 bg-slate-100 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+      <div className="mb-12 flex items-center justify-center">
+        <div className="inline-flex p-1.5 bg-slate-100/80 dark:bg-slate-800/40 backdrop-blur-md rounded-[2rem] border border-slate-200/60 dark:border-slate-700/40 shadow-inner">
           {FILTER_TABS.map((tab) => {
             const active = filter === tab;
             const badge = clinicCounts[CLINIC_TAB_MAP[tab]];
@@ -278,19 +283,21 @@ const AppointmentsPage = () => {
                 type="button"
                 onClick={() => onFilterChange(tab)}
                 className={[
-                  'relative flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap',
+                  'relative flex items-center gap-3 px-8 py-3.5 rounded-[1.5rem] text-sm font-black transition-all duration-500 whitespace-nowrap',
                   active
-                    ? 'bg-white dark:bg-slate-700 text-brand shadow-md'
-                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300',
+                    ? 'bg-white dark:bg-slate-700 text-brand shadow-[0_10px_20px_rgba(0,0,0,0.05)] scale-105 z-10'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-700/30',
                 ].join(' ')}
               >
-                <span>{getFilterLabel(tab)}</span>
+                <span className="uppercase tracking-widest">
+                  {getFilterLabel(tab)}
+                </span>
                 <span
                   className={[
-                    'inline-flex min-w-[1.2rem] items-center justify-center rounded-lg px-1 py-0.5 text-[9px] font-black',
+                    'inline-flex min-w-[1.5rem] h-6 items-center justify-center rounded-full px-2 text-[10px] font-black transition-colors duration-500',
                     active
-                      ? 'bg-brand text-white'
-                      : 'bg-slate-200 dark:bg-slate-700 text-slate-500',
+                      ? 'bg-brand text-white shadow-[0_0_10px_rgba(var(--brand-rgb),0.4)]'
+                      : 'bg-slate-200 dark:bg-slate-700/50 text-slate-500',
                   ].join(' ')}
                 >
                   {badge}
@@ -301,103 +308,111 @@ const AppointmentsPage = () => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6">
-        <section aria-labelledby="clinic-section-title">
-          <SectionHeader
-            id="clinic-section-title"
-            icon={<Building2 className="h-4 w-4" strokeWidth={1.8} />}
-            title={t('PatientAppointments.sections.organisationSlots')}
-            totalCount={clinicTotalCount}
-            refreshing={!isLoadingClinic && isFetchingClinic}
-            action={
-              <Link
-                to="/patient/clinics"
-                className="inline-flex items-center gap-1 text-sm font-semibold text-brand transition-colors hover:text-brand/80"
-              >
-                {t('PatientAppointments.actions.bookMoreSlot')}
-                <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
-              </Link>
-            }
-          />
-
-          {isLoadingClinic ? (
-            <SkeletonList />
-          ) : clinicAppointments.length === 0 ? (
-            <EmptyState
-              icon={<Building2 className="h-6 w-6" strokeWidth={1.5} />}
-              title={
-                filter === 'all'
-                  ? t('PatientAppointments.empty.clinicAll')
-                  : t('PatientAppointments.empty.clinicByFilter', {
-                      filter: getFilterLabel(filter),
-                    })
+      <div className="flex flex-col gap-8">
+        {!bothEmpty && (
+          <section aria-labelledby="clinic-section-title">
+            <SectionHeader
+              id="clinic-section-title"
+              icon={<Building2 className="h-5 w-5" strokeWidth={2} />}
+              title={t('PatientAppointments.sections.organisationSlots')}
+              totalCount={clinicTotalCount}
+              refreshing={!isLoadingClinic && isFetchingClinic}
+              action={
+                <Link
+                  to="/patient/clinics"
+                  className="group inline-flex items-center gap-2 text-sm font-bold text-brand transition-all hover:gap-3"
+                >
+                  <span className="relative">
+                    {t('PatientAppointments.actions.bookMoreSlot')}
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand transition-all group-hover:w-full" />
+                  </span>
+                  <ChevronRight
+                    className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                    strokeWidth={2.5}
+                  />
+                </Link>
               }
-              ctaLabel={
-                filter === 'all'
-                  ? t('PatientAppointments.actions.bookMoreSlot')
-                  : undefined
-              }
-              ctaHref="/patient/clinics"
             />
-          ) : (
-            <div className="space-y-3">
-              {clinicAppointments.map((appointment) => (
-                <ClinicAppointmentCard
-                  key={appointment.id}
-                  appointment={appointment}
-                  statusLabel={getClinicStatusLabel(appointment.status)}
-                  rateLabel={t('PatientAppointments.actions.rateClinic')}
-                  submittedLabel={t(
-                    'PatientAppointments.feedback.submittedBadge'
-                  )}
-                  reasonLabel={t('PatientAppointments.labels.reason', {
-                    reason: appointment.visitReason ?? '',
-                  })}
-                  organisationLabel={t(
-                    'PatientAppointments.labels.organisationAppointment'
-                  )}
-                  clinicLabel={t('PatientAppointments.labels.clinicVisit')}
-                  onRate={() => setClinicFeedbackTarget(appointment)}
-                />
-              ))}
-            </div>
-          )}
 
-          {clinicTotalPages > 1 && (
-            <Pagination
-              page={clinicPage}
-              totalPages={clinicTotalPages}
-              onChange={setClinicPage}
-              labels={{
-                prev: t('PatientAppointments.pagination.prev'),
-                next: t('PatientAppointments.pagination.next'),
-                status: t('PatientAppointments.pagination.pageOf', {
-                  page: clinicPage,
-                  total: clinicTotalPages,
-                }),
-              }}
-            />
-          )}
-        </section>
+            {isLoadingClinic ? (
+              <SkeletonList />
+            ) : clinicAppointments.length === 0 ? (
+              <EmptyState
+                icon={<Building2 className="h-10 w-10" strokeWidth={1.5} />}
+                title={
+                  filter === 'all'
+                    ? t('PatientAppointments.empty.clinicAll')
+                    : t('PatientAppointments.empty.clinicByFilter', {
+                        filter: getFilterLabel(filter),
+                      })
+                }
+                ctaLabel={
+                  filter === 'all'
+                    ? t('PatientAppointments.actions.bookMoreSlot')
+                    : undefined
+                }
+                ctaHref="/patient/clinics"
+              />
+            ) : (
+              <div className="grid grid-cols-1 gap-5">
+                {clinicAppointments.map((appointment) => (
+                  <ClinicAppointmentCard
+                    key={appointment.id}
+                    appointment={appointment}
+                    statusLabel={getClinicStatusLabel(appointment.status)}
+                    rateLabel={t('PatientAppointments.actions.rateClinic')}
+                    submittedLabel={t(
+                      'PatientAppointments.feedback.submittedBadge'
+                    )}
+                    reasonLabel={t('PatientAppointments.labels.reason', {
+                      reason: appointment.visitReason ?? '',
+                    })}
+                    organisationLabel={t(
+                      'PatientAppointments.labels.organisationAppointment'
+                    )}
+                    clinicLabel={t('PatientAppointments.labels.clinicVisit')}
+                    onRate={() => setClinicFeedbackTarget(appointment)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {clinicTotalPages > 1 && (
+              <Pagination
+                page={clinicPage}
+                totalPages={clinicTotalPages}
+                onChange={setClinicPage}
+                labels={{
+                  prev: t('PatientAppointments.pagination.prev'),
+                  next: t('PatientAppointments.pagination.next'),
+                  status: t('PatientAppointments.pagination.pageOf', {
+                    page: clinicPage,
+                    total: clinicTotalPages,
+                  }),
+                }}
+              />
+            )}
+          </section>
+        )}
       </div>
 
       {bothEmpty && (
-        <div className="relative mt-12 overflow-hidden rounded-[2.5rem] bg-slate-50 dark:bg-slate-900/40 p-12 text-center border border-slate-200 dark:border-slate-800">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand/20 to-transparent" />
+        <div className="relative mt-16 overflow-hidden rounded-[3rem] bg-slate-50 dark:bg-slate-900/40 p-16 text-center border border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-100 dark:shadow-none">
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-brand/30 to-transparent" />
 
           <div className="relative z-10 flex flex-col items-center">
-            <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-white dark:bg-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700">
+            <div className="mb-8 flex h-28 w-28 items-center justify-center rounded-[2.5rem] bg-white dark:bg-slate-800 shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700 transition-transform hover:scale-110">
               <CalendarDays
-                className="h-10 w-10 text-brand"
+                className="h-12 w-12 text-brand"
                 strokeWidth={1.5}
               />
             </div>
 
-            <h3 className="mb-3 text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+            <h3 className="mb-4 text-4xl font-black tracking-tight text-slate-900 dark:text-white">
               {t('PatientAppointments.empty.noAppointmentsTitle')}
             </h3>
 
-            <p className="mx-auto mb-8 max-w-md text-base font-medium leading-relaxed text-slate-500 dark:text-slate-400">
+            <p className="mx-auto mb-10 max-w-md text-lg font-medium leading-relaxed text-slate-500 dark:text-slate-400">
               {filter === 'all'
                 ? t('PatientAppointments.empty.noAppointmentsAll')
                 : t('PatientAppointments.empty.noAppointmentsByFilter', {
@@ -407,9 +422,9 @@ const AppointmentsPage = () => {
 
             <Link
               to="/patient/clinics"
-              className="group flex items-center gap-3 rounded-2xl bg-brand px-10 py-4 text-sm font-black uppercase tracking-widest text-white transition-all hover:scale-105 hover:shadow-2xl hover:shadow-brand/30 active:scale-95 shadow-xl shadow-brand/20"
+              className="group flex items-center gap-4 rounded-[2rem] bg-brand px-12 py-5 text-sm font-black uppercase tracking-[0.2em] text-white transition-all hover:scale-105 hover:shadow-[0_20px_50px_rgba(var(--brand-rgb),0.3)] active:scale-95 shadow-xl shadow-brand/20"
             >
-              <PlusCircle className="h-5 w-5" />
+              <PlusCircle className="h-6 w-6" />
               {t('PatientAppointments.actions.bookFirstAppointment')}
             </Link>
           </div>
@@ -453,30 +468,35 @@ const SectionHeader = ({
   refreshing,
   action,
 }: SectionHeaderProps) => (
-  <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-    <div className="flex items-center gap-4">
+  <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+    <div className="flex items-center gap-5">
       <div className="relative group">
-        <div className="absolute inset-0 bg-brand/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-        <span className="relative z-10 w-12 h-12 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center text-brand transition-transform group-hover:scale-110">
+        <div className="absolute inset-0 bg-brand/30 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500" />
+        <span className="relative z-10 w-14 h-14 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 flex items-center justify-center text-brand transition-all group-hover:scale-110 group-hover:rotate-3">
           {icon}
         </span>
       </div>
-      <div>
+      <div className="space-y-1">
         <h2
           id={id}
-          className="text-2xl font-black tracking-tight text-slate-900 dark:text-white"
+          className="text-3xl font-black tracking-tight text-slate-900 dark:text-white"
         >
           {title}
         </h2>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-500 uppercase tracking-widest shadow-sm border border-slate-200/50 dark:border-slate-700/50">
             {totalCount} Total
           </span>
           {refreshing && (
-            <span className="flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-1.5 w-1.5 rounded-full bg-brand opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand"></span>
-            </span>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-brand/10 border border-brand/20">
+              <span className="flex h-1.5 w-1.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand"></span>
+              </span>
+              <span className="text-[9px] font-black text-brand uppercase tracking-tighter animate-pulse">
+                Syncing
+              </span>
+            </div>
           )}
         </div>
       </div>
@@ -501,103 +521,113 @@ const ClinicAppointmentCard = ({
   statusLabel,
   rateLabel,
   submittedLabel,
-  reasonLabel,
   clinicLabel,
   onRate,
-}: Omit<ClinicAppointmentCardProps, 'organisationLabel'>) => {
+}: Omit<ClinicAppointmentCardProps, 'organisationLabel' | 'reasonLabel'>) => {
   const dimmed =
     appointment.status === 'Cancelled' || appointment.status === 'NoShow';
 
   return (
     <article
       className={[
-        'group relative overflow-hidden medical-card p-0 hover:border-brand/40 transition-all duration-300 hover:shadow-xl hover:shadow-brand/5',
-        dimmed ? 'opacity-70 grayscale-[0.5]' : '',
+        'group relative overflow-hidden rounded-[2rem] border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-0 hover:border-brand/40 transition-all duration-500 hover:shadow-2xl hover:shadow-brand/5 hover:-translate-y-1',
+        dimmed ? 'opacity-60 grayscale-[0.3]' : '',
       ].join(' ')}
     >
       <div className="flex flex-col md:flex-row">
         {/* Date Side Column */}
-        <div className="flex flex-row md:flex-col items-center justify-center p-4 md:w-28 bg-slate-50 dark:bg-slate-800/40 border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 transition-colors group-hover:bg-brand-soft/30">
-          <span className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tighter md:mb-1">
+        <div className="flex flex-row md:flex-col items-center justify-center p-6 md:w-32 bg-slate-50/50 dark:bg-slate-800/30 border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 transition-all group-hover:bg-brand-soft/20">
+          <span className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] md:mb-1">
             {format(new Date(appointment.date), 'MMM')}
           </span>
-          <span className="text-3xl md:text-4xl font-black text-slate-800 dark:text-white leading-none px-3 md:px-0">
+          <span className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white leading-none px-4 md:px-0 tracking-tighter">
             {format(new Date(appointment.date), 'dd')}
           </span>
-          <span className="text-xs font-bold text-brand md:mt-1 opacity-80">
+          <div className="hidden md:block w-8 h-1 bg-brand/20 rounded-full my-2" />
+          <span className="text-xs font-black text-brand tracking-widest opacity-60">
             {format(new Date(appointment.date), 'yyyy')}
           </span>
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 p-5 md:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <Building2 className="h-3.5 w-3.5 text-brand opacity-60" />
-                <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">
+        <div className="flex-1 p-6 md:p-8">
+          <div className="flex flex-wrap items-start justify-between gap-6 mb-6">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className="p-1.5 rounded-lg bg-brand/10 text-brand">
+                  <Building2 className="h-3.5 w-3.5" strokeWidth={2.5} />
+                </div>
+                <span className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">
                   {appointment.organisationName
                     ? 'Clinic Appointment'
                     : 'General Appointment'}
                 </span>
               </div>
-              <h3 className="text-xl font-extrabold text-slate-900 dark:text-white truncate">
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white truncate tracking-tight">
                 {appointment.organisationName ?? clinicLabel}
               </h3>
             </div>
 
             <span
               className={[
-                'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide shadow-sm',
+                'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest shadow-sm border border-transparent transition-all',
                 CLINIC_STATUS_STYLES[appointment.status] ??
                   CLINIC_STATUS_STYLES.Pending,
               ].join(' ')}
             >
-              <div className="w-1.5 h-1.5 rounded-full bg-current opacity-80 animate-pulse" />
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
+              </span>
               {statusLabel}
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                  <Clock className="h-4 w-4" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-end">
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 text-slate-700 dark:text-slate-300">
+                <div className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center shrink-0">
+                  <Clock className="h-5 w-5 text-brand" strokeWidth={2.5} />
                 </div>
-                <span className="text-sm font-semibold tabular-nums">
-                  {formatSlotTime(appointment.startTime)} –{' '}
-                  {formatSlotTime(appointment.endTime)}
-                </span>
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
+                    Schedule
+                  </p>
+                  <p className="text-lg font-black tabular-nums tracking-tight">
+                    {formatSlotTime(appointment.startTime)} –{' '}
+                    {formatSlotTime(appointment.endTime)}
+                  </p>
+                </div>
               </div>
 
               {appointment.visitReason && (
-                <div className="flex items-start gap-3 text-slate-500 dark:text-slate-500">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                    <FileText className="h-4 w-4" />
+                <div className="group/reason relative p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 transition-all hover:bg-white dark:hover:bg-slate-800 hover:shadow-md">
+                  <div className="absolute -top-2 -left-2 p-1.5 rounded-lg bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600">
+                    <FileText className="h-3 w-3 text-slate-400" />
                   </div>
-                  <p className="text-xs leading-relaxed line-clamp-2 italic pt-0.5">
+                  <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-400 font-medium italic">
                     "{appointment.visitReason}"
                   </p>
                 </div>
               )}
             </div>
 
-            <div className="flex justify-end pt-2 sm:pt-0">
+            <div className="flex justify-end pt-4 lg:pt-0">
               {appointment.status === 'Completed' && (
-                <div>
+                <div className="w-full sm:w-auto">
                   {appointment.hasFeedback ? (
                     <FeedbackSubmittedBadge label={submittedLabel} />
                   ) : (
                     <button
                       type="button"
                       onClick={onRate}
-                      className="group/btn relative px-5 py-2.5 bg-brand text-white rounded-xl text-xs font-bold transition-all hover:bg-brand/90 hover:scale-105 active:scale-95 shadow-lg shadow-brand/20 overflow-hidden"
+                      className="group/btn relative w-full sm:w-auto px-8 py-3.5 bg-brand text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-brand/30 overflow-hidden"
                     >
-                      <span className="relative z-10 flex items-center gap-2">
-                        <MessageSquareHeart className="h-3.5 w-3.5" />
+                      <span className="relative z-10 flex items-center justify-center gap-3">
+                        <MessageSquareHeart className="h-4 w-4" />
                         {rateLabel}
                       </span>
-                      <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
                     </button>
                   )}
                 </div>
@@ -609,12 +639,13 @@ const ClinicAppointmentCard = ({
 
       {/* Subtle Progress/Accent Line */}
       <div
-        className={`absolute bottom-0 left-0 h-1 transition-all duration-500 group-hover:w-full ${
+        className={`absolute bottom-0 left-0 h-1.5 transition-all duration-700 ease-in-out group-hover:w-full ${
           appointment.status === 'Completed'
             ? 'bg-emerald-500 w-full'
-            : appointment.status === 'Cancelled'
+            : appointment.status === 'Cancelled' ||
+                appointment.status === 'NoShow'
               ? 'bg-rose-500 w-full'
-              : 'bg-brand w-1/4'
+              : 'bg-brand w-1/6'
         }`}
       />
     </article>
