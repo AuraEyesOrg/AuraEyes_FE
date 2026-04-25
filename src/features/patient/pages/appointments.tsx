@@ -14,6 +14,7 @@ import {
   Building2,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { RefreshCw } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import { Link, useParams } from 'react-router-dom';
@@ -30,6 +31,7 @@ import {
 import useAuthStore from '@/store/auth-store';
 import { formatSlotTime } from '@/lib/date-utils';
 import { SessionStatus } from '@/types/consultation';
+import { useSyncOrder } from '../hooks/use-financial';
 import type {
   ClinicAppointmentDto,
   PatientAppointmentTab,
@@ -57,7 +59,7 @@ const SESSION_TAB_STATUS: Record<FilterTab, SessionStatus | undefined> = {
 
 const CLINIC_STATUS_STYLES: Record<string, string> = {
   Pending:
-    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+    'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50',
   Confirmed: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
   CheckedIn: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
   InProgress:
@@ -87,6 +89,7 @@ const AppointmentsPage = () => {
   const [filter, setFilter] = useState<FilterTab>('all');
   const [clinicPage, setClinicPage] = useState(1);
   const [sessionPage, setSessionPage] = useState(1);
+
   const [clinicFeedbackTarget, setClinicFeedbackTarget] =
     useState<ClinicAppointmentDto | null>(null);
   const [cancelSessionId, setCancelSessionId] = useState<string | null>(null);
@@ -99,6 +102,16 @@ const AppointmentsPage = () => {
     setFilter(next);
     setClinicPage(1);
     setSessionPage(1);
+  };
+
+  const { mutate: syncOrder, isPending: isSyncing } = useSyncOrder();
+
+  const handleSync = (orderId: string) => {
+    syncOrder(orderId, {
+      onSuccess: () => {
+        toast.success('Đã cập nhật trạng thái mới nhất.');
+      },
+    });
   };
 
   const clinicAppointmentsQuery = usePatientClinicAppointments(
@@ -132,6 +145,16 @@ const AppointmentsPage = () => {
         icon: <CalendarDays className="h-4 w-4" strokeWidth={1.6} />,
       },
       {
+        key: 'pending' as const,
+        label: 'Chờ thanh toán',
+        value:
+          clinicCounts.All -
+          (clinicCounts.Upcoming +
+            clinicCounts.Completed +
+            clinicCounts.Cancelled),
+        icon: <Clock className="h-4 w-4" strokeWidth={1.6} />,
+      },
+      {
         key: 'completed' as const,
         label: t('PatientAppointments.stats.completed'),
         value: clinicCounts.Completed,
@@ -142,12 +165,6 @@ const AppointmentsPage = () => {
         label: t('PatientAppointments.stats.cancelled'),
         value: clinicCounts.Cancelled,
         icon: <XCircle className="h-4 w-4" strokeWidth={1.6} />,
-      },
-      {
-        key: 'total' as const,
-        label: t('PatientAppointments.stats.total'),
-        value: clinicCounts.All,
-        icon: <FileText className="h-4 w-4" strokeWidth={1.6} />,
       },
     ],
     [clinicCounts, t]
@@ -361,6 +378,8 @@ const AppointmentsPage = () => {
                   })}
                   clinicLabel={t('PatientAppointments.labels.clinicVisit')}
                   onRate={() => setClinicFeedbackTarget(appointment)}
+                  onSync={handleSync}
+                  isSyncing={isSyncing}
                 />
               ))}
             </div>
@@ -501,6 +520,8 @@ interface ClinicAppointmentCardProps {
   reasonLabel: string;
   clinicLabel: string;
   onRate: () => void;
+  onSync: (orderId: string) => void;
+  isSyncing?: boolean;
 }
 
 const ClinicAppointmentCard = ({
@@ -510,6 +531,8 @@ const ClinicAppointmentCard = ({
   submittedLabel,
   clinicLabel,
   onRate,
+  onSync,
+  isSyncing,
 }: ClinicAppointmentCardProps) => {
   const dimmed =
     appointment.status === 'Cancelled' || appointment.status === 'NoShow';
@@ -563,12 +586,45 @@ const ClinicAppointmentCard = ({
               ].join(' ')}
             >
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75"></span>
+                <span
+                  className={`${appointment.status === 'Cancelled' ? '' : 'animate-ping'} absolute inline-flex h-full w-full rounded-full bg-current opacity-75`}
+                ></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
               </span>
               {statusLabel}
             </span>
           </div>
+
+          {appointment.status === 'Pending' && !appointment.isPaidDeposit && (
+            <div className="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 text-amber-700 dark:text-amber-400">
+                <Clock className="w-5 h-5 shrink-0" />
+                <p className="text-xs font-bold leading-tight">
+                  Vui lòng hoàn tất thanh toán đặt cọc để xác nhận lịch hẹn này.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {appointment.orderId && (
+                  <button
+                    onClick={() => onSync(appointment.orderId!)}
+                    disabled={isSyncing}
+                    className="p-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-700 transition-all disabled:opacity-50 group/sync"
+                    title="Cập nhật trạng thái"
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 ${isSyncing ? 'animate-spin' : 'group-hover/sync:rotate-180 transition-transform duration-500'}`}
+                    />
+                  </button>
+                )}
+                <Link
+                  to={resolvePathWithLocale('/patient/wallet')}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-95 whitespace-nowrap"
+                >
+                  Thanh toán ngay
+                </Link>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
             <div className="flex flex-col sm:flex-row sm:items-center gap-6">

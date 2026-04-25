@@ -77,6 +77,11 @@ export interface ClinicAppointmentDto {
    * N+1 existence-check across organisations.
    */
   hasFeedback?: boolean;
+  orderId?: string | null;
+  totalAmount?: number | null;
+  depositAmount?: number | null;
+  isPaidDeposit?: boolean;
+  orderStatus?: string | null;
 }
 
 /** Matches backend enum {@link Application.Scheduling.Appointments.Queries.GetPatientClinicAppointments.PatientAppointmentTab}. */
