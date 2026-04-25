@@ -120,10 +120,16 @@ const ViewAllNotificationsPage = lazy(
 );
 
 const FollowUpPage = lazy(() => import('@/features/patient/pages/follow-up'));
+const MedicalHistoryPage = lazy(
+  () => import('@/features/patient/pages/medical-history')
+);
 
 // Clinic Staff pages
 const ClinicStaffDashboard = lazy(
   () => import('@/features/clinic-staff/pages/dashboard')
+);
+const ClinicStaffMedicalRecords = lazy(
+  () => import('@/features/clinic-staff/pages/medical-records')
 );
 const ClinicStaffQueuePage = lazy(
   () => import('@/features/clinic-staff/pages/queue')
@@ -471,8 +477,12 @@ const Router = () => (
           }
         />
         <Route path="/404" element={<LocalizedRedirect target="/404" />} />
-        <Route path="/erm-test" element={<ErmFormPage />} />
-        <Route path="/erm-patient" element={<ErmFormPatientPage />} />
+        <Route path="/medical-records/new" element={<ErmFormPage />} />
+        <Route path="/medical-records/:id" element={<ErmFormPage />} />
+        <Route
+          path="/medical-records/patient/:id"
+          element={<ErmFormPatientPage />}
+        />
         <Route
           path="/system-admin/staff-management"
           element={
@@ -526,7 +536,12 @@ const Router = () => (
           path="/:locale/two-factor-verify"
           element={<LocalizedPublicRoute element={<TwoFactorVerifyPage />} />}
         />
-        <Route path="/:locale/erm-test" element={<ErmFormPage />} />
+        <Route path="/:locale/medical-records/new" element={<ErmFormPage />} />
+        <Route path="/:locale/medical-records/:id" element={<ErmFormPage />} />
+        <Route
+          path="/:locale/medical-records/patient/:id"
+          element={<ErmFormPatientPage />}
+        />
         <Route
           path="/:locale/force-change-password"
           element={
@@ -627,6 +642,24 @@ const Router = () => (
           }
         />
 
+        <Route
+          path="/:locale/staff/dashboard"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff']}
+              element={<ClinicStaffDashboard />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/staff/medical-records"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff']}
+              element={<ClinicStaffMedicalRecords />}
+            />
+          }
+        />
         <Route
           path="/:locale/patient/dashboard"
           element={
@@ -810,6 +843,15 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['Patient']}
               element={<FollowUpPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/patient/medical-history"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient']}
+              element={<MedicalHistoryPage />}
             />
           }
         />

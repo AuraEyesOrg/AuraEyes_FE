@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Printer, ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { medicalRecordApi } from '../api/medical-record.api';
+import { useParams } from 'react-router-dom';
 
 const SECTION_KEYS = [
   'miMat',
@@ -18,13 +20,38 @@ const SECTION_KEYS = [
 export default function ErmFormPatient() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [data, setData] = useState(location.state?.formData || {});
+  const { id } = useParams();
+  const [data, setData] = useState<any>(location.state?.formData || {});
 
   useEffect(() => {
-    if (location.state?.formData) {
-      setData(location.state.formData);
-    }
-  }, [location.state]);
+    const loadRecord = async () => {
+      if (id) {
+        try {
+          const response = await medicalRecordApi.getById(id);
+          if (response.data.data) {
+            const record = response.data.data;
+            const adminData = JSON.parse(record.administrativeDataJson);
+            const clinicalData = JSON.parse(record.clinicalDataJson);
+
+            setData({
+              ...adminData,
+              ...clinicalData,
+              finalDiagnosisMain: record.finalDiagnosis,
+              finalDiagnosisExtra: record.treatmentPlan,
+              maYT: record.medicalRecordNumber,
+            });
+          }
+        } catch (error) {
+          console.error(error);
+          toast.error('Không thể tải hồ sơ bệnh án');
+        }
+      } else if (location.state?.formData) {
+        setData(location.state.formData);
+      }
+    };
+
+    loadRecord();
+  }, [id, location.state]);
 
   const handleChange = (field: string, value: any) => {
     setData((prev: any) => ({ ...prev, [field]: value }));
@@ -244,13 +271,13 @@ export default function ErmFormPatient() {
                 className="border-b border-black flex-1 px-2 h-5 outline-none bg-transparent"
                 placeholder=".................................................................."
               />
-              <span className="ml-4 mr-2">
-                9.{' '}
-                <span className="bg-yellow-200 print:bg-transparent">Đối</span>{' '}
-                tượng:
-              </span>
+              <span className="ml-4 mr-2">9. Đối tượng:</span>
               1.BHYT
-              {renderSquare(data.objectType === 'BHYT', 'objectType', 'BHYT')}{' '}
+              {renderSquare(
+                data.objectType === 'BHYT',
+                'objectType',
+                'BHYT'
+              )}{' '}
               2.Thu phí
               {renderSquare(
                 data.objectType === 'Thu phí',
@@ -258,7 +285,11 @@ export default function ErmFormPatient() {
                 'Thu phí'
               )}{' '}
               3.Miễn
-              {renderSquare(data.objectType === 'Miễn', 'objectType', 'Miễn')}{' '}
+              {renderSquare(
+                data.objectType === 'Miễn',
+                'objectType',
+                'Miễn'
+              )}{' '}
               4.Khác
               {renderSquare(data.objectType === 'Khác', 'objectType', 'Khác')}
             </div>
@@ -298,13 +329,7 @@ export default function ErmFormPatient() {
                   14. Nơi giới thiệu: 1. Cơ quan y tế{renderSquare(false)} 2.Tự
                   đến{renderSquare(false)} 3.Khác{renderSquare(false)}
                 </p>
-                <p>
-                  - Vào viện{' '}
-                  <span className="bg-yellow-200 print:bg-transparent px-1">
-                    do
-                  </span>{' '}
-                  bệnh này lần thứ mấy {renderSquare(false)}
-                </p>
+                <p>- Vào viện do bệnh này lần thứ mấy {renderSquare(false)}</p>
               </div>
             </div>
 
@@ -394,10 +419,7 @@ export default function ErmFormPatient() {
         {/* III. CHẨN ĐOÁN */}
         <section className="mb-6">
           <div className="flex justify-between items-end border-b-2 border-black pb-0.5 mb-1">
-            <h2 className="text-lg font-bold uppercase">
-              III. CHẨN{' '}
-              <span className="bg-yellow-200 print:bg-transparent">ĐOÁN</span>
-            </h2>
+            <h2 className="text-lg font-bold uppercase">III. CHẨN ĐOÁN</h2>
             <div className="flex gap-32 mr-20 text-[11px] font-bold">
               <span>MÃ</span>
               <span>MÃ</span>
@@ -448,27 +470,9 @@ export default function ErmFormPatient() {
                   {renderSquare(false)}
                 </p>
                 <div className="grid grid-cols-2 text-[11px] gap-y-1 pl-4 mt-2 font-bold">
-                  <p>
-                    1.{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      Do
-                    </span>{' '}
-                    phẫu thuật {renderSquare(false)}
-                  </p>
-                  <p>
-                    2.{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      Do
-                    </span>{' '}
-                    gây mê {renderSquare(false)}
-                  </p>
-                  <p>
-                    3.{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      Do
-                    </span>{' '}
-                    nhiễm khuẩn {renderSquare(false)}
-                  </p>
+                  <p>1. Do phẫu thuật {renderSquare(false)}</p>
+                  <p>2. Do gây mê {renderSquare(false)}</p>
+                  <p>3. Do nhiễm khuẩn {renderSquare(false)}</p>
                   <p>4. Khác {renderSquare(false)}</p>
                 </div>
               </div>
@@ -507,11 +511,7 @@ export default function ErmFormPatient() {
                     <span className="border border-black px-1.5"> </span>
                   </div>
                   <p>
-                    + Chẩn{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      đoán
-                    </span>{' '}
-                    trước phẫu
+                    + Chẩn đoán trước phẫu
                     thuật..............................................
                   </p>
                   <div className="flex justify-end gap-0.5">
@@ -521,11 +521,8 @@ export default function ErmFormPatient() {
                     <span className="border border-black px-1.5"> </span>
                   </div>
                   <p>
-                    + Chẩn{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      đoán
-                    </span>{' '}
-                    sau phẫu thuật..............................................
+                    + Chẩn đoán sau phẫu
+                    thuật..............................................
                   </p>
                   <div className="flex justify-end gap-0.5">
                     <span className="border border-black px-1.5"> </span>
@@ -579,11 +576,7 @@ export default function ErmFormPatient() {
                     <span className="border border-black px-2.5 ml-4"> </span>
                   </p>
                   <p>
-                    2.{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      Đỡ
-                    </span>
-                    , giảm{' '}
+                    2. Đỡ , giảm{' '}
                     <span className="border border-black px-2.5 ml-4"> </span>
                   </p>
                   <p>
@@ -598,20 +591,8 @@ export default function ErmFormPatient() {
                   Ngày........tháng..........năm...........
                 </p>
                 <div className="flex gap-4 pl-4 mt-1">
-                  <p>
-                    1.{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      Do
-                    </span>{' '}
-                    bệnh {renderSquare(false)}
-                  </p>
-                  <p>
-                    2.{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      Do
-                    </span>{' '}
-                    tai biến điều trị {renderSquare(false)}
-                  </p>
+                  <p>1. Do bệnh {renderSquare(false)}</p>
+                  <p>2. Do tai biến điều trị {renderSquare(false)}</p>
                   <p>3. Khác {renderSquare(false)}</p>
                 </div>
                 <div className="grid grid-cols-3 gap-1 text-[9.5px] pt-1.5 border-t border-black border-dotted mt-2 font-bold uppercase">
@@ -626,9 +607,7 @@ export default function ErmFormPatient() {
           <div className="flex justify-between items-start mt-12 text-[14px] px-10">
             <div className="text-center w-64 space-y-20">
               <h3 className="font-bold text-base uppercase">
-                Giám{' '}
-                <span className="bg-yellow-200 print:bg-transparent">đốc</span>{' '}
-                bệnh viện
+                Giám đốc bệnh viện
               </h3>
               <p className="text-slate-400">
                 Họ và
@@ -658,11 +637,7 @@ export default function ErmFormPatient() {
 
           <div className="space-y-6 text-[14px] font-medium leading-relaxed px-2">
             <p>
-              <span className="font-bold uppercase">
-                I. LÝ{' '}
-                <span className="bg-yellow-200 print:bg-transparent">DO</span>{' '}
-                VÀO VIỆN:
-              </span>{' '}
+              <span className="font-bold uppercase">I. LÝ DO VÀO VIỆN:</span>{' '}
               <span className="border-b border-black flex-1 min-w-[400px] inline-block h-5 mx-2">
                 {data.admissionReason ||
                   '...........................................................................'}
@@ -772,7 +747,7 @@ export default function ErmFormPatient() {
                         id: 8,
                         label: 'Dịch kính',
                         options:
-                          'Sạch □ Tyndall □ <span className="bg-yellow-200">Độ</span>.................... Viêm mủ □ .................... Xuất huyết □ Tổ chức hóa □ Bong dịch kính sau □ Tổn thương khác:...',
+                          'Sạch □ Tyndall □ Độ.................... Viêm mủ □ .................... Xuất huyết □ Tổ chức hóa □ Bong dịch kính sau □ Tổn thương khác:...',
                       },
                     ].map((row) => (
                       <tr
