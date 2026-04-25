@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   UserX,
   ArrowRight,
+  Stethoscope,
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { DoctorSidebar, DoctorHeader } from '../components';
@@ -643,6 +644,19 @@ export default function PatientsPage() {
                             >
                               <MessageSquare className="w-4 h-4" />
                               {t('Ophthalmologist.patients.message', 'Message')}
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                navigate(
+                                  `/ophthalmologist/patients/${patient.id}/care-plan`
+                                )
+                              }
+                              className="inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium transition-all hover:shadow-md"
+                            >
+                              <Stethoscope className="w-4 h-4" />
+                              Care plan
                               <ArrowRight className="w-3.5 h-3.5" />
                             </button>
                           </div>
