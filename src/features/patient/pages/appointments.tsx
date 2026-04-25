@@ -16,8 +16,8 @@ import {
 import { format } from 'date-fns';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
-import { Link } from 'react-router-dom';
-
+import { Link, useParams } from 'react-router-dom';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import {
   usePatientClinicAppointments,
   usePatientClinicAppointmentCounts,
@@ -80,6 +80,7 @@ const CLINIC_STATUS_LABEL_KEYS: Record<string, string> = {
 
 const AppointmentsPage = () => {
   const { t: i18nT } = useTranslation();
+  const { locale } = useParams();
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
 
@@ -204,20 +205,13 @@ const AppointmentsPage = () => {
             </p>
           </div>
 
-          <Link
-            to="/patient/schedule"
-            className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-brand px-8 py-4 text-sm font-bold text-white transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-brand/40"
-          >
-            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-            <PlusCircle className="relative z-10 h-5 w-5" strokeWidth={2.5} />
-            <span className="relative z-10 uppercase tracking-wider">
-              {t('PatientAppointments.actions.bookNew')}
-            </span>
-          </Link>
+          <h1 className="text-4xl font-black tracking-tighter text-white md:text-5xl">
+            {t('PatientAppointments.page.title')}
+          </h1>
         </div>
 
         <Link
-          to="/patient/clinics"
+          to={resolvePathWithLocale('/patient/schedule')}
           className="group relative flex items-center justify-center gap-3 overflow-hidden rounded-2xl bg-brand px-10 py-5 text-sm font-black text-white transition-all hover:scale-[1.03] active:scale-95 shadow-[0_20px_50px_rgba(var(--brand-rgb),0.3)]"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
@@ -323,7 +317,7 @@ const AppointmentsPage = () => {
             refreshing={!isLoadingClinic && isFetchingClinic}
             action={
               <Link
-                to="/patient/schedule"
+                to={resolvePathWithLocale('/patient/schedule')}
                 className="inline-flex items-center gap-1 text-sm font-semibold text-brand transition-colors hover:text-brand/80"
               >
                 {t('PatientAppointments.actions.bookMoreSlot')}
@@ -336,7 +330,7 @@ const AppointmentsPage = () => {
             <SkeletonList />
           ) : clinicAppointments.length === 0 ? (
             <EmptyState
-              icon={<Building2 className="h-6 w-6" strokeWidth={1.5} />}
+              icon={<Building2 className="h-10 w-10" strokeWidth={1.5} />}
               title={
                 filter === 'all'
                   ? t('PatientAppointments.empty.clinicAll')
@@ -349,10 +343,10 @@ const AppointmentsPage = () => {
                   ? t('PatientAppointments.actions.bookMoreSlot')
                   : undefined
               }
-              ctaHref="/patient/schedule"
+              ctaHref={resolvePathWithLocale('/patient/schedule')}
             />
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-5">
               {clinicAppointments.map((appointment) => (
                 <ClinicAppointmentCard
                   key={appointment.id}
@@ -372,66 +366,22 @@ const AppointmentsPage = () => {
             </div>
           )}
 
-            {isLoadingClinic ? (
-              <SkeletonList />
-            ) : clinicAppointments.length === 0 ? (
-              <EmptyState
-                icon={<Building2 className="h-10 w-10" strokeWidth={1.5} />}
-                title={
-                  filter === 'all'
-                    ? t('PatientAppointments.empty.clinicAll')
-                    : t('PatientAppointments.empty.clinicByFilter', {
-                        filter: getFilterLabel(filter),
-                      })
-                }
-                ctaLabel={
-                  filter === 'all'
-                    ? t('PatientAppointments.actions.bookMoreSlot')
-                    : undefined
-                }
-                ctaHref="/patient/clinics"
-              />
-            ) : (
-              <div className="grid grid-cols-1 gap-5">
-                {clinicAppointments.map((appointment) => (
-                  <ClinicAppointmentCard
-                    key={appointment.id}
-                    appointment={appointment}
-                    statusLabel={getClinicStatusLabel(appointment.status)}
-                    rateLabel={t('PatientAppointments.actions.rateClinic')}
-                    submittedLabel={t(
-                      'PatientAppointments.feedback.submittedBadge'
-                    )}
-                    reasonLabel={t('PatientAppointments.labels.reason', {
-                      reason: appointment.visitReason ?? '',
-                    })}
-                    organisationLabel={t(
-                      'PatientAppointments.labels.organisationAppointment'
-                    )}
-                    clinicLabel={t('PatientAppointments.labels.clinicVisit')}
-                    onRate={() => setClinicFeedbackTarget(appointment)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {clinicTotalPages > 1 && (
-              <Pagination
-                page={clinicPage}
-                totalPages={clinicTotalPages}
-                onChange={setClinicPage}
-                labels={{
-                  prev: t('PatientAppointments.pagination.prev'),
-                  next: t('PatientAppointments.pagination.next'),
-                  status: t('PatientAppointments.pagination.pageOf', {
-                    page: clinicPage,
-                    total: clinicTotalPages,
-                  }),
-                }}
-              />
-            )}
-          </section>
-        )}
+          {clinicTotalPages > 1 && (
+            <Pagination
+              page={clinicPage}
+              totalPages={clinicTotalPages}
+              onChange={setClinicPage}
+              labels={{
+                prev: t('PatientAppointments.pagination.prev'),
+                next: t('PatientAppointments.pagination.next'),
+                status: t('PatientAppointments.pagination.pageOf', {
+                  page: clinicPage,
+                  total: clinicTotalPages,
+                }),
+              }}
+            />
+          )}
+        </section>
       </div>
 
       {bothEmpty && (

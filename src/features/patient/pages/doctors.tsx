@@ -24,7 +24,7 @@ import {
 import DoctorLottie from '../components/DoctorLottie';
 
 import { useQuery } from '@tanstack/react-query';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   searchOphthalmologistsForPatient,
   getOphthalmologistDetailForPatient,
@@ -47,6 +47,7 @@ import {
 import type { Anomaly, RetinalImage } from '../types/type';
 import { useWallet } from '../hooks/use-wallet';
 import { formatCurrency } from '@/lib/helper';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -82,6 +83,7 @@ function toIsoDate(value: Date): string {
 export default function DoctorsPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { locale } = useParams();
   const { t: i18nT } = useTranslation();
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
@@ -489,7 +491,7 @@ export default function DoctorsPage() {
             {/* Back button — button-in-button pattern */}
             <button
               onClick={() =>
-                navigate('/patient/screening/review', {
+                navigate(resolvePathWithLocale('/patient/screening/review'), {
                   state: consultationContext
                     ? {
                         screeningId: consultationContext.screeningId,
@@ -537,7 +539,9 @@ export default function DoctorsPage() {
                 <div className="h-9 w-32 rounded-full bg-(--bg-secondary) animate-pulse" />
               ) : (
                 <button
-                  onClick={() => navigate('/patient/wallet')}
+                  onClick={() =>
+                    navigate(resolvePathWithLocale('/patient/wallet'))
+                  }
                   title={t('PatientDoctors.header.walletTooltip', {
                     defaultValue: 'View your wallet',
                   })}
@@ -659,7 +663,9 @@ export default function DoctorsPage() {
             </button>
             <button
               className={`px-8 py-3 rounded-full text-base font-bold transition-all text-(--text-secondary) hover:text-(--text-primary) hover:bg-white/50 dark:hover:bg-black/20`}
-              onClick={() => navigate('/patient/clinics')}
+              onClick={() =>
+                navigate(resolvePathWithLocale('/patient/schedule'))
+              }
             >
               {t('PatientDoctors.consultMode.clinics')}
             </button>
