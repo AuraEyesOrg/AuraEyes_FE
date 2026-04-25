@@ -193,7 +193,9 @@ export default function PaymentCallbackPage() {
                       {isClinicBooking ? 'Số tiền đặt cọc (30%)' : 'Số tiền'}
                     </span>
                     <span className="font-bold text-green-600 dark:text-green-400">
-                      {formatCurrency(orderData.totalAmount)}
+                      {formatCurrency(
+                        orderData.depositAmount ?? orderData.totalAmount
+                      )}
                     </span>
                   </div>
 
@@ -293,7 +295,7 @@ export default function PaymentCallbackPage() {
               </h1>
               <p className="text-(--text-secondary) mb-6 text-sm">
                 {isClinicBooking
-                  ? 'Bạn đã hủy thanh toán. Lịch khám vẫn còn — bạn có thể thanh toán đặt cọc sau trong trang lịch sử.'
+                  ? 'Bạn đã hủy thanh toán. Lịch khám này đã được giải phóng để người khác có thể đặt. Vui lòng đặt lại nếu bạn vẫn muốn khám.'
                   : t('PatientPaymentCallback.cancelled.description')}
               </p>
 
