@@ -296,9 +296,7 @@ export default function ScreeningsPage() {
 
     sessionItems.forEach((session) => {
       const sessionScreeningId =
-        session.caseSnapshot?.screeningId ??
-        (session as { aiScreeningId?: string | null }).aiScreeningId ??
-        null;
+        session.caseSnapshot?.screeningId ?? session.aiScreeningId ?? null;
 
       if (!sessionScreeningId) return;
       const screeningKey = sessionScreeningId.toLowerCase();
