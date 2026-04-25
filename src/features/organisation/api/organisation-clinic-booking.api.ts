@@ -20,6 +20,7 @@ export interface OrganisationClinicAppointmentDto {
     | 'Confirmed'
     | 'CheckedIn'
     | 'InProgress'
+    | 'WaitingForPayment'
     | 'Completed'
     | 'Cancelled'
     | 'NoShow';
@@ -32,6 +33,38 @@ export interface OrganisationClinicAppointmentDto {
   isPaidDeposit: boolean;
   remainingAmount: number | null;
   orderStatus: string | null;
+}
+
+interface PagedResult<T> {
+  items: T[];
+  totalCount: number;
+}
+
+export interface ClinicStaffAvailableSlotDto {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  maxCapacity: number;
+  bookedCount: number;
+  availableCapacity: number;
+  cost?: number | null;
+}
+
+export interface CreateClinicStaffAppointmentRequest {
+  patientId: string;
+  slotId: string;
+  visitReason?: string;
+}
+
+export interface CreateClinicStaffAppointmentResult {
+  appointmentId: string;
+  visitId?: string | null;
+  status: string;
+  paymentUrl?: string | null;
+  orderId?: string | null;
+  depositAmount?: number | null;
 }
 
 export const getOrganisationAppointments = async (
@@ -63,6 +96,34 @@ export const getCurrentClinicAppointments = async (
       response.data
     ) ?? []
   );
+};
+
+export const getClinicStaffAvailableSlots = async (
+  date?: string
+): Promise<ClinicStaffAvailableSlotDto[]> => {
+  const response = await api.get<
+    ApiResponse<PagedResult<ClinicStaffAvailableSlotDto>>
+  >(API_ENDPOINTS.PUBLIC.PATIENT_SEARCH.AVAILABLE_SLOTS, {
+    params: {
+      fromDate: date,
+      toDate: date,
+      pageNumber: 1,
+      pageSize: 100,
+    },
+  });
+
+  return unwrapApiData<PagedResult<ClinicStaffAvailableSlotDto>>(response.data)
+    .items;
+};
+
+export const createClinicStaffAppointment = async (
+  request: CreateClinicStaffAppointmentRequest
+): Promise<CreateClinicStaffAppointmentResult> => {
+  const response = await api.post<
+    ApiResponse<CreateClinicStaffAppointmentResult>
+  >(API_ENDPOINTS.CLINIC_APPOINTMENTS.CREATE, request);
+
+  return unwrapApiData<CreateClinicStaffAppointmentResult>(response.data);
 };
 
 export const checkInClinicAppointment = async (
