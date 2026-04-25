@@ -242,6 +242,14 @@ const OphthalmologistEmploymentTypeChangeRequestsPage = lazy(
   () =>
     import('@/features/ophthalmologist/pages/employment-type-change-requests')
 );
+const OphthalmologistPatientCarePlanPage = lazy(
+  () => import('@/features/ophthalmologist/pages/patient-care-plan')
+);
+
+// Care Plan pages (shared)
+const PatientCarePlanPage = lazy(
+  () => import('@/features/patient/pages/care-plan')
+);
 
 // System Admin pages
 const SystemAdminDashboard = lazy(
@@ -564,6 +572,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/ophthalmologist/patients/:patientId/care-plan"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Ophthalmologist']}
+              element={<OphthalmologistPatientCarePlanPage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/ophthalmologist/screenings"
           element={
             <LocalizedPrivateRoute
@@ -783,6 +800,15 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['Patient']}
               element={<RoadmapPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/patient/care-plan"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient']}
+              element={<PatientCarePlanPage />}
             />
           }
         />
@@ -1508,6 +1534,14 @@ const Router = () => (
           }
         />
         <Route
+          path="/patient/care-plan"
+          element={
+            <PrivateRoute allowedRoles={['Patient']}>
+              <PatientCarePlanPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/patient/chat"
           element={
             <PrivateRoute allowedRoles={['Patient']}>
@@ -1804,6 +1838,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['Ophthalmologist']}>
               <OphthalmologistPatientsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/ophthalmologist/patients/:patientId/care-plan"
+          element={
+            <PrivateRoute allowedRoles={['Ophthalmologist']}>
+              <OphthalmologistPatientCarePlanPage />
             </PrivateRoute>
           }
         />
