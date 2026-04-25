@@ -94,6 +94,8 @@ function DoctorSelect({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const selectedDoctor = doctors.find((d) => d.id === value);
+  const selectedDoctorName =
+    selectedDoctor?.fullName?.trim() || placeholder || 'Select a doctor';
 
   return (
     <div className="relative w-full">
@@ -104,12 +106,12 @@ function DoctorSelect({
       >
         <span
           className={
-            selectedDoctor ? 'text-(--text-primary)' : 'text-(--text-tertiary)'
+            selectedDoctor?.fullName?.trim()
+              ? 'text-(--text-primary)'
+              : 'text-(--text-tertiary)'
           }
         >
-          {selectedDoctor
-            ? selectedDoctor.fullName
-            : placeholder || 'Select a doctor'}
+          {selectedDoctorName}
         </span>
         <ChevronDown
           className={`h-4 w-4 text-(--text-tertiary) transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -132,31 +134,36 @@ function DoctorSelect({
               transition={{ duration: 0.15 }}
               className="absolute left-0 right-0 z-20 mt-2 max-h-60 overflow-y-auto rounded-xl border border-(--border-primary) bg-white p-1 shadow-xl dark:bg-slate-800"
             >
-              {doctors.map((doctor) => (
-                <button
-                  key={doctor.id}
-                  type="button"
-                  onClick={() => {
-                    onChange(doctor.id);
-                    setIsOpen(false);
-                  }}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                    value === doctor.id
-                      ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400'
-                      : 'text-(--text-primary) hover:bg-slate-50 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  <div className="flex flex-col">
-                    <span className="font-medium">{doctor.fullName}</span>
-                    {doctor.yearsOfExperience && (
-                      <span className="text-[10px] opacity-70">
-                        {doctor.yearsOfExperience} years exp
-                      </span>
-                    )}
-                  </div>
-                  {value === doctor.id && <Check className="h-4 w-4" />}
-                </button>
-              ))}
+              {doctors.map((doctor, index) => {
+                const doctorName =
+                  doctor.fullName?.trim() || `Doctor #${index + 1}`;
+
+                return (
+                  <button
+                    key={doctor.id}
+                    type="button"
+                    onClick={() => {
+                      onChange(doctor.id);
+                      setIsOpen(false);
+                    }}
+                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                      value === doctor.id
+                        ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400'
+                        : 'text-(--text-primary) hover:bg-slate-50 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium">{doctorName}</span>
+                      {doctor.yearsOfExperience > 0 && (
+                        <span className="text-[10px] opacity-70">
+                          {doctor.yearsOfExperience} years exp
+                        </span>
+                      )}
+                    </div>
+                    {value === doctor.id && <Check className="h-4 w-4" />}
+                  </button>
+                );
+              })}
             </motion.div>
           </>
         )}

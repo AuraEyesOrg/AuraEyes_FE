@@ -49,6 +49,15 @@ export interface AvailableDoctor {
   avatarUrl?: string;
 }
 
+interface AvailableDoctorApiItem {
+  id: string;
+  fullName?: string | null;
+  userFullName?: string | null;
+  yearsOfExperience?: number | null;
+  avatarUrl?: string | null;
+  userAvatarUrl?: string | null;
+}
+
 interface PagedResult<T> {
   items: T[];
   pageNumber: number;
@@ -56,6 +65,19 @@ interface PagedResult<T> {
   totalPages: number;
   totalCount: number;
 }
+
+const normalizeAvailableDoctor = (
+  doctor: AvailableDoctorApiItem,
+  index: number
+): AvailableDoctor => ({
+  id: doctor.id,
+  fullName:
+    doctor.fullName?.trim() ||
+    doctor.userFullName?.trim() ||
+    `Doctor #${index + 1}`,
+  yearsOfExperience: doctor.yearsOfExperience ?? 0,
+  avatarUrl: doctor.avatarUrl ?? doctor.userAvatarUrl ?? undefined,
+});
 
 // ─── API calls ───────────────────────────────────────────────────────────────
 
@@ -79,10 +101,14 @@ export const clinicQueueApi = {
 
   /** Get available doctors to assign the case */
   async getAvailableDoctors() {
-    const response = await api.get<ApiResponse<PagedResult<AvailableDoctor>>>(
-      API_ENDPOINTS.PUBLIC.PATIENT_SEARCH.OPHTHALMOLOGISTS,
-      { params: { pageNumber: 1, pageSize: 50 } }
+    const response = await api.get<
+      ApiResponse<PagedResult<AvailableDoctorApiItem>>
+    >(API_ENDPOINTS.PUBLIC.PATIENT_SEARCH.OPHTHALMOLOGISTS, {
+      params: { pageNumber: 1, pageSize: 50 },
+    });
+    const data = unwrapApiData<PagedResult<AvailableDoctorApiItem>>(
+      response.data
     );
-    return unwrapApiData<PagedResult<AvailableDoctor>>(response.data).items;
+    return data.items.map(normalizeAvailableDoctor);
   },
 };
