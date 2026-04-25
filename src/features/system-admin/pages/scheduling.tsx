@@ -298,7 +298,7 @@ export default function SystemAdminScheduling() {
                 <button
                   onClick={() => triggerGenerationMutation.mutate()}
                   disabled={triggerGenerationMutation.isPending}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-medium transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
                 >
                   {triggerGenerationMutation.isPending ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />
@@ -315,7 +315,7 @@ export default function SystemAdminScheduling() {
                     setEditTemplate(null);
                     setIsModalOpen(true);
                   }}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-medium transition-all shadow-lg shadow-primary-500/20"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20"
                 >
                   <Plus className="w-4 h-4" />
                   {t(
