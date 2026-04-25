@@ -147,6 +147,15 @@ const ClinicStaffWalletPage = lazy(
 const ClinicStaffSettingsPage = lazy(
   () => import('@/features/clinic-staff/pages/settings')
 );
+const ClinicStaffProfilePage = lazy(
+  () => import('@/features/clinic-staff/pages/profile')
+);
+const ClinicStaffSecurityPage = lazy(
+  () => import('@/features/clinic-staff/pages/security')
+);
+const ClinicStaffNotificationsPage = lazy(
+  () => import('@/features/clinic-staff/pages/notifications')
+);
 
 // Organisation pages
 const OrganisationDashboard = lazy(
@@ -909,6 +918,33 @@ const Router = () => (
             />
           }
         />
+        <Route
+          path="/:locale/clinic-staff/profile"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffProfilePage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/security"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffSecurityPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/notifications"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffNotificationsPage />}
+            />
+          }
+        />
 
         <Route
           path="/:locale/organisation/dashboard"
@@ -1588,6 +1624,36 @@ const Router = () => (
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
             >
               <ClinicStaffSettingsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/profile"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffProfilePage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/security"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffSecurityPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/notifications"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffNotificationsPage />
             </PrivateRoute>
           }
         />
