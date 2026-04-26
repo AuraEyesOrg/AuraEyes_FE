@@ -320,6 +320,7 @@ export const API_ENDPOINTS = {
       `/clinic-queue/${visitId}/send-to-doctor`,
     PAYMENT_CONTEXT: (visitId: string) =>
       `/clinic-queue/${visitId}/payment-context`,
+    CREATE_PAYMENT: (visitId: string) => `/clinic-queue/${visitId}/payment`,
   },
 
   // Healthcare Roadmap (doctor-authored care plan timeline)

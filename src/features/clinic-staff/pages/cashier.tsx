@@ -8,10 +8,17 @@ import {
   ReceiptText,
   Stethoscope,
   UserRound,
+  CheckCircle2,
+  ArrowLeft,
 } from 'lucide-react';
 import ClinicStaffLayout from '../components/ClinicStaffLayout';
 import { formatCurrency } from '@/lib/helper';
 import { clinicQueueApi, type ClinicPaymentContext } from '../api/queue.api';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'react-toastify';
+import ConfirmModal from '@/components/ui/confirm-modal';
+import { extractApiErrorMessage } from '@/lib/api-error';
+import { CreditCard, Loader2 } from 'lucide-react';
 
 export default function CashierPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -20,6 +27,8 @@ export default function CashierPage() {
     visitIdFromQuery
   );
   const effectiveVisitId = selectedVisitId ?? visitIdFromQuery;
+  const paymentStatus = searchParams.get('status');
+  const isPaidSuccess = paymentStatus === 'PAID';
 
   const queueQuery = useQuery({
     queryKey: ['clinic-staff', 'queue', 'cashier'],
@@ -52,6 +61,28 @@ export default function CashierPage() {
     }
   }, [visitIdFromQuery, selectedVisitId]);
 
+  // Handle successful payment: clear status and refresh queue after delay
+  useEffect(() => {
+    if (isPaidSuccess) {
+      // Refresh queue immediately
+      queueQuery.refetch();
+
+      // Clear the "PAID" status from URL after 5 seconds
+      const timer = setTimeout(() => {
+        setSearchParams((prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete('status');
+          next.delete('orderCode');
+          next.delete('code');
+          next.delete('cancel');
+          return next;
+        });
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isPaidSuccess, queueQuery, setSearchParams]);
+
   const paymentContext = paymentContextQuery.data;
   const [medicinePriceInputs, setMedicinePriceInputs] = useState<
     Record<string, string>
@@ -82,6 +113,48 @@ export default function CashierPage() {
     );
     return medicinesTotal + parseMoney(serviceFeeInput);
   }, [medicinePriceInputs, serviceFeeInput]);
+
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+  const paymentMutation = useMutation({
+    mutationFn: (payload: any) =>
+      clinicQueueApi.createClinicPayment(effectiveVisitId!, payload),
+    onSuccess: (data) => {
+      toast.success('Đã tạo link thanh toán PayOS thành công!');
+      // Redirect to PayOS checkout page
+      window.location.href = data.paymentUrl;
+    },
+    onError: (error) => {
+      const message = extractApiErrorMessage(
+        error,
+        'Không thể tạo lệnh thanh toán qua PayOS.'
+      );
+      toast.error(message);
+    },
+  });
+
+  const handlePayment = () => {
+    if (!effectiveVisitId || !paymentContext) return;
+
+    const medicationPrices = paymentContext.diagnosis.prescriptionItems.map(
+      (item, index) => ({
+        medicineName: item.medicineName,
+        price: parseMoney(medicinePriceInputs[`medicine-${index}`] ?? '0'),
+      })
+    );
+
+    const payload = {
+      visitId: effectiveVisitId,
+      serviceFee: parseMoney(serviceFeeInput),
+      medicationPrices,
+      // Use absolute URLs for PayOS return/cancel
+      returnUrl: window.location.href,
+      cancelUrl: window.location.href,
+    };
+
+    paymentMutation.mutate(payload);
+    setIsConfirmModalOpen(false);
+  };
 
   return (
     <ClinicStaffLayout>
@@ -273,7 +346,39 @@ export default function CashierPage() {
               </div>
             )}
 
-            {paymentContext && (
+            {isPaidSuccess && effectiveVisitId && (
+              <div className="mt-5 flex flex-col items-center justify-center rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-10 text-center animate-in fade-in zoom-in duration-500">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-600">
+                  <CheckCircle2 className="h-10 w-10" />
+                </div>
+                <h3 className="mt-5 text-xl font-bold text-(--text-primary)">
+                  Thanh toán thành công!
+                </h3>
+                <p className="mt-2 max-w-[30ch] text-sm text-(--text-secondary)">
+                  Ca khám của bệnh nhân{' '}
+                  <span className="font-semibold text-emerald-600">
+                    {activeVisit?.patientName || 'này'}
+                  </span>{' '}
+                  đã được hoàn tất và chuyển trạng thái thành công.
+                </p>
+
+                <div className="mt-8 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedVisitId(null);
+                      setSearchParams(new URLSearchParams());
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl border border-(--border-color) bg-(--bg-primary) px-5 py-2.5 text-sm font-semibold text-(--text-primary) transition hover:bg-(--bg-secondary)"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Quay lại danh sách
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!isPaidSuccess && paymentContext && (
               <CashierPricingPanel
                 context={paymentContext}
                 fallbackDoctorName={activeVisit?.assignedDoctorName}
@@ -284,11 +389,25 @@ export default function CashierPage() {
                   setMedicinePriceInputs((prev) => ({ ...prev, [key]: value }))
                 }
                 onServiceFeeChange={setServiceFeeInput}
+                onInitiatePayment={() => setIsConfirmModalOpen(true)}
+                isProcessing={paymentMutation.isPending}
               />
             )}
           </section>
         </div>
       </main>
+
+      <ConfirmModal
+        open={isConfirmModalOpen}
+        title="Xác nhận thanh toán PayOS"
+        message={`Bạn có chắc chắn muốn tạo lệnh thanh toán qua PayOS cho bệnh nhân ${paymentContext?.patientName} với tổng số tiền là ${formatCurrency(computedManualTotal, { absolute: true })}?`}
+        confirmLabel="Tiến hành thanh toán"
+        cancelLabel="Quay lại"
+        tone="default"
+        onConfirm={handlePayment}
+        onCancel={() => setIsConfirmModalOpen(false)}
+        isLoading={paymentMutation.isPending}
+      />
     </ClinicStaffLayout>
   );
 }
@@ -301,6 +420,8 @@ interface CashierPricingPanelProps {
   computedManualTotal: number;
   onMedicinePriceChange: (key: string, value: string) => void;
   onServiceFeeChange: (value: string) => void;
+  onInitiatePayment: () => void;
+  isProcessing: boolean;
 }
 
 function CashierPricingPanel({
@@ -311,6 +432,8 @@ function CashierPricingPanel({
   computedManualTotal,
   onMedicinePriceChange,
   onServiceFeeChange,
+  onInitiatePayment,
+  isProcessing,
 }: CashierPricingPanelProps) {
   const doctorName =
     context.diagnosis.diagnosedBy.doctorName || fallbackDoctorName;
@@ -457,6 +580,20 @@ function CashierPricingPanel({
           <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 [font-variant-numeric:tabular-nums]">
             {formatCurrency(computedManualTotal, { absolute: true })}
           </p>
+
+          <button
+            type="button"
+            disabled={computedManualTotal <= 0 || isProcessing}
+            onClick={onInitiatePayment}
+            className="inline-flex h-12 items-center gap-2.5 rounded-2xl bg-emerald-600 px-6 text-sm font-bold text-white transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-600/20 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+          >
+            {isProcessing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CreditCard className="h-4 w-4" />
+            )}
+            Thanh toán PayOS
+          </button>
         </div>
       </section>
     </div>

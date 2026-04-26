@@ -122,6 +122,7 @@ interface RawConsultationSessionListDto {
   meetingLink?: string | null;
   lastActivityAt: string;
   createdAt: string;
+  closedAt: string | null;
   isRetinalImagesShared?: boolean;
   isAIResultShared?: boolean;
   caseSnapshot?: RawConsultationCaseSnapshotDto | null;
@@ -288,6 +289,7 @@ const mapConsultationSessionListItem = (
     meetingLink: session.meetingLink ?? null,
     lastActivityAt: session.lastActivityAt,
     createdAt: session.createdAt,
+    closedAt: session.closedAt ?? null,
     isRetinalImagesShared: Boolean(session.isRetinalImagesShared),
     isAIResultShared: Boolean(session.isAIResultShared),
     caseSnapshot: mapCaseSnapshot(session.caseSnapshot),
