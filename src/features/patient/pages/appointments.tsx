@@ -23,7 +23,7 @@ import {
   usePatientClinicAppointments,
   usePatientClinicAppointmentCounts,
 } from '@/features/patient/hooks/use-clinic-booking';
-import { useCreateOrganisationFeedback } from '@/features/patient/hooks/use-feedback';
+import { useCreateClinicFeedback } from '@/features/patient/hooks/use-feedback';
 import {
   FeedbackModal,
   FeedbackSubmittedBadge,
@@ -116,7 +116,7 @@ const AppointmentsPage = () => {
     patientId ?? ''
   );
 
-  const createOrganisationFeedbackMutation = useCreateOrganisationFeedback();
+  const createClinicFeedbackMutation = useCreateClinicFeedback();
 
   const clinicAppointments = clinicAppointmentsQuery.data?.items ?? [];
   const clinicTotalPages = clinicAppointmentsQuery.data?.totalPages ?? 1;
@@ -177,8 +177,8 @@ const AppointmentsPage = () => {
   const submitClinicFeedback = async (rating: number, comment?: string) => {
     if (!clinicFeedbackTarget) return;
     try {
-      await createOrganisationFeedbackMutation.mutateAsync({
-        organisationId: clinicFeedbackTarget.organisationId,
+      await createClinicFeedbackMutation.mutateAsync({
+        clinicId: clinicFeedbackTarget.organisationId,
         request: {
           appointmentId: clinicFeedbackTarget.id,
           rating,
@@ -443,11 +443,50 @@ const AppointmentsPage = () => {
             ? `${clinicFeedbackTarget.organisationName ?? t('PatientAppointments.labels.clinicVisit')} - ${clinicFeedbackTarget.date}`
             : undefined
         }
-        isSubmitting={createOrganisationFeedbackMutation.isPending}
+        targets={
+          clinicFeedbackTarget
+            ? {
+                clinicId: clinicFeedbackTarget.organisationId,
+                clinicName: clinicFeedbackTarget.organisationName,
+                doctorId: clinicFeedbackTarget.ophthalId ?? undefined,
+                doctorName: clinicFeedbackTarget.ophthalFullName ?? undefined,
+                staffId: (clinicFeedbackTarget as any).staffId,
+                staffName: (clinicFeedbackTarget as any).staffName,
+              }
+            : undefined
+        }
+        isSubmitting={createClinicFeedbackMutation.isPending}
         submitLabel={t('PatientAppointments.feedback.submitLabel')}
+        labels={{
+          targetTitle: t('PatientAppointments.feedback.targetTitle'),
+          targetClinic: t('PatientAppointments.feedback.targetClinic'),
+          targetDoctor: t('PatientAppointments.feedback.targetDoctor'),
+          targetStaff: t('PatientAppointments.feedback.targetStaff'),
+          rating: t('PatientAppointments.feedback.ratingLabel'),
+          commentPlaceholder: t(
+            'PatientAppointments.feedback.commentPlaceholder'
+          ),
+        }}
         onClose={() => setClinicFeedbackTarget(null)}
         onSubmit={async (values) => {
-          await submitClinicFeedback(values.rating, values.comment);
+          if (!clinicFeedbackTarget) return;
+          try {
+            await createClinicFeedbackMutation.mutateAsync({
+              clinicId: values.targetId ?? clinicFeedbackTarget.organisationId,
+              request: {
+                appointmentId: clinicFeedbackTarget.id,
+                rating: values.rating,
+                comment: values.comment,
+                doctorId:
+                  values.targetType === 'DOCTOR' ? values.targetId : undefined,
+                staffId:
+                  values.targetType === 'STAFF' ? values.targetId : undefined,
+              },
+            });
+            setClinicFeedbackTarget(null);
+          } catch (error) {
+            console.error('Failed to submit clinic feedback:', error);
+          }
         }}
       />
     </PatientLayout>
