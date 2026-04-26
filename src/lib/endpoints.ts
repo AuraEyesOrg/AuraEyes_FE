@@ -334,16 +334,13 @@ export const API_ENDPOINTS = {
 
   FEEDBACK: {
     WEBSITE: '/feedback/website',
-    ORGANISATION: (organisationId: string) =>
-      `/feedback/organisations/${organisationId}`,
+    CLINIC: (clinicId: string) => `/feedback/clinics/${clinicId}`,
     OPHTHALMOLOGIST: (ophthalmologistId: string) =>
       `/feedback/ophthalmologists/${ophthalmologistId}`,
-    ORGANISATION_ITEMS: (organisationId: string) =>
-      `/feedback/organisations/${organisationId}/items`,
+    CLINIC_ITEMS: (clinicId: string) => `/feedback/clinics/${clinicId}/items`,
     OPHTHALMOLOGIST_ITEMS: (ophthalmologistId: string) =>
       `/feedback/ophthalmologists/${ophthalmologistId}/items`,
-    ORGANISATION_RATING: (organisationId: string) =>
-      `/feedback/organisations/${organisationId}/rating`,
+    CLINIC_RATING: (clinicId: string) => `/feedback/clinics/${clinicId}/rating`,
     OPHTHALMOLOGIST_RATING: (ophthalmologistId: string) =>
       `/feedback/ophthalmologists/${ophthalmologistId}/rating`,
   },

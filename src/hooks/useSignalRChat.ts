@@ -26,6 +26,23 @@ let activeChatConnection: HubConnection | null = null;
 const sanitizeToken = (value: string | null): string =>
   value?.replace(/['"]+/g, '') || '';
 
+export const joinChatSession = async (sessionId: string) => {
+  if (
+    !activeChatConnection ||
+    activeChatConnection.state !== HubConnectionState.Connected
+  ) {
+    console.warn('[ChatHub] Cannot join session: Not connected');
+    return;
+  }
+
+  try {
+    await activeChatConnection.invoke('JoinSession', sessionId);
+    console.log(`[ChatHub] Joined session group: ${sessionId}`);
+  } catch (err) {
+    console.error('[ChatHub] Error joining session group:', err);
+  }
+};
+
 export const sendChatTypingIndicator = async (
   payload: SignalRSendTypingPayload
 ): Promise<void> => {
@@ -175,10 +192,17 @@ export function useSignalRChat(): void {
       return;
     }
 
+    console.log('[ChatHub] Attempting to start connection...', {
+      isAuthenticated,
+      state: connectionRef.current?.state,
+      url: CHAT_HUB_URL,
+    });
+
     if (
       connectionRef.current?.state === HubConnectionState.Connected ||
       connectionRef.current?.state === HubConnectionState.Connecting
     ) {
+      console.log('[ChatHub] Already connected or connecting, skipping');
       return;
     }
 

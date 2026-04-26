@@ -25,6 +25,9 @@ export interface OrganisationClinicAppointmentDto {
     | 'Cancelled'
     | 'NoShow';
   createdAt?: string;
+  ophthalId?: string;
+  ophthalFullName?: string | null;
+  ophthalAvatarUrl?: string | null;
 
   // Billing info
   orderId?: string;

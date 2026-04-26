@@ -66,7 +66,10 @@ import {
   SIGNALR_TYPING_INDICATOR_EVENT,
   type SignalRTypingIndicatorEvent,
 } from '@/types/chat-realtime';
-import { sendChatTypingIndicator } from '@/hooks/useSignalRChat';
+import {
+  sendChatTypingIndicator,
+  joinChatSession,
+} from '@/hooks/useSignalRChat';
 import useAuthStore from '@/store/auth-store';
 import {
   formatFullDate,
@@ -737,6 +740,12 @@ export default function ChatPage() {
     hasComposerPayload &&
     !sendMessageMutation.isPending &&
     !uploadChatImagesMutation.isPending;
+
+  useEffect(() => {
+    if (selectedSessionId) {
+      void joinChatSession(selectedSessionId);
+    }
+  }, [selectedSessionId]);
 
   useEffect(() => {
     if (
