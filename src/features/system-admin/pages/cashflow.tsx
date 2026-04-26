@@ -28,15 +28,7 @@ import { useQuery } from '@tanstack/react-query';
 
 type FilterType = 'all' | 'completed' | 'pending' | 'cancelled';
 
-const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
-  Pending: 'Chờ thanh toán',
-  Confirmed: 'Đã xác nhận',
-  Processing: 'Đang xử lý',
-  Completed: 'Hoàn thành',
-  Cancelled: 'Đã hủy',
-  Refunded: 'Hoàn tiền',
-};
-
+// We move the labels inside the component to use the 't' function reactively
 const PAYMENT_STATUS_COLOR: Record<PaymentStatus, string> = {
   Pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   Processing: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
@@ -48,6 +40,30 @@ const PAYMENT_STATUS_COLOR: Record<PaymentStatus, string> = {
 
 export default function CashflowPage() {
   const { t } = useTranslation();
+
+  const ORDER_STATUS_LABEL: Record<OrderStatus, string> = useMemo(
+    () => ({
+      Pending: t('SystemAdmin.cashflow.status.pending', {
+        defaultValue: 'Chờ thanh toán',
+      }),
+      Confirmed: t('SystemAdmin.cashflow.status.confirmed', {
+        defaultValue: 'Đã xác nhận',
+      }),
+      Processing: t('SystemAdmin.cashflow.status.processing', {
+        defaultValue: 'Đang xử lý',
+      }),
+      Completed: t('SystemAdmin.cashflow.status.completed', {
+        defaultValue: 'Hoàn thành',
+      }),
+      Cancelled: t('SystemAdmin.cashflow.status.cancelled', {
+        defaultValue: 'Đã hủy',
+      }),
+      Refunded: t('SystemAdmin.cashflow.status.refunded', {
+        defaultValue: 'Hoàn tiền',
+      }),
+    }),
+    [t]
+  );
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 15;
@@ -160,19 +176,25 @@ export default function CashflowPage() {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <SummaryCard
-              title="Tổng doanh thu (Trang này)"
+              title={t('SystemAdmin.cashflow.stats.totalVolume', {
+                defaultValue: 'Tổng doanh thu (Trang này)',
+              })}
               value={formatCurrency(summary.totalRevenue, { absolute: true })}
               tone="emerald"
               icon={DollarSign}
             />
             <SummaryCard
-              title="Tổng chờ (Trang này)"
+              title={t('SystemAdmin.cashflow.stats.pendingAmount', {
+                defaultValue: 'Tổng chờ (Trang này)',
+              })}
               value={formatCurrency(summary.totalPending, { absolute: true })}
               tone="amber"
               icon={Clock3}
             />
             <SummaryCard
-              title="Tổng số đơn hàng"
+              title={t('SystemAdmin.cashflow.stats.completedOrders', {
+                defaultValue: 'Tổng số đơn hàng',
+              })}
               value={summary.orderCount.toString()}
               tone="violet"
               icon={BarChart3}
@@ -184,7 +206,9 @@ export default function CashflowPage() {
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-(--text-primary) flex items-center gap-2">
                 <ShoppingCart className="w-5 h-5 text-brand" />
-                Danh sách đơn hàng
+                {t('SystemAdmin.cashflow.table.list', {
+                  defaultValue: 'Danh sách đơn hàng',
+                })}
               </h2>
 
               {/* Filter tabs */}
@@ -205,12 +229,20 @@ export default function CashflowPage() {
                     }`}
                   >
                     {option === 'all'
-                      ? 'Tất cả'
+                      ? t('SystemAdmin.cashflow.filters.all', {
+                          defaultValue: 'Tất cả',
+                        })
                       : option === 'completed'
-                        ? 'Hoàn thành'
+                        ? t('SystemAdmin.cashflow.filters.completed', {
+                            defaultValue: 'Hoàn thành',
+                          })
                         : option === 'pending'
-                          ? 'Chờ'
-                          : 'Đã hủy/Hoàn'}
+                          ? t('SystemAdmin.cashflow.filters.pending', {
+                              defaultValue: 'Chờ',
+                            })
+                          : t('SystemAdmin.cashflow.filters.failed', {
+                              defaultValue: 'Đã hủy/Hoàn',
+                            })}
                   </button>
                 ))}
               </div>
@@ -238,7 +270,11 @@ export default function CashflowPage() {
             {query.error && (
               <div className="p-8 text-center text-red-500 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/20">
                 <AlertCircle className="w-10 h-10 mx-auto mb-3" />
-                <p>Lỗi khi tải dữ liệu đơn hàng</p>
+                <p>
+                  {t('SystemAdmin.cashflow.error', {
+                    defaultValue: 'Lỗi khi tải dữ liệu đơn hàng',
+                  })}
+                </p>
               </div>
             )}
 
@@ -246,7 +282,9 @@ export default function CashflowPage() {
               <div className="text-center py-12">
                 <History className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <p className="text-slate-500 font-medium">
-                  Không tìm thấy đơn hàng nào
+                  {t('SystemAdmin.cashflow.noData', {
+                    defaultValue: 'Không tìm thấy đơn hàng nào',
+                  })}
                 </p>
               </div>
             )}
@@ -287,12 +325,18 @@ export default function CashflowPage() {
                               </div>
                               <p className="text-slate-900 dark:text-white font-bold truncate flex items-center gap-2">
                                 {order.patientName ||
-                                  `Patient ${order.userId.slice(0, 8)}`}
+                                  `${t('SystemAdmin.cashflow.table.patientFallback', { defaultValue: 'Patient' })} ${order.userId.slice(0, 8)}`}
                               </p>
                             </div>
 
                             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400 font-medium">
-                              {order.description || 'Thanh toán phòng khám'}
+                              {order.description ||
+                                t(
+                                  'SystemAdmin.cashflow.table.defaultDescription',
+                                  {
+                                    defaultValue: 'Thanh toán phòng khám',
+                                  }
+                                )}
                             </p>
 
                             <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
@@ -312,11 +356,18 @@ export default function CashflowPage() {
                               <span className="text-slate-300">|</span>
                               {isOnlineDeposit ? (
                                 <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 uppercase tracking-tighter">
-                                  Online Deposit
+                                  {t(
+                                    'SystemAdmin.cashflow.table.onlineDeposit',
+                                    {
+                                      defaultValue: 'Online Deposit',
+                                    }
+                                  )}
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 uppercase tracking-tighter">
-                                  Full Payment
+                                  {t('SystemAdmin.cashflow.table.fullPayment', {
+                                    defaultValue: 'Full Payment',
+                                  })}
                                 </span>
                               )}
                             </div>
@@ -331,12 +382,18 @@ export default function CashflowPage() {
                           </p>
                           {isOnlineDeposit && (
                             <p className="text-xs text-slate-500 font-medium flex items-center gap-2">
-                              Đã cọc:{' '}
+                              {t('SystemAdmin.cashflow.table.deposited', {
+                                defaultValue: 'Đã cọc',
+                              })}
+                              :{' '}
                               <span className="text-blue-600 dark:text-blue-400">
                                 {formatCurrency(order.depositAmount!)}
                               </span>
                               <span className="text-slate-300">|</span>
-                              Còn lại:{' '}
+                              {t('SystemAdmin.cashflow.table.remaining', {
+                                defaultValue: 'Còn lại',
+                              })}
+                              :{' '}
                               <span className="text-rose-500">
                                 {formatCurrency(
                                   order.totalAmount - order.depositAmount!
@@ -375,10 +432,15 @@ export default function CashflowPage() {
                   className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-slate-100 dark:bg-slate-800 disabled:opacity-50 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  Trước
+                  {t('SystemAdmin.cashflow.pagination.previous', {
+                    defaultValue: 'Trước',
+                  })}
                 </button>
                 <span className="text-sm text-slate-500">
-                  Trang {query.data.pageNumber} / {query.data.totalPages}
+                  {t('SystemAdmin.cashflow.pagination.page', {
+                    defaultValue: 'Trang',
+                  })}{' '}
+                  {query.data.pageNumber} / {query.data.totalPages}
                 </span>
                 <button
                   onClick={() =>
@@ -387,7 +449,9 @@ export default function CashflowPage() {
                   disabled={!query.data.hasNext}
                   className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-slate-100 dark:bg-slate-800 disabled:opacity-50 transition-colors"
                 >
-                  Sau
+                  {t('SystemAdmin.cashflow.pagination.next', {
+                    defaultValue: 'Sau',
+                  })}
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
