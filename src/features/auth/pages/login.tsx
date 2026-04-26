@@ -256,6 +256,19 @@ const LoginPage = () => {
           authLogin(response.user);
         }
 
+        if (response.user?.mustUpdateProfile) {
+          const roles = response.user.roles || [];
+          if (roles.includes('Patient')) {
+            navigate('/patient/security');
+            return;
+          }
+
+          if (roles.includes('OrgAdmin')) {
+            navigate('/force-change-password');
+            return;
+          }
+        }
+
         // Navigate based on user role
         const roles = response.user?.roles || [];
         if (roles.includes('SystemAdmin')) {

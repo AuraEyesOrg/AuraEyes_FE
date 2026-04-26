@@ -9,14 +9,24 @@ export interface CreateWalkInPatientRequest {
   phoneNumber?: string;
   citizenId?: string;
   address?: string;
+  email?: string;
+}
+
+export interface CreateWalkInPatientResponse {
+  patientId: string;
+  userId: string;
+  loginEmail: string;
+  isGeneratedEmail: boolean;
+  emailSent: boolean;
+  temporaryPassword?: string | null;
 }
 
 export const orgWalkInPatientApi = {
   async createWalkInPatient(request: CreateWalkInPatientRequest) {
-    const response = await api.post<ApiResponse<string>>(
+    const response = await api.post<ApiResponse<CreateWalkInPatientResponse>>(
       '/organisations/patients/walk-in',
       request
     );
-    return unwrapApiData<string>(response.data);
+    return unwrapApiData<CreateWalkInPatientResponse>(response.data);
   },
 };

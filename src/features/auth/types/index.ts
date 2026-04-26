@@ -10,6 +10,15 @@ export interface LoginRequest {
   turnstileToken?: string;
 }
 
+export interface LookupAccountByCitizenIdRequest {
+  citizenId: string;
+}
+
+export interface LookupAccountByCitizenIdResponse {
+  exists: boolean;
+  maskedEmail?: string | null;
+}
+
 export interface GoogleLoginRequest {
   credential: string;
   deviceInfo?: string;
