@@ -967,6 +967,32 @@ export default function ClinicStaffAppointmentsPage() {
                               {formatDate(appt.date, 'short')}
                             </div>
                           </div>
+
+                          {/* Consulting Doctor Badge */}
+                          <div className="mt-3 flex items-center gap-3 p-2.5 pr-5 rounded-2xl bg-slate-50/50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60 w-fit group/doc transition-all hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm">
+                            <div className="relative shrink-0">
+                              {appt.ophthalAvatarUrl ? (
+                                <img
+                                  src={appt.ophthalAvatarUrl}
+                                  alt={appt.ophthalFullName ?? ''}
+                                  className="w-10 h-10 rounded-xl object-cover border-2 border-white dark:border-slate-700 shadow-sm"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-brand text-xs font-black border border-brand/20">
+                                  {getInitials(appt.ophthalFullName || 'DR')}
+                                </div>
+                              )}
+                              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full shadow-sm" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
+                                Consulting Doctor
+                              </span>
+                              <span className="text-sm font-black text-slate-800 dark:text-slate-100 group-hover/doc:text-brand transition-colors">
+                                {appt.ophthalFullName || 'Clinic Doctor'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -1072,21 +1098,22 @@ export default function ClinicStaffAppointmentsPage() {
                       </div>
                     )}
 
-                    {appt.visitReason && (
-                      <div className="mt-4 flex items-start gap-3 rounded-2xl bg-amber-500/5 p-4 border border-amber-500/10">
-                        <div className="mt-0.5 rounded-lg bg-amber-500/10 p-1.5">
-                          <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
+                    {appt.visitReason &&
+                      appt.visitReason !== 'Regular eye checkup' && (
+                        <div className="mt-4 flex items-start gap-3 rounded-2xl bg-amber-500/5 p-4 border border-amber-500/10">
+                          <div className="mt-0.5 rounded-lg bg-amber-500/10 p-1.5">
+                            <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70">
+                              Visit Reason
+                            </p>
+                            <p className="text-xs font-bold text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
+                              {appt.visitReason}
+                            </p>
+                          </div>
                         </div>
-                        <div className="space-y-1">
-                          <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70">
-                            Visit Reason
-                          </p>
-                          <p className="text-xs font-bold text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
-                            {appt.visitReason}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* Actions Row */}
                     <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-6 dark:border-slate-800">
