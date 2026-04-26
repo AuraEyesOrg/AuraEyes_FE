@@ -468,7 +468,11 @@ export default function CollaborationPage() {
           setGroups((prev) =>
             prev.map((g) =>
               g.id === selectedGroupId
-                ? { ...g, memberCount: newMemberIds.length }
+                ? {
+                    ...g,
+                    memberCount: newMemberIds.length,
+                    memberIds: newMemberIds,
+                  }
                 : g
             )
           );
@@ -723,20 +727,18 @@ export default function CollaborationPage() {
           <h2 className="font-bold text-lg dark:text-white">
             {t('ProfessionalNetwork.collaboration.groups', 'Internal Groups')}
           </h2>
-          <button
-            onClick={() => {
-              if (!isSystemAdmin) {
-                toast.info('Only System Admin can create internal groups.');
-                return;
-              }
-              setIsCreateGroupOpen(true);
-              void loadCandidateUsers();
-            }}
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-primary transition-colors"
-            title="Create internal group"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
+          {isSystemAdmin && (
+            <button
+              onClick={() => {
+                setIsCreateGroupOpen(true);
+                void loadCandidateUsers();
+              }}
+              className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-primary transition-colors"
+              title="Create internal group"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         <div className="p-4">
@@ -1506,9 +1508,9 @@ export default function CollaborationPage() {
                         <div
                           className={`h-6 w-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-all ${
                             inGroup
-                              ? 'border-primary bg-primary text-white scale-110 shadow-md shadow-primary/20'
+                              ? `border-primary bg-primary text-white scale-110 shadow-md shadow-primary/20`
                               : 'border-slate-300 dark:border-slate-600'
-                          }`}
+                          } ${!isSystemAdmin && inGroup ? 'opacity-50' : ''}`}
                         >
                           {inGroup ? (
                             <Check className="w-4 h-4 stroke-[3px]" />

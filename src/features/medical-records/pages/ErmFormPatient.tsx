@@ -103,72 +103,106 @@ export default function ErmFormPatient() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-100 py-10 no-print text-black">
+    <div className="min-h-screen bg-slate-50 py-10 no-print text-black selection:bg-primary/20">
       {/* NAVIGATION */}
-      <div className="fixed top-5 left-1/2 -translate-x-1/2 flex gap-4 no-print z-50 font-sans">
+      <div className="fixed top-5 left-1/2 -translate-x-1/2 flex gap-4 no-print z-50">
         <button
           onClick={() => navigate(-1)}
-          className="bg-white border border-black px-6 py-2 font-bold text-xs flex items-center gap-2 hover:bg-slate-50 transition-all shadow-lg"
+          className="bg-white border border-slate-200 px-6 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 hover:bg-slate-50 transition-all shadow-xl text-slate-600"
         >
           <ArrowLeft className="w-4 h-4" /> QUAY LẠI
         </button>
         <button
           onClick={handleSave}
-          className="bg-primary text-white px-8 py-2 font-bold text-xs flex items-center gap-2 hover:bg-primary/90 shadow-xl transition-all"
+          className="bg-primary text-white px-8 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 hover:bg-primary/90 shadow-xl transition-all"
         >
           <Save className="w-4 h-4" /> LƯU THÔNG TIN
         </button>
         <button
           onClick={() => window.print()}
-          className="bg-black text-white px-8 py-2 font-bold text-xs flex items-center gap-2 hover:bg-slate-800 shadow-xl transition-all"
+          className="bg-slate-900 text-white px-8 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 hover:bg-black shadow-xl transition-all"
         >
           <Printer className="w-4 h-4" /> IN BỆNH ÁN
         </button>
       </div>
 
-      <main className="max-w-[900px] mx-auto bg-white p-[60px] shadow-2xl print:p-0 print:shadow-none print:border-none border border-slate-300 font-serif leading-tight">
+      <main
+        className="max-w-[850px] mx-auto bg-white p-[50px] shadow-2xl print:p-0 print:shadow-none print:border-none border border-slate-200 leading-tight"
+        style={{ fontFamily: "'Times New Roman', Times, serif" }}
+      >
         {/* HEADER */}
-        <div className="flex flex-col items-center relative mb-8">
-          <h1 className="text-2xl font-bold uppercase tracking-tight">
-            BỆNH ÁN MẮT
-          </h1>
-          <p className="text-sm font-bold uppercase">(Đáy mắt)</p>
+        <div className="grid grid-cols-12 mb-8 items-start">
+          <div className="col-span-4 space-y-1">
+            <div className="flex items-center gap-2 mb-2">
+              <img src="/logo.png" alt="AURA" className="h-10 w-auto" />
+              <div className="text-[10px] font-bold leading-tight">
+                <p className="uppercase">Hệ thống phòng khám mắt</p>
+                <p className="text-primary uppercase">Aura Digital Clinic</p>
+              </div>
+            </div>
+            <div className="text-[10px] font-bold uppercase space-y-0.5">
+              <p>Sở Y tế: .................................</p>
+              <p>Bệnh viện: AURA DIGITAL CLINIC</p>
+            </div>
+          </div>
 
-          <div className="absolute top-0 right-0 text-[11px] font-bold text-right space-y-0.5">
+          <div className="col-span-4 text-center">
+            <h1 className="text-xl font-bold uppercase tracking-tight">
+              BỆNH ÁN MẮT
+            </h1>
+            <p className="text-[12px] font-bold uppercase mt-1">
+              (Dùng cho điều trị ngoại trú)
+            </p>
+          </div>
+
+          <div className="col-span-4 text-[11px] font-bold text-right space-y-1">
             <p>MS: 23/BV-01</p>
-            <p>Số lưu trữ:....................................</p>
+            <p>
+              Số lưu trữ:{' '}
+              <span className="inline-block border-b border-black w-24 text-center">
+                {data.soLuuTru || '...............'}
+              </span>
+            </p>
             <p>
               Mã YT:{' '}
               <input
                 type="text"
+                autoComplete="off"
+                spellCheck={false}
                 value={data.maYT || ''}
                 onChange={(e) => handleChange('maYT', e.target.value)}
-                className="w-40 border-b border-black outline-none bg-transparent"
-                placeholder="...... /210/20......"
+                className="w-32 border-b border-black outline-none bg-transparent text-center font-bold"
+                placeholder="...................."
               />
             </p>
           </div>
+        </div>
 
-          <div className="w-full flex justify-between text-[11px] font-bold mt-6">
-            <p>
-              Khoa:{' '}
-              <input
-                type="text"
-                value={data.khoa || ''}
-                onChange={(e) => handleChange('khoa', e.target.value)}
-                className="border-b border-black w-[100px] text-center outline-none bg-transparent"
-                placeholder="................"
-              />{' '}
-              Giường:{' '}
-              <input
-                type="text"
-                value={data.giuong || ''}
-                onChange={(e) => handleChange('giuong', e.target.value)}
-                className="border-b border-black w-[80px] text-center outline-none bg-transparent"
-                placeholder="............"
-              />
-            </p>
-          </div>
+        <div className="flex justify-between text-[12px] font-bold mb-6 italic">
+          <p>
+            Khoa:{' '}
+            <input
+              type="text"
+              autoComplete="off"
+              spellCheck={false}
+              value={data.khoa || ''}
+              onChange={(e) => handleChange('khoa', e.target.value)}
+              className="border-b border-black w-[150px] text-center outline-none bg-transparent font-bold not-italic"
+              placeholder="................"
+            />
+          </p>
+          <p>
+            Giường:{' '}
+            <input
+              type="text"
+              autoComplete="off"
+              spellCheck={false}
+              value={data.giuong || ''}
+              onChange={(e) => handleChange('giuong', e.target.value)}
+              className="border-b border-black w-[80px] text-center outline-none bg-transparent font-bold not-italic"
+              placeholder="............"
+            />
+          </p>
         </div>
 
         {/* I. HÀNH CHÍNH */}
@@ -695,7 +729,7 @@ export default function ErmFormPatient() {
 
               <div className="border border-black overflow-hidden mx-4">
                 <table className="w-full border-collapse">
-                  <tr className="divide-x divide-black border-b border-black h-9 bg-slate-50/30">
+                  <tr className="divide-x divide-black border-b border-black h-9 bg-white">
                     <td className="w-1/2 px-3 text-[12px] font-bold">
                       Thị lực vào viện: Không kính: MP..........MT........
                     </td>
@@ -718,7 +752,7 @@ export default function ErmFormPatient() {
               <div className="border border-black mx-4">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="divide-x divide-black border-b border-black font-bold uppercase text-center h-10 bg-slate-50/50">
+                    <tr className="divide-x divide-black border-b border-black font-bold uppercase text-center h-10 bg-white">
                       <th className="w-1/2 text-base">MẮT PHẢI</th>
                       <th className="w-1/2 text-base">MẮT TRÁI</th>
                     </tr>

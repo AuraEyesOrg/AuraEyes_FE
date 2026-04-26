@@ -9,7 +9,6 @@ import {
   User,
   FileText,
   Lock,
-  Loader2,
   RotateCcw,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -291,17 +290,63 @@ export default function ErmForm() {
   };
 
   const onSubmit = async (data: FullErmFormData) => {
-    // Basic validation for required fields
     const missingFields: string[] = [];
+
+    // 1. Validate Administrative Data (Clinic Staff / Doctor)
     if (!data.fullName) missingFields.push('Họ tên');
     if (!data.age) missingFields.push('Tuổi');
+    if (!data.gender) missingFields.push('Giới tính');
+    if (!data.address) missingFields.push('Địa chỉ');
     if (!data.admissionReason) missingFields.push('Lý do vào viện');
-    if (isOphthalmologist && !data.finalDiagnosisMain)
-      missingFields.push('Chẩn đoán chính');
+    if (!data.admissionDate) missingFields.push('Ngày vào viện');
+
+    // 2. Validate Clinical Data (Doctor Only)
+    if (isOphthalmologist) {
+      if (!data.medicalHistory) missingFields.push('Tiền sử bệnh');
+      if (!data.rightEyeVisionNoGlass || !data.leftEyeVisionNoGlass)
+        missingFields.push('Thị lực (MP/MT)');
+      if (!data.rightEyePressure || !data.leftEyePressure)
+        missingFields.push('Nhãn áp (MP/MT)');
+      if (!data.finalDiagnosisMain) missingFields.push('Chẩn đoán chính');
+      if (!data.doctorName) missingFields.push('Tên bác sĩ');
+
+      // Validate pathological details
+      SECTION_KEYS.forEach((key) => {
+        if (
+          data.rightEye?.[key] &&
+          !data.rightEye[key].normal &&
+          !data.rightEye[key].other
+        ) {
+          missingFields.push(
+            `Mô tả bệnh lý Mắt Phải - ${sectionConfig[key].label}`
+          );
+        }
+        if (
+          data.leftEye?.[key] &&
+          !data.leftEye[key].normal &&
+          !data.leftEye[key].other
+        ) {
+          missingFields.push(
+            `Mô tả bệnh lý Mắt Trái - ${sectionConfig[key].label}`
+          );
+        }
+      });
+    }
 
     if (missingFields.length > 0) {
       toast.error(
-        `Vui lòng điền các trường bắt buộc: ${missingFields.join(', ')}`
+        <div className="space-y-1">
+          <p className="font-bold">Vui lòng điền đầy đủ các thông tin:</p>
+          <ul className="list-disc list-inside text-[10px]">
+            {missingFields.slice(0, 5).map((f, i) => (
+              <li key={i}>{f}</li>
+            ))}
+            {missingFields.length > 5 && (
+              <li>...và {missingFields.length - 5} trường khác</li>
+            )}
+          </ul>
+        </div>,
+        { autoClose: 5000 }
       );
       return;
     }
@@ -311,64 +356,69 @@ export default function ErmForm() {
       return;
     }
 
-    if (isStaff && !isOphthalmologist) {
-      // Clinic Staff saving administrative data
-      const adminData = {
-        khoa: data.khoa,
-        giuong: data.giuong,
-        soLuuTru: data.soLuuTru,
-        maYT: data.maYT,
-        fullName: data.fullName,
-        birthDate: data.birthDate,
-        age: data.age,
-        gender: data.gender,
-        job: data.job,
-        ethnicity: data.ethnicity,
-        nationality: data.nationality,
-        address: data.address,
-        workplace: data.workplace,
-        objectType: data.objectType,
-        bhytExpiry: data.bhytExpiry,
-        bhytNumber: data.bhytNumber,
-        relativeName: data.relativeName,
-        relativePhone: data.relativePhone,
-        admissionTime: data.admissionTime,
-        admissionDate: data.admissionDate,
-        admissionType: data.admissionType,
-        referralPlace: data.referralPlace,
-        admissionReason: data.admissionReason,
-      };
+    try {
+      if (isStaff && !isOphthalmologist) {
+        // Clinic Staff saving administrative data
+        const adminData = {
+          khoa: data.khoa,
+          giuong: data.giuong,
+          soLuuTru: data.soLuuTru,
+          maYT: data.maYT,
+          fullName: data.fullName,
+          birthDate: data.birthDate,
+          age: data.age,
+          gender: data.gender,
+          job: data.job,
+          ethnicity: data.ethnicity,
+          nationality: data.nationality,
+          address: data.address,
+          workplace: data.workplace,
+          objectType: data.objectType,
+          bhytExpiry: data.bhytExpiry,
+          bhytNumber: data.bhytNumber,
+          relativeName: data.relativeName,
+          relativePhone: data.relativePhone,
+          admissionTime: data.admissionTime,
+          admissionDate: data.admissionDate,
+          admissionType: data.admissionType,
+          referralPlace: data.referralPlace,
+          admissionReason: data.admissionReason,
+        };
 
-      updateAdministrativeMutation.mutate({
-        id,
-        data: { administrativeDataJson: JSON.stringify(adminData) },
-      });
-    } else if (isOphthalmologist) {
-      // Doctor saving clinical data
-      const clinicalData = {
-        medicalHistory: data.medicalHistory,
-        personalHistory: data.personalHistory,
-        familyHistory: data.familyHistory,
-        rightEyeVisionNoGlass: data.rightEyeVisionNoGlass,
-        leftEyeVisionNoGlass: data.leftEyeVisionNoGlass,
-        rightEyeVisionWithGlass: data.rightEyeVisionWithGlass,
-        leftEyeVisionWithGlass: data.leftEyeVisionWithGlass,
-        rightEyePressure: data.rightEyePressure,
-        leftEyePressure: data.leftEyePressure,
-        rightEyeField: data.rightEyeField,
-        leftEyeField: data.leftEyeField,
-        rightEye: data.rightEye,
-        leftEye: data.leftEye,
-      };
+        await updateAdministrativeMutation.mutateAsync({
+          id,
+          data: { administrativeDataJson: JSON.stringify(adminData) },
+        });
+      } else if (isOphthalmologist) {
+        // Doctor saving clinical data
+        const clinicalData = {
+          medicalHistory: data.medicalHistory,
+          personalHistory: data.personalHistory,
+          familyHistory: data.familyHistory,
+          rightEyeVisionNoGlass: data.rightEyeVisionNoGlass,
+          leftEyeVisionNoGlass: data.leftEyeVisionNoGlass,
+          rightEyeVisionWithGlass: data.rightEyeVisionWithGlass,
+          leftEyeVisionWithGlass: data.leftEyeVisionWithGlass,
+          rightEyePressure: data.rightEyePressure,
+          leftEyePressure: data.leftEyePressure,
+          rightEyeField: data.rightEyeField,
+          leftEyeField: data.leftEyeField,
+          rightEye: data.rightEye,
+          leftEye: data.leftEye,
+        };
 
-      updateDiagnosisMutation.mutate({
-        id,
-        data: {
-          clinicalData: clinicalData,
-          finalDiagnosis: data.finalDiagnosisMain,
-          treatmentPlan: data.finalDiagnosisExtra,
-        },
-      });
+        await updateDiagnosisMutation.mutateAsync({
+          id,
+          data: {
+            clinicalData: clinicalData,
+            finalDiagnosis: data.finalDiagnosisMain,
+            treatmentPlan: data.finalDiagnosisExtra,
+          },
+        });
+      }
+      toast.success('Hồ sơ đã được lưu thành công');
+    } catch (err) {
+      // Errors are handled by mutation callbacks or global error handler
     }
   };
 
@@ -394,6 +444,15 @@ export default function ErmForm() {
     }
   };
 
+  const [activeStep, setActiveStep] = React.useState<'admin' | 'clinical'>(
+    isOphthalmologist ? 'clinical' : 'admin'
+  );
+
+  const canProceedToAi =
+    recordStatus === MedicalRecordStatus.ClinicFilling ||
+    recordStatus === MedicalRecordStatus.DoctorFilling ||
+    recordStatus === MedicalRecordStatus.Completed;
+
   const renderEyeCell = (
     eye: 'rightEye' | 'leftEye',
     field: string,
@@ -408,9 +467,15 @@ export default function ErmForm() {
 
     return (
       <div
-        className={`p-4 transition-all duration-300 ${itemData?.normal ? 'bg-white' : isRight ? 'bg-primary/5' : 'bg-rose-50'}`}
+        className={`p-6 transition-all duration-500 ${
+          itemData?.normal
+            ? 'bg-transparent'
+            : isRight
+              ? 'bg-primary/5'
+              : 'bg-rose-50'
+        }`}
       >
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-3">
           <span className="font-black text-[11px] text-slate-800 uppercase tracking-tighter">
             {idx}. {config.label}
           </span>
@@ -420,27 +485,33 @@ export default function ErmForm() {
             onClick={() =>
               setValue(`${eye}.${field}.normal`, !itemData?.normal)
             }
-            className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-all shadow-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${itemData?.normal ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600'}`}
+            className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase transition-all shadow-sm ${
+              disabled
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:scale-105 active:scale-95'
+            } ${itemData?.normal ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600'}`}
           >
             {itemData?.normal ? 'Bình thường' : 'Bệnh lý'}
           </button>
         </div>
 
         {!itemData?.normal && (
-          <div className="space-y-3 pt-2 animate-in slide-in-from-top-2 duration-300">
-            <div className="grid grid-cols-1 gap-1.5">
+          <div className="space-y-4 pt-2 animate-in slide-in-from-top-2 duration-500">
+            <div className="grid grid-cols-1 gap-2">
               {Object.entries(config.checks).map(([key, label]) => (
                 <label
                   key={key}
-                  className={`flex items-center gap-2 group ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`flex items-center gap-3 group px-3 py-2 rounded-xl border border-transparent hover:border-slate-200 hover:bg-white transition-all ${
+                    disabled ? 'cursor-not-allowed' : 'cursor-pointer'
+                  }`}
                 >
                   <input
                     type="checkbox"
                     disabled={disabled}
-                    className="w-3.5 h-3.5 rounded border-slate-300 text-primary focus:ring-primary/20"
+                    className="w-4 h-4 rounded-lg border-slate-300 text-primary focus:ring-primary/20 transition-all"
                     {...register(`${eye}.${field}.checks.${key}`)}
                   />
-                  <span className="text-[10px] font-bold text-slate-600 group-hover:text-primary transition-colors">
+                  <span className="text-[10px] font-bold text-slate-600 group-hover:text-slate-900 transition-colors">
                     {label}
                   </span>
                 </label>
@@ -449,8 +520,8 @@ export default function ErmForm() {
             <textarea
               {...register(`${eye}.${field}.other`)}
               disabled={disabled}
-              placeholder="Mô tả tổn thương..."
-              className="w-full bg-white/50 border border-slate-200 p-2 rounded-lg text-[10px] font-medium outline-none focus:border-primary/50 min-h-[50px] disabled:opacity-50"
+              placeholder="Nhập mô tả chi tiết tổn thương..."
+              className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-[11px] font-medium outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 min-h-[80px] disabled:opacity-50 transition-all"
             />
           </div>
         )}
@@ -458,9 +529,30 @@ export default function ErmForm() {
     );
   };
 
+  const renderStepIndicator = () => (
+    <div className="flex items-center justify-center mb-10">
+      <div className="flex items-center gap-4 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+        <button
+          onClick={() => setActiveStep('admin')}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all ${activeStep === 'admin' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-400 hover:text-slate-600'}`}
+        >
+          <User className="w-4 h-4" /> 1. HÀNH CHÍNH
+        </button>
+        <div className="w-8 h-px bg-slate-100" />
+        <button
+          onClick={() => isOphthalmologist && setActiveStep('clinical')}
+          disabled={!isOphthalmologist}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all ${activeStep === 'clinical' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-300 cursor-not-allowed'}`}
+        >
+          <Activity className="w-4 h-4" /> 2. KHÁM LÂM SÀNG
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-primary/20 pb-20">
-      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200 px-8 py-3 flex items-center justify-between shadow-sm">
+    <div className="min-h-screen bg-[#F0F4F8] text-slate-900 font-sans selection:bg-primary/20 pb-20">
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-2xl border-b border-slate-200 px-8 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <div className="bg-primary w-8 h-8 rounded-xl flex items-center justify-center">
@@ -470,31 +562,58 @@ export default function ErmForm() {
               AURA <span className="text-primary">EMR</span>
             </span>
           </div>
+          <div className="h-6 w-px bg-slate-200 mx-2" />
+          <div
+            className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+              recordStatus === MedicalRecordStatus.Locked
+                ? 'bg-rose-100 text-rose-600'
+                : recordStatus === MedicalRecordStatus.Completed
+                  ? 'bg-emerald-100 text-emerald-600'
+                  : 'bg-blue-100 text-blue-600'
+            }`}
+          >
+            Trạng thái: {recordStatus}
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
-          {isOphthalmologist && (
+          {activeStep === 'clinical' && isOphthalmologist && (
             <button
               onClick={handleSetAllNormal}
-              className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-5 py-2 rounded-xl font-black text-[11px] hover:bg-emerald-500 hover:text-white transition-all"
+              className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-5 py-2.5 rounded-2xl font-black text-[11px] hover:bg-emerald-500 hover:text-white transition-all"
             >
-              <CheckCircle2 className="w-4 h-4" /> TẤT CẢ BÌNH THƯỜNG
+              <CheckCircle2 className="w-4 h-4" /> BÌNH THƯỜNG HẾT
             </button>
           )}
+
+          <button
+            onClick={() => navigate(`/retinal-processing/${id}`)}
+            disabled={!canProceedToAi}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-[11px] transition-all ${
+              canProceedToAi
+                ? 'bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white shadow-lg shadow-blue-500/10'
+                : 'bg-slate-100 text-slate-300 cursor-not-allowed'
+            }`}
+          >
+            <Activity className="w-4 h-4" /> XỬ LÝ ẢNH AI
+          </button>
+
           <button
             onClick={handlePreviewPatient}
-            className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2 rounded-xl font-black text-[11px] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-black/10"
+            className="flex items-center gap-2 bg-slate-100 text-slate-600 px-5 py-2.5 rounded-2xl font-black text-[11px] hover:bg-slate-200 transition-all"
           >
-            <Eye className="w-4 h-4" /> XEM BẢN IN
+            <Eye className="w-4 h-4" /> BẢN IN
           </button>
-          {isFinalizer && (
+
+          {isFinalizer && recordStatus !== MedicalRecordStatus.Locked && (
             <button
               onClick={handleFinalize}
-              className="flex items-center gap-2 bg-rose-500 text-white px-8 py-2.5 rounded-xl font-black text-[11px] hover:bg-rose-600 hover:shadow-xl hover:shadow-rose-500/20 transition-all"
+              className="flex items-center gap-2 bg-rose-500 text-white px-8 py-2.5 rounded-2xl font-black text-[11px] hover:bg-rose-600 hover:shadow-xl hover:shadow-rose-500/20 transition-all"
             >
-              <Lock className="w-4 h-4" /> KHÓA HỒ SƠ
+              <Lock className="w-4 h-4" /> KHÓA
             </button>
           )}
+
           <button
             onClick={handleSubmit(onSubmit)}
             disabled={
@@ -502,55 +621,43 @@ export default function ErmForm() {
               updateAdministrativeMutation.isPending ||
               recordStatus === MedicalRecordStatus.Locked
             }
-            className="flex items-center gap-2 bg-primary text-white px-8 py-2.5 rounded-xl font-black text-[11px] hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/20 transition-all disabled:opacity-50"
+            className="flex items-center gap-2 bg-primary text-white px-8 py-2.5 rounded-2xl font-black text-[11px] hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/20 transition-all disabled:opacity-50"
           >
-            {updateDiagnosisMutation.isPending ||
-            updateAdministrativeMutation.isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            {id ? 'CẬP NHẬT HỒ SƠ' : 'LƯU HỒ SƠ'}
+            <Save className="w-4 h-4" />
+            {id ? 'CẬP NHẬT' : 'LƯU'}
           </button>
         </div>
       </nav>
 
-      <main className="max-w-[1000px] mx-auto p-8 space-y-10">
-        <div className="flex flex-col items-center justify-center space-y-4 pt-4">
+      <main className="max-w-[1200px] mx-auto p-8">
+        <div className="flex flex-col items-center justify-center space-y-4 pt-4 mb-12">
           <img
             src="/logo.png"
-            alt="AURA Logo"
-            className="h-16 w-auto object-contain"
+            alt="AURA"
+            className="h-14 w-auto object-contain"
           />
-          <h1 className="text-2xl font-black uppercase tracking-[0.2em] text-slate-800">
-            Hồ sơ bệnh án mắt
+          <h1 className="text-2xl font-black uppercase tracking-[0.3em] text-slate-800">
+            Hồ sơ bệnh án điện tử
           </h1>
-          <div className="w-20 h-1 bg-primary rounded-full" />
+          <div className="w-12 h-1 bg-primary rounded-full" />
         </div>
 
-        <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
-          <div className="p-10 border-b border-slate-50 space-y-8">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center">
-                <User className="w-5 h-5 text-primary" />
-              </div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-slate-400">
-                I. Thông tin hành chính
-              </h2>
-            </div>
+        {renderStepIndicator()}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                  Họ và tên bệnh nhân
-                </label>
-                <input
-                  {...register('fullName')}
-                  disabled={isOphthalmologist}
-                  className="w-full bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white p-4 rounded-2xl outline-none font-bold uppercase text-slate-800 transition-all disabled:opacity-50"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white rounded-[3rem] shadow-2xl border border-white overflow-hidden p-2">
+          {activeStep === 'admin' ? (
+            <div className="p-8 md:p-12 space-y-12">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                    Họ và tên
+                  </label>
+                  <input
+                    {...register('fullName')}
+                    disabled={isOphthalmologist}
+                    className="w-full bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white p-4 rounded-2xl outline-none font-bold uppercase text-slate-800 transition-all disabled:opacity-50"
+                  />
+                </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
                     Tuổi
@@ -575,177 +682,193 @@ export default function ErmForm() {
                   </select>
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                Lý do vào viện
-              </label>
-              <textarea
-                {...register('admissionReason')}
-                disabled={isOphthalmologist}
-                className="w-full h-32 bg-slate-50 p-4 rounded-2xl outline-none text-sm font-medium resize-none focus:bg-white transition-all disabled:opacity-50"
-              />
-            </div>
-          </div>
-
-          <div className="p-10 border-b border-slate-50 space-y-8">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center">
-                <Activity className="w-5 h-5 text-primary" />
-              </div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-slate-400">
-                II. Khám chuyên khoa mắt
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-slate-50 p-6 rounded-[2rem] flex items-center gap-8 border border-slate-100">
-                <div className="px-4 py-2 bg-primary text-white rounded-xl font-black text-xs">
-                  MP
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                    Địa chỉ
+                  </label>
+                  <input
+                    {...register('address')}
+                    disabled={isOphthalmologist}
+                    className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium disabled:opacity-50"
+                  />
                 </div>
-                <div className="flex-1 grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">
-                      Thị lực
-                    </label>
-                    <input
-                      {...register('rightEyeVisionNoGlass')}
-                      disabled={isStaff && !isOphthalmologist}
-                      placeholder="V"
-                      className="bg-transparent font-black text-lg outline-none w-full disabled:opacity-50"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">
-                      Nhãn áp
-                    </label>
-                    <input
-                      {...register('rightEyePressure')}
-                      disabled={isStaff && !isOphthalmologist}
-                      placeholder="mmHg"
-                      className="bg-transparent font-black text-lg outline-none w-full disabled:opacity-50"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="bg-slate-50 p-6 rounded-[2rem] flex items-center gap-8 border border-slate-100">
-                <div className="px-4 py-2 bg-rose-500 text-white rounded-xl font-black text-xs">
-                  MT
-                </div>
-                <div className="flex-1 grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">
-                      Thị lực
-                    </label>
-                    <input
-                      {...register('leftEyeVisionNoGlass')}
-                      disabled={isStaff && !isOphthalmologist}
-                      placeholder="V"
-                      className="bg-transparent font-black text-lg outline-none w-full disabled:opacity-50"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">
-                      Nhãn áp
-                    </label>
-                    <input
-                      {...register('leftEyePressure')}
-                      disabled={isStaff && !isOphthalmologist}
-                      placeholder="mmHg"
-                      className="bg-transparent font-black text-lg outline-none w-full disabled:opacity-50"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm">
-              <div className="grid grid-cols-2 divide-x divide-slate-100 bg-slate-50 border-b border-slate-100">
-                <div className="p-4 text-center font-black text-[10px] uppercase tracking-widest text-slate-500">
-                  Mắt Phải (Right)
-                </div>
-                <div className="p-4 text-center font-black text-[10px] uppercase tracking-widest text-slate-500">
-                  Mắt Trái (Left)
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                    Nghề nghiệp
+                  </label>
+                  <input
+                    {...register('job')}
+                    disabled={isOphthalmologist}
+                    className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium disabled:opacity-50"
+                  />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 divide-x divide-slate-100">
-                <div className="divide-y divide-slate-50">
-                  {SECTION_KEYS.map((key, i) =>
-                    renderEyeCell('rightEye', key, i + 1)
-                  )}
-                </div>
-                <div className="divide-y divide-slate-50">
-                  {SECTION_KEYS.map((key, i) =>
-                    renderEyeCell('leftEye', key, i + 1)
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-10 space-y-8 bg-slate-900 text-white">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center">
-                <FileText className="w-5 h-5 text-primary" />
-              </div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-white/40">
-                III. Chẩn đoán sau cùng
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 gap-8">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-white/40 uppercase ml-1">
-                  Bệnh chính
+                <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                  Lý do vào viện
                 </label>
-                <input
-                  {...register('finalDiagnosisMain')}
-                  disabled={isStaff && !isOphthalmologist}
-                  placeholder="Nhập chẩn đoán xác định..."
-                  className="w-full bg-white/5 border-2 border-white/10 focus:border-primary/50 p-4 rounded-2xl outline-none font-bold uppercase text-white transition-all disabled:opacity-50"
+                <textarea
+                  {...register('admissionReason')}
+                  disabled={isOphthalmologist}
+                  className="w-full h-32 bg-slate-50 p-4 rounded-2xl outline-none text-sm font-medium resize-none focus:bg-white transition-all disabled:opacity-50"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-white/40 uppercase ml-1">
-                  Bệnh kèm theo (nếu có)
-                </label>
-                <input
-                  {...register('finalDiagnosisExtra')}
-                  disabled={isStaff && !isOphthalmologist}
-                  placeholder="Nhập bệnh phụ hoặc ghi chú..."
-                  className="w-full bg-white/5 border-2 border-white/10 p-4 rounded-2xl outline-none font-medium text-white transition-all disabled:opacity-50"
-                />
+
+              {!isOphthalmologist && (
+                <div className="flex justify-end pt-8">
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep('clinical')}
+                    className="flex items-center gap-2 bg-slate-900 text-white px-10 py-4 rounded-2xl font-black text-xs hover:bg-black transition-all shadow-xl shadow-black/10"
+                  >
+                    TIẾP THEO <Activity className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="p-8 md:p-12 space-y-12">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 bg-primary text-white font-black text-xs rounded-bl-2xl">
+                    MẮT PHẢI
+                  </div>
+                  <div className="grid grid-cols-2 gap-8 pt-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase">
+                        Thị lực
+                      </label>
+                      <input
+                        {...register('rightEyeVisionNoGlass')}
+                        placeholder="V"
+                        className="w-full bg-white p-4 rounded-2xl outline-none font-black text-xl text-primary"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase">
+                        Nhãn áp
+                      </label>
+                      <input
+                        {...register('rightEyePressure')}
+                        placeholder="mmHg"
+                        className="w-full bg-white p-4 rounded-2xl outline-none font-black text-xl text-primary"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 bg-rose-500 text-white font-black text-xs rounded-bl-2xl">
+                    MẮT TRÁI
+                  </div>
+                  <div className="grid grid-cols-2 gap-8 pt-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase">
+                        Thị lực
+                      </label>
+                      <input
+                        {...register('leftEyeVisionNoGlass')}
+                        placeholder="V"
+                        className="w-full bg-white p-4 rounded-2xl outline-none font-black text-xl text-rose-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase">
+                        Nhãn áp
+                      </label>
+                      <input
+                        {...register('leftEyePressure')}
+                        placeholder="mmHg"
+                        className="w-full bg-white p-4 rounded-2xl outline-none font-black text-xl text-rose-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border border-slate-100 rounded-[3rem] overflow-hidden shadow-inner bg-slate-50/50">
+                <div className="grid grid-cols-2 divide-x divide-slate-100 border-b border-slate-100">
+                  <div className="p-4 text-center font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                    Right Eye Pathology
+                  </div>
+                  <div className="p-4 text-center font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                    Left Eye Pathology
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 divide-x divide-slate-100">
+                  <div className="divide-y divide-slate-50 bg-white/50">
+                    {SECTION_KEYS.map((key, i) =>
+                      renderEyeCell('rightEye', key, i + 1)
+                    )}
+                  </div>
+                  <div className="divide-y divide-slate-50 bg-white/50">
+                    {SECTION_KEYS.map((key, i) =>
+                      renderEyeCell('leftEye', key, i + 1)
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 rounded-[3rem] p-10 md:p-16 space-y-10 text-white shadow-2xl">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
+                    <CheckCircle2 className="w-6 h-6 text-primary" />
+                  </div>
+                  <h2 className="text-xl font-black uppercase tracking-widest italic">
+                    Chẩn đoán & Điều trị
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 gap-10">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-2">
+                      Bệnh chính (Tổn thương chính)
+                    </label>
+                    <input
+                      {...register('finalDiagnosisMain')}
+                      className="w-full bg-white/5 border-2 border-white/10 focus:border-primary/50 p-6 rounded-[2rem] outline-none font-black uppercase text-xl text-white transition-all"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-2">
+                      Phương án điều trị / Ghi chú
+                    </label>
+                    <textarea
+                      {...register('finalDiagnosisExtra')}
+                      className="w-full h-40 bg-white/5 border-2 border-white/10 p-6 rounded-[2rem] outline-none font-medium text-lg text-white/80 resize-none"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
-        <div className="flex justify-between items-center px-4">
-          <div className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-            Mã lưu trữ: {formData.soLuuTru || '---'} | MS: 23/BV-01
+        <div className="flex justify-between items-center px-8 mt-10">
+          <div className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+            Aura Digital Clinic © 2026 | {recordStatus}
           </div>
-          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-lg w-full max-w-sm text-center">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">
-              Bác sĩ điều trị
+          <div className="flex items-center gap-6">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Bác sĩ khám:
             </label>
             <input
               {...register('doctorName')}
-              disabled={isStaff && !isOphthalmologist}
-              placeholder="Họ và tên bác sĩ"
-              className="w-full text-center font-black text-xl text-slate-800 outline-none bg-transparent placeholder:text-slate-100 disabled:opacity-50"
+              className="bg-transparent border-b-2 border-slate-200 focus:border-primary px-4 py-1 text-lg font-black outline-none text-slate-800"
+              placeholder="---"
             />
           </div>
         </div>
       </main>
 
-      {!isFinalizer && (
+      {isOphthalmologist && (
         <button
           onClick={() => reset(INITIAL_VALUES as FullErmFormData)}
-          className="fixed bottom-8 left-8 p-4 bg-white text-slate-400 hover:text-rose-500 rounded-full shadow-xl border border-slate-100 transition-all hover:rotate-180 duration-500 z-40"
+          className="fixed bottom-8 left-8 p-5 bg-white text-slate-400 hover:text-primary rounded-2xl shadow-2xl border border-slate-100 transition-all hover:scale-110 active:scale-95 z-40"
         >
-          <RotateCcw className="w-5 h-5" />
+          <RotateCcw className="w-6 h-6" />
         </button>
       )}
     </div>
