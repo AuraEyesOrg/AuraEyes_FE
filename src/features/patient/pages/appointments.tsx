@@ -23,7 +23,7 @@ import {
   usePatientClinicAppointments,
   usePatientClinicAppointmentCounts,
 } from '@/features/patient/hooks/use-clinic-booking';
-import { useCreateOrganisationFeedback } from '@/features/patient/hooks/use-feedback';
+import { useCreateClinicFeedback } from '@/features/patient/hooks/use-feedback';
 import {
   FeedbackModal,
   FeedbackSubmittedBadge,
@@ -60,6 +60,8 @@ const CLINIC_STATUS_STYLES: Record<string, string> = {
     'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
   Cancelled: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
   NoShow: 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+  Booked:
+    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200',
 };
 
 const CLINIC_STATUS_LABEL_KEYS: Record<string, string> = {
@@ -114,7 +116,7 @@ const AppointmentsPage = () => {
     patientId ?? ''
   );
 
-  const createOrganisationFeedbackMutation = useCreateOrganisationFeedback();
+  const createClinicFeedbackMutation = useCreateClinicFeedback();
 
   const clinicAppointments = clinicAppointmentsQuery.data?.items ?? [];
   const clinicTotalPages = clinicAppointmentsQuery.data?.totalPages ?? 1;
@@ -159,19 +161,24 @@ const AppointmentsPage = () => {
   const getFilterLabel = (status: FilterTab) =>
     t(`PatientAppointments.filters.${status}`);
 
-  const getClinicStatusLabel = (status: string) => {
-    const mappedKey = CLINIC_STATUS_LABEL_KEYS[status];
-    if (!mappedKey) return status;
+  const getClinicStatusLabel = (appointment: ClinicAppointmentDto) => {
+    if (appointment.status === 'Pending' && appointment.isPaidDeposit) {
+      return t('PatientAppointments.clinicStatus.booked', {
+        defaultValue: 'Booked',
+      });
+    }
+    const mappedKey = CLINIC_STATUS_LABEL_KEYS[appointment.status];
+    if (!mappedKey) return appointment.status;
     return t(`PatientAppointments.clinicStatus.${mappedKey}`, {
-      defaultValue: status,
+      defaultValue: appointment.status,
     });
   };
 
   const submitClinicFeedback = async (rating: number, comment?: string) => {
     if (!clinicFeedbackTarget) return;
     try {
-      await createOrganisationFeedbackMutation.mutateAsync({
-        organisationId: clinicFeedbackTarget.organisationId,
+      await createClinicFeedbackMutation.mutateAsync({
+        clinicId: clinicFeedbackTarget.organisationId,
         request: {
           appointmentId: clinicFeedbackTarget.id,
           rating,
@@ -354,7 +361,7 @@ const AppointmentsPage = () => {
                 <ClinicAppointmentCard
                   key={appointment.id}
                   appointment={appointment}
-                  statusLabel={getClinicStatusLabel(appointment.status)}
+                  statusLabel={getClinicStatusLabel(appointment)}
                   rateLabel={t('PatientAppointments.actions.rateClinic')}
                   submittedLabel={t(
                     'PatientAppointments.feedback.submittedBadge'
@@ -436,11 +443,50 @@ const AppointmentsPage = () => {
             ? `${clinicFeedbackTarget.organisationName ?? t('PatientAppointments.labels.clinicVisit')} - ${clinicFeedbackTarget.date}`
             : undefined
         }
-        isSubmitting={createOrganisationFeedbackMutation.isPending}
+        targets={
+          clinicFeedbackTarget
+            ? {
+                clinicId: clinicFeedbackTarget.organisationId,
+                clinicName: clinicFeedbackTarget.organisationName,
+                doctorId: clinicFeedbackTarget.ophthalId ?? undefined,
+                doctorName: clinicFeedbackTarget.ophthalFullName ?? undefined,
+                staffId: (clinicFeedbackTarget as any).staffId,
+                staffName: (clinicFeedbackTarget as any).staffName,
+              }
+            : undefined
+        }
+        isSubmitting={createClinicFeedbackMutation.isPending}
         submitLabel={t('PatientAppointments.feedback.submitLabel')}
+        labels={{
+          targetTitle: t('PatientAppointments.feedback.targetTitle'),
+          targetClinic: t('PatientAppointments.feedback.targetClinic'),
+          targetDoctor: t('PatientAppointments.feedback.targetDoctor'),
+          targetStaff: t('PatientAppointments.feedback.targetStaff'),
+          rating: t('PatientAppointments.feedback.ratingLabel'),
+          commentPlaceholder: t(
+            'PatientAppointments.feedback.commentPlaceholder'
+          ),
+        }}
         onClose={() => setClinicFeedbackTarget(null)}
         onSubmit={async (values) => {
-          await submitClinicFeedback(values.rating, values.comment);
+          if (!clinicFeedbackTarget) return;
+          try {
+            await createClinicFeedbackMutation.mutateAsync({
+              clinicId: values.targetId ?? clinicFeedbackTarget.organisationId,
+              request: {
+                appointmentId: clinicFeedbackTarget.id,
+                rating: values.rating,
+                comment: values.comment,
+                doctorId:
+                  values.targetType === 'DOCTOR' ? values.targetId : undefined,
+                staffId:
+                  values.targetType === 'STAFF' ? values.targetId : undefined,
+              },
+            });
+            setClinicFeedbackTarget(null);
+          } catch (error) {
+            console.error('Failed to submit clinic feedback:', error);
+          }
         }}
       />
     </PatientLayout>
@@ -573,8 +619,10 @@ const ClinicAppointmentCard = ({
             <span
               className={[
                 'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest shadow-sm border border-transparent transition-all',
-                CLINIC_STATUS_STYLES[appointment.status] ??
-                  CLINIC_STATUS_STYLES.Pending,
+                appointment.status === 'Pending' && appointment.isPaidDeposit
+                  ? CLINIC_STATUS_STYLES.Booked
+                  : (CLINIC_STATUS_STYLES[appointment.status] ??
+                    CLINIC_STATUS_STYLES.Pending),
               ].join(' ')}
             >
               <span className="relative flex h-2 w-2">

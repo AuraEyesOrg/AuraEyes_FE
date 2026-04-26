@@ -82,7 +82,7 @@ const statusBadge: Record<string, string> = {
   Pending:
     'bg-amber-100/50 text-amber-700 border border-amber-200/50 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800/30',
   Confirmed:
-    'bg-blue-100/50 text-blue-700 border border-blue-200/50 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800/30',
+    'bg-sky-100/50 text-sky-700 border border-sky-200/50 dark:bg-sky-900/20 dark:text-sky-300 dark:border-sky-800/30',
   CheckedIn:
     'bg-emerald-100/50 text-emerald-700 border border-emerald-200/50 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800/30',
   InProgress:
@@ -95,6 +95,8 @@ const statusBadge: Record<string, string> = {
     'bg-rose-100/50 text-rose-700 border border-rose-200/50 dark:bg-rose-900/20 dark:text-rose-300 dark:border-rose-800/30',
   NoShow:
     'bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
+  Booked:
+    'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800/30',
 };
 
 const cardAccent: Record<string, string> = {
@@ -106,6 +108,7 @@ const cardAccent: Record<string, string> = {
   Completed: 'before:bg-slate-300',
   Cancelled: 'before:bg-rose-400',
   NoShow: 'before:bg-slate-400',
+  Booked: 'before:bg-blue-500',
 };
 
 const avatarColors: Record<string, string> = {
@@ -125,6 +128,8 @@ const avatarColors: Record<string, string> = {
     'bg-gradient-to-br from-rose-50 to-rose-100 text-rose-700 dark:from-rose-900/40 dark:to-rose-900/60 dark:text-rose-300',
   NoShow:
     'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500 dark:from-slate-800/60 dark:to-slate-800/80 dark:text-slate-400',
+  Booked:
+    'bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 dark:from-blue-900/40 dark:to-blue-900/60 dark:text-blue-300',
 };
 
 function getInitials(value: string) {
@@ -343,10 +348,13 @@ export default function ClinicStaffAppointmentsPage() {
     payRemainingMutation.isPending ||
     createWalkInAppointmentMutation.isPending;
 
-  const getStatusDisplay = (status: string) => {
+  const getStatusDisplay = (appointment: (typeof appointments)[number]) => {
+    const { status, isPaidDeposit } = appointment;
     switch (status) {
       case 'Pending':
-        return t('Organisation.calendar.status.pending', 'Pending');
+        return isPaidDeposit
+          ? t('Organisation.calendar.status.booked', 'Booked')
+          : t('Organisation.calendar.status.pending', 'Pending');
       case 'Confirmed':
         return t('Organisation.calendar.status.confirmed', 'Confirmed');
       case 'CheckedIn':
@@ -808,14 +816,14 @@ export default function ClinicStaffAppointmentsPage() {
               </h2>
               <div className="flex items-center gap-2">
                 <button
-                type="button"
-                onClick={openWalkInModal}
-                className="inline-flex h-9 items-center gap-2 rounded-xl bg-cyan-600 px-4 text-sm font-bold text-white transition hover:bg-cyan-700"
-              >
-                <Plus className="h-4 w-4" />
-                {t('Organisation.calendar.actions.newWalkIn', 'New Walk-in')}
-              </button>
-              <span className="h-1 w-6 rounded-full bg-brand" />
+                  type="button"
+                  onClick={openWalkInModal}
+                  className="inline-flex h-9 items-center gap-2 rounded-xl bg-cyan-600 px-4 text-sm font-bold text-white transition hover:bg-cyan-700"
+                >
+                  <Plus className="h-4 w-4" />
+                  {t('Organisation.calendar.actions.newWalkIn', 'New Walk-in')}
+                </button>
+                <span className="h-1 w-6 rounded-full bg-brand" />
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                   {t(
                     'Organisation.calendar.summary.records',
@@ -910,7 +918,7 @@ export default function ClinicStaffAppointmentsPage() {
                             />
                             {i === stepIdx && (
                               <span className="text-[8px] font-black uppercase tracking-tighter text-brand absolute -top-4">
-                                {getStatusDisplay(step)}
+                                {getStatusDisplay(appt)}
                               </span>
                             )}
                           </div>
@@ -959,6 +967,32 @@ export default function ClinicStaffAppointmentsPage() {
                               {formatDate(appt.date, 'short')}
                             </div>
                           </div>
+
+                          {/* Consulting Doctor Badge */}
+                          <div className="mt-3 flex items-center gap-3 p-2.5 pr-5 rounded-2xl bg-slate-50/50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60 w-fit group/doc transition-all hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm">
+                            <div className="relative shrink-0">
+                              {appt.ophthalAvatarUrl ? (
+                                <img
+                                  src={appt.ophthalAvatarUrl}
+                                  alt={appt.ophthalFullName ?? ''}
+                                  className="w-10 h-10 rounded-xl object-cover border-2 border-white dark:border-slate-700 shadow-sm"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-brand text-xs font-black border border-brand/20">
+                                  {getInitials(appt.ophthalFullName || 'DR')}
+                                </div>
+                              )}
+                              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full shadow-sm" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
+                                Consulting Doctor
+                              </span>
+                              <span className="text-sm font-black text-slate-800 dark:text-slate-100 group-hover/doc:text-brand transition-colors">
+                                {appt.ophthalFullName || 'Clinic Doctor'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -966,7 +1000,7 @@ export default function ClinicStaffAppointmentsPage() {
                         <span
                           className={`rounded-xl px-4 py-1.5 text-[10px] font-black tracking-[0.1em] uppercase shadow-sm ${statusBadge[appt.status] ?? statusBadge.Pending}`}
                         >
-                          {getStatusDisplay(appt.status)}
+                          {getStatusDisplay(appt)}
                         </span>
 
                         {appt.orderId && (
@@ -1064,21 +1098,22 @@ export default function ClinicStaffAppointmentsPage() {
                       </div>
                     )}
 
-                    {appt.visitReason && (
-                      <div className="mt-4 flex items-start gap-3 rounded-2xl bg-amber-500/5 p-4 border border-amber-500/10">
-                        <div className="mt-0.5 rounded-lg bg-amber-500/10 p-1.5">
-                          <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
+                    {appt.visitReason &&
+                      appt.visitReason !== 'Regular eye checkup' && (
+                        <div className="mt-4 flex items-start gap-3 rounded-2xl bg-amber-500/5 p-4 border border-amber-500/10">
+                          <div className="mt-0.5 rounded-lg bg-amber-500/10 p-1.5">
+                            <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70">
+                              Visit Reason
+                            </p>
+                            <p className="text-xs font-bold text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
+                              {appt.visitReason}
+                            </p>
+                          </div>
                         </div>
-                        <div className="space-y-1">
-                          <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70">
-                            Visit Reason
-                          </p>
-                          <p className="text-xs font-bold text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
-                            {appt.visitReason}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* Actions Row */}
                     <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-6 dark:border-slate-800">
@@ -1129,10 +1164,10 @@ export default function ClinicStaffAppointmentsPage() {
                         {appt.orderId &&
                           (appt.remainingAmount ?? 0) > 0 &&
                           [
-                          'CheckedIn',
-                          'InProgress',
-                          'WaitingForPayment',
-                        ].includes(appt.status) && (
+                            'CheckedIn',
+                            'InProgress',
+                            'WaitingForPayment',
+                          ].includes(appt.status) && (
                             <button
                               type="button"
                               disabled={isMutating}

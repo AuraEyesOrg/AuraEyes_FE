@@ -2439,9 +2439,15 @@
     },
     "feedback": {
       "submittedBadge": "Đã gửi đánh giá",
-      "modalTitle": "Đánh giá cơ sở",
-      "modalSubtitle": "Chia sẻ trải nghiệm khám tại cơ sở của bạn.",
-      "submitLabel": "Gửi đánh giá cơ sở"
+      "modalTitle": "Đánh giá dịch vụ",
+      "modalSubtitle": "Chia sẻ trải nghiệm của bạn về buổi thăm khám.",
+      "submitLabel": "Gửi đánh giá",
+      "targetTitle": "Bạn muốn đánh giá đối tượng nào?",
+      "targetClinic": "Phòng khám",
+      "targetDoctor": "Bác sĩ",
+      "targetStaff": "Nhân viên",
+      "ratingLabel": "Mức độ hài lòng",
+      "commentPlaceholder": "Hãy chia sẻ thêm về trải nghiệm của bạn..."
     }
   },
   "PatientDashboard": {

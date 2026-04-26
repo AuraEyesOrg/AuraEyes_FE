@@ -69,7 +69,10 @@ import {
   type SignalRRoomStateChangedEvent,
   type SignalRTypingIndicatorEvent,
 } from '@/types/chat-realtime';
-import { sendChatTypingIndicator } from '@/hooks/useSignalRChat';
+import {
+  sendChatTypingIndicator,
+  joinChatSession,
+} from '@/hooks/useSignalRChat';
 import {
   formatAppointmentSlot,
   formatCountdown,
@@ -976,6 +979,12 @@ export default function ConsultationsChatView({
     hasComposerPayload &&
     !sendMessageMutation.isPending &&
     !uploadChatImagesMutation.isPending;
+
+  useEffect(() => {
+    if (selectedSessionId) {
+      void joinChatSession(selectedSessionId);
+    }
+  }, [selectedSessionId]);
 
   useEffect(() => {
     if (
