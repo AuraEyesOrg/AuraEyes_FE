@@ -11,6 +11,8 @@ import { unwrapApiData } from '@/types/api-response';
 import { resolveAvatarUrl, resolvePreferredAvatarUrl } from '@/lib/user-avatar';
 import type {
   LoginRequest,
+  LookupAccountByCitizenIdRequest,
+  LookupAccountByCitizenIdResponse,
   GoogleLoginRequest,
   RegisterPatientRequest,
   RegisterOrganisationRequest,
@@ -184,6 +186,15 @@ export const login = async (
   }
 
   return result;
+};
+
+export const lookupAccountByCitizenId = async (
+  data: LookupAccountByCitizenIdRequest
+): Promise<LookupAccountByCitizenIdResponse> => {
+  const response = await api.post<
+    ApiResponse<LookupAccountByCitizenIdResponse>
+  >(`${AUTH_BASE_URL}/lookup-account`, data);
+  return unwrapApiData<LookupAccountByCitizenIdResponse>(response.data);
 };
 
 /**

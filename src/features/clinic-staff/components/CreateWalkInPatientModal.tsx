@@ -8,6 +8,7 @@ import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
   createClinicWalkInPatient,
   type CreateWalkInPatientRequest,
+  type CreateWalkInPatientResponse,
 } from '../api/patients.api';
 
 interface CreateWalkInPatientModalProps {
@@ -26,6 +27,7 @@ export default function CreateWalkInPatientModal({
   const [isScanning, setIsScanning] = useState(false);
   const [formData, setFormData] = useState({
     citizenId: '',
+    email: '',
     fullName: '',
     gender: 'Male',
     dateOfBirth: '',
@@ -33,19 +35,31 @@ export default function CreateWalkInPatientModal({
     phoneNumber: '',
   });
 
-  const mutation = useMutation<string, Error, CreateWalkInPatientRequest>({
+  const mutation = useMutation<
+    CreateWalkInPatientResponse,
+    Error,
+    CreateWalkInPatientRequest
+  >({
     mutationFn: createClinicWalkInPatient,
-    onSuccess: (data: string) => {
+    onSuccess: (data) => {
       void queryClient.invalidateQueries({
         queryKey: ['clinic-staff', 'patients'],
       });
-      toast.success(
-        t(
-          'ClinicStaff.walkInPatientModal.toast.createSuccess',
-          'Walk-in patient created successfully!'
-        )
-      );
-      onSuccess(data);
+      if (data.emailSent) {
+        toast.success('Da tao tai khoan va da gui email thong tin dang nhap.');
+      } else if (data.temporaryPassword) {
+        toast.info(
+          `Da tao tai khoan. Email dang nhap: ${data.loginEmail} | Mat khau tam: ${data.temporaryPassword}`
+        );
+      } else {
+        toast.success(
+          t(
+            'ClinicStaff.walkInPatientModal.toast.createSuccess',
+            'Walk-in patient created successfully!'
+          )
+        );
+      }
+      onSuccess(data.patientId);
     },
     onError: (error) => {
       console.error('Failed to create walk-in patient', error);
@@ -58,6 +72,7 @@ export default function CreateWalkInPatientModal({
       setIsScanning(false);
       setFormData({
         citizenId: '',
+        email: '',
         fullName: '',
         gender: 'Male',
         dateOfBirth: '',
@@ -143,6 +158,7 @@ export default function CreateWalkInPatientModal({
     e.preventDefault();
     mutation.mutate({
       ...formData,
+      email: formData.email.trim() || undefined,
       address: formData.address.trim() || undefined,
       dateOfBirth: new Date(formData.dateOfBirth).toISOString(),
     });
@@ -237,6 +253,21 @@ export default function CreateWalkInPatientModal({
                 'ClinicStaff.walkInPatientModal.form.citizenIdPlaceholder',
                 'e.g. 001099000000'
               )}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-(--text-secondary)">
+              Email
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
+              placeholder="benhnhan@example.com (khong bat buoc)"
             />
           </div>
 

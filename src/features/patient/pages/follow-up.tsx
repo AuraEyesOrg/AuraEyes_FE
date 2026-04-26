@@ -13,6 +13,7 @@ import {
 import PatientLayout from '../components/PatientLayout';
 import { toast } from 'react-toastify';
 import { formatShortDate } from '@/lib/date-utils';
+import { lookupAccountByCitizenId } from '@/features/auth/api/auth.api';
 
 interface HistoricalRecord {
   id: string;
@@ -50,18 +51,43 @@ export default function FollowUpPage() {
   const [preferredDate, setPreferredDate] = useState('');
   const [step, setStep] = useState(1); // 1: Search, 2: Select/Fill, 3: Success
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!searchId.trim()) {
       toast.error('Vui lòng nhập CitizenID hoặc UserId');
       return;
     }
     setIsSearching(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const result = await lookupAccountByCitizenId({
+        citizenId: searchId.trim(),
+      });
+      if (!result.exists) {
+        toast.info(
+          'Chua tim thay tai khoan voi CCCD nay. Vui long lien he tiep tan de duoc ho tro.'
+        );
+        setRecords(null);
+        return;
+      }
+
+      if (result.maskedEmail) {
+        toast.success(
+          `Da tim thay tai khoan. Ban dang nhap bang email: ${result.maskedEmail}`
+        );
+      } else {
+        toast.success(
+          'Da tim thay tai khoan. Vui long dang nhap de xem lich su.'
+        );
+      }
+
       setRecords(MOCK_RECORDS);
       setIsSearching(false);
       setStep(1); // Stay on step 1 but show results
-    }, 1000);
+    } catch (error) {
+      toast.error('Khong the tra cuu tai khoan. Vui long thu lai sau.');
+      setRecords(null);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleSelectRecord = (record: HistoricalRecord) => {
