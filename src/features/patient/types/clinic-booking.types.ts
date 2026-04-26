@@ -70,6 +70,8 @@ export interface ClinicAppointmentDto {
   ophthalId?: string | null;
   ophthalFullName?: string | null;
   ophthalAvatarUrl?: string | null;
+  staffId?: string | null;
+  staffName?: string | null;
   cost?: number | null;
   /**
    * True when the current patient has already submitted feedback for this

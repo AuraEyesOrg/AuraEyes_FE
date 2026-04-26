@@ -4,11 +4,11 @@ import type { ApiResponse } from '@/types/api-response';
 import { unwrapApiData } from '@/types/api-response';
 import type {
   CreateOphthalmologistFeedbackRequest,
-  CreateOrganisationFeedbackRequest,
+  CreateClinicFeedbackRequest,
   CreateWebsiteFeedbackRequest,
   FeedbackRatingSummary,
   OphthalmologistFeedbackItem,
-  OrganisationFeedbackItem,
+  ClinicFeedbackItem,
   PagedResult,
 } from '../types/feedback.types';
 
@@ -23,12 +23,12 @@ export const createWebsiteFeedback = async (
   return unwrapApiData<string>(response.data);
 };
 
-export const createOrganisationFeedback = async (
-  organisationId: string,
-  request: CreateOrganisationFeedbackRequest
+export const createClinicFeedback = async (
+  clinicId: string,
+  request: CreateClinicFeedbackRequest
 ): Promise<string> => {
   const response = await api.post<string | ApiResponse<string>>(
-    API_ENDPOINTS.FEEDBACK.ORGANISATION(organisationId),
+    API_ENDPOINTS.FEEDBACK.CLINIC(clinicId),
     request
   );
 
@@ -47,12 +47,12 @@ export const createOphthalmologistFeedback = async (
   return unwrapApiData<string>(response.data);
 };
 
-export const getOrganisationRatingSummary = async (
-  organisationId: string
+export const getClinicRatingSummary = async (
+  clinicId: string
 ): Promise<FeedbackRatingSummary> => {
   const response = await api.get<
     FeedbackRatingSummary | ApiResponse<FeedbackRatingSummary>
-  >(API_ENDPOINTS.FEEDBACK.ORGANISATION_RATING(organisationId));
+  >(API_ENDPOINTS.FEEDBACK.CLINIC_RATING(clinicId));
 
   return unwrapApiData<FeedbackRatingSummary>(response.data);
 };
@@ -67,19 +67,19 @@ export const getOphthalmologistRatingSummary = async (
   return unwrapApiData<FeedbackRatingSummary>(response.data);
 };
 
-export const listOrganisationFeedback = async (
-  organisationId: string,
+export const listClinicFeedback = async (
+  clinicId: string,
   pageNumber = 1,
   pageSize = 10
-): Promise<PagedResult<OrganisationFeedbackItem>> => {
+): Promise<PagedResult<ClinicFeedbackItem>> => {
   const response = await api.get<
-    | PagedResult<OrganisationFeedbackItem>
-    | ApiResponse<PagedResult<OrganisationFeedbackItem>>
+    | PagedResult<ClinicFeedbackItem>
+    | ApiResponse<PagedResult<ClinicFeedbackItem>>
   >(
-    `${API_ENDPOINTS.FEEDBACK.ORGANISATION_ITEMS(organisationId)}?pageNumber=${pageNumber}&pageSize=${pageSize}`
+    `${API_ENDPOINTS.FEEDBACK.CLINIC_ITEMS(clinicId)}?pageNumber=${pageNumber}&pageSize=${pageSize}`
   );
 
-  return unwrapApiData<PagedResult<OrganisationFeedbackItem>>(response.data);
+  return unwrapApiData<PagedResult<ClinicFeedbackItem>>(response.data);
 };
 
 export const listOphthalmologistFeedback = async (

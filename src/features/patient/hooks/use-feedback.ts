@@ -1,33 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createOphthalmologistFeedback,
-  createOrganisationFeedback,
+  createClinicFeedback,
   createWebsiteFeedback,
   getOphthalmologistRatingSummary,
-  getOrganisationRatingSummary,
+  getClinicRatingSummary,
   listOphthalmologistFeedback,
-  listOrganisationFeedback,
+  listClinicFeedback,
 } from '../api/feedback.api';
 import type {
   CreateOphthalmologistFeedbackRequest,
-  CreateOrganisationFeedbackRequest,
+  CreateClinicFeedbackRequest,
   CreateWebsiteFeedbackRequest,
 } from '../types/feedback.types';
 
 export const feedbackKeys = {
   all: ['feedback'] as const,
-  organisationRating: (organisationId: string) =>
-    [...feedbackKeys.all, 'organisation-rating', organisationId] as const,
+  clinicRating: (clinicId: string) =>
+    [...feedbackKeys.all, 'clinic-rating', clinicId] as const,
   ophthalmologistRating: (ophthalmologistId: string) =>
     [...feedbackKeys.all, 'ophthalmologist-rating', ophthalmologistId] as const,
-  organisationItems: (organisationId: string, page = 1, size = 10) =>
-    [
-      ...feedbackKeys.all,
-      'organisation-items',
-      organisationId,
-      page,
-      size,
-    ] as const,
+  clinicItems: (clinicId: string, page = 1, size = 10) =>
+    [...feedbackKeys.all, 'clinic-items', clinicId, page, size] as const,
   ophthalmologistItems: (ophthalmologistId: string, page = 1, size = 10) =>
     [
       ...feedbackKeys.all,
@@ -51,21 +45,21 @@ export const useCreateWebsiteFeedback = () => {
   });
 };
 
-export const useCreateOrganisationFeedback = () => {
+export const useCreateClinicFeedback = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({
-      organisationId,
+      clinicId,
       request,
     }: {
-      organisationId: string;
-      request: CreateOrganisationFeedbackRequest;
-    }) => createOrganisationFeedback(organisationId, request),
+      clinicId: string;
+      request: CreateClinicFeedbackRequest;
+    }) => createClinicFeedback(clinicId, request),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: feedbackKeys.all });
       queryClient.invalidateQueries({
-        queryKey: feedbackKeys.organisationRating(variables.organisationId),
+        queryKey: feedbackKeys.clinicRating(variables.clinicId),
       });
       queryClient.invalidateQueries({ queryKey: ['clinic-booking'] });
     },
@@ -95,14 +89,11 @@ export const useCreateOphthalmologistFeedback = () => {
   });
 };
 
-export const useOrganisationRatingSummary = (
-  organisationId: string,
-  enabled = true
-) =>
+export const useClinicRatingSummary = (clinicId: string, enabled = true) =>
   useQuery({
-    queryKey: feedbackKeys.organisationRating(organisationId),
-    queryFn: () => getOrganisationRatingSummary(organisationId),
-    enabled: enabled && !!organisationId,
+    queryKey: feedbackKeys.clinicRating(clinicId),
+    queryFn: () => getClinicRatingSummary(clinicId),
+    enabled: enabled && !!clinicId,
     staleTime: 30_000,
   });
 
@@ -117,16 +108,16 @@ export const useOphthalmologistRatingSummary = (
     staleTime: 30_000,
   });
 
-export const useOrganisationFeedbackItems = (
-  organisationId: string,
+export const useClinicFeedbackItems = (
+  clinicId: string,
   page = 1,
   size = 10,
   enabled = true
 ) =>
   useQuery({
-    queryKey: feedbackKeys.organisationItems(organisationId, page, size),
-    queryFn: () => listOrganisationFeedback(organisationId, page, size),
-    enabled: enabled && !!organisationId,
+    queryKey: feedbackKeys.clinicItems(clinicId, page, size),
+    queryFn: () => listClinicFeedback(clinicId, page, size),
+    enabled: enabled && !!clinicId,
     staleTime: 30_000,
   });
 

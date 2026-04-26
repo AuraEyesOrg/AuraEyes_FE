@@ -72,6 +72,7 @@ export default defineConfig(({ mode }) => {
           target: 'https://localhost:5001',
           changeOrigin: true,
           secure: false,
+          ws: true,
         },
       },
     },
