@@ -670,6 +670,7 @@ export default function ChatPage() {
   const phaseInfo = useConsultationPhase(
     currentSession?.chatStatus,
     currentSession?.appointmentTime ?? null,
+    currentSession?.closedAt ?? null,
     currentTimeMs
   );
   const phaseUIConfig = useMemo(() => getPhaseUIConfig(t), [t]);
