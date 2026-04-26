@@ -7,6 +7,7 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
   CreateWalkInPatientRequest,
+  CreateWalkInPatientResponse,
   orgWalkInPatientApi,
 } from '../api/walkin-patient.api';
 
@@ -26,6 +27,7 @@ export default function CreateWalkInPatientModal({
   const [isScanning, setIsScanning] = useState(false);
   const [formData, setFormData] = useState({
     citizenId: '',
+    email: '',
     fullName: '',
     gender: 'Male',
     dateOfBirth: '',
@@ -33,9 +35,13 @@ export default function CreateWalkInPatientModal({
     phoneNumber: '',
   });
 
-  const mutation = useMutation<string, Error, CreateWalkInPatientRequest>({
+  const mutation = useMutation<
+    CreateWalkInPatientResponse,
+    Error,
+    CreateWalkInPatientRequest
+  >({
     mutationFn: orgWalkInPatientApi.createWalkInPatient,
-    onSuccess: (data: string) => {
+    onSuccess: (data) => {
       // Invalidate the recent patients query so the new one shows up
       queryClient.invalidateQueries({
         queryKey: ['clinic-patients', 'recent'],
@@ -46,7 +52,7 @@ export default function CreateWalkInPatientModal({
           'Walk-in patient created successfully!'
         )
       );
-      onSuccess(data);
+      onSuccess(data.patientId);
     },
     onError: (error) => {
       console.error('Failed to create walk-in patient', error);
@@ -59,6 +65,7 @@ export default function CreateWalkInPatientModal({
       setIsScanning(false);
       setFormData({
         citizenId: '',
+        email: '',
         fullName: '',
         gender: 'Male',
         dateOfBirth: '',
@@ -147,6 +154,7 @@ export default function CreateWalkInPatientModal({
     e.preventDefault();
     mutation.mutate({
       ...formData,
+      email: formData.email.trim() || undefined,
       address: formData.address.trim() || undefined,
       dateOfBirth: new Date(formData.dateOfBirth).toISOString(),
     });
@@ -238,6 +246,21 @@ export default function CreateWalkInPatientModal({
                 'Organisation.walkInPatientModal.form.citizenIdPlaceholder',
                 'e.g. 001099000000'
               )}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-(--text-secondary)">
+              Email
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
+              placeholder="benhnhan@example.com (khong bat buoc)"
             />
           </div>
 
