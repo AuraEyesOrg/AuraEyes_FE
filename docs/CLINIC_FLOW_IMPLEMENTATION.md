@@ -42,11 +42,13 @@ Quy trình gồm 6 trạng thái chính cho một ca khám:
   - Xem dữ liệu AI đã được điền tự động (Admission Reason, AI Findings).
   - Điền Phần A: Bệnh án (Quá trình bệnh lý, tiền sử, khám lâm sàng chi tiết mắt phải/mắt trái).
   - Đưa ra chẩn đoán cuối cùng và hướng điều trị.
+  - Nhập đơn thuốc theo hybrid: `prescriptionItems[]` (từng dòng thuốc: tên, đơn vị, liều, tần suất, số ngày, hướng dẫn) + `prescriptionNote` (ghi chú tổng). Giá thuốc sẽ do Cashier nhập sau.
 - **Trạng thái**: `InConsultation`.
 
 ### Bước 6: Hoàn tất & Thanh toán (Clinic Staff / Cashier)
 
 - **Hành động**: Bác sĩ xác nhận hoàn tất. Clinic Staff/Cashier thực hiện thanh toán và in hồ sơ bệnh án cho bệnh nhân.
+- **Luồng bàn giao**: Khi bác sĩ chọn `Finalize & Send to Cashier`, hồ sơ được khóa chỉnh sửa từ phía bác sĩ và chuyển qua Cashier để nhập giá thủ công theo từng thuốc.
 - **Trạng thái**: `Finalized`.
 
 ## 3. Quản lý Tái khám (Patient Follow-up)
