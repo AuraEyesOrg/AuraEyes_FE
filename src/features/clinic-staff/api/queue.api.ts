@@ -84,6 +84,24 @@ export interface ClinicPaymentContext {
   };
 }
 
+export interface MedicationPriceItem {
+  medicineName: string;
+  price: number;
+}
+
+export interface CreateClinicPaymentRequest {
+  visitId: string;
+  serviceFee: number;
+  medicationPrices: MedicationPriceItem[];
+  returnUrl: string;
+  cancelUrl: string;
+}
+
+export interface CreateClinicPaymentResponse {
+  orderId: string;
+  paymentUrl: string;
+}
+
 interface AvailableDoctorApiItem {
   id: string;
   fullName?: string | null;
@@ -153,5 +171,17 @@ export const clinicQueueApi = {
       API_ENDPOINTS.CLINIC_QUEUE.PAYMENT_CONTEXT(visitId)
     );
     return unwrapApiData<ClinicPaymentContext>(response.data);
+  },
+
+  /** Create a payment order for clinic medicines and services */
+  async createClinicPayment(
+    visitId: string,
+    payload: CreateClinicPaymentRequest
+  ) {
+    const response = await api.post<ApiResponse<CreateClinicPaymentResponse>>(
+      API_ENDPOINTS.CLINIC_QUEUE.CREATE_PAYMENT(visitId),
+      payload
+    );
+    return unwrapApiData<CreateClinicPaymentResponse>(response.data);
   },
 };
