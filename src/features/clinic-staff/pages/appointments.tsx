@@ -82,7 +82,7 @@ const statusBadge: Record<string, string> = {
   Pending:
     'bg-amber-100/50 text-amber-700 border border-amber-200/50 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800/30',
   Confirmed:
-    'bg-blue-100/50 text-blue-700 border border-blue-200/50 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800/30',
+    'bg-sky-100/50 text-sky-700 border border-sky-200/50 dark:bg-sky-900/20 dark:text-sky-300 dark:border-sky-800/30',
   CheckedIn:
     'bg-emerald-100/50 text-emerald-700 border border-emerald-200/50 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800/30',
   InProgress:
@@ -343,10 +343,13 @@ export default function ClinicStaffAppointmentsPage() {
     payRemainingMutation.isPending ||
     createWalkInAppointmentMutation.isPending;
 
-  const getStatusDisplay = (status: string) => {
+  const getStatusDisplay = (appointment: (typeof appointments)[number]) => {
+    const { status, isPaidDeposit } = appointment;
     switch (status) {
       case 'Pending':
-        return t('Organisation.calendar.status.pending', 'Pending');
+        return isPaidDeposit
+          ? t('Organisation.calendar.status.booked', 'Booked')
+          : t('Organisation.calendar.status.pending', 'Pending');
       case 'Confirmed':
         return t('Organisation.calendar.status.confirmed', 'Confirmed');
       case 'CheckedIn':
@@ -808,14 +811,14 @@ export default function ClinicStaffAppointmentsPage() {
               </h2>
               <div className="flex items-center gap-2">
                 <button
-                type="button"
-                onClick={openWalkInModal}
-                className="inline-flex h-9 items-center gap-2 rounded-xl bg-cyan-600 px-4 text-sm font-bold text-white transition hover:bg-cyan-700"
-              >
-                <Plus className="h-4 w-4" />
-                {t('Organisation.calendar.actions.newWalkIn', 'New Walk-in')}
-              </button>
-              <span className="h-1 w-6 rounded-full bg-brand" />
+                  type="button"
+                  onClick={openWalkInModal}
+                  className="inline-flex h-9 items-center gap-2 rounded-xl bg-cyan-600 px-4 text-sm font-bold text-white transition hover:bg-cyan-700"
+                >
+                  <Plus className="h-4 w-4" />
+                  {t('Organisation.calendar.actions.newWalkIn', 'New Walk-in')}
+                </button>
+                <span className="h-1 w-6 rounded-full bg-brand" />
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                   {t(
                     'Organisation.calendar.summary.records',
@@ -910,7 +913,7 @@ export default function ClinicStaffAppointmentsPage() {
                             />
                             {i === stepIdx && (
                               <span className="text-[8px] font-black uppercase tracking-tighter text-brand absolute -top-4">
-                                {getStatusDisplay(step)}
+                                {getStatusDisplay(appt)}
                               </span>
                             )}
                           </div>
@@ -966,7 +969,7 @@ export default function ClinicStaffAppointmentsPage() {
                         <span
                           className={`rounded-xl px-4 py-1.5 text-[10px] font-black tracking-[0.1em] uppercase shadow-sm ${statusBadge[appt.status] ?? statusBadge.Pending}`}
                         >
-                          {getStatusDisplay(appt.status)}
+                          {getStatusDisplay(appt)}
                         </span>
 
                         {appt.orderId && (
@@ -1129,10 +1132,10 @@ export default function ClinicStaffAppointmentsPage() {
                         {appt.orderId &&
                           (appt.remainingAmount ?? 0) > 0 &&
                           [
-                          'CheckedIn',
-                          'InProgress',
-                          'WaitingForPayment',
-                        ].includes(appt.status) && (
+                            'CheckedIn',
+                            'InProgress',
+                            'WaitingForPayment',
+                          ].includes(appt.status) && (
                             <button
                               type="button"
                               disabled={isMutating}
