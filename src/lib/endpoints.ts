@@ -24,6 +24,10 @@ export const API_ENDPOINTS = {
       RECENT_SCREENINGS: '/system-admin/dashboard/recent-screenings',
       SYSTEM_HEALTH: '/system-admin/dashboard/system-health',
       RISK_DISTRIBUTION: '/system-admin/dashboard/risk-analysis',
+      TODAY_SUMMARY: '/system-admin/dashboard/today-summary',
+      SLOT_UTILIZATION: '/system-admin/dashboard/slot-utilization',
+      LIVE_QUEUE: '/system-admin/dashboard/live-queue',
+      DOCTOR_STATUS: '/system-admin/dashboard/doctor-status',
     },
 
     // Organisation & Device Management (formerly Clinic)
@@ -211,6 +215,7 @@ export const API_ENDPOINTS = {
   // Ophthalmologist features
   OPHTHALMOLOGIST: {
     DASHBOARD_METRICS: '/ophthalmologists/dashboard-metrics',
+    REVIEW_QUEUE: '/ophthalmologists/review-queue',
     PATIENTS: '/ophthalmologist/patients',
     SCREENINGS: '/ophthalmologist/screenings',
     REPORTS: '/ophthalmologist/reports',

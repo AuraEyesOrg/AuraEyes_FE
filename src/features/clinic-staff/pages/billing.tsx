@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import ClinicStaffLayout from '../components/ClinicStaffLayout';
 import { formatDateTimeWithYear } from '@/lib/date-utils';
-import { formatCurrency } from '@/lib/helper';
+import { formatCurrency, cleanDescription } from '@/lib/helper';
 import { useAllOrders, useCompleteOrder } from '../hooks/use-billing';
 import type {
   OrderStatus,
@@ -28,15 +28,6 @@ import { clinicQueueApi, type ClinicPaymentContext } from '../api/queue.api';
 
 type FilterType = 'all' | 'completed' | 'pending' | 'cancelled';
 
-const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
-  Pending: 'Chờ thanh toán',
-  Confirmed: 'Đã xác nhận',
-  Processing: 'Đang xử lý',
-  Completed: 'Hoàn thành',
-  Cancelled: 'Đã hủy',
-  Refunded: 'Hoàn tiền',
-};
-
 const PAYMENT_STATUS_COLOR: Record<PaymentStatus, string> = {
   Pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   Processing: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
@@ -47,9 +38,28 @@ const PAYMENT_STATUS_COLOR: Record<PaymentStatus, string> = {
 };
 
 export default function BillingPage() {
-  const { t: i18nT } = useTranslation();
-  const t = (key: string, options?: Record<string, unknown>) =>
-    i18nT(key as never, options as never) as unknown as string;
+  const { t } = useTranslation();
+
+  const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
+    Pending: t('ClinicStaffBilling.filters.pending', {
+      defaultValue: 'Chờ thanh toán',
+    }),
+    Confirmed: t('ClinicStaffBilling.filters.completed', {
+      defaultValue: 'Đã xác nhận',
+    }),
+    Processing: t('ClinicStaffBilling.orderDetails.processing', {
+      defaultValue: 'Đang xử lý',
+    }),
+    Completed: t('ClinicStaffBilling.filters.completed', {
+      defaultValue: 'Hoàn thành',
+    }),
+    Cancelled: t('ClinicStaffBilling.filters.cancelled', {
+      defaultValue: 'Đã hủy',
+    }),
+    Refunded: t('ClinicStaffBilling.stats.totalRefund', {
+      defaultValue: 'Hoàn tiền',
+    }),
+  };
 
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [page, setPage] = useState(1);
@@ -265,7 +275,9 @@ export default function BillingPage() {
                           defaultValue: 'Hoàn thành',
                         })
                       : option === 'pending'
-                        ? 'Chờ thanh toán'
+                        ? t('ClinicStaffBilling.filters.pending', {
+                            defaultValue: 'Chờ thanh toán',
+                          })
                         : t('ClinicStaffBilling.filters.cancelled', {
                             defaultValue: 'Đã hủy',
                           })}
@@ -361,14 +373,21 @@ export default function BillingPage() {
                           {/* Info */}
                           <div className="min-w-0">
                             <p className="text-(--text-primary) font-semibold truncate flex items-center gap-2">
-                              {order.description || 'Thanh toán phòng khám'}
+                              {cleanDescription(order.description) ||
+                                t(
+                                  'ClinicStaffBilling.orderDetails.description'
+                                )}
                               {isOnlineDeposit ? (
                                 <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs font-medium">
-                                  Đặt cọc Online
+                                  {t(
+                                    'ClinicStaffBilling.orderDetails.depositOnline'
+                                  )}
                                 </span>
                               ) : (
                                 <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs font-medium">
-                                  Walk-in / Full
+                                  {t(
+                                    'ClinicStaffBilling.orderDetails.walkInFull'
+                                  )}
                                 </span>
                               )}
                             </p>
@@ -380,11 +399,14 @@ export default function BillingPage() {
                               <span className="inline-flex items-center gap-1.5 font-medium text-brand">
                                 <User className="w-3 h-3 shrink-0" />
                                 {order.patientName ||
-                                  `ID: ${order.userId.slice(0, 8)}`}
+                                  `${t('ClinicStaffBilling.orderDetails.idLabel')} ${order.userId.slice(0, 8)}`}
                               </span>
                               <span className="inline-flex items-center gap-1.5">
                                 <Clock3 className="w-3 h-3 shrink-0" />
-                                Đơn: {order.id.slice(0, 8)}
+                                {t(
+                                  'ClinicStaffBilling.orderDetails.idLabel'
+                                )}{' '}
+                                {order.id.slice(0, 8)}
                               </span>
                             </div>
 
@@ -394,16 +416,24 @@ export default function BillingPage() {
                                 className={`mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${PAYMENT_STATUS_COLOR[firstPayment.status]}`}
                               >
                                 {firstPayment.status === 'Completed'
-                                  ? 'Đã thanh toán cọc/100%'
+                                  ? t(
+                                      'ClinicStaffBilling.orderDetails.confirmedDeposit'
+                                    )
                                   : firstPayment.status === 'Pending'
-                                    ? 'Chờ thanh toán'
+                                    ? t('ClinicStaffBilling.filters.pending')
                                     : firstPayment.status === 'Cancelled'
-                                      ? 'Đã hủy'
+                                      ? t(
+                                          'ClinicStaffBilling.filters.cancelled'
+                                        )
                                       : firstPayment.status === 'Failed'
-                                        ? 'Thất bại'
+                                        ? t('ClinicStaffBilling.error.retry')
                                         : firstPayment.status === 'Refunded'
-                                          ? 'Hoàn tiền'
-                                          : 'Đang xử lý'}
+                                          ? t(
+                                              'ClinicStaffBilling.stats.totalRefund'
+                                            )
+                                          : t(
+                                              'ClinicStaffBilling.orderDetails.processing'
+                                            )}
                               </span>
                             )}
                           </div>
@@ -418,12 +448,14 @@ export default function BillingPage() {
                           </p>
                           {isOnlineDeposit && (
                             <p className="text-sm text-(--text-secondary) font-medium flex items-center gap-2">
-                              Đã cọc:{' '}
+                              {t('ClinicStaffBilling.orderDetails.paid')}{' '}
                               <span className="text-blue-600 dark:text-blue-400">
                                 {formatCurrency(order.depositAmount!)}
                               </span>
                               <span className="text-(--text-muted)">|</span>
-                              Còn lại:{' '}
+                              {t(
+                                'ClinicStaffBilling.orderDetails.remaining'
+                              )}{' '}
                               <span className="text-rose-500">
                                 {formatCurrency(
                                   order.totalAmount - order.depositAmount!
@@ -454,8 +486,12 @@ export default function BillingPage() {
                               className="mt-2 px-3 py-1.5 bg-brand text-white text-xs font-bold rounded-lg hover:bg-brand/90 transition-all shadow-sm active:scale-95 disabled:opacity-50"
                             >
                               {completeMutation.isPending
-                                ? 'Đang xử lý...'
-                                : 'Xác nhận thanh toán nốt'}
+                                ? t(
+                                    'ClinicStaffBilling.orderDetails.processing'
+                                  )
+                                : t(
+                                    'ClinicStaffBilling.orderDetails.confirmFinalPayment'
+                                  )}
                             </button>
                           )}
                         </div>
@@ -526,30 +562,35 @@ function CashierPricingPanel({
   onMedicinePriceChange,
   onServiceFeeChange,
 }: CashierPricingPanelProps) {
+  const { t } = useTranslation();
   return (
     <div className="mt-4 space-y-4">
       <div className="rounded-2xl border border-(--border-color) bg-(--bg-secondary) p-4">
         <p className="text-sm text-(--text-secondary)">
           <span className="font-semibold text-(--text-primary)">
-            Bệnh nhân:
+            {t('ClinicStaffBilling.orderDetails.patientLabel')}
           </span>{' '}
           {context.patientName}
         </p>
         <p className="mt-1 text-sm text-(--text-secondary)">
-          <span className="font-semibold text-(--text-primary)">Bác sĩ:</span>{' '}
+          <span className="font-semibold text-(--text-primary)">
+            {t('ClinicStaffBilling.orderDetails.doctorLabel')}
+          </span>{' '}
           {context.diagnosis.diagnosedBy.doctorName || 'N/A'}
         </p>
       </div>
 
       {context.diagnosis.noMedicationPrescribed ? (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
-          Bác sĩ đánh dấu không kê thuốc cho ca này.
+          {t('ClinicStaffBilling.orderDetails.noMedication')}
         </div>
       ) : (
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
             <Pill className="h-3.5 w-3.5" />
-            Có {context.diagnosis.prescriptionItems.length} thuốc trong đơn
+            {t('ClinicStaffBilling.orderDetails.medicationCount', {
+              count: context.diagnosis.prescriptionItems.length,
+            })}
           </div>
           {context.diagnosis.prescriptionItems.map((item, index) => {
             const inputKey = `medicine-${index}`;
@@ -571,7 +612,7 @@ function CashierPricingPanel({
                     htmlFor={inputKey}
                     className="block text-xs font-semibold text-(--text-secondary)"
                   >
-                    Giá thuốc (VND)
+                    {t('ClinicStaffBilling.orderDetails.medicinePriceLabel')}
                   </label>
                   <input
                     id={inputKey}
@@ -580,7 +621,9 @@ function CashierPricingPanel({
                     onChange={(event) =>
                       onMedicinePriceChange(inputKey, event.target.value)
                     }
-                    placeholder="Nhập giá thủ công"
+                    placeholder={t(
+                      'ClinicStaffBilling.orderDetails.manualPricePlaceholder'
+                    )}
                     className="w-full rounded-xl border border-(--border-color) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary) placeholder:text-(--text-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                   />
                 </div>
@@ -593,10 +636,10 @@ function CashierPricingPanel({
       <div className="grid grid-cols-1 gap-3 rounded-2xl border border-(--border-color) bg-(--bg-secondary) p-4 md:grid-cols-[2fr_1fr] md:items-end">
         <div>
           <p className="text-sm font-semibold text-(--text-primary)">
-            Phí khám / dịch vụ khác
+            {t('ClinicStaffBilling.orderDetails.serviceFeeLabel')}
           </p>
           <p className="mt-1 text-xs text-(--text-muted)">
-            Nhập khoản phí ngoài giá thuốc nếu có.
+            {t('ClinicStaffBilling.orderDetails.serviceFeeDescription')}
           </p>
         </div>
         <div className="space-y-1">
@@ -604,7 +647,7 @@ function CashierPricingPanel({
             htmlFor="service-fee-input"
             className="block text-xs font-semibold text-(--text-secondary)"
           >
-            Phí dịch vụ (VND)
+            {t('ClinicStaffBilling.orderDetails.serviceFeeInputLabel')}
           </label>
           <input
             id="service-fee-input"
@@ -618,14 +661,15 @@ function CashierPricingPanel({
       </div>
 
       <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
-        <p className="text-xs text-(--text-secondary)">Tổng tiền thủ công</p>
+        <p className="text-xs text-(--text-secondary)">
+          {t('ClinicStaffBilling.orderDetails.totalManual')}
+        </p>
         <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
           {formatCurrency(computedManualTotal, { absolute: true })}
         </p>
       </div>
       <p className="text-xs text-(--text-muted)">
-        Lưu ý: BE hiện mới trả dữ liệu diagnosis/prescription cho cashier, chưa
-        có endpoint để submit breakdown đơn giá thuốc theo visit.
+        {t('ClinicStaffBilling.orderDetails.note')}
       </p>
     </div>
   );

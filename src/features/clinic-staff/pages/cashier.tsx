@@ -16,11 +16,13 @@ import { formatCurrency } from '@/lib/helper';
 import { clinicQueueApi, type ClinicPaymentContext } from '../api/queue.api';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
+import { useTranslation, Trans } from 'react-i18next';
 import ConfirmModal from '@/components/ui/confirm-modal';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { CreditCard, Loader2 } from 'lucide-react';
 
 export default function CashierPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const visitIdFromQuery = searchParams.get('visitId');
   const [selectedVisitId, setSelectedVisitId] = useState<string | null>(
@@ -120,14 +122,14 @@ export default function CashierPage() {
     mutationFn: (payload: any) =>
       clinicQueueApi.createClinicPayment(effectiveVisitId!, payload),
     onSuccess: (data) => {
-      toast.success('Đã tạo link thanh toán PayOS thành công!');
+      toast.success(t('Cashier.toast.createSuccess'));
       // Redirect to PayOS checkout page
       window.location.href = data.paymentUrl;
     },
     onError: (error) => {
       const message = extractApiErrorMessage(
         error,
-        'Không thể tạo lệnh thanh toán qua PayOS.'
+        t('Cashier.toast.createError')
       );
       toast.error(message);
     },
@@ -170,22 +172,20 @@ export default function CashierPage() {
           <div className="relative grid gap-4 md:grid-cols-[1.2fr_0.8fr] md:items-end">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">
-                Cashier workspace
+                {t('Cashier.header.badge')}
               </p>
               <h1 className="mt-2 text-3xl font-bold tracking-tight text-(--text-primary) md:text-4xl [text-wrap:balance]">
-                Thu ngân thủ công cho ca khám đã hoàn tất
+                {t('Cashier.header.title')}
               </h1>
               <p className="mt-3 max-w-[62ch] text-sm leading-relaxed text-(--text-secondary)">
-                Chọn ca đã finalize để nhập giá thuốc và phí dịch vụ. Tổng tiền
-                sẽ được tính ngay để hỗ trợ xác nhận thanh toán nhanh và chính
-                xác.
+                {t('Cashier.header.description')}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-(--text-secondary)">
-                  Ca finalized
+                  {t('Cashier.stats.finalizedCount')}
                 </p>
                 <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400 [font-variant-numeric:tabular-nums]">
                   {finalizedVisits.length}
@@ -193,12 +193,12 @@ export default function CashierPage() {
               </div>
               <div className="rounded-2xl border border-(--border-color) bg-(--bg-primary)/80 px-4 py-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-(--text-secondary)">
-                  Đang chọn
+                  {t('Cashier.stats.currentlySelecting')}
                 </p>
                 <p className="mt-1 truncate text-sm font-semibold text-(--text-primary)">
                   {effectiveVisitId
                     ? `${effectiveVisitId.slice(0, 8)}...`
-                    : 'Chưa chọn ca'}
+                    : t('Cashier.stats.noVisitSelected')}
                 </p>
               </div>
             </div>
@@ -210,7 +210,7 @@ export default function CashierPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-(--text-primary)">
-                  Danh sách ca chờ thu ngân
+                  {t('Cashier.queue.title')}
                 </h2>
               </div>
             </div>
@@ -230,9 +230,7 @@ export default function CashierPage() {
               <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">
                 <div className="flex items-start gap-2.5">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <p>
-                    Không thể tải danh sách ca thu ngân. Vui lòng thử lại sau.
-                  </p>
+                  <p>{t('Cashier.queue.loadError')}</p>
                 </div>
               </div>
             )}
@@ -242,10 +240,10 @@ export default function CashierPage() {
               finalizedVisits.length === 0 && (
                 <div className="mt-4 rounded-2xl border border-(--border-color) bg-(--bg-secondary) px-4 py-6 text-center">
                   <p className="text-sm font-medium text-(--text-primary)">
-                    Chưa có ca nào sẵn sàng thu ngân
+                    {t('Cashier.queue.empty')}
                   </p>
                   <p className="mt-1 text-xs text-(--text-muted)">
-                    Hệ thống sẽ tự cập nhật ngay khi bác sĩ finalize ca khám.
+                    {t('Cashier.queue.emptySub')}
                   </p>
                 </div>
               )}
@@ -281,7 +279,7 @@ export default function CashierPage() {
                           </p>
                           {isActive && (
                             <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-700 dark:text-emerald-300">
-                              Đang chọn
+                              {t('Cashier.queue.selectedBadge')}
                             </span>
                           )}
                         </div>
@@ -289,7 +287,8 @@ export default function CashierPage() {
                           Visit: {visit.visitId.slice(0, 8)}...
                         </p>
                         <p className="mt-0.5 text-xs text-(--text-muted)">
-                          Bác sĩ: {visit.assignedDoctorName || 'N/A'}
+                          {t('Cashier.queue.doctorName')}:{' '}
+                          {visit.assignedDoctorName || 'N/A'}
                         </p>
                       </button>
                     );
@@ -302,17 +301,17 @@ export default function CashierPage() {
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div>
                 <h2 className="text-lg font-semibold text-(--text-primary)">
-                  Bảng giá thủ công
+                  {t('Cashier.pricingPanel.title')}
                 </h2>
                 <p className="mt-1 text-xs text-(--text-muted)">
-                  Nhập chi phí theo từng thuốc và dịch vụ trong ca khám đã chọn.
+                  {t('Cashier.pricingPanel.description')}
                 </p>
               </div>
               <span className="inline-flex items-center gap-1 rounded-full border border-(--border-color) bg-(--bg-secondary) px-2.5 py-1 text-[11px] font-medium text-(--text-secondary)">
                 <FileText className="h-3.5 w-3.5" />
                 {effectiveVisitId
                   ? `Visit ${effectiveVisitId.slice(0, 8)}...`
-                  : 'Chưa chọn ca'}
+                  : t('Cashier.pricingPanel.noVisitSelectedBadge')}
               </span>
             </div>
 
@@ -320,11 +319,10 @@ export default function CashierPage() {
               <div className="mt-5 rounded-2xl border border-dashed border-(--border-color) bg-(--bg-secondary) p-8 text-center">
                 <ReceiptText className="mx-auto h-9 w-9 text-(--text-muted)" />
                 <p className="mt-3 text-sm font-medium text-(--text-primary)">
-                  Chọn một ca khám để bắt đầu nhập giá
+                  {t('Cashier.pricingPanel.selectPrompt')}
                 </p>
                 <p className="mt-1 text-xs text-(--text-muted)">
-                  Danh sách ca nằm ở cột bên trái. Sau khi chọn, thông tin đơn
-                  thuốc sẽ hiển thị tại đây.
+                  {t('Cashier.pricingPanel.selectPromptSub')}
                 </p>
               </div>
             )}
@@ -341,7 +339,7 @@ export default function CashierPage() {
               <div className="mt-5 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
                 <div className="flex items-start gap-2.5">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <p>Không thể tải payment context cho visit này.</p>
+                  <p>{t('Cashier.pricingPanel.contextLoadError')}</p>
                 </div>
               </div>
             )}
@@ -352,14 +350,19 @@ export default function CashierPage() {
                   <CheckCircle2 className="h-10 w-10" />
                 </div>
                 <h3 className="mt-5 text-xl font-bold text-(--text-primary)">
-                  Thanh toán thành công!
+                  {t('Cashier.pricingPanel.paymentSuccessTitle')}
                 </h3>
                 <p className="mt-2 max-w-[30ch] text-sm text-(--text-secondary)">
-                  Ca khám của bệnh nhân{' '}
-                  <span className="font-semibold text-emerald-600">
-                    {activeVisit?.patientName || 'này'}
-                  </span>{' '}
-                  đã được hoàn tất và chuyển trạng thái thành công.
+                  <Trans
+                    i18nKey="Cashier.pricingPanel.paymentSuccessDescription"
+                    values={{ name: activeVisit?.patientName || 'này' }}
+                  >
+                    Ca khám của bệnh nhân{' '}
+                    <span className="font-semibold text-emerald-600">
+                      {'{{name}}'}
+                    </span>{' '}
+                    đã được hoàn tất và chuyển trạng thái thành công.
+                  </Trans>
                 </p>
 
                 <div className="mt-8 flex gap-3">
@@ -372,7 +375,7 @@ export default function CashierPage() {
                     className="inline-flex items-center gap-2 rounded-xl border border-(--border-color) bg-(--bg-primary) px-5 py-2.5 text-sm font-semibold text-(--text-primary) transition hover:bg-(--bg-secondary)"
                   >
                     <ArrowLeft className="h-4 w-4" />
-                    Quay lại danh sách
+                    {t('Cashier.pricingPanel.backToList')}
                   </button>
                 </div>
               </div>
@@ -399,10 +402,13 @@ export default function CashierPage() {
 
       <ConfirmModal
         open={isConfirmModalOpen}
-        title="Xác nhận thanh toán PayOS"
-        message={`Bạn có chắc chắn muốn tạo lệnh thanh toán qua PayOS cho bệnh nhân ${paymentContext?.patientName} với tổng số tiền là ${formatCurrency(computedManualTotal, { absolute: true })}?`}
-        confirmLabel="Tiến hành thanh toán"
-        cancelLabel="Quay lại"
+        title={t('Cashier.confirmModal.title')}
+        message={t('Cashier.confirmModal.message', {
+          name: paymentContext?.patientName,
+          amount: formatCurrency(computedManualTotal, { absolute: true }),
+        })}
+        confirmLabel={t('Cashier.confirmModal.confirm')}
+        cancelLabel={t('Cashier.confirmModal.cancel')}
         tone="default"
         onConfirm={handlePayment}
         onCancel={() => setIsConfirmModalOpen(false)}
@@ -435,6 +441,7 @@ function CashierPricingPanel({
   onInitiatePayment,
   isProcessing,
 }: CashierPricingPanelProps) {
+  const { t } = useTranslation();
   const doctorName =
     context.diagnosis.diagnosedBy.doctorName || fallbackDoctorName;
 
@@ -453,7 +460,7 @@ function CashierPricingPanel({
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-(--text-secondary)">
-                Bệnh nhân
+                {t('Cashier.pricingPanel.patientLabel')}
               </p>
               <p className="mt-1 text-sm font-semibold text-(--text-primary)">
                 {context.patientName}
@@ -469,7 +476,7 @@ function CashierPricingPanel({
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-(--text-secondary)">
-                Bác sĩ phụ trách
+                {t('Cashier.pricingPanel.doctorLabel')}
               </p>
               <p className="mt-1 text-sm font-semibold text-(--text-primary)">
                 {doctorName || 'N/A'}
@@ -483,14 +490,16 @@ function CashierPricingPanel({
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
           <div className="flex items-start gap-2.5">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-            <p>Bác sĩ đánh dấu không kê thuốc cho ca này.</p>
+            <p>{t('Cashier.pricingPanel.noMedication')}</p>
           </div>
         </div>
       ) : (
         <section className="space-y-3">
           <div className="inline-flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
             <Pill className="h-3.5 w-3.5" />
-            Có {context.diagnosis.prescriptionItems.length} thuốc trong đơn
+            {t('Cashier.pricingPanel.medicationCount', {
+              count: context.diagnosis.prescriptionItems.length,
+            })}
           </div>
 
           {context.diagnosis.prescriptionItems.map((item, index) => {
@@ -518,7 +527,7 @@ function CashierPricingPanel({
                     htmlFor={inputKey}
                     className="block text-xs font-semibold text-(--text-secondary)"
                   >
-                    Giá thuốc (VND)
+                    {t('Cashier.pricingPanel.medicinePriceLabel')}
                   </label>
                   <input
                     id={inputKey}
@@ -527,11 +536,13 @@ function CashierPricingPanel({
                     onChange={(event) =>
                       onMedicinePriceChange(inputKey, event.target.value)
                     }
-                    placeholder="Nhập giá thủ công"
+                    placeholder={t(
+                      'Cashier.pricingPanel.manualPricePlaceholder'
+                    )}
                     className="w-full rounded-xl border border-(--border-color) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary) [font-variant-numeric:tabular-nums] placeholder:text-(--text-muted) transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                   />
                   <p className="text-[11px] text-(--text-muted)">
-                    Tạm tính:{' '}
+                    {t('Cashier.pricingPanel.estimated')}:{' '}
                     {formatCurrency(medicinePrice, { absolute: true })}
                   </p>
                 </div>
@@ -544,10 +555,10 @@ function CashierPricingPanel({
       <section className="grid grid-cols-1 gap-3 rounded-2xl border border-(--border-color) bg-(--bg-secondary) p-4 md:grid-cols-[2fr_1fr] md:items-end">
         <div>
           <p className="text-sm font-semibold text-(--text-primary)">
-            Phí khám / dịch vụ khác
+            {t('Cashier.pricingPanel.serviceFeeLabel')}
           </p>
           <p className="mt-1 text-xs text-(--text-muted)">
-            Nhập khoản phí ngoài giá thuốc nếu có.
+            {t('Cashier.pricingPanel.serviceFeeDescription')}
           </p>
         </div>
         <div className="space-y-1.5">
@@ -555,7 +566,7 @@ function CashierPricingPanel({
             htmlFor="service-fee-input"
             className="block text-xs font-semibold text-(--text-secondary)"
           >
-            Phí dịch vụ (VND)
+            {t('Cashier.pricingPanel.serviceFeeInputLabel')}
           </label>
           <input
             id="service-fee-input"
@@ -566,7 +577,7 @@ function CashierPricingPanel({
             className="w-full rounded-xl border border-(--border-color) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary) [font-variant-numeric:tabular-nums] placeholder:text-(--text-muted) transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           />
           <p className="text-[11px] text-(--text-muted)">
-            Tạm tính:{' '}
+            {t('Cashier.pricingPanel.estimated')}:{' '}
             {formatCurrency(parseMoney(serviceFeeInput), { absolute: true })}
           </p>
         </div>
@@ -574,7 +585,7 @@ function CashierPricingPanel({
 
       <section className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4">
         <p className="text-xs font-medium text-(--text-secondary)">
-          Tổng tiền thủ công
+          {t('Cashier.pricingPanel.totalManual')}
         </p>
         <div className="mt-2 flex items-end justify-between gap-3">
           <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 [font-variant-numeric:tabular-nums]">
@@ -592,7 +603,7 @@ function CashierPricingPanel({
             ) : (
               <CreditCard className="h-4 w-4" />
             )}
-            Thanh toán PayOS
+            {t('Cashier.pricingPanel.payButton')}
           </button>
         </div>
       </section>

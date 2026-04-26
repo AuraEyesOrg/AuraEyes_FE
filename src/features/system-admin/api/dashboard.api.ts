@@ -116,6 +116,37 @@ interface AdminDoctorWorkloadListItemDto {
   warningFlag: boolean;
 }
 
+interface TodaySummaryDto {
+  totalAppointments: number;
+  checkedInPatients: number;
+  completedVisits: number;
+  noShowCount: number;
+}
+
+interface SlotUtilizationDto {
+  totalSlots: number;
+  bookedSlots: number;
+  remainingCapacity: number;
+  utilizationRate: number;
+}
+
+interface LiveQueueItemDto {
+  visitId: string;
+  patientName: string;
+  status: string;
+  assignedDoctorName?: string;
+  waitingTimeMinutes: number;
+  checkedInAt?: string;
+}
+
+interface DoctorStatusDto {
+  doctorId: string;
+  doctorName: string;
+  currentStatus: string;
+  patientsHandledToday: number;
+  activeLoad: number;
+}
+
 interface AdminPagedResult<T> {
   items: T[];
   pageNumber: number;
@@ -315,5 +346,60 @@ export const dashboardApi = {
       console.error('Failed to fetch doctor workloads:', error);
       throw error;
     }
+  },
+
+  async getTodaySummary(): Promise<TodaySummaryDto> {
+    const response = await api.get<ApiResponse<TodaySummaryDto>>(
+      API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.TODAY_SUMMARY
+    );
+    const data = response.data.data;
+    return {
+      totalAppointments: data?.totalAppointments ?? 0,
+      checkedInPatients: data?.checkedInPatients ?? 0,
+      completedVisits: data?.completedVisits ?? 0,
+      noShowCount: data?.noShowCount ?? 0,
+    };
+  },
+
+  async getSlotUtilization(): Promise<SlotUtilizationDto> {
+    const response = await api.get<ApiResponse<SlotUtilizationDto>>(
+      API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.SLOT_UTILIZATION
+    );
+    const data = response.data.data;
+    return {
+      totalSlots: data?.totalSlots ?? 0,
+      bookedSlots: data?.bookedSlots ?? 0,
+      remainingCapacity: data?.remainingCapacity ?? 0,
+      utilizationRate: data?.utilizationRate ?? 0,
+    };
+  },
+
+  async getLiveQueue(): Promise<LiveQueueItemDto[]> {
+    const response = await api.get<ApiResponse<LiveQueueItemDto[]>>(
+      API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.LIVE_QUEUE
+    );
+    const data = response.data.data ?? [];
+    return data.map((item) => ({
+      visitId: item.visitId,
+      patientName: item.patientName,
+      status: item.status,
+      assignedDoctorName: item.assignedDoctorName,
+      waitingTimeMinutes: item.waitingTimeMinutes ?? 0,
+      checkedInAt: item.checkedInAt,
+    }));
+  },
+
+  async getDoctorStatus(): Promise<DoctorStatusDto[]> {
+    const response = await api.get<ApiResponse<DoctorStatusDto[]>>(
+      API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.DOCTOR_STATUS
+    );
+    const data = response.data.data ?? [];
+    return data.map((item) => ({
+      doctorId: item.doctorId,
+      doctorName: item.doctorName,
+      currentStatus: item.currentStatus,
+      patientsHandledToday: item.patientsHandledToday ?? 0,
+      activeLoad: item.activeLoad ?? 0,
+    }));
   },
 };
