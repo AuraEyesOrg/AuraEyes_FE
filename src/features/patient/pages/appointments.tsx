@@ -60,6 +60,8 @@ const CLINIC_STATUS_STYLES: Record<string, string> = {
     'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
   Cancelled: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
   NoShow: 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+  Booked:
+    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200',
 };
 
 const CLINIC_STATUS_LABEL_KEYS: Record<string, string> = {
@@ -159,11 +161,16 @@ const AppointmentsPage = () => {
   const getFilterLabel = (status: FilterTab) =>
     t(`PatientAppointments.filters.${status}`);
 
-  const getClinicStatusLabel = (status: string) => {
-    const mappedKey = CLINIC_STATUS_LABEL_KEYS[status];
-    if (!mappedKey) return status;
+  const getClinicStatusLabel = (appointment: ClinicAppointmentDto) => {
+    if (appointment.status === 'Pending' && appointment.isPaidDeposit) {
+      return t('PatientAppointments.clinicStatus.booked', {
+        defaultValue: 'Booked',
+      });
+    }
+    const mappedKey = CLINIC_STATUS_LABEL_KEYS[appointment.status];
+    if (!mappedKey) return appointment.status;
     return t(`PatientAppointments.clinicStatus.${mappedKey}`, {
-      defaultValue: status,
+      defaultValue: appointment.status,
     });
   };
 
@@ -354,7 +361,7 @@ const AppointmentsPage = () => {
                 <ClinicAppointmentCard
                   key={appointment.id}
                   appointment={appointment}
-                  statusLabel={getClinicStatusLabel(appointment.status)}
+                  statusLabel={getClinicStatusLabel(appointment)}
                   rateLabel={t('PatientAppointments.actions.rateClinic')}
                   submittedLabel={t(
                     'PatientAppointments.feedback.submittedBadge'
@@ -573,8 +580,10 @@ const ClinicAppointmentCard = ({
             <span
               className={[
                 'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest shadow-sm border border-transparent transition-all',
-                CLINIC_STATUS_STYLES[appointment.status] ??
-                  CLINIC_STATUS_STYLES.Pending,
+                appointment.status === 'Pending' && appointment.isPaidDeposit
+                  ? CLINIC_STATUS_STYLES.Booked
+                  : (CLINIC_STATUS_STYLES[appointment.status] ??
+                    CLINIC_STATUS_STYLES.Pending),
               ].join(' ')}
             >
               <span className="relative flex h-2 w-2">

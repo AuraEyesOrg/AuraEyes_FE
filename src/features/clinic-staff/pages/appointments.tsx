@@ -95,6 +95,8 @@ const statusBadge: Record<string, string> = {
     'bg-rose-100/50 text-rose-700 border border-rose-200/50 dark:bg-rose-900/20 dark:text-rose-300 dark:border-rose-800/30',
   NoShow:
     'bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
+  Booked:
+    'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800/30',
 };
 
 const cardAccent: Record<string, string> = {
@@ -106,6 +108,7 @@ const cardAccent: Record<string, string> = {
   Completed: 'before:bg-slate-300',
   Cancelled: 'before:bg-rose-400',
   NoShow: 'before:bg-slate-400',
+  Booked: 'before:bg-blue-500',
 };
 
 const avatarColors: Record<string, string> = {
@@ -125,6 +128,8 @@ const avatarColors: Record<string, string> = {
     'bg-gradient-to-br from-rose-50 to-rose-100 text-rose-700 dark:from-rose-900/40 dark:to-rose-900/60 dark:text-rose-300',
   NoShow:
     'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500 dark:from-slate-800/60 dark:to-slate-800/80 dark:text-slate-400',
+  Booked:
+    'bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 dark:from-blue-900/40 dark:to-blue-900/60 dark:text-blue-300',
 };
 
 function getInitials(value: string) {
