@@ -15,15 +15,16 @@ export const getAllOrders = async (
   page: number = 1,
   pageSize: number = 20
 ): Promise<PaginatedOrdersResponse> => {
-  const { data } = await api.get<PaginatedOrdersResponse>('/financial/orders', {
+  const { data } = await api.get<any>('/financial/orders/all', {
     params: { pageNumber: page, pageSize },
   });
-  return data;
+  // Handle both wrapped and unwrapped responses for resilience
+  return data.data || data;
 };
 
 export const getOrderById = async (orderId: string): Promise<OrderDto> => {
   const { data } = await api.get<any>(`/financial/orders/${orderId}`);
-  return data.data;
+  return data.data || data;
 };
 
 export interface CompleteOrderResponse {
@@ -36,10 +37,22 @@ export interface CompleteOrderResponse {
 
 export const completeOrder = async (
   orderId: string,
-  method: 'Cash' | 'PayOS' = 'Cash'
+  method: 'Cash' | 'PayOS' = 'Cash',
+  returnUrl?: string,
+  cancelUrl?: string
 ): Promise<CompleteOrderResponse> => {
   const { data } = await api.post<any>(
-    `/financial/orders/${orderId}/complete?method=${method}`
+    `/financial/orders/${orderId}/complete`,
+    {
+      method,
+      returnUrl,
+      cancelUrl,
+    }
   );
+  return data.data;
+};
+
+export const syncOrderPaymentStatus = async (orderId: string): Promise<any> => {
+  const { data } = await api.post<any>(`/financial/orders/${orderId}/sync`);
   return data.data;
 };

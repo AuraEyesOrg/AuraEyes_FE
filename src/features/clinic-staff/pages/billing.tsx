@@ -17,10 +17,7 @@ import ClinicStaffLayout from '../components/ClinicStaffLayout';
 import { formatDateTimeWithYear } from '@/lib/date-utils';
 import { formatCurrency, cleanDescription } from '@/lib/helper';
 import { useAllOrders, useCompleteOrder } from '../hooks/use-billing';
-import type {
-  OrderStatus,
-  PaymentStatus,
-} from '@/features/patient/types/financial.types';
+import type { PaymentStatus } from '@/features/patient/types/financial.types';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
@@ -40,18 +37,21 @@ const PAYMENT_STATUS_COLOR: Record<PaymentStatus, string> = {
 export default function BillingPage() {
   const { t } = useTranslation();
 
-  const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
+  const ORDER_STATUS_LABEL: Record<string, string> = {
     Pending: t('ClinicStaffBilling.filters.pending', {
       defaultValue: 'Chờ thanh toán',
     }),
-    Confirmed: t('ClinicStaffBilling.filters.completed', {
-      defaultValue: 'Đã xác nhận',
+    PartiallyPaid: t('ClinicStaffBilling.status.partiallyPaid', {
+      defaultValue: 'Thanh toán cọc',
     }),
-    Processing: t('ClinicStaffBilling.orderDetails.processing', {
-      defaultValue: 'Đang xử lý',
+    Confirmed: t('ClinicStaffBilling.status.partiallyPaid', {
+      defaultValue: 'Thanh toán cọc',
     }),
-    Completed: t('ClinicStaffBilling.filters.completed', {
-      defaultValue: 'Hoàn thành',
+    FullyPaid: t('ClinicStaffBilling.status.fullyPaid', {
+      defaultValue: 'Đã tất toán',
+    }),
+    Completed: t('ClinicStaffBilling.status.fullyPaid', {
+      defaultValue: 'Đã tất toán',
     }),
     Cancelled: t('ClinicStaffBilling.filters.cancelled', {
       defaultValue: 'Đã hủy',
@@ -134,7 +134,11 @@ export default function BillingPage() {
     if (activeFilter === 'all') return orders;
     if (activeFilter === 'completed')
       return orders.filter(
-        (o) => o.status === 'Completed' || o.status === 'Confirmed'
+        (o) =>
+          o.status === 'Completed' ||
+          o.status === 'Confirmed' ||
+          o.status === 'PartiallyPaid' ||
+          o.status === 'FullyPaid'
       );
     if (activeFilter === 'pending')
       return orders.filter(
@@ -150,7 +154,11 @@ export default function BillingPage() {
   // ── Summary ─────────────────────────────────────────────────────────────────
   const summary = useMemo(() => {
     const completedOrders = orders.filter(
-      (o) => o.status === 'Completed' || o.status === 'Confirmed'
+      (o) =>
+        o.status === 'Completed' ||
+        o.status === 'Confirmed' ||
+        o.status === 'PartiallyPaid' ||
+        o.status === 'FullyPaid'
     );
     const refundedOrders = orders.filter((o) => o.status === 'Refunded');
     const totalRevenue = completedOrders.reduce((s, o) => s + o.totalAmount, 0);
@@ -163,8 +171,13 @@ export default function BillingPage() {
     };
   }, [orders, ordersData]);
 
-  const getOrderStatusIcon = (status: OrderStatus) => {
-    if (status === 'Completed' || status === 'Confirmed')
+  const getOrderStatusIcon = (status: string) => {
+    if (
+      status === 'Completed' ||
+      status === 'Confirmed' ||
+      status === 'PartiallyPaid' ||
+      status === 'FullyPaid'
+    )
       return (
         <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
       );
@@ -351,7 +364,8 @@ export default function BillingPage() {
                 {visibleOrders.map((order) => {
                   const isCompleted =
                     order.status === 'Completed' ||
-                    order.status === 'Confirmed';
+                    order.status === 'Confirmed' ||
+                    order.status === 'FullyPaid';
                   const isRefunded = order.status === 'Refunded';
                   const isCancelled = order.status === 'Cancelled';
                   const isOnlineDeposit = order.depositAmount != null;
@@ -450,7 +464,7 @@ export default function BillingPage() {
                             <p className="text-sm text-(--text-secondary) font-medium flex items-center gap-2">
                               {t('ClinicStaffBilling.orderDetails.paid')}{' '}
                               <span className="text-blue-600 dark:text-blue-400">
-                                {formatCurrency(order.depositAmount!)}
+                                {formatCurrency(order.paidAmount)}
                               </span>
                               <span className="text-(--text-muted)">|</span>
                               {t(
@@ -458,7 +472,10 @@ export default function BillingPage() {
                               )}{' '}
                               <span className="text-rose-500">
                                 {formatCurrency(
-                                  order.totalAmount - order.depositAmount!
+                                  Math.max(
+                                    0,
+                                    order.totalAmount - order.paidAmount
+                                  )
                                 )}
                               </span>
                             </p>
