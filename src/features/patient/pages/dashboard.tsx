@@ -73,8 +73,14 @@ export default function PatientDashboard() {
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
 
-  const { profile, latestReport, recentReports, nextAppointment, isLoading } =
-    useDashboard();
+  const {
+    profile,
+    latestAnalysis,
+    latestReport,
+    recentReports,
+    nextAppointment,
+    isLoading,
+  } = useDashboard();
 
   const firstName =
     profile?.fullName?.split(' ')[0] ??

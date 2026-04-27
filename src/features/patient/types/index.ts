@@ -234,28 +234,6 @@ export interface VerificationFinding {
   affectedArea: string;
 }
 
-// ============ HEALTH ROADMAP TYPES ============
-
-export interface HealthRoadmap {
-  id: string;
-  patientId: string;
-  medicalDiagnosisId: string;
-  screeningId?: string;
-  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  summary: string;
-  nextSteps: string[];
-  lifestyleAdvice: string[];
-  warningSigns: string[];
-  followUp: HealthRoadmapFollowUp;
-  source: 'AI' | 'DOCTOR_OVERRIDE';
-  generatedAt: string;
-}
-
-export interface HealthRoadmapFollowUp {
-  needed: boolean;
-  timeframe: string;
-}
-
 // ============ CHAT TYPES ============
 
 export interface ChatConversation {

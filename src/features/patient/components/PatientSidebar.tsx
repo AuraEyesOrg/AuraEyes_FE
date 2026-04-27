@@ -7,7 +7,6 @@ import {
   Calendar,
   MapPin,
   MessageCircle,
-  Milestone,
   MessageSquareHeart,
   Globe,
   FileText,
@@ -84,12 +83,6 @@ export default function PatientSidebar() {
       requiredPermission: Permissions.ScreeningRead,
     },
     {
-      icon: Milestone,
-      label: t('PatientSidebar.nav.healthRoadmap', 'Health Roadmap'),
-      path: '/patient/roadmap',
-      requiredPermission: Permissions.ScreeningRead,
-    },
-    {
       icon: MessageCircle,
       label: t('PatientSidebar.nav.chat', 'Chat'),
       path: '/patient/chat',
@@ -98,7 +91,7 @@ export default function PatientSidebar() {
     },
     {
       icon: Wallet,
-      label: t('PatientSidebar.nav.wallet', 'Wallet'),
+      label: t('PatientSidebar.nav.wallet', 'Transaction History'),
       path: '/patient/wallet',
       requiredPermission: Permissions.WalletsRead,
     },

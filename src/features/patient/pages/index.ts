@@ -18,7 +18,6 @@ export { default as ProfilePage } from './profile';
 export { default as ClinicsPage } from './clinics';
 
 // Health & Communication
-export { default as RoadmapPage } from './roadmap';
 export { default as ChatPage } from './chat';
 
 // Wallet

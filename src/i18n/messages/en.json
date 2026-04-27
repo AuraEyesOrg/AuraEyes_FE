@@ -3319,7 +3319,7 @@
       "findClinics": "Find Clinics",
       "healthRoadmap": "Health Roadmap",
       "chat": "Chat",
-      "wallet": "Wallet",
+      "wallet": "Transaction History",
       "helpFeedback": "Help & Feedback",
       "settings": "Settings"
     },
@@ -3345,7 +3345,7 @@
       "clinics": "Find Clinics",
       "roadmap": "Health Roadmap",
       "chat": "Chat",
-      "wallet": "Wallet",
+      "wallet": "Transaction History",
       "profile": "My Profile",
       "settings": "Settings",
       "security": "Security",
