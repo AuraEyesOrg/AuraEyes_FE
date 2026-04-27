@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 import { resolvePathWithLocale } from '@/i18n/middleware';
+import { useClinicDashboardMetrics } from '../hooks/use-clinic-dashboard';
 import ClinicStaffLayout from '../components/ClinicStaffLayout';
 
 // ─── Stat Card ─────────────────────────────────────────────────────────────
@@ -150,6 +151,7 @@ export default function ClinicStaffDashboardPage() {
     i18nT(key as never, { defaultValue } as never) as unknown as string;
 
   const { user } = useAuthStore();
+  const { data: metrics, isLoading } = useClinicDashboardMetrics();
 
   const firstName = user?.fullName?.split(' ').at(-1) ?? 'Staff';
   const currentHour = new Date().getHours();
@@ -160,7 +162,6 @@ export default function ClinicStaffDashboardPage() {
         ? t('ClinicStaffDashboard.greetings.afternoon', 'Good afternoon')
         : t('ClinicStaffDashboard.greetings.evening', 'Good evening');
 
-  // TODO: Replace with real API data via React Query
   const stats = [
     {
       icon: Calendar,
@@ -168,7 +169,7 @@ export default function ClinicStaffDashboardPage() {
         'ClinicStaffDashboard.stats.todayAppointments',
         "Today's Appointments"
       ),
-      value: 0,
+      value: metrics?.todayAppointments ?? 0,
       sub: t('ClinicStaffDashboard.stats.scheduled', 'Scheduled'),
       iconBg: 'bg-blue-500/10',
       iconColor: 'text-blue-500',
@@ -176,7 +177,7 @@ export default function ClinicStaffDashboardPage() {
     {
       icon: Users,
       label: t('ClinicStaffDashboard.stats.patientsCheckedIn', 'Checked In'),
-      value: 0,
+      value: metrics?.checkedInPatients ?? 0,
       sub: t('ClinicStaffDashboard.stats.today', 'Today'),
       iconBg: 'bg-green-500/10',
       iconColor: 'text-green-500',
@@ -184,7 +185,7 @@ export default function ClinicStaffDashboardPage() {
     {
       icon: ClipboardList,
       label: t('ClinicStaffDashboard.stats.pendingTasks', 'Pending Tasks'),
-      value: 0,
+      value: metrics?.pendingTasks ?? 0,
       sub: t('ClinicStaffDashboard.stats.requiresAction', 'Require action'),
       iconBg: 'bg-amber-500/10',
       iconColor: 'text-amber-500',
@@ -192,16 +193,14 @@ export default function ClinicStaffDashboardPage() {
     {
       icon: UserCheck,
       label: t('ClinicStaffDashboard.stats.completedToday', 'Completed'),
-      value: 0,
+      value: metrics?.completedToday ?? 0,
       sub: t('ClinicStaffDashboard.stats.today', 'Today'),
       iconBg: 'bg-teal-500/10',
       iconColor: 'text-teal-500',
     },
   ];
 
-  const recentActivity: ActivityItemProps[] = [
-    // Placeholder — will be driven by API
-  ];
+  const recentActivity = metrics?.recentActivity ?? [];
 
   const quickActions: QuickActionProps[] = [
     {

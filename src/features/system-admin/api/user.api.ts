@@ -163,12 +163,12 @@ export const userApi = {
   }) {
     try {
       const response = await api.post<ApiResponse<string>>(
-        `${API_ENDPOINTS.SYSTEM_ADMIN.USERS.LIST}/onboard`,
+        `${API_ENDPOINTS.SYSTEM_ADMIN.USERS.LIST}/accounts`,
         data
       );
       return response.data.data;
     } catch (error) {
-      console.error('Failed to onboard staff:', error);
+      console.error('Failed to create staff:', error);
       throw error;
     }
   },

@@ -15,44 +15,38 @@ import {
 
 export const organisationBookingKeys = {
   all: ['organisation-booking'] as const,
-  templates: (orgId: string) =>
-    [...organisationBookingKeys.all, 'templates', orgId] as const,
-  slots: (params: GetOrganisationSlotsParams) =>
+  templates: () => [...organisationBookingKeys.all, 'templates'] as const,
+  slots: (params: Omit<GetOrganisationSlotsParams, 'orgId'>) =>
     [...organisationBookingKeys.all, 'slots', params] as const,
 };
 
-export const useOrganisationTemplates = (orgId: string, enabled = true) =>
+export const useOrganisationTemplates = (enabled = true) =>
   useQuery({
-    queryKey: organisationBookingKeys.templates(orgId),
-    queryFn: () => getOrganisationTemplates(orgId),
-    enabled: enabled && !!orgId,
+    queryKey: organisationBookingKeys.templates(),
+    queryFn: () => getOrganisationTemplates(),
+    enabled: enabled,
     staleTime: 60_000,
   });
 
 export const useOrganisationSlots = (
-  params: GetOrganisationSlotsParams,
+  params: Omit<GetOrganisationSlotsParams, 'orgId'>,
   enabled = true
 ) =>
   useQuery({
     queryKey: organisationBookingKeys.slots(params),
     queryFn: () => getOrganisationSlots(params),
-    enabled: enabled && !!params.orgId,
+    enabled: enabled,
     staleTime: 15_000,
   });
 
 export const useCreateOrganisationTemplate = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      orgId,
-      request,
-    }: {
-      orgId: string;
-      request: CreateOrganisationTemplateRequest;
-    }) => createOrganisationTemplate(orgId, request),
-    onSuccess: (_data, variables) => {
+    mutationFn: ({ request }: { request: CreateOrganisationTemplateRequest }) =>
+      createOrganisationTemplate(request),
+    onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: organisationBookingKeys.templates(variables.orgId),
+        queryKey: organisationBookingKeys.templates(),
       });
     },
   });
@@ -67,11 +61,10 @@ export const useUpdateOrganisationTemplate = () => {
     }: {
       templateId: string;
       request: UpdateOrganisationTemplateRequest;
-      orgId: string;
     }) => updateOrganisationTemplate(templateId, request),
-    onSuccess: (_data, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: organisationBookingKeys.templates(variables.orgId),
+        queryKey: organisationBookingKeys.templates(),
       });
     },
   });
@@ -80,16 +73,11 @@ export const useUpdateOrganisationTemplate = () => {
 export const useDeleteOrganisationTemplate = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      templateId,
-      orgId,
-    }: {
-      templateId: string;
-      orgId: string;
-    }) => deleteOrganisationTemplate(templateId),
-    onSuccess: (_data, variables) => {
+    mutationFn: ({ templateId }: { templateId: string }) =>
+      deleteOrganisationTemplate(templateId),
+    onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: organisationBookingKeys.templates(variables.orgId),
+        queryKey: organisationBookingKeys.templates(),
       });
       queryClient.invalidateQueries({ queryKey: organisationBookingKeys.all });
     },

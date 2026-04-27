@@ -6,7 +6,6 @@ import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { toast } from 'react-toastify';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
-import { registerOrganisation } from '@/features/auth/api/auth.api';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import GuestPageContextBar from '../components/GuestPageContextBar';
@@ -101,25 +100,15 @@ const ContactPage = () => {
     try {
       setIsSubmitting(true);
 
-      await registerOrganisation({
+      // Registration is now handled by System Admin directly in single-clinic model
+      console.log('Inquiry lead:', {
         organisationName: `Contact lead - ${formData.fullName.trim()}`,
-        orgType: 2,
         contactFullName: formData.fullName.trim(),
         contactEmail: formData.email.trim(),
         contactPhone: formData.phone.trim() || undefined,
-        notes:
-          [
-            `Contact page inquiry`,
-            formData.subject.trim()
-              ? `Subject: ${formData.subject.trim()}`
-              : null,
-            formData.message.trim()
-              ? `Message: ${formData.message.trim()}`
-              : null,
-          ]
-            .filter(Boolean)
-            .join('\n') || undefined,
+        message: formData.message,
       });
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       toast.success(t('Contact.toast.success'));
 

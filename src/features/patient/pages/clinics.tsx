@@ -549,11 +549,7 @@ export default function ClinicsPage() {
     data: availableSlots = [],
     isLoading: loadingSlots,
     error: availableSlotsError,
-  } = useOrganisationAvailableSlots(
-    selectedOrganisationId,
-    undefined,
-    !!selectedOrganisationId
-  );
+  } = useOrganisationAvailableSlots(undefined, !!selectedOrganisationId);
 
   const createAppointmentMutation = useCreateClinicAppointment();
   const { data: walletData } = useWallet();
@@ -642,7 +638,6 @@ export default function ClinicsPage() {
     setErrorMessage('');
     try {
       await createAppointmentMutation.mutateAsync({
-        organisationId: selectedOrganisationId,
         slotId: selectedSlotId,
         visitReason: visitReason.trim() || undefined,
       });

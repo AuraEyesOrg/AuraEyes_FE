@@ -172,7 +172,7 @@ export default function PatientDashboard() {
   };
 
   const currentDate = formatShortDate(new Date().toISOString());
-  const latestReportRisk = latestReport?.riskLevel ?? latestAnalysis?.riskLevel;
+  const latestReportRisk = latestReport?.riskLevel;
   const effectiveLatestRisk = latestSessionRisk ?? latestReportRisk;
   const hasLatestSession = Boolean(latestSession);
   const hasHeroResult = Boolean(

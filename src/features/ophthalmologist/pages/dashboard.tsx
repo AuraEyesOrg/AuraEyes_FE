@@ -120,9 +120,6 @@ export default function OphthalmologistDashboard() {
 
   const displayName =
     user?.fullName || t('Ophthalmologist.common.doctor', 'Doctor');
-  const organisationHint = user?.organizationId
-    ? `${t('Ophthalmologist.dashboard.organisationLabel', 'Organisation')} ${user.organizationId.slice(0, 8)}`
-    : t('Ophthalmologist.dashboard.defaultOrganisation', 'AURA Care Network');
   const greeting = getGreeting(new Date().getHours(), t);
 
   const metricsFirstLoad = metricsQuery.isLoading && !metricsQuery.data;
@@ -166,7 +163,6 @@ export default function OphthalmologistDashboard() {
                     {greeting}, {displayName}
                   </h1>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {organisationHint} •{' '}
                     {t(
                       'Ophthalmologist.dashboard.subtitle',
                       'Your workspace — review queue and patient cases'

@@ -28,11 +28,10 @@ export interface ClinicStaffAppointmentDto {
 }
 
 export const getClinicStaffAppointments = async (
-  organisationId: string,
   date?: string
 ): Promise<ClinicStaffAppointmentDto[]> => {
   const response = await api.get<ApiResponse<ClinicStaffAppointmentDto[]>>(
-    API_ENDPOINTS.CLINIC_BOOKING.ORGANISATION_APPOINTMENTS(organisationId),
+    API_ENDPOINTS.CLINIC_BOOKING.ORGANISATION_APPOINTMENTS(),
     { params: { date } }
   );
 
