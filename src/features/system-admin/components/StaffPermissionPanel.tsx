@@ -119,7 +119,7 @@ export const StaffPermissionPanel: React.FC = () => {
       setLoadingUserPerms(true);
       try {
         const result = await permissionsApi.getUserPermissions(userId);
-        setUserEffective(result);
+        setUserEffective(result ?? null);
       } catch (err) {
         toast.error(
           t(

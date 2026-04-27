@@ -2445,6 +2445,12 @@ declare module 'i18next' {
         modalTitle: string;
         modalSubtitle: string;
         submitLabel: string;
+        targetTitle: string;
+        targetClinic: string;
+        targetDoctor: string;
+        targetStaff: string;
+        ratingLabel: string;
+        commentPlaceholder: string;
       };
     };
     PatientDashboard: {

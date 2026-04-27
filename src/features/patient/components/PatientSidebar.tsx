@@ -10,6 +10,7 @@ import {
   Milestone,
   MessageSquareHeart,
   Globe,
+  FileText,
   Stethoscope,
 } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
@@ -57,6 +58,12 @@ export default function PatientSidebar() {
       icon: Eye,
       label: t('PatientSidebar.nav.myScans', 'My Scans'),
       path: '/patient/screening',
+      requiredPermission: Permissions.ScreeningRead,
+    },
+    {
+      icon: FileText,
+      label: t('PatientSidebar.nav.medicalHistory', 'Medical History'),
+      path: '/patient/medical-history',
       requiredPermission: Permissions.ScreeningRead,
     },
     {

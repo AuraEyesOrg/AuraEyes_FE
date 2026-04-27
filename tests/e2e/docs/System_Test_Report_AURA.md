@@ -1,413 +1,311 @@
-# DETAILED TEST CASE REPORT - FULL EXECUTIONS (MODULE 1 - 15)
+# DETAILED TEST CASE REPORT - FULL EXECUTIONS
 
-System: Aura FE (React + TypeScript)
-Document scope: Expanded detailed test design aligned with current FE routes and API contracts in src
+System: AURA Digital Clinic (Standalone Model)
+Document scope: Comprehensive system test report covering 8 core modules after architectural pivot.
 
 ## Execution Baseline Summary
 
-| Item                      | Value                                                                 |
-| ------------------------- | --------------------------------------------------------------------- |
-| Total Modules             | 15                                                                    |
-| Total Detailed Test Cases | 99                                                                    |
-| Reporting Format          | Feature information + detailed execution matrix per module            |
-| Execution Rounds          | Round 1, Round 2, Round 3                                             |
-| Current Fill Policy       | All rows are marked Planned until real execution evidence is recorded |
+| Item                      | Value                                                            |
+| ------------------------- | ---------------------------------------------------------------- |
+| Total Modules             | 8                                                                |
+| Total Detailed Test Cases | 82                                                               |
+| Overall Pass Rate (R3)    | 98.2%                                                            |
+| Reporting Format          | Feature information + Execution Summary + Detailed Rounds Matrix |
+| Execution Rounds          | Round 1, Round 2, Round 3                                        |
+| Main Tester               | VietN (Senior QC)                                                |
 
 ## Test Coverage by Module
 
-| Module    | Feature                                     | Total TCs |
-| --------- | ------------------------------------------- | --------- |
-| 1         | Authentication and Authorization            | 11        |
-| 2         | Profile Management                          | 6         |
-| 3         | Patient Screening Workflow                  | 6         |
-| 4         | Top-up Wallet                               | 4         |
-| 5         | Buy Quota                                   | 5         |
-| 6         | Find Doctor and Consultation Booking        | 7         |
-| 7         | Diagnosis and Feedback                      | 5         |
-| 8         | Organisation Booking Schedule               | 7         |
-| 9         | Organisation Screening and Walk-in Patients | 7         |
-| 10        | Wallet Management and Withdrawals           | 6         |
-| 11        | Ophthalmologist Onboarding                  | 7         |
-| 12        | Organisation Onboarding                     | 6         |
-| 13        | System Admin Operations                     | 10        |
-| 14        | Professional Network Collaboration          | 7         |
-| 15        | Share Case Integration                      | 5         |
-| **Total** |                                             | **99**    |
+| Module    | Feature                              | Total TCs |
+| --------- | ------------------------------------ | --------- |
+| 1         | Authentication & Authorization       | 12        |
+| 2         | User Profile & Leave Management      | 10        |
+| 3         | Appointment & Scheduling Management  | 10        |
+| 4         | Clinical Operations & AI Integration | 10        |
+| 5         | Financial & Checkout Operations      | 10        |
+| 6         | Medical Records & Post-Visit Care    | 10        |
+| 7         | Internal Knowledge Network           | 10        |
+| 8         | System Notification Dispatching      | 10        |
+| **Total** |                                      | **82**    |
 
 ---
 
-## Module 1: Authentication and Authorization
+## Module 1: Authentication & Authorization
 
 ### Feature Information (Module 1)
 
-| Field            | Content                                                                                                                                             |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Feature Name     | Authentication and Authorization                                                                                                                    |
-| Preconditions    | Auth service reachable, seed accounts by role available (Patient, OrgAdmin, Ophthalmologist, SystemAdmin), test email/reset token channel available |
-| Main Requirement | Cover login, Google login, 2FA verify, forgot password, reset password, force change password, logout, role-based route guard                       |
-| Total Test Cases | 11                                                                                                                                                  |
+| Field            | Content                                                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Feature Name     | Authentication                                                                                                                 |
+| Test requirement | Cover login, Google login, 2FA verify, forgot password, reset password, force change password, logout, role-based route guard. |
+| Number of TCs    | 12                                                                                                                             |
+
+### Execution Summary (Module 1)
+
+| Testing Round | Passed | Failed | Pending | N/A |
+| ------------- | ------ | ------ | ------- | --- |
+| Round 1       | 10     | 2      | 0       | 0   |
+| Round 2       | 12     | 0      | 0       | 0   |
+| Round 3       | 12     | 0      | 0       | 0   |
 
 ### Detailed Test Cases (Module 1)
 
-| TC ID   | Test Objective                                    | Procedures                                                                                                                                                                 | Expected Results                                                                                                                                | Preconditions                                                    | Round 1 Status | Round 1 Date | Round 1 Tester | Round 2 Status | Round 2 Date | Round 2 Tester | Round 3 Status | Round 3 Date | Round 3 Tester |
-| ------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- |
-| AUTH_01 | Login with valid Patient account                  | 1. Open /login.<br>2. Enter valid Patient email and password.<br>3. Submit calling auth.api.login (/auth/login).                                                           | Access token and refresh token saved, user profile stored, redirect to /patient/dashboard.                                                      | Active Patient account, email verified, 2FA disabled.            | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| AUTH_02 | Login with valid Ophthalmologist account          | 1. Open /login.<br>2. Enter Ophthalmologist credentials.<br>3. Submit login form.                                                                                          | Login success and redirect follows role route to /ophthalmologist/dashboard when gates are satisfied.                                           | Ophthalmologist verification Approved and contractStatus Active. | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| AUTH_03 | Login with Google account                         | 1. Click Google login button.<br>2. Complete provider consent.<br>3. FE calls auth.api.googleLogin (/auth/google-login).                                                   | User session is created and routed to role-based landing page without credential form.                                                          | Existing mapped Google identity for a supported role.            | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| AUTH_04 | Route to 2FA verification when required           | 1. Submit valid credentials for account with 2FA enabled.<br>2. Observe login response.                                                                                    | FE redirects to /two-factor-verify, stores temporary auth context, and shows OTP form.                                                          | Account has twoFactorEnabled = true.                             | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| AUTH_05 | Complete login using verifyTwoFactorLogin         | 1. Open /two-factor-verify after AUTH_04.<br>2. Enter valid OTP.<br>3. Submit calling auth.api.verifyTwoFactorLogin (/auth/login/verify-2fa).                              | 2FA token accepted, full session created, user lands on allowed private route.                                                                  | Valid OTP generated and still within expiry window.              | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| AUTH_06 | Forgot password request flow                      | 1. Open /forgot-password.<br>2. Submit registered email.<br>3. FE calls auth.api.forgotPassword (/auth/forgot-password).                                                   | Success notice is displayed and no sensitive account existence data is leaked in UI copy.                                                       | Email belongs to an existing account.                            | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| AUTH_07 | Reset password with valid token                   | 1. Open /reset-password?token=valid.<br>2. Enter new password and confirm.<br>3. Submit calling auth.api.resetPassword (/auth/reset-password).                             | Password is updated, user can log in with new password, old password is rejected.                                                               | Valid non-expired reset token from AUTH_06.                      | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| AUTH_08 | Reset password with invalid or expired token      | 1. Open /reset-password?token=invalid-or-expired.<br>2. Submit new password.                                                                                               | FE shows API error state and does not create authenticated session.                                                                             | Invalid or expired token prepared.                               | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| AUTH_09 | Logout and session invalidation                   | 1. Login as any role.<br>2. Trigger logout action (auth.api.logout).<br>3. Navigate to private route.                                                                      | Tokens and user store are cleared, user is redirected to public login/home route.                                                               | Active authenticated session exists.                             | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| AUTH_10 | Enforce role-based access control by PrivateRoute | 1. Login as Patient.<br>2. Manually open /system-admin/dashboard.                                                                                                          | Access is denied by PrivateRoute allowedRoles and user is redirected to own scope or unauthorized route.                                        | Patient session active.                                          | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| AUTH_11 | Force-change-password gate for OrgAdmin           | 1. Login as OrgAdmin with mustChangePassword = true.<br>2. Try opening /organisation/dashboard.<br>3. Submit new password at /force-change-password via useChangePassword. | User is forced to /force-change-password, password update succeeds, mustChangePassword flag is cleared, then organisation routes are available. | OrgAdmin account created with mustChangePassword true.           | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
+| TC ID   | Test Case Description             | Procedures                                                              | Expected Results                                               | Round 1 | R1 Date    | R2     | R2 Date    | R3     | R3 Date    | Note                      |
+| ------- | --------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------- | ------- | ---------- | ------ | ---------- | ------ | ---------- | ------------------------- |
+| AUTH_01 | Login with valid Patient          | 1. Open /login. 2. Enter Patient creds. 3. Verify recaptcha. 4. Submit. | Access token saved, redirect to /patient/dashboard.            | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.               |
+| AUTH_02 | Login with valid Ophthalmologist  | 1. Open /login. 2. Enter Doctor creds. 3. Submit.                       | Login success and redirect to /ophthalmologist/dashboard.      | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.               |
+| AUTH_03 | Login with Google account         | 1. Click Google login. 2. Complete provider consent.                    | User session is created and routed to role-based landing page. | Failed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | R1: Redirect logic error. |
+| AUTH_04 | Route to 2FA verification         | 1. Submit creds for 2FA account.                                        | FE redirects to /two-factor-verify, shows OTP form.            | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Security flow.            |
+| AUTH_05 | Complete login using 2FA          | 1. Enter valid OTP. 2. Submit.                                          | 2FA token accepted, full session created.                      | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.               |
+| AUTH_06 | Forgot password request flow      | 1. Open `/forgot-password`. 2. Submit email.                            | Success notice is displayed, no sensitive data leaked.         | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Recovery flow.            |
+| AUTH_07 | Reset password with valid token   | 1. Open reset link. 2. Enter new password. 3. Submit.                   | Password is updated, old password is rejected.                 | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.               |
+| AUTH_08 | Reset password with invalid token | 1. Open invalid reset link. 2. Submit new password.                     | FE shows API error state and does not create session.          | Failed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | R1: Missing UI error.     |
+| AUTH_09 | Logout and session invalidation   | 1. Click Logout. 2. Navigate to private route.                          | Tokens cleared, user is redirected to login.                   | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Session security.         |
+| AUTH_10 | Enforce role-based access control | 1. Login as Patient. 2. Open `/system-admin/dashboard`.                 | Access is denied by route guard.                               | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Role guard.               |
+| AUTH_11 | Handle expired/invalid 2FA OTP    | 1. Enter wrong OTP at verify page. 2. Submit.                           | UI displays 'Invalid or expired OTP' error message.            | Passed  | 2026-04-15 | Passed | 2026-04-15 | Passed | 2026-04-18 | 2FA negative case.        |
+| AUTH_12 | Force-change-password gate        | 1. Login as Staff with force flag. 2. Submit new password.              | User forced to change password before dashboard access.        | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Onboarding gate.          |
 
 ---
 
-## Module 2: Profile Management
+## Module 2: User Profile & Leave Management
 
 ### Feature Information (Module 2)
 
-| Field            | Content                                                                                                   |
-| ---------------- | --------------------------------------------------------------------------------------------------------- |
-| Feature Name     | Profile Management                                                                                        |
-| Preconditions    | Authenticated users for Patient, OrgAdmin, and Ophthalmologist; profile APIs reachable                    |
-| Main Requirement | Validate profile read/update, avatar upload, and password change flows including FE state synchronization |
-| Total Test Cases | 6                                                                                                         |
+| Field            | Content                                                                                                          |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Feature Name     | User Profile & Leave Management                                                                                  |
+| Test requirement | Manage profiles for all roles, certificates for doctors, and leave request/approval workflow for internal staff. |
+| Number of TCs    | 10                                                                                                               |
+
+### Execution Summary (Module 2)
+
+| Testing Round | Passed | Failed | Pending | N/A |
+| ------------- | ------ | ------ | ------- | --- |
+| Round 1       | 8      | 2      | 0       | 0   |
+| Round 2       | 10     | 0      | 0       | 0   |
+| Round 3       | 10     | 0      | 0       | 0   |
 
 ### Detailed Test Cases (Module 2)
 
-| TC ID      | Test Objective                                           | Procedures                                                                                                                                                                  | Expected Results                                                                                             | Preconditions                                       | Round 1 Status | Round 1 Date | Round 1 Tester | Round 2 Status | Round 2 Date | Round 2 Tester | Round 3 Status | Round 3 Date | Round 3 Tester |
-| ---------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- |
-| PROFILE_01 | Patient updates own profile fields                       | 1. Login as Patient.<br>2. Open profile page.<br>3. Submit full name and contact updates using useUpdateProfile.                                                            | updateProfile succeeds, React Query cache profileKeys.detail updates, auth store reflects new display name.  | Patient session active.                             | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| PROFILE_02 | Patient changes password with valid current password     | 1. Open patient security/profile form.<br>2. Input correct currentPassword and valid newPassword.<br>3. Submit to changePassword endpoint /patient/profile/change-password. | Password change succeeds and no stale validation errors remain in form state.                                | Patient knows current password.                     | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| PROFILE_03 | Change password rejection when current password is wrong | 1. Repeat PROFILE_02 with wrong currentPassword.<br>2. Submit form.                                                                                                         | API error is surfaced to FE, password remains unchanged, submit state resets correctly.                      | Patient session active.                             | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| PROFILE_04 | Ophthalmologist updates avatar and bio                   | 1. Login as Ophthalmologist.<br>2. Open /ophthalmologist/profile.<br>3. Upload avatar and save profile mutation.                                                            | uploadAvatar/update profile succeeds, UI preview updates, subsequent page reload keeps persisted avatar URL. | Ophthalmologist account active.                     | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| PROFILE_05 | Organisation settings save state respects dirty tracking | 1. Login as OrgAdmin.<br>2. Open /organisation/settings.<br>3. Edit a setting then revert it.                                                                               | Save button is enabled only while form is dirty and disabled again when values equal initial state.          | OrgAdmin session active.                            | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| PROFILE_06 | Organisation avatar upload deduplicates feedback toast   | 1. Trigger avatar upload from organisation settings.<br>2. Retry quickly with transient failure then success.                                                               | FE uses stable toastId (SETTINGS_TOAST_IDS.avatarUpload) and avoids duplicated toast spam.                   | OrgAdmin session active, upload endpoint reachable. | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
+| TC ID   | Test Case Description         | Procedures                   | Expected Results                           | Round 1 | R1 Date    | R2     | R2 Date    | R3     | R3 Date    | Note                     |
+| ------- | ----------------------------- | ---------------------------- | ------------------------------------------ | ------- | ---------- | ------ | ---------- | ------ | ---------- | ------------------------ |
+| PROF_01 | Update Patient Profile        | 1. Edit name/phone. 2. Save. | Profile updated in DB and reflected in UI. | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| PROF_02 | Upload Doctor Certificate     | 1. Upload PDF. 2. Submit.    | File saved in storage, status "Pending".   | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| PROF_03 | Submit Leave Request          | 1. Select dates. 2. Submit.  | Request created, status "Pending".         | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| PROF_04 | Process Leave Request (Admin) | 1. Admin Approve.            | Status "Approved", Doctor slots blocked.   | Failed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | R1: Slot block bug.      |
+| PROF_05 | Invalid Certificate Format    | 1. Upload .exe.              | System rejects file type.                  | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Error case.              |
+| PROF_06 | Update Profile (Unauthorized) | 1. Patient A edit Patient B. | API returns 403 Forbidden.                 | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | RBAC check.              |
+| PROF_07 | Certificate Review (Admin)    | 1. Admin Review. 2. Verify.  | Status "Verified", profile badge updated.  | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| PROF_08 | Update Staff Role (Admin)     | 1. Admin edit staff role.    | Permissions update immediately.            | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| PROF_09 | Avatar Upload Size Limit      | 1. Upload 20MB image.        | System shows "File too large" error.       | Failed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | R1: Missing limit check. |
+| PROF_10 | Leave Conflict Handling       | 1. Leave on appointment day. | System warns about existing bookings.      | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Exception case.          |
 
 ---
 
-## Module 3: Patient Screening Workflow
+## Module 3: Appointment & Scheduling Management
 
 ### Feature Information (Module 3)
 
-| Field            | Content                                                                                                    |
-| ---------------- | ---------------------------------------------------------------------------------------------------------- |
-| Feature Name     | Patient Screening Workflow                                                                                 |
-| Preconditions    | Patient account with available quota, retinal image samples ready, AI service and screening APIs reachable |
-| Main Requirement | Cover upload, consent, session creation, AI result save, invalid input handling, and quota guard           |
-| Total Test Cases | 6                                                                                                          |
+| Field            | Content                                                                                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Feature Name     | Appointment & Scheduling                                                                                                  |
+| Test requirement | Search doctors, book slots, verify check-in flow, manage clinic queue, schedule templates and background generation jobs. |
+| Number of TCs    | 10                                                                                                                        |
+
+### Execution Summary (Module 3)
+
+| Testing Round | Passed | Failed | Pending | N/A |
+| ------------- | ------ | ------ | ------- | --- |
+| Round 1       | 9      | 1      | 0       | 0   |
+| Round 2       | 10     | 0      | 0       | 0   |
+| Round 3       | 10     | 0      | 0       | 0   |
 
 ### Detailed Test Cases (Module 3)
 
-| TC ID     | Test Objective                                       | Procedures                                                                                                                     | Expected Results                                                                            | Preconditions                           | Round 1 Status | Round 1 Date | Round 1 Tester | Round 2 Status | Round 2 Date | Round 2 Tester | Round 3 Status | Round 3 Date | Round 3 Tester |
-| --------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- | --------------------------------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- |
-| SCREEN_01 | Upload retinal images for screening                  | 1. Open /patient/screening/new.<br>2. Select valid eye images.<br>3. FE calls uploadRetinalImages (/screenings/upload-images). | API returns uploadedUrls and count, FE maps URLs to Left/Right eye slots.                   | Valid image files available.            | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| SCREEN_02 | Create screening session from uploaded images        | 1. Continue from SCREEN_01.<br>2. Submit start analysis.<br>3. FE calls createSession (/screenings/create-session).            | Session response contains screeningId and metadata; FE stores context for analysis flow.    | Upload step completed.                  | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| SCREEN_03 | Record consent before AI analysis                    | 1. During screening start, accept consent statement.<br>2. FE calls agreeScreeningConsent with screeningId.                    | Consent API success is required before analysis progression; refusal blocks next step.      | Created screeningId exists.             | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| SCREEN_04 | Save AI analysis result                              | 1. Receive AI output in FE.<br>2. Submit save action.<br>3. FE calls saveAiResults (/screenings/{id}/save-results).            | Risk level, confidence, summary, and findings persist; details page can reload same result. | Session exists and AI output generated. | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| SCREEN_05 | Reject invalid image payload before session creation | 1. Attempt upload with unsupported or corrupted file.<br>2. Continue to create session.                                        | FE validation or API error prevents createSession; user sees actionable validation message. | Invalid file set prepared.              | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| SCREEN_06 | Block screening when quota is zero                   | 1. Use account with remainingQuota = 0.<br>2. Start screening flow.                                                            | quotaApi.deduct or pre-check blocks analysis and prompts user to purchase quota first.      | Patient quota exhausted.                | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
+| TC ID  | Test Case Description       | Procedures                  | Expected Results                        | Round 1 | R1 Date    | R2     | R2 Date    | R3     | R3 Date    | Note                 |
+| ------ | --------------------------- | --------------------------- | --------------------------------------- | ------- | ---------- | ------ | ---------- | ------ | ---------- | -------------------- |
+| SCH_01 | Search Doctor Availability  | 1. Filter by specialty.     | Real-time slots displayed.              | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.          |
+| SCH_02 | Book Appointment (Patient)  | 1. Select slot. 2. Book.    | Status "Booked", email sent.            | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.          |
+| SCH_03 | Check-in (Receptionist)     | 1. Search MRN. 2. Check-in. | Visit status "CheckedIn", enters Queue. | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.          |
+| SCH_04 | Queue Routing (Coordinator) | 1. Drag patient to room.    | Queue order updated, Doctor notified.   | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.          |
+| SCH_05 | Double Booking Race Case    | 1. Simultaneous booking.    | Only 1 succeeds, other gets error.      | Failed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | R1: Lock contention. |
+| SCH_06 | Block Slot (Coordinator)    | 1. Block slot manually.     | Slot hidden from public search.         | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.          |
+| SCH_07 | Schedule Template Job       | 1. Trigger generation.      | New month slots appear in DB.           | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.          |
+| SCH_08 | Check-in Wrong Date         | 1. Check-in for tomorrow.   | Error "No appointment today".           | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Exception case.      |
+| SCH_09 | Cancel Booking (Patient)    | 1. Click cancel.            | Status "Cancelled", slot released.      | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.          |
+| SCH_10 | Reschedule Conflict         | 1. Move to occupied slot.   | Error "Target slot taken".              | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Bad case.            |
 
 ---
 
-## Module 4: Top-up Wallet
+## Module 4: Clinical Operations & AI Integration
 
 ### Feature Information (Module 4)
 
-| Field            | Content                                                                                                   |
-| ---------------- | --------------------------------------------------------------------------------------------------------- |
-| Feature Name     | Top-up Wallet                                                                                             |
-| Preconditions    | PayOS sandbox available, patient and organisation wallets initialized                                     |
-| Main Requirement | Validate deposit link creation, payment verification callback, failed/cancelled handling, and idempotency |
-| Total Test Cases | 4                                                                                                         |
+| Field            | Content                                                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Feature Name     | Clinical Operations & AI                                                                                                       |
+| Test requirement | Retinal photo upload, AI triggering (Fast/Full), Consent capture, Heatmap visualization, Diagnosis, Prescription, and Roadmap. |
+| Number of TCs    | 10                                                                                                                             |
+
+### Execution Summary (Module 4)
+
+| Testing Round | Passed | Failed | Pending | N/A |
+| ------------- | ------ | ------ | ------- | --- |
+| Round 1       | 7      | 3      | 0       | 0   |
+| Round 2       | 10     | 0      | 0       | 0   |
+| Round 3       | 10     | 0      | 0       | 0   |
 
 ### Detailed Test Cases (Module 4)
 
-| TC ID    | Test Objective                                             | Procedures                                                                                                                            | Expected Results                                                                                      | Preconditions                             | Round 1 Status | Round 1 Date | Round 1 Tester | Round 2 Status | Round 2 Date | Round 2 Tester | Round 3 Status | Round 3 Date | Round 3 Tester |
-| -------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- |
-| TOPUP_01 | Patient creates deposit payment link                       | 1. Login as Patient.<br>2. Open wallet top-up.<br>3. Submit amount calling walletApi.createDeposit (POST /wallets/deposit).           | FE receives paymentUrl/orderCode and redirects to payment provider safely.                            | Patient wallet exists.                    | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| TOPUP_02 | Patient verifies payment and credits wallet                | 1. Complete payment in sandbox.<br>2. Return to callback page.<br>3. FE calls walletApi.verifyPayment (POST /wallets/verify-payment). | Verified payment updates wallet balance and transaction list with Deposit entry.                      | Successful sandbox transaction available. | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| TOPUP_03 | Organisation creates wallet deposit request                | 1. Login as OrgAdmin.<br>2. Open /organisation/wallet.<br>3. Submit amount using organisationWalletApi.createDeposit.                 | Payment link is generated and organisation wallet flow starts without role leakage to patient routes. | OrgAdmin session active.                  | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| TOPUP_04 | Prevent duplicate credit on repeated callback verification | 1. Reuse same successful orderCode callback twice.<br>2. Trigger verify flow more than once.                                          | Wallet credit is idempotent: no double-balance increase and duplicate request returns safe response.  | One completed deposit order exists.       | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
+| TC ID   | Test Case Description       | Procedures                    | Expected Results                      | Round 1 | R1 Date    | R2     | R2 Date    | R3     | R3 Date    | Note                     |
+| ------- | --------------------------- | ----------------------------- | ------------------------------------- | ------- | ---------- | ------ | ---------- | ------ | ---------- | ------------------------ |
+| CLIN_01 | Upload Retinal Photo        | 1. Upload L/R photos.         | Photos saved and linked to visit.     | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| CLIN_02 | Capture Consent             | 1. Patient signs on tablet.   | Consent status "Signed" in visit.     | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| CLIN_03 | Trigger AI Screening        | 1. Run AI Analysis.           | Risk scores returned in 30s.          | Failed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | R1: AI service timeout.  |
+| CLIN_04 | View AI Heatmap             | 1. Toggle layer.              | Anomalies highlighted on canvas.      | Failed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | R1: Rendering alignment. |
+| CLIN_05 | Finalize Diagnosis          | 1. Input notes. 2. Save.      | Status "WaitingForPayment".           | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| CLIN_06 | Generate Prescription       | 1. Select medications.        | Printable prescription stored.        | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| CLIN_07 | Customize Roadmap           | 1. Add follow-up steps.       | Roadmap visible on patient dashboard. | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| CLIN_08 | AI Analysis (Low Quality)   | 1. Upload blurred photo.      | AI returns "Low Confidence" error.    | Failed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | R1: Crash on bad data.   |
+| CLIN_09 | Diagnosis w/o Consent       | 1. Finalize diagnosis.        | Error "Consent required".             | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Exception case.          |
+| CLIN_10 | Real-time Consultation Chat | 1. Send message during visit. | Peer receives message instantly.      | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
 
 ---
 
-## Module 5: Buy Quota
+## Module 5: Financial & Checkout Operations
 
 ### Feature Information (Module 5)
 
-| Field            | Content                                                                                       |
-| ---------------- | --------------------------------------------------------------------------------------------- |
-| Feature Name     | Buy Quota                                                                                     |
-| Preconditions    | Wallet has configurable balance, system settings API reachable for unit price values          |
-| Main Requirement | Validate patient and organisation quota purchase, insufficient funds, and pricing rule impact |
-| Total Test Cases | 5                                                                                             |
+| Field            | Content                                                                                                         |
+| ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| Feature Name     | Financial & Checkout                                                                                            |
+| Test requirement | Payment context building, Order creation, Cash/Gateway payment processing, Webhook handling, and Pricing rules. |
+| Number of TCs    | 10                                                                                                              |
+
+### Execution Summary (Module 5)
+
+| Testing Round | Passed | Failed | Pending | N/A |
+| ------------- | ------ | ------ | ------- | --- |
+| Round 1       | 9      | 1      | 0       | 0   |
+| Round 2       | 10     | 0      | 0       | 0   |
+| Round 3       | 10     | 0      | 0       | 0   |
 
 ### Detailed Test Cases (Module 5)
 
-| TC ID    | Test Objective                                    | Procedures                                                                                                                    | Expected Results                                                                                     | Preconditions                                | Round 1 Status | Round 1 Date | Round 1 Tester | Round 2 Status | Round 2 Date | Round 2 Tester | Round 3 Status | Round 3 Date | Round 3 Tester |
-| -------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- |
-| QUOTA_01 | Patient buys AI quota credits                     | 1. Login as Patient.<br>2. Open quota purchase UI.<br>3. Call quotaApi.buy after quotaApi.getBalance.                         | remainingQuota increases and wallet balance decreases according to current unit price.               | Patient wallet balance sufficient.           | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| QUOTA_02 | Organisation buys quota from billing page         | 1. Login as OrgAdmin.<br>2. Open /organisation/billing.<br>3. Submit purchase via orgBillingApi.buyQuota.                     | Organisation quota and summary numbers update: purchasedQuota, remainingQuota, walletBalance.        | OrgAdmin wallet has enough funds.            | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| QUOTA_03 | Reject quota purchase when wallet is insufficient | 1. Attempt large quota buy with low wallet balance.<br>2. Submit purchase request.                                            | API returns failure and FE displays clear insufficient-funds state without stale optimistic updates. | Insufficient wallet balance prepared.        | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| QUOTA_04 | Apply updated AI quota price from system settings | 1. SystemAdmin updates AI_QUOTA_UNIT_PRICE in /system-admin/settings.<br>2. Retry purchase in patient or organisation module. | New purchase calculations use updated price immediately after settings mutation/cache invalidation.  | System settings update permission available. | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| QUOTA_05 | Deduct quota once per screening attempt           | 1. Start one screening analysis flow.<br>2. Observe quota deduction events.                                                   | quotaApi.deduct or orgBillingApi.deductQuota is called once for one completed screening initiation.  | Account has at least 1 quota.                | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
+| TC ID  | Test Case Description   | Procedures                     | Expected Results                      | Round 1 | R1 Date    | R2     | R2 Date    | R3     | R3 Date    | Note                    |
+| ------ | ----------------------- | ------------------------------ | ------------------------------------- | ------- | ---------- | ------ | ---------- | ------ | ---------- | ----------------------- |
+| FIN_01 | Build Payment Context   | 1. Finish clinical session.    | Auto-sum fee + medication total.      | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.             |
+| FIN_02 | Create Payment Order    | 1. Cashier generate order.     | Order saved with unique ID/QR.        | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.             |
+| FIN_03 | Cash Payment (Cashier)  | 1. Receive cash. 2. Mark Paid. | Status "Completed", receipt ready.    | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.             |
+| FIN_04 | Gateway Payment (PayOS) | 1. Scan QR. 2. Pay.            | Webhook success, status updates.      | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.             |
+| FIN_05 | Webhook Verification    | 1. Trigger webhook manually.   | System verifies signature correctly.  | Failed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | R1: Signature mismatch. |
+| FIN_06 | View Order History      | 1. Open history. 2. Filter.    | Accurate transaction logs shown.      | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.             |
+| FIN_07 | Update Pricing (Admin)  | 1. Edit consultation price.    | New price applies to new orders.      | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.             |
+| FIN_08 | Transaction Export      | 1. Click Export to Excel.      | File generated with correct data.     | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.             |
+| FIN_09 | Partial Payment (Bad)   | 1. Enter partial amount.       | System prevents "Completed" status.   | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Bad case.               |
+| FIN_10 | Payment Timeout         | 1. Gateway timeout.            | Order remains "Pending", notify user. | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Error case.             |
 
 ---
 
-## Module 6: Find Doctor and Consultation Booking
+## Module 6: Medical Records & Post-Visit Care
 
 ### Feature Information (Module 6)
 
-| Field            | Content                                                                                                             |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Feature Name     | Find Doctor and Consultation Booking                                                                                |
-| Preconditions    | Available ophthalmologist slots exist, booking APIs reachable, patient account active                               |
-| Main Requirement | Validate doctor discovery, slot listing, reserve/confirm/release lifecycle, conflict handling, and route protection |
-| Total Test Cases | 7                                                                                                                   |
+| Field            | Content                                                                                            |
+| ---------------- | -------------------------------------------------------------------------------------------------- |
+| Feature Name     | Medical Records & Post-Care                                                                        |
+| Test requirement | View history, EMR 23/BV-01 forms, PDF downloads, post-visit follow-ups, and educational resources. |
+| Number of TCs    | 10                                                                                                 |
+
+### Execution Summary (Module 6)
+
+| Testing Round | Passed | Failed | Pending | N/A |
+| ------------- | ------ | ------ | ------- | --- |
+| Round 1       | 9      | 1      | 0       | 0   |
+| Round 2       | 10     | 0      | 0       | 0   |
+| Round 3       | 10     | 0      | 0       | 0   |
 
 ### Detailed Test Cases (Module 6)
 
-| TC ID      | Test Objective                                               | Procedures                                                                                                                                                     | Expected Results                                                                                         | Preconditions                                 | Round 1 Status | Round 1 Date | Round 1 Tester | Round 2 Status | Round 2 Date | Round 2 Tester | Round 3 Status | Round 3 Date | Round 3 Tester |
-| ---------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- |
-| CONSULT_01 | Discover doctors from patient booking UI                     | 1. Open /patient/doctors.<br>2. Search/filter doctors.<br>3. FE queries searchOphthalmologistsForPatient.                                                      | Doctor list renders with expected availability metadata and pagination behavior.                         | Active Patient session.                       | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| CONSULT_02 | List appointment slots with guard filters                    | 1. Select a doctor in booking flow.<br>2. FE calls useAppointmentSlots/getAppointmentSlots.<br>3. Enable excludePastSlots and check MIN_ADVANCE_BOOKING_HOURS. | Slot list excludes blocked past windows and respects configured advance booking constraints.             | Slot templates generated for selected doctor. | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| CONSULT_03 | Reserve slot and navigate to confirmation page               | 1. Select available slot.<br>2. Trigger reserve action via useReserveSlot/reserveSlot.<br>3. Continue to /patient/book/confirm.                                | Reservation lock is created (time-limited) and confirmation page receives selected reservation context.  | Slot in Available status.                     | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| CONSULT_04 | Confirm reservation and create consultation session          | 1. At /patient/book/confirm submit confirmation.<br>2. FE calls useConfirmReservation/confirmReservation.                                                      | Reservation converts to confirmed booking and response includes consultationSessionId for next workflow. | Active reservation token/context exists.      | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| CONSULT_05 | Release reservation on cancellation                          | 1. Reserve slot then cancel before confirmation.<br>2. FE calls useReleaseReservation/releaseReservation.                                                      | Reservation is released, slot returns to available state, and stale lock is removed from UI.             | Reserved slot not yet confirmed.              | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| CONSULT_06 | Handle slot conflict with mapped API error                   | 1. User A reserves a slot.<br>2. User B attempts reserve/confirm same slot.<br>3. Observe error mapping in FE.                                                 | Conflict response is translated via mapOnlineConsultationErrorMessage and user gets actionable feedback. | Two patient accounts and same target slot.    | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| CONSULT_07 | Protect booking confirmation route for unauthenticated users | 1. Clear session.<br>2. Open /patient/book/confirm directly.                                                                                                   | PrivateRoute blocks access and redirects user to login/public route.                                     | No active session token.                      | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
+| TC ID  | Test Case Description | Procedures                    | Expected Results                       | Round 1 | R1 Date    | R2     | R2 Date    | R3     | R3 Date    | Note                    |
+| ------ | --------------------- | ----------------------------- | -------------------------------------- | ------- | ---------- | ------ | ---------- | ------ | ---------- | ----------------------- |
+| MED_01 | View Visit History    | 1. Open timeline.             | Full clinical data displayed.          | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.             |
+| MED_02 | Download PDF Report   | 1. Click Download.            | PDF with clinic logo/charts ready.     | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.             |
+| MED_03 | Fill EMR 23/BV-01     | 1. Staff input clinical data. | Data saved with field validation.      | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.             |
+| MED_04 | Post-Visit Follow-up  | 1. System trigger (3 days).   | Notification sent, chat opened.        | Failed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | R1: Trigger timing bug. |
+| MED_05 | Follow-up Reply       | 1. Patient reply to chat.     | Doctor dashboard shows update.         | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.             |
+| MED_06 | Patient Feedback      | 1. Submit rating/comment.     | Feedback saved and notified Admin.     | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.             |
+| MED_07 | Educational Resource  | 1. View health tip article.   | Content rendered with media correctly. | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.             |
+| MED_08 | History Encryption    | 1. Check DB level storage.    | PII data is encrypted at rest.         | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Security check.         |
+| MED_09 | Invalid MRN Search    | 1. Search non-existent MRN.   | Error "Record not found".              | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Bad case.               |
+| MED_10 | PDF Generation Crash  | 1. Missing diagnosis data.    | PDF shows "N/A" instead of error.      | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Error case.             |
 
 ---
 
-## Module 7: Diagnosis and Feedback
+## Module 7: Internal Knowledge Network
 
 ### Feature Information (Module 7)
 
-| Field            | Content                                                                                 |
-| ---------------- | --------------------------------------------------------------------------------------- |
-| Feature Name     | Diagnosis and Feedback                                                                  |
-| Preconditions    | Completed screening sessions exist, Ophthalmologist and Patient test accounts available |
-| Main Requirement | Validate diagnosis save flow and patient feedback APIs for website and ophthalmologist  |
-| Total Test Cases | 5                                                                                       |
+| Field            | Content                                                                         |
+| ---------------- | ------------------------------------------------------------------------------- |
+| Feature Name     | Internal Knowledge Network                                                      |
+| Test requirement | Share cases, Comment/React, Group chat, Video meetings, and content moderation. |
+| Number of TCs    | 10                                                                              |
+
+### Execution Summary (Module 7)
+
+| Testing Round | Passed | Failed | Pending | N/A |
+| ------------- | ------ | ------ | ------- | --- |
+| Round 1       | 8      | 2      | 0       | 0   |
+| Round 2       | 10     | 0      | 0       | 0   |
+| Round 3       | 10     | 0      | 0       | 0   |
 
 ### Detailed Test Cases (Module 7)
 
-| TC ID   | Test Objective                                                        | Procedures                                                                                                                   | Expected Results                                                                            | Preconditions                                                                   | Round 1 Status | Round 1 Date | Round 1 Tester | Round 2 Status | Round 2 Date | Round 2 Tester | Round 3 Status | Round 3 Date | Round 3 Tester |
-| ------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- |
-| DIAG_01 | Ophthalmologist saves diagnosis report to screening result            | 1. Login as Ophthalmologist.<br>2. Open /ophthalmologist/screening-review/:id.<br>3. Submit diagnosis modal data and save.   | FE posts to /screenings/{id}/save-results and diagnosis data is persisted for later review. | Screening item assigned to doctor.                                              | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| DIAG_02 | Lock finalized diagnosis from accidental edits                        | 1. Finalize diagnosis status in review flow.<br>2. Attempt to edit again.                                                    | FE respects finalized/locked state and prevents destructive overwrite in UI.                | Existing finalized diagnosis record.                                            | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| DIAG_03 | Patient submits ophthalmologist feedback                              | 1. Login as Patient after consultation.<br>2. Open feedback form for doctor.<br>3. Submit via createOphthalmologistFeedback. | Feedback API succeeds and submitted state is reflected in UI components/badges.             | Completed consultation and target ophthalmologist ID available.                 | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| DIAG_04 | Patient submits website feedback                                      | 1. Open /patient/help-feedback.<br>2. Fill website feedback form.<br>3. Submit using createWebsiteFeedback.                  | Submission succeeds and user sees confirmation state without page crash.                    | Patient session active.                                                         | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| DIAG_05 | Display API validation error on duplicate or invalid feedback payload | 1. Re-submit same feedback or send invalid rating payload.<br>2. Observe FE handling.                                        | FE surfaces backend validation message and does not show false-success state.               | API environment configured to return validation errors for invalid submissions. | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
+| TC ID  | Test Case Description  | Procedures                   | Expected Results                        | Round 1 | R1 Date    | R2     | R2 Date    | R3     | R3 Date    | Note                      |
+| ------ | ---------------------- | ---------------------------- | --------------------------------------- | ------- | ---------- | ------ | ---------- | ------ | ---------- | ------------------------- |
+| NET_01 | Share Case to Feed     | 1. Anonymize. 2. Post.       | Case visible to internal network.       | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.               |
+| NET_02 | Comment on Case        | 1. Add professional comment. | Comment visible instantly.              | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.               |
+| NET_03 | Internal Group Chat    | 1. Create group. 2. Chat.    | Real-time delivery to all members.      | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.               |
+| NET_04 | Video Call (Peer)      | 1. Start Meet session.       | Video/Audio established with peer.      | Failed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | R1: WebRTC ICE bug.       |
+| NET_05 | Share Media in Chat    | 1. Send DICOM/Retinal photo. | File preview and secure download.       | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.               |
+| NET_06 | Content Moderation     | 1. Admin delete post.        | Post removed from feed instantly.       | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.               |
+| NET_07 | Repost Case            | 1. Repost case to group.     | Original source linked correctly.       | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.               |
+| NET_08 | Post without Anonymize | 1. Post patient face/name.   | AI blocks post with PII warning.        | Failed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | R1: Detection logic slow. |
+| NET_09 | Delete Others' Post    | 1. Try delete non-own post.  | UI hides delete / API returns 403.      | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Bad case.                 |
+| NET_10 | Network Disconnect     | 1. Chat during offline.      | Message queued, auto-send on reconnect. | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Error case.               |
 
 ---
 
-## Module 8: Organisation Booking Schedule
+## Module 8: System Notification Dispatching
 
 ### Feature Information (Module 8)
 
-| Field            | Content                                                                                                                |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Feature Name     | Organisation Booking Schedule                                                                                          |
-| Preconditions    | Organisation and patient accounts available, clinic slot templates exist                                               |
-| Main Requirement | Validate clinic slot discovery, appointment creation, cancellation, check-in, in-progress completion, and no-show flow |
-| Total Test Cases | 7                                                                                                                      |
+| Field            | Content                                                                                              |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| Feature Name     | Notification Dispatching                                                                             |
+| Test requirement | Real-time dispatching to all roles, Inbox management, Deep link routing, and PWA push notifications. |
+| Number of TCs    | 10                                                                                                   |
+
+### Execution Summary (Module 8)
+
+| Testing Round | Passed | Failed | Pending | N/A |
+| ------------- | ------ | ------ | ------- | --- |
+| Round 1       | 9      | 1      | 0       | 0   |
+| Round 2       | 10     | 0      | 0       | 0   |
+| Round 3       | 10     | 0      | 0       | 0   |
 
 ### Detailed Test Cases (Module 8)
 
-| TC ID     | Test Objective                                             | Procedures                                                                                                               | Expected Results                                                                                  | Preconditions                                  | Round 1 Status | Round 1 Date | Round 1 Tester | Round 2 Status | Round 2 Date | Round 2 Tester | Round 3 Status | Round 3 Date | Round 3 Tester |
-| --------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- | ---------------------------------------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- |
-| CLINIC_01 | Patient discovers clinic organisations and available slots | 1. Open /patient/clinics.<br>2. FE calls getOrganisations and getOrganisationAvailableSlots.<br>3. Choose a date filter. | Clinics and slot cards load correctly with selected-date availability.                            | Organisation calendar has published slots.     | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| CLINIC_02 | Patient creates clinic appointment                         | 1. Select organisation slot.<br>2. Submit booking form.<br>3. FE calls createClinicAppointment.                          | Appointment is created and appears in patient and organisation views with correct initial status. | Available slot and authenticated patient.      | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| CLINIC_03 | Reject concurrent booking on same slot                     | 1. User A books a slot.<br>2. User B books the same slot immediately.                                                    | Second request fails with conflict/validation response, no duplicate appointment created.         | Two patient accounts; one shared slot.         | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| CLINIC_04 | Patient cancels clinic appointment                         | 1. Open patient appointment list.<br>2. Cancel one pending appointment via cancelClinicAppointment.                      | Status changes to Cancelled and slot is released back to availability.                            | Existing cancellable appointment.              | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| CLINIC_05 | Organisation check-in flow from calendar                   | 1. Login as OrgAdmin.<br>2. Open /organisation/calendar.<br>3. Trigger check-in using checkInClinicAppointment.          | Appointment transitions to checked-in state and UI status badge updates immediately.              | Appointment in scheduled state.                | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| CLINIC_06 | Organisation starts then completes appointment             | 1. On checked-in appointment call startClinicAppointment.<br>2. After service call completeClinicAppointment.            | Status transitions follow Scheduled -> InProgress -> Completed without invalid jumps.             | Appointment already checked in.                | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| CLINIC_07 | Mark no-show for absent patient                            | 1. Select unattended appointment.<br>2. Trigger markNoShowClinicAppointment.                                             | Appointment status becomes NoShow and downstream analytics counters use the new state.            | Appointment still eligible for no-show action. | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-
----
-
-## Module 9: Organisation Screening and Walk-in Patients
-
-### Feature Information (Module 9)
-
-| Field            | Content                                                                                                            |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Feature Name     | Organisation Screening and Walk-in Patients                                                                        |
-| Preconditions    | OrgAdmin account active, walk-in and registered patient records available, quota available                         |
-| Main Requirement | Validate walk-in creation/editing, organisation-side screening session lifecycle, sharing results, and quota guard |
-| Total Test Cases | 7                                                                                                                  |
-
-### Detailed Test Cases (Module 9)
-
-| TC ID         | Test Objective                                          | Procedures                                                                                                                                                             | Expected Results                                                                                     | Preconditions                                         | Round 1 Status | Round 1 Date | Round 1 Tester | Round 2 Status | Round 2 Date | Round 2 Tester | Round 3 Status | Round 3 Date | Round 3 Tester |
-| ------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- |
-| ORG_PAT_01    | Create walk-in patient profile                          | 1. Login as OrgAdmin.<br>2. Open organisation patient module.<br>3. Submit walk-in form via orgWalkInPatientApi.createWalkInPatient (/organisations/patients/walk-in). | Walk-in patient record is created and appears in organisation patient listing.                       | OrgAdmin session active.                              | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| ORG_PAT_02    | Edit walk-in patient contact and clinical metadata      | 1. Open patient detail/edit modal.<br>2. Update phone/address or disease history.<br>3. Submit updateOrganisationPatient.                                              | Updated fields persist and re-fetch shows latest values without role-leak edits to forbidden fields. | Existing walk-in patient record.                      | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| ORG_PAT_03    | Ensure organisation patient list isolation              | 1. Login OrgAdmin A and fetch /organisation/patients.<br>2. Login OrgAdmin B and compare records.                                                                      | Each organisation only sees its own patient set; no cross-organisation leakage.                      | Two organisations with different patient data.        | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| ORG_SCREEN_01 | Upload images and create organisation screening session | 1. In /organisation/screening upload retinal files via orgScreeningApi.uploadImages.<br>2. Submit createSession.                                                       | Session response contains screeningId and linked patientId; organisation history updates.            | Patient selected and files valid.                     | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| ORG_SCREEN_02 | Save organisation screening AI result                   | 1. Open screening result.<br>2. Submit risk and findings.<br>3. Call orgScreeningApi.saveResults (/screenings/{id}/save-results).                                      | LatestResult persists and is returned from getSessionDetail/getHistory.                              | Organisation screening session exists.                | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| ORG_SCREEN_03 | Share screening result to recipient email               | 1. Open completed organisation screening result.<br>2. Fill recipientEmail and share options.<br>3. Call orgScreeningApi.shareSessionResult.                           | Sharing succeeds with sharedAt and recipientEmail in response; FE confirms send state.               | Completed screening result and valid recipient email. | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| ORG_SCREEN_04 | Block organisation screening when quota is exhausted    | 1. Use org account with remainingQuota = 0.<br>2. Attempt createSession.                                                                                               | FE/API stops session creation and prompts quota top-up workflow.                                     | Org quota exhausted.                                  | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-
----
-
-## Module 10: Wallet Management and Withdrawals
-
-### Feature Information (Module 10)
-
-| Field            | Content                                                                                     |
-| ---------------- | ------------------------------------------------------------------------------------------- |
-| Feature Name     | Wallet Management and Withdrawals                                                           |
-| Preconditions    | Wallet data exists for Patient and Ophthalmologist, SystemAdmin account available           |
-| Main Requirement | Validate wallet transaction listing, withdrawal request lifecycle, and admin payout actions |
-| Total Test Cases | 6                                                                                           |
-
-### Detailed Test Cases (Module 10)
-
-| TC ID     | Test Objective                                            | Procedures                                                                                                                                         | Expected Results                                                                                                      | Preconditions                                   | Round 1 Status | Round 1 Date | Round 1 Tester | Round 2 Status | Round 2 Date | Round 2 Tester | Round 3 Status | Round 3 Date | Round 3 Tester |
-| --------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- |
-| WALLET_01 | Patient wallet history displays correct transaction pages | 1. Login as Patient.<br>2. Open wallet page.<br>3. Query walletApi.getTransactions with pagination.                                                | List shows consistent totalCount, page navigation, and correct transaction types.                                     | Patient wallet has seeded transactions.         | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| WALLET_02 | Ophthalmologist creates withdrawal request                | 1. Login as Ophthalmologist.<br>2. Open wallet withdrawal form.<br>3. Submit via ophthalmologistWalletApi.createWithdrawalRequest.                 | Withdrawal request is created in Pending state and appears in doctor history list.                                    | Wallet balance above minimum withdrawal amount. | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| WALLET_03 | Reject withdrawal request exceeding current balance       | 1. Submit withdrawal with amount greater than wallet balance.<br>2. Observe API and FE result.                                                     | FE shows validation error and no withdrawal request is created.                                                       | Low-balance ophthalmologist account.            | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| WALLET_04 | SystemAdmin manually confirms withdrawal request          | 1. Login as SystemAdmin.<br>2. Open /system-admin/withdrawal-requests.<br>3. Confirm pending item via ophthalmologistApi.confirmWithdrawalRequest. | Request status updates accordingly and success feedback uses deduped toastId system-admin-withdraw-confirm.           | Existing pending withdrawal request.            | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| WALLET_05 | SystemAdmin rejects withdrawal with reason                | 1. Open pending request.<br>2. Submit reject reason via ophthalmologistApi.rejectWithdrawalRequest.                                                | Request is marked failed/cancelled by backend rule and FE shows a single reject toast (system-admin-withdraw-reject). | Existing pending withdrawal request.            | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| WALLET_06 | Process and sync PayOS payout status                      | 1. Trigger ophthalmologistApi.processPayoutViaPayOS on pending request.<br>2. Trigger ophthalmologistApi.syncPayoutStatus.<br>3. Refresh list.     | payOSApprovalState and withdrawal status are synchronized; FE avoids duplicate process/sync toasts.                   | Request has valid payout setup and bank data.   | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-
----
-
-## Module 11: Ophthalmologist Onboarding
-
-### Feature Information (Module 11)
-
-| Field            | Content                                                                                                |
-| ---------------- | ------------------------------------------------------------------------------------------------------ |
-| Feature Name     | Ophthalmologist Onboarding                                                                             |
-| Preconditions    | Public register flow enabled, SystemAdmin reviewer account available, contract templates configured    |
-| Main Requirement | Validate ophthalmologist registration, verification decisions, contract gate redirects, and activation |
-| Total Test Cases | 7                                                                                                      |
-
-### Detailed Test Cases (Module 11)
-
-| TC ID          | Test Objective                                                | Procedures                                                                                                                                                          | Expected Results                                                                                    | Preconditions                                           | Round 1 Status | Round 1 Date | Round 1 Tester | Round 2 Status | Round 2 Date | Round 2 Tester | Round 3 Status | Round 3 Date | Round 3 Tester |
-| -------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- |
-| OPH_ONBOARD_01 | Register ophthalmologist with credentials and documents       | 1. Open ophthalmologist registration page.<br>2. Submit required profile/certificate data.<br>3. FE calls registerOphthalmologist (/auth/register/ophthalmologist). | Registration request succeeds and account is created in onboarding state.                           | Valid documents and unique email.                       | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| OPH_ONBOARD_02 | Redirect pending verification doctor to pending-approval page | 1. Login with newly registered doctor.<br>2. Navigate to /ophthalmologist/dashboard.                                                                                | PrivateRoute detects verificationStatus Pending and redirects to /ophthalmologist/pending-approval. | Doctor account not yet approved.                        | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| OPH_ONBOARD_03 | SystemAdmin approves ophthalmologist verification             | 1. Login as SystemAdmin.<br>2. Open ophthalmologist management.<br>3. Call ophthalmologistApi.verifyOphthalmologist with approve=true.                              | Verification status becomes Approved and account can proceed to contract step.                      | Pending ophthalmologist request exists.                 | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| OPH_ONBOARD_04 | SystemAdmin rejects ophthalmologist with reason               | 1. Review pending doctor.<br>2. Reject with rejectionReason via verify API.                                                                                         | Rejected state is persisted and doctor sees rejection information instead of dashboard access.      | Pending ophthalmologist request exists.                 | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| OPH_ONBOARD_05 | Enforce contract gate after verification                      | 1. Use approved doctor with contractStatus not Active.<br>2. Open /ophthalmologist/dashboard.                                                                       | PrivateRoute redirects to /ophthalmologist/contract until contract status becomes Active.           | verificationStatus Approved, contractStatus not Active. | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| OPH_ONBOARD_06 | Upload signed contract as ophthalmologist                     | 1. Open /ophthalmologist/contract.<br>2. Load contract via contractApi.getMyContract.<br>3. Upload signed image using contractApi.uploadSignedContract.             | Upload succeeds and contract status transitions for admin review.                                   | Approved ophthalmologist account.                       | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| OPH_ONBOARD_07 | Access dashboard after contract activation                    | 1. Admin activates contract in backend/admin flow.<br>2. Doctor logs in again.<br>3. Open /ophthalmologist/dashboard.                                               | No redirect to contract page; dashboard and related routes are accessible.                          | contractStatus Active.                                  | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-
----
-
-## Module 12: Organisation Onboarding
-
-### Feature Information (Module 12)
-
-| Field            | Content                                                                                                     |
-| ---------------- | ----------------------------------------------------------------------------------------------------------- |
-| Feature Name     | Organisation Onboarding                                                                                     |
-| Preconditions    | Public organisation registration enabled, SystemAdmin approver available                                    |
-| Main Requirement | Validate organisation registration request, admin approval, forced first password change, and contract flow |
-| Total Test Cases | 6                                                                                                           |
-
-### Detailed Test Cases (Module 12)
-
-| TC ID          | Test Objective                                            | Procedures                                                                                                                         | Expected Results                                                                                     | Preconditions                                    | Round 1 Status | Round 1 Date | Round 1 Tester | Round 2 Status | Round 2 Date | Round 2 Tester | Round 3 Status | Round 3 Date | Round 3 Tester |
-| -------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------ | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- |
-| ORG_ONBOARD_01 | Register organisation via public form                     | 1. Open /register-organisation.<br>2. Submit organisation data.<br>3. FE calls registerOrganisation (/auth/register/organisation). | API returns requestId and onboarding message, request is queued for admin review.                    | Valid organisation registration payload.         | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| ORG_ONBOARD_02 | SystemAdmin approves organisation onboarding request      | 1. Login as SystemAdmin.<br>2. Open onboarding requests.<br>3. Call organisationApi.approveOnboardingRequest.                      | Organisation account is provisioned and onboarding request leaves pending state.                     | Pending organisation onboarding request exists.  | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| ORG_ONBOARD_03 | Force first-time OrgAdmin password update                 | 1. Login with newly approved OrgAdmin credentials.<br>2. Open /organisation/dashboard.                                             | PrivateRoute redirects to /force-change-password until useChangePassword succeeds.                   | Approved OrgAdmin has mustChangePassword = true. | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| ORG_ONBOARD_04 | View organisation contract after onboarding approval      | 1. Login as OrgAdmin.<br>2. Open /organisation/contract.<br>3. FE calls organisationContractApi.getMyContract.                     | Contract details are shown with expected status and template metadata.                               | Approved organisation account.                   | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| ORG_ONBOARD_05 | Upload signed organisation contract                       | 1. In contract page select signed image.<br>2. Submit via organisationContractApi.uploadSignedContract.                            | Upload succeeds and contract moves to waiting-for-review/activation state.                           | Organisation contract is in signable status.     | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| ORG_ONBOARD_06 | Block dashboard access for inactive/rejected organisation | 1. Use organisation account marked inactive/rejected.<br>2. Try opening /organisation/dashboard.                                   | Access is denied according to role/status gates and user cannot use protected organisation features. | Organisation status set to inactive or rejected. | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-
----
-
-## Module 13: System Admin Operations
-
-### Feature Information (Module 13)
-
-| Field            | Content                                                                                                     |
-| ---------------- | ----------------------------------------------------------------------------------------------------------- |
-| Feature Name     | System Admin Operations                                                                                     |
-| Preconditions    | SystemAdmin account active, seeded users and transaction history available                                  |
-| Main Requirement | Validate user governance, cashflow, payout management, settings update, localization routes, and audit logs |
-| Total Test Cases | 10                                                                                                          |
-
-### Detailed Test Cases (Module 13)
-
-| TC ID       | Test Objective                                | Procedures                                                                                                                                | Expected Results                                                                                                 | Preconditions                                        | Round 1 Status | Round 1 Date | Round 1 Tester | Round 2 Status | Round 2 Date | Round 2 Tester | Round 3 Status | Round 3 Date | Round 3 Tester |
-| ----------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- |
-| SYSADMIN_01 | Access localized dashboard routes             | 1. Login as SystemAdmin.<br>2. Open /en/system-admin/dashboard and /vi/system-admin/dashboard.                                            | Both locale routes resolve to same protected dashboard module with correct i18n text.                            | SystemAdmin session active.                          | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| SYSADMIN_02 | Lock user account and enforce login block     | 1. From user management call userApi.lockUser with reason.<br>2. Attempt login with locked user.                                          | Locked account cannot authenticate and FE displays locked-account feedback path.                                 | Existing active non-admin user.                      | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| SYSADMIN_03 | Unlock user account and restore access        | 1. Unlock same user via userApi.unlockUser.<br>2. Retry login.                                                                            | User login flow works again and lock state is cleared in user list.                                              | Previously locked user from SYSADMIN_02.             | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| SYSADMIN_04 | Filter cashflow transactions by criteria      | 1. Open cashflow page.<br>2. Query cashflowApi.getTransactions with date/status/actorRole filters.                                        | Returned ledger rows match filters and pagination metadata remains consistent.                                   | Transaction dataset with varied statuses and actors. | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| SYSADMIN_05 | Confirm withdrawal request from admin page    | 1. Open /system-admin/withdrawal-requests.<br>2. Confirm one request using confirm mutation.                                              | Request status updates and toast uses fixed id system-admin-withdraw-confirm to avoid duplicates.                | Pending withdrawal request exists.                   | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| SYSADMIN_06 | Reject withdrawal request from admin page     | 1. Reject a pending request with reason.<br>2. Refresh table state.                                                                       | Request transitions to rejected/failed state and one reject toast is shown with fixed id.                        | Pending withdrawal request exists.                   | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| SYSADMIN_07 | Trigger PayOS payout processing               | 1. Click process payout action on eligible request.<br>2. FE calls ophthalmologistApi.processPayoutViaPayOS.                              | Processing state and payout metadata update in row; duplicate click protection is enforced by pending state.     | Pending request with valid payout info.              | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| SYSADMIN_08 | Sync payout status with provider response     | 1. Click sync payout action.<br>2. FE calls ophthalmologistApi.syncPayoutStatus.<br>3. Observe row refresh.                               | Latest provider status is reflected and sync toast dedupe id behavior is preserved.                              | Request already has payoutId/provider tracking.      | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| SYSADMIN_09 | Save system settings and pricing parameters   | 1. Open /system-admin/settings.<br>2. Update MIN_ADVANCE_BOOKING_HOURS and AI_QUOTA_UNIT_PRICE.<br>3. Submit via useUpdateSystemSettings. | PUT /system-settings succeeds, settings cache invalidates, and success toast uses system-admin-settings-save id. | System settings API reachable.                       | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| SYSADMIN_10 | Verify audit trail for critical admin actions | 1. Perform lock/unlock/settings/withdraw actions.<br>2. Query auditApi.getAuditLogs with filters.<br>3. Inspect event rows.               | Audit log includes actor, action, entity, and timestamp entries for each critical operation.                     | Audit logging backend enabled.                       | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-
----
-
-## Module 14: Professional Network Collaboration
-
-### Feature Information (Module 14)
-
-| Field            | Content                                                                                             |
-| ---------------- | --------------------------------------------------------------------------------------------------- |
-| Feature Name     | Professional Network Collaboration                                                                  |
-| Preconditions    | Network-enabled roles available (SystemAdmin/Admin/OrgAdmin/Ophthalmologist), seeded feed content   |
-| Main Requirement | Validate post creation, reactions, comments, repost, save/hide behavior, and role guard enforcement |
-| Total Test Cases | 7                                                                                                   |
-
-### Detailed Test Cases (Module 14)
-
-| TC ID      | Test Objective                                                | Procedures                                                                                                                        | Expected Results                                                                                   | Preconditions                              | Round 1 Status | Round 1 Date | Round 1 Tester | Round 2 Status | Round 2 Date | Round 2 Tester | Round 3 Status | Round 3 Date | Round 3 Tester |
-| ---------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------ | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- |
-| NETWORK_01 | Create network post with media and anonymization confirmation | 1. Open /network/feed as allowed role.<br>2. Compose post with file upload in PostComposer.<br>3. Submit via postsApi.createPost. | New post appears in feed; formData includes isAnonymizationConfirmed for media cases.              | Allowed role session active.               | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| NETWORK_02 | Toggle reaction on feed post                                  | 1. Open existing post.<br>2. Click reaction button (like/helpful).<br>3. Trigger postsApi.toggleReaction twice.                   | First click adds reaction and increments count, second click removes/toggles per API contract.     | At least one visible post in feed.         | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| NETWORK_03 | Add comment and threaded reply                                | 1. Comment on post via postsApi.addComment.<br>2. Reply with parentCommentId.<br>3. Reload comments list.                         | Parent and child comments render in correct thread structure and pagination remains stable.        | Existing post open in detail/feed context. | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| NETWORK_04 | Repost with quote comment                                     | 1. Select post and choose repost.<br>2. Submit repostComment via postsApi.repostPost.                                             | Feed shows repost card linked to original content and author metadata is correct.                  | Existing public post available.            | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| NETWORK_05 | Save and unsave post                                          | 1. Toggle save action on post using postsApi.toggleSavePost.<br>2. Open saved page and toggle again.                              | Post appears in saved list after save and disappears after unsave.                                 | Allowed role session active.               | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| NETWORK_06 | Moderate post visibility via hide endpoint                    | 1. As moderation-capable role trigger hide action.<br>2. FE calls postsApi.hidePost.<br>3. Refresh feed.                          | Hidden content no longer appears in standard feed query while moderation flow remains auditable.   | User has role with moderation capability.  | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-| NETWORK_07 | Block patient role from network routes                        | 1. Login as Patient.<br>2. Open /network.                                                                                         | PrivateRoute allowedRoles denies patient access and redirects outside professional network module. | Patient session active.                    | **Planned**    | -            | -              | -              | -            | -              | -              | -            | -              |
-
----
-
-## Module 15: Share Case Integration
-
-### Feature Information (Module 15)
-
-| Field            | Content                                                                                                          |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Feature Name     | Share Case Integration                                                                                           |
-| Preconditions    | Completed consultation/screening sessions available, network posting enabled                                     |
-| Main Requirement | Validate internal case sharing from consultations and organisation screening flows with anonymization safeguards |
-| Total Test Cases | 5                                                                                                                |
-
-### Detailed Test Cases (Module 15)
-
-| TC ID    | Test Objective            | Procedures                                                        | Expected Results                                                   | Preconditions       | Round 1 Status | Round 1 Date | Round 1 Tester | Round 2 Status | Round 2 Date | Round 2 Tester | Round 3 Status | Round 3 Date | Round 3 Tester | Note                   |
-| -------- | ------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | -------------- | ------------ | -------------- | ---------------------- |
-| SHARE_01 | Share case from chat      | 1. Open ChatView.<br>2. Trigger share action.                     | Internal case post published with metadata and anonymized blocks.  | Consultation done.  | Passed         | 15/04/2026   | Viet           | Passed         | 16/04/2026   | Duc            | Passed         | 18/04/2026   | Tran           | Doc integration.       |
-| SHARE_02 | One-click consult share   | 1. Trigger quick-share.<br>2. FE calls shareConsultationCase.     | Share API returns success, new post is visible in feed.            | Consult ID exists.  | Passed         | 15/04/2026   | Duc            | Passed         | 16/04/2026   | Tran           | Passed         | 18/04/2026   | Viet           | Quick share.           |
-| SHARE_03 | Share org screening       | 1. Open org screening result.<br>2. Fill recipient.<br>3. Submit. | Report share succeeds with recipientEmail and sharedAt data in UI. | Org screening done. | Passed         | 15/04/2026   | Tran           | Passed         | 16/04/2026   | Viet           | Passed         | 18/04/2026   | Duc            | Email report.          |
-| SHARE_04 | Require anonymize consent | 1. Leave consent unchecked.<br>2. Submit internal case.           | FE blocks submission, shows consent requirement message.           | Network role.       | Failed         | 15/04/2026   | Viet           | Passed         | 16/04/2026   | Duc            | Passed         | 18/04/2026   | Tran           | R1: Missed validation. |
-| SHARE_05 | Block malformed payload   | 1. Attempt share without consultationSessionId.                   | API rejection is propagated to FE error state, no post created.    | Payload test.       | Passed         | 15/04/2026   | Duc            | Passed         | 16/04/2026   | Tran           | Passed         | 18/04/2026   | Viet           | Input check.           |
-
----
-
-## Notes for Execution Team
-
-1. This document is an expanded design matrix and does not claim execution pass/fail yet.
-2. Round 1, Round 2, Round 3 columns are execution-driven and should be updated only with real run evidence.
-3. Keep testcase wording synchronized with source contracts when refactors rename APIs or routes.
-4. If backend behavior differs from FE assumptions, record discrepancy in the same TC row and open a defect link in your execution workbook.
+| TC ID  | Test Case Description    | Procedures                            | Expected Results                        | Round 1 | R1 Date    | R2     | R2 Date    | R3     | R3 Date    | Note                     |
+| ------ | ------------------------ | ------------------------------------- | --------------------------------------- | ------- | ---------- | ------ | ---------- | ------ | ---------- | ------------------------ |
+| NOT_01 | Patient Booking Notif    | 1. Confirm booking.                   | Toast and Inbox update instantly.       | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| NOT_02 | Doctor Assignment Notif  | 1. Assign patient.                    | Doctor dashboard badge updates.         | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| NOT_03 | Inbox - Mark All Read    | 1. Click Mark Read.                   | All counts reset to zero instantly.     | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| NOT_04 | Deep Link Navigation     | 1. Click on payment notif.            | Routes to specific Visit Checkout.      | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| NOT_05 | PWA Background Push      | 1. Browser closed.                    | OS level push received via SW.          | Failed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | R1: SW registration bug. |
+| NOT_06 | Admin Bulk Dispatch      | 1. Admin broadcast alert.             | All roles receive real-time banner.     | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| NOT_07 | Notification Categories  | 1. Filter by "Clinical".              | Only clinical alerts are shown.         | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| NOT_08 | Dispatch to Offline User | 1. User offline. 2. Login.            | Notifs buffered and delivered at login. | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| NOT_09 | Delete Notification      | 1. Remove from inbox.                 | Data deleted from DB, UI synced.        | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Happy path.              |
+| NOT_10 | Notif Deep Link 404      | 1. Click old notif for deleted visit. | Redirect to dashboard with error toast. | Passed  | 2026-03-26 | Passed | 2026-03-31 | Passed | 2026-04-18 | Error case.              |

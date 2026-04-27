@@ -600,20 +600,27 @@ export default function ClinicStaffQueuePage() {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  navigate('/erm-patient', {
-                                    state: {
-                                      formData: {
-                                        patientId: item.patientId,
-                                        fullName: item.patientName,
-                                        maYT: item.visitId
-                                          .substring(0, 8)
-                                          .toUpperCase(),
-                                        gender: item.patientGender,
-                                        age: item.patientAge?.toString() || '',
-                                        citizenId: item.citizenId,
+                                  if (item.medicalRecordId) {
+                                    navigate(
+                                      `/medical-records/${item.medicalRecordId}`
+                                    );
+                                  } else {
+                                    navigate('/erm-patient', {
+                                      state: {
+                                        formData: {
+                                          patientId: item.patientId,
+                                          fullName: item.patientName,
+                                          maYT: item.visitId
+                                            .substring(0, 8)
+                                            .toUpperCase(),
+                                          gender: item.patientGender,
+                                          age:
+                                            item.patientAge?.toString() || '',
+                                          citizenId: item.citizenId,
+                                        },
                                       },
-                                    },
-                                  });
+                                    });
+                                  }
                                 }}
                                 className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3.5 py-1.5 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100"
                               >

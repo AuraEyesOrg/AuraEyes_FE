@@ -1,38 +1,129 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Printer, ArrowLeft, Save } from 'lucide-react';
+import { Printer, ArrowLeft, Save, Download } from 'lucide-react';
 import { toast } from 'react-toastify';
-
-const SECTION_KEYS = [
-  'miMat',
-  'ketMac',
-  'giacMac',
-  'cungMac',
-  'tienPhong',
-  'mongMat',
-  'theThuyTinh',
-  'dichKinh',
-  'vongMac',
-];
+import { medicalRecordApi } from '../api/medical-record.api';
+import { useParams } from 'react-router-dom';
 
 export default function ErmFormPatient() {
+  const SECTION_KEYS = [
+    'miMat',
+    'ketMac',
+    'giacMac',
+    'cungMac',
+    'tienPhong',
+    'mongMat',
+    'theThuyTinh',
+    'dichKinh',
+    'vongMac',
+  ];
   const location = useLocation();
   const navigate = useNavigate();
-  const [data, setData] = useState(location.state?.formData || {});
+  const { id } = useParams();
+  const [data, setData] = useState<any>(location.state?.formData || {});
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   useEffect(() => {
-    if (location.state?.formData) {
-      setData(location.state.formData);
-    }
-  }, [location.state]);
+    const loadRecord = async () => {
+      if (id && id !== 'new') {
+        try {
+          const response = await medicalRecordApi.getById(id);
+          if (response.data.data) {
+            const record = response.data.data;
+            const adminData = JSON.parse(record.administrativeDataJson);
+            const clinicalData = JSON.parse(record.clinicalDataJson);
+
+            const mappedClinical: any = {};
+            if (clinicalData.rightEye) {
+              SECTION_KEYS.forEach((key) => {
+                if (clinicalData.rightEye[key]) {
+                  mappedClinical[`right_${key}`] = clinicalData.rightEye[key];
+                }
+                if (clinicalData.leftEye && clinicalData.leftEye[key]) {
+                  mappedClinical[`left_${key}`] = clinicalData.leftEye[key];
+                }
+              });
+            }
+
+            setData({
+              ...adminData,
+              ...clinicalData,
+              ...mappedClinical,
+              finalDiagnosisMain: record.finalDiagnosis,
+              finalDiagnosisExtra: record.treatmentPlan,
+              maYT: record.medicalRecordNumber,
+            });
+          }
+        } catch (_error) {
+          console.error(_error);
+          toast.error('Không thể tải hồ sơ bệnh án');
+        }
+      } else if (location.state?.formData) {
+        setData(location.state.formData);
+      }
+    };
+
+    loadRecord();
+  }, [id, location.state]);
 
   const handleChange = (field: string, value: any) => {
     setData((prev: any) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    console.log('Saving Staff ERM Data:', data);
-    toast.success('Thông tin hành chính đã được lưu!');
+  const handleSave = async () => {
+    if (!id || id === 'new') {
+      toast.warning('Vui lòng tạo hồ sơ từ luồng tiếp nhận/check-in');
+      return;
+    }
+
+    try {
+      await medicalRecordApi.updateAdministrative(id, {
+        administrativeDataJson: JSON.stringify(data),
+      });
+      toast.success('Thông tin hành chính đã được lưu!');
+    } catch (error) {
+      toast.error('Lỗi khi lưu thông tin');
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!id || id === 'new') {
+      toast.warning('Hồ sơ chưa được tạo. Không thể tải PDF.');
+      return;
+    }
+
+    try {
+      setIsDownloadingPdf(true);
+      const response = await medicalRecordApi.downloadPdf(id);
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+
+      const contentDisposition = response.headers['content-disposition'] as
+        | string
+        | undefined;
+      const fallbackFileName = `EMR_${data.maYT || id}.pdf`;
+      const fileNameMatch = contentDisposition?.match(
+        /filename\*?=(?:UTF-8''|\")?([^\";]+)/i
+      );
+      const fileName = fileNameMatch?.[1]
+        ? decodeURIComponent(fileNameMatch[1].replace(/\"/g, '').trim())
+        : fallbackFileName;
+
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Đã tải EMR PDF thành công.');
+    } catch (error) {
+      console.error(error);
+      toast.error('Không thể tải EMR PDF. Vui lòng thử lại.');
+    } finally {
+      setIsDownloadingPdf(false);
+    }
   };
 
   const renderSquare = (checked: boolean, field?: string, value?: string) => (
@@ -53,72 +144,114 @@ export default function ErmFormPatient() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-100 py-10 no-print text-black">
+    <div className="min-h-screen bg-slate-50 py-10 no-print text-black selection:bg-primary/20">
       {/* NAVIGATION */}
-      <div className="fixed top-5 left-1/2 -translate-x-1/2 flex gap-4 no-print z-50 font-sans">
+      <div className="fixed top-5 left-1/2 -translate-x-1/2 flex gap-4 no-print z-50">
         <button
           onClick={() => navigate(-1)}
-          className="bg-white border border-black px-6 py-2 font-bold text-xs flex items-center gap-2 hover:bg-slate-50 transition-all shadow-lg"
+          className="bg-white border border-slate-200 px-6 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 hover:bg-slate-50 transition-all shadow-xl text-slate-600"
         >
           <ArrowLeft className="w-4 h-4" /> QUAY LẠI
         </button>
         <button
           onClick={handleSave}
-          className="bg-primary text-white px-8 py-2 font-bold text-xs flex items-center gap-2 hover:bg-primary/90 shadow-xl transition-all"
+          className="bg-primary text-white px-8 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 hover:bg-primary/90 shadow-xl transition-all"
         >
           <Save className="w-4 h-4" /> LƯU THÔNG TIN
         </button>
         <button
           onClick={() => window.print()}
-          className="bg-black text-white px-8 py-2 font-bold text-xs flex items-center gap-2 hover:bg-slate-800 shadow-xl transition-all"
+          className="bg-slate-900 text-white px-8 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 hover:bg-black shadow-xl transition-all"
         >
           <Printer className="w-4 h-4" /> IN BỆNH ÁN
         </button>
+        <button
+          onClick={handleDownloadPdf}
+          disabled={isDownloadingPdf}
+          className="bg-emerald-600 text-white px-8 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 hover:bg-emerald-700 shadow-xl transition-all disabled:opacity-50"
+        >
+          <Download className="w-4 h-4" />
+          {isDownloadingPdf ? 'ĐANG TẢI PDF...' : 'TẢI PDF'}
+        </button>
       </div>
 
-      <main className="max-w-[900px] mx-auto bg-white p-[60px] shadow-2xl print:p-0 print:shadow-none print:border-none border border-slate-300 font-serif leading-tight">
+      <main
+        className="max-w-[850px] mx-auto bg-white p-[50px] shadow-2xl print:p-0 print:shadow-none print:border-none border border-slate-200 leading-tight"
+        style={{ fontFamily: "'Times New Roman', Times, serif" }}
+      >
         {/* HEADER */}
-        <div className="flex flex-col items-center relative mb-8">
-          <h1 className="text-2xl font-bold uppercase tracking-tight">
-            BỆNH ÁN MẮT
-          </h1>
-          <p className="text-sm font-bold uppercase">(Đáy mắt)</p>
+        <div className="grid grid-cols-12 mb-8 items-start">
+          <div className="col-span-4 space-y-1">
+            <div className="flex items-center gap-2 mb-2">
+              <img src="/logo.png" alt="AURA" className="h-10 w-auto" />
+              <div className="text-[10px] font-bold leading-tight">
+                <p className="uppercase">Hệ thống phòng khám mắt</p>
+                <p className="text-primary uppercase">AURA</p>
+              </div>
+            </div>
+            <div className="text-[10px] font-bold uppercase space-y-0.5">
+              <p>Sở Y tế: .................................</p>
+              <p>Bệnh viện: AURA DIGITAL CLINIC</p>
+            </div>
+          </div>
 
-          <div className="absolute top-0 right-0 text-[11px] font-bold text-right space-y-0.5">
+          <div className="col-span-4 text-center">
+            <h1 className="text-xl font-bold uppercase tracking-tight">
+              BỆNH ÁN MẮT
+            </h1>
+            <p className="text-[12px] font-bold uppercase mt-1">
+              (Dùng cho điều trị ngoại trú)
+            </p>
+          </div>
+
+          <div className="col-span-4 text-[11px] font-bold text-right space-y-1">
             <p>MS: 23/BV-01</p>
-            <p>Số lưu trữ:....................................</p>
+            <p>
+              Số lưu trữ:{' '}
+              <span className="inline-block border-b border-black w-24 text-center">
+                {data.soLuuTru || '...............'}
+              </span>
+            </p>
             <p>
               Mã YT:{' '}
               <input
                 type="text"
+                autoComplete="off"
+                spellCheck={false}
                 value={data.maYT || ''}
                 onChange={(e) => handleChange('maYT', e.target.value)}
-                className="w-40 border-b border-black outline-none bg-transparent"
-                placeholder="...... /210/20......"
+                className="w-32 border-b border-black outline-none bg-transparent text-center font-bold"
+                placeholder="...................."
               />
             </p>
           </div>
+        </div>
 
-          <div className="w-full flex justify-between text-[11px] font-bold mt-6">
-            <p>
-              Khoa:{' '}
-              <input
-                type="text"
-                value={data.khoa || ''}
-                onChange={(e) => handleChange('khoa', e.target.value)}
-                className="border-b border-black w-[100px] text-center outline-none bg-transparent"
-                placeholder="................"
-              />{' '}
-              Giường:{' '}
-              <input
-                type="text"
-                value={data.giuong || ''}
-                onChange={(e) => handleChange('giuong', e.target.value)}
-                className="border-b border-black w-[80px] text-center outline-none bg-transparent"
-                placeholder="............"
-              />
-            </p>
-          </div>
+        <div className="flex justify-between text-[12px] font-bold mb-6 italic">
+          <p>
+            Khoa:{' '}
+            <input
+              type="text"
+              autoComplete="off"
+              spellCheck={false}
+              value={data.khoa || ''}
+              onChange={(e) => handleChange('khoa', e.target.value)}
+              className="border-b border-black w-[150px] text-center outline-none bg-transparent font-bold not-italic"
+              placeholder="................"
+            />
+          </p>
+          <p>
+            Giường:{' '}
+            <input
+              type="text"
+              autoComplete="off"
+              spellCheck={false}
+              value={data.giuong || ''}
+              onChange={(e) => handleChange('giuong', e.target.value)}
+              className="border-b border-black w-[80px] text-center outline-none bg-transparent font-bold not-italic"
+              placeholder="............"
+            />
+          </p>
         </div>
 
         {/* I. HÀNH CHÍNH */}
@@ -244,13 +377,13 @@ export default function ErmFormPatient() {
                 className="border-b border-black flex-1 px-2 h-5 outline-none bg-transparent"
                 placeholder=".................................................................."
               />
-              <span className="ml-4 mr-2">
-                9.{' '}
-                <span className="bg-yellow-200 print:bg-transparent">Đối</span>{' '}
-                tượng:
-              </span>
+              <span className="ml-4 mr-2">9. Đối tượng:</span>
               1.BHYT
-              {renderSquare(data.objectType === 'BHYT', 'objectType', 'BHYT')}{' '}
+              {renderSquare(
+                data.objectType === 'BHYT',
+                'objectType',
+                'BHYT'
+              )}{' '}
               2.Thu phí
               {renderSquare(
                 data.objectType === 'Thu phí',
@@ -258,7 +391,11 @@ export default function ErmFormPatient() {
                 'Thu phí'
               )}{' '}
               3.Miễn
-              {renderSquare(data.objectType === 'Miễn', 'objectType', 'Miễn')}{' '}
+              {renderSquare(
+                data.objectType === 'Miễn',
+                'objectType',
+                'Miễn'
+              )}{' '}
               4.Khác
               {renderSquare(data.objectType === 'Khác', 'objectType', 'Khác')}
             </div>
@@ -298,13 +435,7 @@ export default function ErmFormPatient() {
                   14. Nơi giới thiệu: 1. Cơ quan y tế{renderSquare(false)} 2.Tự
                   đến{renderSquare(false)} 3.Khác{renderSquare(false)}
                 </p>
-                <p>
-                  - Vào viện{' '}
-                  <span className="bg-yellow-200 print:bg-transparent px-1">
-                    do
-                  </span>{' '}
-                  bệnh này lần thứ mấy {renderSquare(false)}
-                </p>
+                <p>- Vào viện do bệnh này lần thứ mấy {renderSquare(false)}</p>
               </div>
             </div>
 
@@ -394,10 +525,7 @@ export default function ErmFormPatient() {
         {/* III. CHẨN ĐOÁN */}
         <section className="mb-6">
           <div className="flex justify-between items-end border-b-2 border-black pb-0.5 mb-1">
-            <h2 className="text-lg font-bold uppercase">
-              III. CHẨN{' '}
-              <span className="bg-yellow-200 print:bg-transparent">ĐOÁN</span>
-            </h2>
+            <h2 className="text-lg font-bold uppercase">III. CHẨN ĐOÁN</h2>
             <div className="flex gap-32 mr-20 text-[11px] font-bold">
               <span>MÃ</span>
               <span>MÃ</span>
@@ -448,27 +576,9 @@ export default function ErmFormPatient() {
                   {renderSquare(false)}
                 </p>
                 <div className="grid grid-cols-2 text-[11px] gap-y-1 pl-4 mt-2 font-bold">
-                  <p>
-                    1.{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      Do
-                    </span>{' '}
-                    phẫu thuật {renderSquare(false)}
-                  </p>
-                  <p>
-                    2.{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      Do
-                    </span>{' '}
-                    gây mê {renderSquare(false)}
-                  </p>
-                  <p>
-                    3.{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      Do
-                    </span>{' '}
-                    nhiễm khuẩn {renderSquare(false)}
-                  </p>
+                  <p>1. Do phẫu thuật {renderSquare(false)}</p>
+                  <p>2. Do gây mê {renderSquare(false)}</p>
+                  <p>3. Do nhiễm khuẩn {renderSquare(false)}</p>
                   <p>4. Khác {renderSquare(false)}</p>
                 </div>
               </div>
@@ -507,11 +617,7 @@ export default function ErmFormPatient() {
                     <span className="border border-black px-1.5"> </span>
                   </div>
                   <p>
-                    + Chẩn{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      đoán
-                    </span>{' '}
-                    trước phẫu
+                    + Chẩn đoán trước phẫu
                     thuật..............................................
                   </p>
                   <div className="flex justify-end gap-0.5">
@@ -521,11 +627,8 @@ export default function ErmFormPatient() {
                     <span className="border border-black px-1.5"> </span>
                   </div>
                   <p>
-                    + Chẩn{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      đoán
-                    </span>{' '}
-                    sau phẫu thuật..............................................
+                    + Chẩn đoán sau phẫu
+                    thuật..............................................
                   </p>
                   <div className="flex justify-end gap-0.5">
                     <span className="border border-black px-1.5"> </span>
@@ -579,11 +682,7 @@ export default function ErmFormPatient() {
                     <span className="border border-black px-2.5 ml-4"> </span>
                   </p>
                   <p>
-                    2.{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      Đỡ
-                    </span>
-                    , giảm{' '}
+                    2. Đỡ , giảm{' '}
                     <span className="border border-black px-2.5 ml-4"> </span>
                   </p>
                   <p>
@@ -598,20 +697,8 @@ export default function ErmFormPatient() {
                   Ngày........tháng..........năm...........
                 </p>
                 <div className="flex gap-4 pl-4 mt-1">
-                  <p>
-                    1.{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      Do
-                    </span>{' '}
-                    bệnh {renderSquare(false)}
-                  </p>
-                  <p>
-                    2.{' '}
-                    <span className="bg-yellow-200 print:bg-transparent">
-                      Do
-                    </span>{' '}
-                    tai biến điều trị {renderSquare(false)}
-                  </p>
+                  <p>1. Do bệnh {renderSquare(false)}</p>
+                  <p>2. Do tai biến điều trị {renderSquare(false)}</p>
                   <p>3. Khác {renderSquare(false)}</p>
                 </div>
                 <div className="grid grid-cols-3 gap-1 text-[9.5px] pt-1.5 border-t border-black border-dotted mt-2 font-bold uppercase">
@@ -626,9 +713,7 @@ export default function ErmFormPatient() {
           <div className="flex justify-between items-start mt-12 text-[14px] px-10">
             <div className="text-center w-64 space-y-20">
               <h3 className="font-bold text-base uppercase">
-                Giám{' '}
-                <span className="bg-yellow-200 print:bg-transparent">đốc</span>{' '}
-                bệnh viện
+                Giám đốc bệnh viện
               </h3>
               <p className="text-slate-400">
                 Họ và
@@ -658,11 +743,7 @@ export default function ErmFormPatient() {
 
           <div className="space-y-6 text-[14px] font-medium leading-relaxed px-2">
             <p>
-              <span className="font-bold uppercase">
-                I. LÝ{' '}
-                <span className="bg-yellow-200 print:bg-transparent">DO</span>{' '}
-                VÀO VIỆN:
-              </span>{' '}
+              <span className="font-bold uppercase">I. LÝ DO VÀO VIỆN:</span>{' '}
               <span className="border-b border-black flex-1 min-w-[400px] inline-block h-5 mx-2">
                 {data.admissionReason ||
                   '...........................................................................'}
@@ -697,7 +778,7 @@ export default function ErmFormPatient() {
 
               <div className="border border-black overflow-hidden mx-4">
                 <table className="w-full border-collapse">
-                  <tr className="divide-x divide-black border-b border-black h-9 bg-slate-50/30">
+                  <tr className="divide-x divide-black border-b border-black h-9 bg-white">
                     <td className="w-1/2 px-3 text-[12px] font-bold">
                       Thị lực vào viện: Không kính: MP..........MT........
                     </td>
@@ -720,7 +801,7 @@ export default function ErmFormPatient() {
               <div className="border border-black mx-4">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="divide-x divide-black border-b border-black font-bold uppercase text-center h-10 bg-slate-50/50">
+                    <tr className="divide-x divide-black border-b border-black font-bold uppercase text-center h-10 bg-white">
                       <th className="w-1/2 text-base">MẮT PHẢI</th>
                       <th className="w-1/2 text-base">MẮT TRÁI</th>
                     </tr>
@@ -772,7 +853,7 @@ export default function ErmFormPatient() {
                         id: 8,
                         label: 'Dịch kính',
                         options:
-                          'Sạch □ Tyndall □ <span className="bg-yellow-200">Độ</span>.................... Viêm mủ □ .................... Xuất huyết □ Tổ chức hóa □ Bong dịch kính sau □ Tổn thương khác:...',
+                          'Sạch □ Tyndall □ Độ.................... Viêm mủ □ .................... Xuất huyết □ Tổ chức hóa □ Bong dịch kính sau □ Tổn thương khác:...',
                       },
                     ].map((row) => (
                       <tr

@@ -1792,29 +1792,24 @@ export default function PermissionsPage() {
                         <div className="divide-y divide-slate-100 dark:divide-slate-800">
                           {rolePerms.map((rp) => (
                             <div
-                              key={rp.id}
+                              key={rp.rolePermissionId}
                               className="px-6 py-4 flex items-center justify-between group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                             >
                               <div className="flex items-center gap-3">
-                                <div
-                                  className={`w-2 h-2 rounded-full ${
-                                    rp.permissionIsActive
-                                      ? 'bg-emerald-500'
-                                      : 'bg-slate-300'
-                                  }`}
-                                />
+                                <div className="w-2 h-2 rounded-full bg-emerald-500" />
                                 <div>
                                   <p className="text-sm font-medium text-slate-900 dark:text-white">
-                                    {rp.permissionName}
+                                    {rp.permissionDisplayName ||
+                                      rp.permissionName}
                                   </p>
                                   <p className="text-xs text-slate-500">
-                                    {rp.permissionKey}
+                                    {rp.permissionName}
                                   </p>
                                 </div>
                               </div>
                               <button
                                 onClick={() =>
-                                  handleRevokeFromRole(selectedRole.id, rp.id)
+                                  handleRemoveFromRole(rp.rolePermissionId)
                                 }
                                 className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100"
                                 title={t(

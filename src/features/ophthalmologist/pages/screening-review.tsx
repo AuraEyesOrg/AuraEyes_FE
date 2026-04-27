@@ -2943,14 +2943,16 @@ export default function ScreeningReviewPage() {
                               detail?.latestResult?.findings || '',
                             // Add other fields if needed
                           };
-                          navigate('/erm-test', { state: { formData } });
+                          navigate('/medical-records/new', {
+                            state: { formData },
+                          });
                         }}
                         className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm shadow-indigo-600/25 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md hover:shadow-indigo-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <FileText className="w-4 h-4" />
                         {t(
                           'Ophthalmologist.screeningReview.createMedicalRecord',
-                          'Tạo hồ sơ bệnh án'
+                          'Điền bệnh án'
                         )}
                       </button>
                     </div>

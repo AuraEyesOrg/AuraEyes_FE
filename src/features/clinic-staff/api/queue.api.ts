@@ -30,6 +30,7 @@ export interface ClinicQueueItem {
   consultationStatus?: string;
   assignedDoctorId?: string;
   assignedDoctorName?: string;
+  medicalRecordId?: string;
   flowState: ClinicFlowState;
 }
 

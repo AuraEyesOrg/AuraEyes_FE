@@ -3,16 +3,16 @@ import {
   Activity,
   AlertCircle,
   Bot,
-  Loader2,
   Mail,
   Network,
   Link as LinkIcon,
-  Printer,
-  RefreshCw,
-  Share2,
-  Sparkles,
+  FilePlus,
+  Loader2,
   Stethoscope,
   X,
+  Sparkles,
+  Printer,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
@@ -840,6 +840,36 @@ export default function ClinicStaffScreeningResultPage() {
     t,
   ]);
 
+  const handleCreateMedicalRecord = useCallback(() => {
+    if (!sessionData) return;
+
+    const findingsText = draft?.findings || '';
+    const summaryText = draft?.summary || '';
+
+    // Map AI findings to ERM Form Data structure
+    const formData = {
+      fullName: sessionData.patientName || '',
+      maYT: sessionData.patientId?.slice(0, 8).toUpperCase() || '',
+      admissionReason:
+        t(
+          'ClinicStaff.screeningResult.emr.admissionReasonPrefix',
+          'Khám mắt sàng lọc AI. '
+        ) + (summaryText ? `\nKết quả AI: ${summaryText}` : ''),
+      medicalHistory: findingsText ? `AI Findings: ${findingsText}` : '',
+      finalDiagnosisMain: findingsText.split('\n')[0]?.replace(/^- /, '') || '',
+      screeningId: sessionData.screeningId,
+      patientId: sessionData.patientId,
+    };
+
+    navigate(resolvePathWithLocale('/medical-records/new'), {
+      state: {
+        formData,
+        source: 'screening',
+        screeningId: sessionData.screeningId,
+      },
+    });
+  }, [sessionData, draft, navigate, t]);
+
   const handleCopyDoctorReviewLink = useCallback(async () => {
     if (!doctorReviewPath) return;
     const reviewUrl = `${window.location.origin}${doctorReviewPath}`;
@@ -1003,12 +1033,15 @@ export default function ClinicStaffScreeningResultPage() {
             <div className="flex flex-wrap items-center gap-2.5">
               <button
                 type="button"
-                onClick={() => setShareModalOpen(true)}
+                onClick={handleCreateMedicalRecord}
                 disabled={!canShareResult}
-                className="flex items-center gap-2 rounded-xl border border-(--border-primary) bg-(--bg-primary) px-4 py-2.5 text-sm font-medium text-(--text-secondary) transition hover:bg-(--bg-tertiary) disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <Share2 className="h-4 w-4" />
-                {t('ClinicStaff.screeningResult.actions.share', 'Share')}
+                <FilePlus className="h-4 w-4" />
+                {t(
+                  'ClinicStaff.screeningResult.actions.createMedicalRecord',
+                  'Tạo Hồ sơ bệnh án'
+                )}
               </button>
 
               <button

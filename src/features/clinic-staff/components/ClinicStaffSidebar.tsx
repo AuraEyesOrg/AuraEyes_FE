@@ -10,6 +10,7 @@ import {
   Stethoscope,
   CreditCard,
   ListOrdered,
+  FileText,
 } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
@@ -74,6 +75,12 @@ export default function ClinicStaffSidebar() {
       label: t('ClinicStaffSidebar.nav.patients', 'Patients'),
       path: '/clinic-staff/patients',
       requiredPermission: Permissions.PatientsRead,
+    },
+    {
+      icon: FileText,
+      label: t('ClinicStaffSidebar.nav.medicalRecords', 'Medical Records'),
+      path: '/clinic-staff/medical-records',
+      requiredPermission: Permissions.DashboardRead,
     },
     {
       icon: Stethoscope,
