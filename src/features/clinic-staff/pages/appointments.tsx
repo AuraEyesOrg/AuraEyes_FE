@@ -201,7 +201,7 @@ function isFutureDateKey(dateKey: string | undefined, todayKey: string) {
 export default function ClinicStaffAppointmentsPage() {
   const { user } = useAuthStore();
   const { t } = useSafeTranslation();
-  const organisationId = user?.organizationId ?? '';
+  const organisationId = 'current-clinic';
 
   const todayKey = toLocalDateKey(new Date());
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
@@ -243,7 +243,7 @@ export default function ClinicStaffAppointmentsPage() {
   const weekAppointmentQueries = useQueries({
     queries: weekWindow.days.map((day) => ({
       queryKey: organisationClinicBookingKeys.appointments(
-        organisationId || 'current-clinic',
+        organisationId,
         day.dateKey
       ),
       queryFn: () => getCurrentClinicAppointments(day.dateKey),

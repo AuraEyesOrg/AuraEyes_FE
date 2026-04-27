@@ -69,7 +69,7 @@ export interface GenerateOrganisationSlotsRequest {
 }
 
 export interface GetOrganisationSlotsParams {
-  orgId: string;
+  orgId?: string;
   fromDate?: string;
   toDate?: string;
   status?: number;
@@ -77,14 +77,13 @@ export interface GetOrganisationSlotsParams {
   pageSize?: number;
 }
 
-export const getOrganisationTemplates = async (
-  orgId: string
-): Promise<OrganisationScheduleTemplateDto[]> => {
+export const getOrganisationTemplates = async (): Promise<
+  OrganisationScheduleTemplateDto[]
+> => {
   const response = await api.get<
     ApiResponse<PagedResult<OrganisationScheduleTemplateDto>>
   >(API_ENDPOINTS.SCHEDULE_TEMPLATES.LIST, {
     params: {
-      orgId,
       pageNumber: 1,
       pageSize: 200,
     },
@@ -96,13 +95,11 @@ export const getOrganisationTemplates = async (
 };
 
 export const createOrganisationTemplate = async (
-  orgId: string,
   request: CreateOrganisationTemplateRequest
 ): Promise<string> => {
   const response = await api.post<ApiResponse<string>>(
     API_ENDPOINTS.SCHEDULE_TEMPLATES.CREATE,
     {
-      orgId,
       dayOfWeek: request.dayOfWeek,
       startTime: request.startTime,
       endTime: request.endTime,
@@ -142,7 +139,6 @@ export const getOrganisationSlots = async (
     ApiResponse<PagedResult<OrganisationAppointmentSlotDto>>
   >(API_ENDPOINTS.APPOINTMENT_SLOTS.LIST, {
     params: {
-      orgId: params.orgId,
       fromDate: params.fromDate,
       toDate: params.toDate,
       status: params.status,

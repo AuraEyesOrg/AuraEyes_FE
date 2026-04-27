@@ -71,12 +71,12 @@ export interface CreateClinicStaffAppointmentResult {
 }
 
 export const getOrganisationAppointments = async (
-  organisationId: string,
+  _organisationId: string,
   date?: string
 ): Promise<OrganisationClinicAppointmentDto[]> => {
   const response = await api.get<
     ApiResponse<OrganisationClinicAppointmentDto[]>
-  >(API_ENDPOINTS.CLINIC_BOOKING.ORGANISATION_APPOINTMENTS(organisationId), {
+  >(API_ENDPOINTS.CLINIC_BOOKING.ORGANISATION_APPOINTMENTS(), {
     params: { date },
   });
 
@@ -106,7 +106,7 @@ export const getClinicStaffAvailableSlots = async (
 ): Promise<ClinicStaffAvailableSlotDto[]> => {
   const response = await api.get<
     ApiResponse<PagedResult<ClinicStaffAvailableSlotDto>>
-  >(API_ENDPOINTS.PUBLIC.PATIENT_SEARCH.AVAILABLE_SLOTS, {
+  >(API_ENDPOINTS.CLINIC_BOOKING.AVAILABLE_SLOTS(), {
     params: {
       fromDate: date,
       toDate: date,

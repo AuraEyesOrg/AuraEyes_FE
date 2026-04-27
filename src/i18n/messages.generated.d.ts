@@ -4657,6 +4657,101 @@ declare module 'i18next' {
           createError: string;
         };
       };
+      cashflow: {
+        title: string;
+        description: string;
+        stats: {
+          totalVolume: string;
+          pendingAmount: string;
+          completedOrders: string;
+          avgOrderValue: string;
+        };
+        filters: {
+          all: string;
+          pending: string;
+          completed: string;
+          failed: string;
+        };
+        table: {
+          orderId: string;
+          customer: string;
+          amount: string;
+          status: string;
+          date: string;
+          actions: string;
+          list: string;
+          defaultDescription: string;
+          deposited: string;
+          remaining: string;
+          onlineDeposit: string;
+          fullPayment: string;
+          patientFallback: string;
+        };
+        status: {
+          pending: string;
+          confirmed: string;
+          processing: string;
+          completed: string;
+          cancelled: string;
+          failed: string;
+          refunded: string;
+        };
+        pagination: {
+          previous: string;
+          next: string;
+          page: string;
+        };
+        noData: string;
+        error: string;
+      };
+      dashboard: {
+        title: string;
+        subtitle: string;
+        refresh: string;
+        error: string;
+        stats: {
+          totalAppointments: string;
+          checkedIn: string;
+          completed: string;
+          noShow: string;
+        };
+        liveQueue: string;
+        active: string;
+        queueEmpty: string;
+        patient: string;
+        status: string;
+        doctor: string;
+        waitTime: string;
+        doctorStatus: string;
+        busy: string;
+        noDoctors: string;
+        handled: string;
+        activeLoad: string;
+        slotUtilization: string;
+        booked: string;
+        remaining: string;
+        bottlenecks: string;
+        noBottlenecks: string;
+        bottleneckLongWait: string;
+        bottleneckFullCapacity: string;
+        bottleneckOverloaded: string;
+        quickActions: string;
+        actions: {
+          createSlot: string;
+          createSlotDesc: string;
+          assignDoctor: string;
+          assignDoctorDesc: string;
+          viewSchedule: string;
+          viewScheduleDesc: string;
+          addWalkIn: string;
+          addWalkInDesc: string;
+        };
+        statusBadge: {
+          waiting: string;
+          inProgress: string;
+          payment: string;
+        };
+      };
     };
     ProfessionalNetwork: {
       common: {
@@ -5079,6 +5174,252 @@ declare module 'i18next' {
           expires: string;
           viewFile: string;
         };
+      };
+    };
+    ClinicStaffDashboard: {
+      greetings: {
+        morning: string;
+        afternoon: string;
+        evening: string;
+        welcome: string;
+      };
+      subtitle: string;
+      common: {
+        staffFallback: string;
+      };
+      stats: {
+        todayAppointments: string;
+        scheduled: string;
+        patientsCheckedIn: string;
+        today: string;
+        pendingTasks: string;
+        requiresAction: string;
+        completedToday: string;
+      };
+      quickActions: {
+        title: string;
+        subtitle: string;
+        newAppointment: string;
+        newAppointmentDesc: string;
+        registerPatient: string;
+        registerPatientDesc: string;
+        viewSchedule: string;
+        viewScheduleDesc: string;
+        cashierDesk: string;
+        cashierDeskDesc: string;
+      };
+      activity: {
+        title: string;
+        subtitle: string;
+        empty: string;
+      };
+    };
+    ClinicStaffSidebar: {
+      portalSubtitle: string;
+      nav: {
+        dashboard: string;
+        queue: string;
+        appointments: string;
+        patients: string;
+        screenings: string;
+        schedules: string;
+        cashier: string;
+        billing: string;
+        wallet: string;
+        settings: string;
+        profile: string;
+      };
+      actions: {
+        logout: string;
+      };
+    };
+    ClinicStaffHeader: {
+      breadcrumb: {
+        home: string;
+      };
+      search: {
+        placeholder: string;
+      };
+      pages: {
+        dashboard: string;
+        queue: string;
+        appointments: string;
+        patients: string;
+        screenings: string;
+        schedules: string;
+        cashier: string;
+        billing: string;
+        wallet: string;
+        settings: string;
+        profile: string;
+        security: string;
+        notifications: string;
+      };
+      actions: {
+        toggleTheme: string;
+      };
+      Cashier: {
+        header: {
+          workspace: string;
+          title: string;
+          description: string;
+        };
+        stats: {
+          finalizedVisits: string;
+          selectedVisit: string;
+          noVisitSelected: string;
+        };
+        queue: {
+          title: string;
+          loading: string;
+          error: string;
+          empty: string;
+          emptyDesc: string;
+          selected: string;
+          doctor: string;
+        };
+        pricingPanel: {
+          title: string;
+          subtitle: string;
+          selectedVisitId: string;
+          noVisitSelected: string;
+          selectToStart: string;
+          selectToStartDesc: string;
+          loading: string;
+          error: string;
+          success: {
+            title: string;
+            message: string;
+            backToList: string;
+          };
+          patient: string;
+          doctor: string;
+          noMedication: string;
+          medicationCount: string;
+          medicationPrice: string;
+          manualPricePlaceholder: string;
+          subtotal: string;
+          serviceFee: string;
+          serviceFeeDesc: string;
+          serviceFeeLabel: string;
+          totalManual: string;
+          payButton: string;
+        };
+        confirmModal: {
+          title: string;
+          message: string;
+          confirm: string;
+          cancel: string;
+        };
+        toast: {
+          success: string;
+          error: string;
+        };
+      };
+    };
+    Cashier: {
+      header: {
+        badge: string;
+        title: string;
+        description: string;
+      };
+      stats: {
+        finalizedCount: string;
+        currentlySelecting: string;
+        noVisitSelected: string;
+      };
+      queue: {
+        title: string;
+        loadError: string;
+        empty: string;
+        emptySub: string;
+        selectedBadge: string;
+        doctorName: string;
+      };
+      pricingPanel: {
+        title: string;
+        description: string;
+        noVisitSelectedBadge: string;
+        selectPrompt: string;
+        selectPromptSub: string;
+        contextLoadError: string;
+        paymentSuccessTitle: string;
+        paymentSuccessDescription: string;
+        backToList: string;
+        patientLabel: string;
+        doctorLabel: string;
+        noMedication: string;
+        medicationCount: string;
+        medicinePriceLabel: string;
+        manualPricePlaceholder: string;
+        estimated: string;
+        serviceFeeLabel: string;
+        serviceFeeDescription: string;
+        serviceFeeInputLabel: string;
+        totalManual: string;
+        payButton: string;
+      };
+      confirmModal: {
+        title: string;
+        message: string;
+        confirm: string;
+        cancel: string;
+      };
+      toast: {
+        createSuccess: string;
+        createError: string;
+      };
+    };
+    ClinicStaffBilling: {
+      page: {
+        title: string;
+        subtitle: string;
+      };
+      stats: {
+        totalRevenue: string;
+        totalRefund: string;
+        orders: string;
+      };
+      transactions: {
+        title: string;
+        loadFailed: string;
+        emptyTitle: string;
+      };
+      filters: {
+        all: string;
+        completed: string;
+        pending: string;
+        cancelled: string;
+      };
+      orderDetails: {
+        description: string;
+        depositOnline: string;
+        walkInFull: string;
+        idLabel: string;
+        patientLabel: string;
+        doctorLabel: string;
+        noMedication: string;
+        medicationCount: string;
+        medicinePriceLabel: string;
+        manualPricePlaceholder: string;
+        serviceFeeLabel: string;
+        serviceFeeDescription: string;
+        serviceFeeInputLabel: string;
+        totalManual: string;
+        note: string;
+        confirmedDeposit: string;
+        remaining: string;
+        paid: string;
+        processing: string;
+        confirmFinalPayment: string;
+      };
+      pagination: {
+        previous: string;
+        next: string;
+        pageOf: string;
+      };
+      error: {
+        retry: string;
       };
     };
   }

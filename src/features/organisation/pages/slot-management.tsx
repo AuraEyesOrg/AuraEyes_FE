@@ -20,7 +20,6 @@ import {
   formatWeekRange,
   toLocalDateKey,
 } from '@/lib/date-utils';
-import useAuthStore from '@/store/auth-store';
 import OrganisationHeader from '../components/OrganisationHeader';
 import Sidebar from '../components/Sidebar';
 import {
@@ -56,8 +55,6 @@ const statusBadge: Record<string, string> = {
 };
 
 export default function OrganisationSlotManagementPage() {
-  const { user } = useAuthStore();
-  const organisationId = user?.organizationId ?? '';
   const { t } = useSafeTranslation();
 
   const getDayOfWeekLabel = (dayOfWeekValue: string | number): string => {
@@ -151,16 +148,15 @@ export default function OrganisationSlotManagementPage() {
   }, [currentWeekOffset, todayKey]);
 
   const { data: templates = [], isLoading: templatesLoading } =
-    useOrganisationTemplates(organisationId, !!organisationId);
+    useOrganisationTemplates(true);
 
   const { data: slotsPage, isLoading: slotsLoading } = useOrganisationSlots(
     {
-      orgId: organisationId,
       fromDate: weekWindow.from,
       toDate: weekWindow.to,
       pageSize: 200,
     },
-    !!organisationId
+    true
   );
 
   const createTemplateMutation = useCreateOrganisationTemplate();
@@ -210,7 +206,6 @@ export default function OrganisationSlotManagementPage() {
   }, [selectedDate, weekWindow.days]);
 
   const handleCreateTemplate = async () => {
-    if (!organisationId) return;
     if (startTime >= endTime) {
       toast.error(
         t(
@@ -240,7 +235,6 @@ export default function OrganisationSlotManagementPage() {
     }
     try {
       await createTemplateMutation.mutateAsync({
-        orgId: organisationId,
         request: {
           dayOfWeek,
           startTime: `${startTime}:00`,
@@ -312,11 +306,10 @@ export default function OrganisationSlotManagementPage() {
   };
 
   const confirmDeleteTemplate = async () => {
-    if (!organisationId || !templateToDeleteId) return;
+    if (!templateToDeleteId) return;
     try {
       await deleteTemplateMutation.mutateAsync({
         templateId: templateToDeleteId,
-        orgId: organisationId,
       });
       toast.success(
         t(
@@ -392,15 +385,6 @@ export default function OrganisationSlotManagementPage() {
         />
 
         <main className="p-6">
-          {!organisationId && (
-            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-              {t(
-                'Organisation.slotManagement.states.noOrganisationLinked',
-                'No organisation linked to this account. Slot management is unavailable.'
-              )}
-            </div>
-          )}
-
           {/* Tab navigation */}
           <div className="mb-5 flex gap-1 border-b border-(--border-color)">
             {tabs.map((tab) => (
@@ -900,7 +884,7 @@ export default function OrganisationSlotManagementPage() {
                 <button
                   type="button"
                   onClick={() => void handleCreateTemplate()}
-                  disabled={createTemplateMutation.isPending || !organisationId}
+                  disabled={createTemplateMutation.isPending}
                   className="mt-4 inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-700 disabled:opacity-50"
                 >
                   {createTemplateMutation.isPending ? (
@@ -1090,9 +1074,7 @@ export default function OrganisationSlotManagementPage() {
                   <button
                     type="button"
                     onClick={() => void handleGenerateSlots()}
-                    disabled={
-                      generateSlotsMutation.isPending || !organisationId
-                    }
+                    disabled={generateSlotsMutation.isPending}
                     className="inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-700 disabled:opacity-50"
                   >
                     {generateSlotsMutation.isPending ? (
