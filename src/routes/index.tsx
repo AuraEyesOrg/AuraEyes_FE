@@ -90,7 +90,6 @@ const OrganisationSchedulePage = lazy(
   () => import('@/features/patient/pages/organisation-schedule')
 );
 
-const RoadmapPage = lazy(() => import('@/features/patient/pages/roadmap'));
 const ChatPage = lazy(() => import('@/features/patient/pages/chat'));
 const WalletPage = lazy(() => import('@/features/patient/pages/wallet'));
 const PaymentCallbackPage = lazy(
@@ -233,6 +232,9 @@ const OphthalmologistAppointmentsPage = lazy(
 );
 const OphthalmologistSettingsPage = lazy(
   () => import('@/features/ophthalmologist/pages/settings')
+);
+const OphthalmologistProfilePage = lazy(
+  () => import('@/features/ophthalmologist/pages/profile')
 );
 const OphthalmologistConsultationsPage = lazy(
   () => import('@/features/ophthalmologist/pages/consultations')
@@ -608,6 +610,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/ophthalmologist/profile"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Ophthalmologist']}
+              element={<OphthalmologistProfilePage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/ophthalmologist/settings"
           element={
             <LocalizedPrivateRoute
@@ -827,15 +838,6 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['Patient']}
               element={<DoctorsPage />}
-            />
-          }
-        />
-        <Route
-          path="/:locale/patient/roadmap"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Patient']}
-              element={<RoadmapPage />}
             />
           }
         />
@@ -1580,14 +1582,6 @@ const Router = () => (
           }
         />
         <Route
-          path="/patient/roadmap"
-          element={
-            <PrivateRoute allowedRoles={['Patient']}>
-              <RoadmapPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
           path="/patient/care-plan"
           element={
             <PrivateRoute allowedRoles={['Patient']}>
@@ -1926,6 +1920,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['Ophthalmologist']}>
               <OphthalmologistAppointmentsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/ophthalmologist/profile"
+          element={
+            <PrivateRoute allowedRoles={['Ophthalmologist']}>
+              <OphthalmologistProfilePage />
             </PrivateRoute>
           }
         />

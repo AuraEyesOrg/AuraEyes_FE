@@ -2,7 +2,6 @@ import {
   Calendar,
   FileText,
   Eye,
-  Wallet,
   MessageCircle,
   ArrowRight,
   ChevronRight,
@@ -18,7 +17,6 @@ import { useTranslation } from 'react-i18next';
 import PatientLayout from '../components/PatientLayout';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatShortDate } from '@/lib/date-utils';
-import { formatCurrency } from '@/lib/helper';
 import { screeningApi } from '../api/screening.api';
 
 // ============ HELPERS ============
@@ -77,7 +75,6 @@ export default function PatientDashboard() {
 
   const {
     profile,
-    wallet,
     latestAnalysis,
     latestReport,
     recentReports,
@@ -266,20 +263,6 @@ export default function PatientDashboard() {
       valueColor: 'text-[var(--text-primary)]',
       bgColor: 'icon-bg-pink',
       iconColor: 'text-pink-500',
-    },
-    {
-      icon: Wallet,
-      label: t('PatientDashboard.stats.walletBalance'),
-      value: wallet
-        ? formatCurrency(wallet.balance, {
-            locale: 'vi-VN',
-            useCurrencyStyle: false,
-            suffix: ' VNĐ',
-          })
-        : t('PatientDashboard.stats.noWalletValue'),
-      valueColor: 'text-[var(--text-primary)]',
-      bgColor: 'icon-bg-orange',
-      iconColor: 'text-orange-500',
     },
   ];
 
