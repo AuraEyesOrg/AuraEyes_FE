@@ -34,6 +34,11 @@ const usePermissions = () => {
     hasAllPermissions,
     hasAnyPermission,
     isSystemAdmin: user?.roles?.includes('SystemAdmin') || false,
+    subRoles: user?.subRoles || [],
+    hasSubRole: (role: string): boolean => {
+      if (user?.roles?.includes('SystemAdmin')) return true;
+      return (user?.subRoles || []).includes(role);
+    },
   };
 };
 

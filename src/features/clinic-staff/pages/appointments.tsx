@@ -14,10 +14,11 @@ import {
   CreditCard,
   Receipt,
   CheckCircle,
-  Clock3,
   AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import Spinner from '@/components/ui/spinner';
@@ -97,6 +98,8 @@ const statusBadge: Record<string, string> = {
     'bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
   Booked:
     'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800/30',
+  DepositPaid:
+    'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800/30',
 };
 
 const cardAccent: Record<string, string> = {
@@ -199,8 +202,10 @@ function isFutureDateKey(dateKey: string | undefined, todayKey: string) {
 }
 
 export default function ClinicStaffAppointmentsPage() {
-  const { user } = useAuthStore();
   const { t } = useSafeTranslation();
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const { i18n: i18nObj } = useTranslation();
   const organisationId = 'current-clinic';
 
   const todayKey = toLocalDateKey(new Date());
@@ -353,15 +358,23 @@ export default function ClinicStaffAppointmentsPage() {
     switch (status) {
       case 'Pending':
         return isPaidDeposit
-          ? t('Organisation.calendar.status.booked', 'Booked')
+          ? t('Organisation.calendar.status.depositPaid', 'Deposit Paid')
           : t('Organisation.calendar.status.pending', 'Pending');
       case 'Confirmed':
-        return t('Organisation.calendar.status.confirmed', 'Confirmed');
+        return isPaidDeposit
+          ? t('Organisation.calendar.status.depositPaid', 'Deposit Paid')
+          : t('Organisation.calendar.status.confirmed', 'Confirmed');
       case 'CheckedIn':
         return t('Organisation.calendar.status.checkedIn', 'Checked in');
       case 'InProgress':
         return t('Organisation.calendar.status.inProgress', 'In progress');
       case 'WaitingForPayment':
+        if (
+          appointment.orderStatus === 'FullyPaid' ||
+          (appointment.remainingAmount ?? 0) <= 0
+        ) {
+          return t('Organisation.calendar.status.completed', 'Completed');
+        }
         return t(
           'Organisation.calendar.status.waitingForPayment',
           'Waiting for payment'
@@ -452,11 +465,25 @@ export default function ClinicStaffAppointmentsPage() {
     }
 
     try {
-      await createWalkInAppointmentMutation.mutateAsync({
+      const locale = i18nObj.language === 'en' ? '/en' : '/vi';
+      const result = await createWalkInAppointmentMutation.mutateAsync({
         patientId: selectedWalkInPatientId,
         slotId: selectedWalkInSlotId,
         visitReason: walkInVisitReason.trim() || undefined,
+        returnUrl: `${window.location.origin}${locale}/patient/wallet/payment-callback?type=clinic-booking`,
+        cancelUrl: `${window.location.origin}${locale}/patient/wallet/payment-callback?type=clinic-booking&cancel=true`,
       });
+
+      if (result.paymentUrl) {
+        toast.info(
+          `Đặt lịch thành công! Đang chuyển đến trang thanh toán đặt cọc ${(result.depositAmount ?? 0).toLocaleString('vi-VN')} VND...`
+        );
+        setTimeout(() => {
+          window.location.href = result.paymentUrl!;
+        }, 1500);
+        return;
+      }
+
       setSelectedDate(walkInDate);
       setCurrentWeekOffset(getWeekOffsetFromDateKey(walkInDate));
       toast.success(
@@ -997,30 +1024,51 @@ export default function ClinicStaffAppointmentsPage() {
                       </div>
 
                       <div className="flex flex-col items-end gap-3 shrink-0">
-                        <span
-                          className={`rounded-xl px-4 py-1.5 text-[10px] font-black tracking-[0.1em] uppercase shadow-sm ${statusBadge[appt.status] ?? statusBadge.Pending}`}
-                        >
-                          {getStatusDisplay(appt)}
-                        </span>
+                        {(() => {
+                          const isFullyPaid =
+                            appt.orderStatus === 'FullyPaid' ||
+                            (appt.remainingAmount ?? 0) <= 0;
+                          const effectiveStatus =
+                            appt.status === 'WaitingForPayment' && isFullyPaid
+                              ? 'Completed'
+                              : appt.status;
+
+                          return (
+                            <span
+                              className={`rounded-xl px-4 py-1.5 text-[10px] font-black tracking-[0.1em] uppercase shadow-sm ${statusBadge[effectiveStatus] ?? statusBadge.Pending}`}
+                            >
+                              {getStatusDisplay(appt)}
+                            </span>
+                          );
+                        })()}
 
                         {appt.orderId && (
                           <div className="flex flex-wrap justify-end gap-2">
                             {appt.orderStatus === 'Pending' && (
                               <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-amber-600 border border-amber-500/20">
-                                <Clock3 className="w-3.5 h-3.5" />
-                                Pending Payment
+                                <Clock className="w-3.5 h-3.5" />
+                                {t(
+                                  'Organisation.calendar.states.billing.pending',
+                                  'Pending Payment'
+                                )}
                               </div>
                             )}
-                            {appt.orderStatus === 'Confirmed' && (
+                            {appt.orderStatus === 'PartiallyPaid' && (
                               <div className="flex items-center gap-2 rounded-xl bg-blue-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-blue-600 border border-blue-500/20">
                                 <CreditCard className="w-3.5 h-3.5" />
-                                Deposit Paid
+                                {t(
+                                  'Organisation.calendar.states.billing.partiallyPaid',
+                                  'Deposit Paid'
+                                )}
                               </div>
                             )}
-                            {appt.orderStatus === 'Completed' && (
+                            {appt.orderStatus === 'FullyPaid' && (
                               <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-600 border border-emerald-500/20">
                                 <CheckCircle className="w-3.5 h-3.5" />
-                                Fully Paid
+                                {t(
+                                  'Organisation.calendar.states.billing.fullyPaid',
+                                  'Fully Paid'
+                                )}
                               </div>
                             )}
                             {appt.orderStatus === 'Cancelled' && (
@@ -1068,7 +1116,7 @@ export default function ClinicStaffAppointmentsPage() {
                               {new Intl.NumberFormat('vi-VN', {
                                 style: 'currency',
                                 currency: 'VND',
-                              }).format(appt.depositAmount || 0)}
+                              }).format(appt.paidAmount || 0)}
                             </p>
                           </div>
                         </div>
@@ -1118,7 +1166,7 @@ export default function ClinicStaffAppointmentsPage() {
                     {/* Actions Row */}
                     <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-6 dark:border-slate-800">
                       <div className="flex flex-wrap items-center gap-3">
-                        {appt.status === 'Pending' ? (
+                        {['Pending', 'Confirmed'].includes(appt.status) ? (
                           <button
                             type="button"
                             disabled={isMutating || selectedDate > todayKey}
@@ -1168,21 +1216,48 @@ export default function ClinicStaffAppointmentsPage() {
                             'InProgress',
                             'WaitingForPayment',
                           ].includes(appt.status) && (
-                            <button
-                              type="button"
-                              disabled={isMutating}
-                              onClick={() => {
-                                setAppointmentToPay(appt);
-                                setIsPaymentModalOpen(true);
-                              }}
-                              className="inline-flex h-11 items-center gap-2 rounded-2xl border-2 border-emerald-600 bg-white px-6 text-xs font-black uppercase tracking-widest text-emerald-600 transition-all hover:bg-emerald-50 hover:shadow-lg hover:shadow-emerald-500/10 disabled:opacity-50 dark:bg-slate-900 dark:hover:bg-emerald-950/30"
-                            >
-                              <Banknote className="h-4 w-4" />
-                              {t(
-                                'Organisation.calendar.actions.payRemaining',
-                                'Pay Balance'
-                              )}
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                disabled={isMutating}
+                                onClick={() => {
+                                  setAppointmentToPay(appt);
+                                  setIsPaymentModalOpen(true);
+                                }}
+                                className="inline-flex h-11 items-center gap-2 rounded-2xl border-2 border-emerald-600 bg-white px-6 text-xs font-black uppercase tracking-widest text-emerald-600 transition-all hover:bg-emerald-50 hover:shadow-lg hover:shadow-emerald-500/10 disabled:opacity-50 dark:bg-slate-900 dark:hover:bg-emerald-950/30"
+                              >
+                                <Banknote className="h-4 w-4" />
+                                {t(
+                                  'Organisation.calendar.actions.payRemaining',
+                                  'Pay Balance'
+                                )}
+                              </button>
+
+                              <button
+                                type="button"
+                                title="Sync Payment Status"
+                                onClick={async () => {
+                                  try {
+                                    await import('../api/billing.api').then(
+                                      (m) =>
+                                        m.syncOrderPaymentStatus(appt.orderId!)
+                                    );
+                                    queryClient.invalidateQueries({
+                                      queryKey:
+                                        organisationClinicBookingKeys.all,
+                                    });
+                                    toast.success('Payment status synced');
+                                  } catch (e) {
+                                    toast.error(
+                                      'Failed to sync payment status'
+                                    );
+                                  }
+                                }}
+                                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition-all hover:bg-slate-50 hover:text-brand dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+                              >
+                                <RefreshCw className="h-4 w-4" />
+                              </button>
+                            </div>
                           )}
                       </div>
 
@@ -1580,9 +1655,15 @@ export default function ClinicStaffAppointmentsPage() {
         onConfirm={async (method) => {
           if (!appointmentToPay?.orderId) return;
 
+          const localePrefix = i18nObj.language === 'en' ? '/en' : '/vi';
+          const callbackUrl = `${window.location.origin}${localePrefix}/payment/success`;
+          const cancelUrl = `${window.location.origin}${localePrefix}/payment/cancel`;
+
           return payRemainingMutation.mutateAsync({
             orderId: appointmentToPay.orderId,
             method,
+            returnUrl: callbackUrl,
+            cancelUrl: cancelUrl,
           });
         }}
       />

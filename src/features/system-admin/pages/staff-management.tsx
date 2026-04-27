@@ -44,6 +44,8 @@ type StaffUser = User & {
   mustUpdateProfile?: boolean;
   consultationFee?: number;
   ophthalmologistId?: string;
+  subRoles?: string[];
+  clinicStaffId?: string;
 };
 
 export default function StaffManagementPage() {
@@ -58,6 +60,9 @@ export default function StaffManagementPage() {
   const [editingFee, setEditingFee] = useState(false);
   const [feeValue, setFeeValue] = useState<number>(0);
   const [isUpdatingFee, setIsUpdatingFee] = useState(false);
+  const [editingSubRoles, setEditingSubRoles] = useState(false);
+  const [subRolesValue, setSubRolesValue] = useState<string[]>([]);
+  const [isUpdatingSubRoles, setIsUpdatingSubRoles] = useState(false);
 
   const roleFilterOptions: Array<{ value: string; label: string }> = [
     {
@@ -192,6 +197,41 @@ export default function StaffManagementPage() {
     } finally {
       setIsUpdatingFee(false);
     }
+  };
+
+  const handleUpdateSubRoles = async () => {
+    if (!selectedUser || !selectedUser.clinicStaffId) return;
+    try {
+      setIsUpdatingSubRoles(true);
+      await userApi.updateClinicStaff(selectedUser.clinicStaffId, {
+        subRoles: subRolesValue,
+        phone: selectedUser.phoneNumber || undefined,
+      });
+
+      toast.success('Functional roles updated successfully.');
+      setEditingSubRoles(false);
+      await loadData();
+      setSelectedUser((prev) =>
+        prev ? { ...prev, subRoles: subRolesValue } : null
+      );
+    } catch (error) {
+      toast.error('Failed to update functional roles.');
+    } finally {
+      setIsUpdatingSubRoles(false);
+    }
+  };
+
+  const toggleSubRoleValue = (sub: string) => {
+    setSubRolesValue((prev) => {
+      const current = [...prev];
+      const index = current.indexOf(sub);
+      if (index > -1) {
+        if (current.length > 1) current.splice(index, 1);
+      } else {
+        current.push(sub);
+      }
+      return current;
+    });
   };
 
   const userColumns: TableColumn<StaffUser>[] = [
@@ -547,6 +587,78 @@ export default function StaffManagementPage() {
                           {formatCurrency(feeValue || 0, vndCurrencyOptions)}
                         </span>
                       </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {selectedUser.role === 'ClinicStaff' && (
+                <div className="md:col-span-2 p-4 rounded-xl bg-blue-500/5 border border-blue-500/20 mt-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                      Functional Roles (Sub-roles)
+                    </p>
+                    {!editingSubRoles ? (
+                      <button
+                        onClick={() => {
+                          setSubRolesValue(selectedUser.subRoles || []);
+                          setEditingSubRoles(true);
+                        }}
+                        className="text-xs font-bold text-blue-600 hover:underline"
+                      >
+                        Edit Roles
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleUpdateSubRoles}
+                          disabled={isUpdatingSubRoles}
+                          className="text-xs font-bold text-emerald-600 hover:underline disabled:opacity-50"
+                        >
+                          {isUpdatingSubRoles ? 'Saving...' : 'Save'}
+                        </button>
+                        <button
+                          onClick={() => setEditingSubRoles(false)}
+                          className="text-xs font-bold text-slate-500 hover:underline"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {!editingSubRoles ? (
+                    <div className="flex flex-wrap gap-2">
+                      {(selectedUser.subRoles || []).length > 0 ? (
+                        (selectedUser.subRoles || []).map((sub) => (
+                          <span
+                            key={sub}
+                            className="px-2.5 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold border border-blue-200 dark:border-blue-800"
+                          >
+                            {sub}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-sm text-slate-400 italic">
+                          No sub-roles assigned
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      {['Receptionist', 'Coordinator', 'Cashier'].map((sub) => (
+                        <button
+                          key={sub}
+                          type="button"
+                          onClick={() => toggleSubRoleValue(sub)}
+                          className={`px-3 py-2 rounded-lg text-xs font-bold border-2 transition-all ${
+                            subRolesValue.includes(sub)
+                              ? 'border-blue-500 bg-blue-500/10 text-blue-600 shadow-sm shadow-blue-500/10'
+                              : 'border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-200 dark:hover:border-slate-700'
+                          }`}
+                        >
+                          {sub}
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>

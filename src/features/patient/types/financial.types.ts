@@ -8,7 +8,9 @@ export type OrderStatus =
   | 'Processing'
   | 'Completed'
   | 'Cancelled'
-  | 'Refunded';
+  | 'Refunded'
+  | 'PartiallyPaid'
+  | 'FullyPaid';
 
 export type PaymentStatus =
   | 'Pending'
@@ -29,6 +31,7 @@ export interface PaymentDto {
   paidAt: string | null;
   paymentUrl: string | null;
   description: string | null;
+  paymentOrderCode?: string | null;
 }
 
 export interface OrderDto {
@@ -40,6 +43,7 @@ export interface OrderDto {
   description: string | null;
   status: OrderStatus;
   createdAt: string;
+  paidAmount: number;
   payments: PaymentDto[];
 }
 

@@ -2411,6 +2411,7 @@
     "clinicStatus": {
       "pending": "Pending",
       "confirmed": "Confirmed",
+      "depositPaid": "Deposit Paid",
       "checkedIn": "Checked In",
       "inProgress": "In Progress",
       "completed": "Completed",
@@ -3640,6 +3641,7 @@
         "checkedIn": "Checked in",
         "completed": "Completed",
         "confirmed": "Confirmed",
+        "depositPaid": "Deposit Paid",
         "inProgress": "In progress",
         "noShow": "No-show",
         "pending": "Pending"

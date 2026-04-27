@@ -637,10 +637,21 @@ export default function ClinicsPage() {
     if (!selectedOrganisationId || !patientId || !selectedSlotId) return;
     setErrorMessage('');
     try {
-      await createAppointmentMutation.mutateAsync({
+      const result = await createAppointmentMutation.mutateAsync({
         slotId: selectedSlotId,
         visitReason: visitReason.trim() || undefined,
       });
+
+      if (result.paymentUrl) {
+        toast.info(
+          `Đặt lịch thành công! Đang chuyển đến trang thanh toán đặt cọc ${(result.depositAmount ?? 0).toLocaleString('vi-VN')} VND...`
+        );
+        setTimeout(() => {
+          window.location.href = result.paymentUrl!;
+        }, 1500);
+        return;
+      }
+
       toast.success(t('PatientClinics.toast.bookSuccess'));
       setSelectedSlotId('');
       setShowConfirmModal(false);

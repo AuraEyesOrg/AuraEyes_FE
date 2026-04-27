@@ -72,7 +72,7 @@ export default function SettingsPage() {
     queryKey: ['ophthalmologist', 'me', 'profile'],
     queryFn: async () => {
       const response = await api.get<{
-        data: { data: OphthalmologistProfileApi };
+        data: OphthalmologistProfileApi;
       }>('/ophthalmologist/profile');
       return response.data.data;
     },

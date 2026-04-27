@@ -61,6 +61,12 @@ export default function CashflowPage() {
       Refunded: t('SystemAdmin.cashflow.status.refunded', {
         defaultValue: 'Hoàn tiền',
       }),
+      PartiallyPaid: t('SystemAdmin.cashflow.status.partiallyPaid', {
+        defaultValue: 'Thanh toán cọc',
+      }),
+      FullyPaid: t('SystemAdmin.cashflow.status.fullyPaid', {
+        defaultValue: 'Đã tất toán',
+      }),
     }),
     [t]
   );

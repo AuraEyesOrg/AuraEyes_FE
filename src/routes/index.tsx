@@ -899,7 +899,43 @@ const Router = () => (
           path="/:locale/patient/wallet/payment-callback"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['Patient']}
+              allowedRoles={['Patient', 'ClinicStaff']}
+              element={<PaymentCallbackPage />}
+            />
+          }
+        />
+        <Route
+          path="/payment/success"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient', 'ClinicStaff']}
+              element={<PaymentCallbackPage />}
+            />
+          }
+        />
+        <Route
+          path="/payment/cancel"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient', 'ClinicStaff']}
+              element={<PaymentCallbackPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/payment/success"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient', 'ClinicStaff']}
+              element={<PaymentCallbackPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/payment/cancel"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient', 'ClinicStaff']}
               element={<PaymentCallbackPage />}
             />
           }
@@ -1616,7 +1652,7 @@ const Router = () => (
         <Route
           path="/patient/wallet/payment-callback"
           element={
-            <PrivateRoute allowedRoles={['Patient']}>
+            <PrivateRoute allowedRoles={['Patient', 'ClinicStaff']}>
               <PaymentCallbackPage />
             </PrivateRoute>
           }
@@ -1638,6 +1674,16 @@ const Router = () => (
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
             >
               <ClinicStaffDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/medical-records"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffMedicalRecords />
             </PrivateRoute>
           }
         />

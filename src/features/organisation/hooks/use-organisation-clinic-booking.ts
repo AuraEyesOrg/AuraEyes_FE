@@ -120,12 +120,16 @@ export const useCompleteOrderPayment = () => {
     mutationFn: ({
       orderId,
       method = 'Cash',
+      returnUrl,
+      cancelUrl,
     }: {
       orderId: string;
       method?: 'Cash' | 'PayOS';
+      returnUrl?: string;
+      cancelUrl?: string;
     }) =>
       import('@/features/clinic-staff/api/billing.api').then((m) =>
-        m.completeOrder(orderId, method)
+        m.completeOrder(orderId, method, returnUrl, cancelUrl)
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({
