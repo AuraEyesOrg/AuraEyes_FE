@@ -160,6 +160,7 @@ export const userApi = {
     phone: string;
     role: UserRole;
     consultationFee?: number;
+    subRoles?: string[];
   }) {
     try {
       const response = await api.post<ApiResponse<string>>(
@@ -169,6 +170,29 @@ export const userApi = {
       return response.data.data;
     } catch (error) {
       console.error('Failed to create staff:', error);
+      throw error;
+    }
+  },
+  /**
+   * Update clinic staff details (sub-roles, etc.)
+   */
+  async updateClinicStaff(
+    id: string,
+    data: {
+      subRoles: string[];
+      department?: string;
+      employeeCode?: string;
+      phone?: string;
+    }
+  ) {
+    try {
+      const response = await api.put<ApiResponse<any>>(
+        `/clinic-staff/${id}`,
+        data
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error('Failed to update clinic staff:', error);
       throw error;
     }
   },
