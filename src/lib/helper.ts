@@ -45,3 +45,15 @@ export const vndCurrencyOptions: FormatCurrencyOptions = {
   minimumFractionDigits: 0,
   maximumFractionDigits: 0,
 };
+export const cleanDescription = (
+  description: string | null | undefined
+): string => {
+  if (!description) return '';
+  if (description.startsWith('METADATA:')) {
+    const parts = description.split(' | ');
+    if (parts.length > 1) {
+      return parts.slice(1).join(' | ');
+    }
+  }
+  return description;
+};

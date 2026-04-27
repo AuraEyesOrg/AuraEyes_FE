@@ -1,9 +1,5 @@
-import {
-  FileText,
-  AlertTriangle,
-  CheckCircle,
-  CalendarClock,
-} from 'lucide-react';
+import { FileText, CheckCircle } from 'lucide-react';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import type { DashboardStats } from '../types/ophthalmologist.types';
 
 interface StatsCardGridProps {
@@ -47,41 +43,28 @@ function StatCard({
 }
 
 export default function StatsCardGrid({ stats }: StatsCardGridProps) {
+  const { t } = useSafeTranslation();
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+    <div className="grid grid-cols-2 gap-4">
       <StatCard
         icon={<FileText className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />}
-        label="Pending Reviews"
+        label={t('Ophthalmologist.dashboard.stats.pending', 'Pending Reviews')}
         value={stats.pendingReviews}
         iconBgClass="bg-cyan-50 dark:bg-cyan-900/30"
         accentColor="#00bcd4"
       />
       <StatCard
         icon={
-          <AlertTriangle className="w-6 h-6 text-red-500 dark:text-red-400" />
-        }
-        label="Urgent Cases"
-        value={stats.urgentCases}
-        iconBgClass="bg-red-50 dark:bg-red-900/30"
-        accentColor="#f44336"
-      />
-      <StatCard
-        icon={
           <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
         }
-        label="Completed Today"
+        label={t(
+          'Ophthalmologist.dashboard.stats.completed',
+          'Completed Today'
+        )}
         value={stats.completedToday}
         iconBgClass="bg-green-50 dark:bg-green-900/30"
         accentColor="#4caf50"
-      />
-      <StatCard
-        icon={
-          <CalendarClock className="w-6 h-6 text-violet-600 dark:text-violet-400" />
-        }
-        label="Open Slots Today"
-        value={stats.openSlotsToday}
-        iconBgClass="bg-violet-50 dark:bg-violet-900/30"
-        accentColor="#8b5cf6"
       />
     </div>
   );

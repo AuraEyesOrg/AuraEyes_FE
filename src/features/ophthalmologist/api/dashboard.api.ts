@@ -67,3 +67,26 @@ export const getOphthalmologistDashboardMetrics =
     );
     return normalizeDashboardMetrics(data ?? {});
   };
+
+export interface ReviewQueueItem {
+  screeningId: string;
+  consultationSessionId: string;
+  patientId: string;
+  patientName: string;
+  riskLevel: string;
+  confidenceScore: number;
+  aiSummary: string | null;
+  thumbnailUrl: string | null;
+  reviewStatus: 'READY_FOR_REVIEW' | 'IN_PROGRESS';
+  waitingMinutes: number;
+  appointmentTime: string | null;
+  createdAt: string;
+}
+
+export const getReviewQueue = async (): Promise<ReviewQueueItem[]> => {
+  const response = await api.get<ApiResponse<ReviewQueueItem[]>>(
+    API_ENDPOINTS.OPHTHALMOLOGIST.REVIEW_QUEUE
+  );
+  const data = unwrapApiData<ReviewQueueItem[]>(response.data);
+  return Array.isArray(data) ? data : [];
+};

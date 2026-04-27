@@ -143,6 +143,39 @@ export interface SystemAdminDashboardMetrics {
   topOrganisationsByRating: SystemAdminTopOrganisation[];
 }
 
+// ─── Real-Time Clinic Operations Dashboard Types ──────────────────────────────
+
+export interface TodaySummary {
+  totalAppointments: number;
+  checkedInPatients: number;
+  completedVisits: number;
+  noShowCount: number;
+}
+
+export interface SlotUtilization {
+  totalSlots: number;
+  bookedSlots: number;
+  remainingCapacity: number;
+  utilizationRate: number;
+}
+
+export interface LiveQueueItem {
+  visitId: string;
+  patientName: string;
+  status: string;
+  assignedDoctorName?: string;
+  waitingTimeMinutes: number;
+  checkedInAt?: string;
+}
+
+export interface DoctorStatusItem {
+  doctorId: string;
+  doctorName: string;
+  currentStatus: string;
+  patientsHandledToday: number;
+  activeLoad: number;
+}
+
 export interface SystemAdminPartTimeSlotQuotaUsage {
   date: string;
   usedSlots: number;

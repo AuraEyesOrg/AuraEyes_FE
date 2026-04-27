@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
 import { formatDateTimeWithYear } from '@/lib/date-utils';
-import { formatCurrency } from '@/lib/helper';
+import { formatCurrency, cleanDescription } from '@/lib/helper';
 import { useMyOrders, useSyncOrder } from '../hooks/use-financial';
 import type { OrderStatus, PaymentStatus } from '../types/financial.types';
 import { useTranslation } from 'react-i18next';
@@ -437,7 +437,7 @@ export default function WalletPage() {
                           {/* Info */}
                           <div className="min-w-0 space-y-1">
                             <h4 className="text-lg font-extrabold text-slate-900 dark:text-white truncate pr-4">
-                              {order.description ||
+                              {cleanDescription(order.description) ||
                                 'Medical Appointment Booking'}
                             </h4>
                             <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
