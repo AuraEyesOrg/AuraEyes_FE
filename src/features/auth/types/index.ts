@@ -34,18 +34,6 @@ export interface RegisterPatientRequest {
   gender?: number;
 }
 
-export interface RegisterOrganisationRequest {
-  contactEmail: string;
-  contactFullName: string;
-  organisationName: string;
-  orgType: number;
-  contactPhone?: string;
-  address?: string;
-  licenseNumber?: string;
-  taxCode?: string;
-  notes?: string;
-}
-
 export interface VerifyTwoFactorRequest {
   userId: string;
   code: string;
@@ -83,7 +71,6 @@ export interface UserInfoResponse {
   providerAvatarUrl?: string | null;
   roles: string[];
   emailConfirmed: boolean;
-  organizationId?: string;
   roleId?: string | null;
   employmentType?: 'FullTime' | 'PartTime' | null;
   twoFactorEnabled: boolean;

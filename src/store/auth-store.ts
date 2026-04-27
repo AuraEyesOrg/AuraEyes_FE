@@ -15,7 +15,6 @@ export interface AuthUser {
   providerAvatarUrl?: string | null;
   roles: string[];
   emailConfirmed: boolean;
-  organizationId?: string | null;
   employmentType?: 'FullTime' | 'PartTime' | null;
   twoFactorEnabled: boolean;
   isVerified?: boolean | null;
@@ -57,7 +56,6 @@ const isSameAuthUser = (a: AuthUser, b: AuthUser): boolean => {
     a.uploadedAvatarUrl === b.uploadedAvatarUrl &&
     a.providerAvatarUrl === b.providerAvatarUrl &&
     a.emailConfirmed === b.emailConfirmed &&
-    a.organizationId === b.organizationId &&
     a.employmentType === b.employmentType &&
     a.twoFactorEnabled === b.twoFactorEnabled &&
     a.isVerified === b.isVerified &&

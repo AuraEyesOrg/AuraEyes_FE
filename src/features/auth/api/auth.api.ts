@@ -15,7 +15,6 @@ import type {
   LookupAccountByCitizenIdResponse,
   GoogleLoginRequest,
   RegisterPatientRequest,
-  RegisterOrganisationRequest,
   VerifyTwoFactorRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
@@ -278,20 +277,6 @@ export const registerPatient = async (
     data
   );
   return unwrapApiData<{ userId: string }>(response.data);
-};
-
-/**
- * Register a new organisation account
- */
-export const registerOrganisation = async (
-  data: RegisterOrganisationRequest
-): Promise<{ requestId: string; email: string; message: string }> => {
-  const response = await api.post<
-    ApiResponse<{ requestId: string; email: string; message: string }>
-  >(`${AUTH_BASE_URL}/register/organisation`, data);
-  return unwrapApiData<{ requestId: string; email: string; message: string }>(
-    response.data
-  );
 };
 
 /**
