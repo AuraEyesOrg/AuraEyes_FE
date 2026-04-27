@@ -93,7 +93,6 @@ export default function PatientSidebar() {
       icon: Wallet,
       label: t('PatientSidebar.nav.wallet', 'Transaction History'),
       path: '/patient/wallet',
-      requiredPermission: Permissions.WalletsRead,
     },
     {
       icon: MessageSquareHeart,

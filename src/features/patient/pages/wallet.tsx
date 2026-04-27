@@ -29,6 +29,8 @@ const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   Completed: 'Hoàn thành',
   Cancelled: 'Đã hủy',
   Refunded: 'Hoàn tiền',
+  FullyPaid: 'Đã tất toán',
+  PartiallyPaid: 'Đã thanh toán cọc',
 };
 
 const PAYMENT_STATUS_COLOR: Record<PaymentStatus, string> = {
@@ -60,7 +62,11 @@ export default function WalletPage() {
     if (activeFilter === 'all') return orders;
     if (activeFilter === 'completed')
       return orders.filter(
-        (o) => o.status === 'Completed' || o.status === 'Confirmed'
+        (o) =>
+          o.status === 'Completed' ||
+          o.status === 'Confirmed' ||
+          o.status === 'FullyPaid' ||
+          o.status === 'PartiallyPaid'
       );
     if (activeFilter === 'pending')
       return orders.filter(
@@ -76,7 +82,11 @@ export default function WalletPage() {
   // ── Summary ─────────────────────────────────────────────────────────────────
   const summary = useMemo(() => {
     const completedOrders = orders.filter(
-      (o) => o.status === 'Completed' || o.status === 'Confirmed'
+      (o) =>
+        o.status === 'Completed' ||
+        o.status === 'Confirmed' ||
+        o.status === 'FullyPaid' ||
+        o.status === 'PartiallyPaid'
     );
     const refundedOrders = orders.filter((o) => o.status === 'Refunded');
     const totalPaid = completedOrders.reduce((sum, order) => {
@@ -127,7 +137,12 @@ export default function WalletPage() {
   };
 
   const getOrderStatusIcon = (status: OrderStatus) => {
-    if (status === 'Completed' || status === 'Confirmed')
+    if (
+      status === 'Completed' ||
+      status === 'Confirmed' ||
+      status === 'FullyPaid' ||
+      status === 'PartiallyPaid'
+    )
       return (
         <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
           <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -414,7 +429,9 @@ export default function WalletPage() {
                 {visibleOrders.map((order) => {
                   const isCompleted =
                     order.status === 'Completed' ||
-                    order.status === 'Confirmed';
+                    order.status === 'Confirmed' ||
+                    order.status === 'FullyPaid' ||
+                    order.status === 'PartiallyPaid';
                   const isRefunded = order.status === 'Refunded';
                   const isCancelled = order.status === 'Cancelled';
                   const isPending =
@@ -457,17 +474,24 @@ export default function WalletPage() {
                                 <span
                                   className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${PAYMENT_STATUS_COLOR[firstPayment.status]}`}
                                 >
-                                  {firstPayment.status === 'Completed'
-                                    ? 'Payment successful'
-                                    : firstPayment.status === 'Pending'
-                                      ? 'Payment required'
-                                      : firstPayment.status === 'Cancelled'
-                                        ? 'Transaction cancelled'
-                                        : firstPayment.status === 'Failed'
-                                          ? 'Payment failed'
-                                          : firstPayment.status === 'Refunded'
-                                            ? 'Amount refunded'
-                                            : 'Transaction processing'}
+                                  {order.status === 'FullyPaid' ||
+                                  order.status === 'Completed'
+                                    ? 'Payment completed'
+                                    : order.status === 'PartiallyPaid' ||
+                                        order.status === 'Confirmed'
+                                      ? 'Deposit paid'
+                                      : firstPayment.status === 'Completed'
+                                        ? 'Payment successful'
+                                        : firstPayment.status === 'Pending'
+                                          ? 'Payment required'
+                                          : firstPayment.status === 'Cancelled'
+                                            ? 'Transaction cancelled'
+                                            : firstPayment.status === 'Failed'
+                                              ? 'Payment failed'
+                                              : firstPayment.status ===
+                                                  'Refunded'
+                                                ? 'Amount refunded'
+                                                : 'Transaction processing'}
                                 </span>
                               </div>
                             )}
@@ -489,7 +513,9 @@ export default function WalletPage() {
                               }`}
                             >
                               {formatCurrency(
-                                order.depositAmount ?? order.totalAmount,
+                                order.paidAmount > 0
+                                  ? order.paidAmount
+                                  : (order.depositAmount ?? order.totalAmount),
                                 {
                                   absolute: true,
                                 }

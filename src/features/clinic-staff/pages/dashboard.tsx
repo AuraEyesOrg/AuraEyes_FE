@@ -56,6 +56,9 @@ function StatCard({
 
 // ─── Activity Item ──────────────────────────────────────────────────────────
 
+import { formatDistanceToNow } from 'date-fns';
+import { vi, enUS } from 'date-fns/locale';
+
 interface ActivityItemProps {
   patientName: string;
   action: string;
@@ -69,6 +72,9 @@ function ActivityItem({
   time,
   status,
 }: ActivityItemProps) {
+  const { i18n } = useTranslation();
+  const currentLocale = i18n.language === 'vi' ? vi : enUS;
+
   const statusConfig = {
     completed: {
       icon: CheckCircle,
@@ -88,21 +94,36 @@ function ActivityItem({
   };
 
   const { icon: StatusIcon, color, bg } = statusConfig[status];
+  const date = new Date(time);
 
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-(--border-color)/20 last:border-none">
+    <div className="flex items-center gap-4 py-4 border-b border-(--border-color)/10 last:border-none group/activity hover:bg-(--bg-primary)/40 transition-all px-2 -mx-2 rounded-xl">
       <div
-        className={`w-8 h-8 rounded-full flex items-center justify-center ${bg}`}
+        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover/activity:scale-110 ${bg}`}
       >
-        <StatusIcon className={`w-4 h-4 ${color}`} />
+        <StatusIcon className={`w-5 h-5 ${color}`} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-(--text-primary) truncate">
+        <p className="text-sm font-bold text-(--text-primary) group-hover/activity:text-brand transition-colors truncate">
           {patientName}
         </p>
-        <p className="text-xs text-gray-400">{action}</p>
+        <p className="text-xs text-(--text-secondary) font-medium">{action}</p>
       </div>
-      <span className="text-xs text-gray-400 shrink-0">{time}</span>
+      <div className="text-right shrink-0">
+        <p className="text-sm font-bold text-(--text-primary) tabular-nums">
+          {date.toLocaleTimeString(i18n.language, {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          })}
+        </p>
+        <p className="text-[10px] text-(--text-muted) font-semibold uppercase tracking-tighter">
+          {formatDistanceToNow(date, {
+            addSuffix: true,
+            locale: currentLocale,
+          })}
+        </p>
+      </div>
     </div>
   );
 }
