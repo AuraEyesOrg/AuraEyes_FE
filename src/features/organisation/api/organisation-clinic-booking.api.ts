@@ -34,6 +34,7 @@ export interface OrganisationClinicAppointmentDto {
   totalAmount?: number;
   depositAmount?: number;
   isPaidDeposit: boolean;
+  paidAmount: number;
   remainingAmount: number | null;
   orderStatus: string | null;
 }
@@ -59,6 +60,8 @@ export interface CreateClinicStaffAppointmentRequest {
   patientId: string;
   slotId: string;
   visitReason?: string;
+  returnUrl?: string;
+  cancelUrl?: string;
 }
 
 export interface CreateClinicStaffAppointmentResult {

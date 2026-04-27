@@ -18,6 +18,7 @@ import { format } from 'date-fns';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import { Link } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import {
   usePatientClinicAppointments,
@@ -83,6 +84,7 @@ const AppointmentsPage = () => {
   const [clinicPage, setClinicPage] = useState(1);
   const [clinicFeedbackTarget, setClinicFeedbackTarget] =
     useState<ClinicAppointmentDto | null>(null);
+  const [qrTarget, setQrTarget] = useState<ClinicAppointmentDto | null>(null);
 
   const { user } = useAuthStore();
   const patientId = user?.roleId;
@@ -162,9 +164,13 @@ const AppointmentsPage = () => {
     t(`PatientAppointments.filters.${status}`);
 
   const getClinicStatusLabel = (appointment: ClinicAppointmentDto) => {
-    if (appointment.status === 'Pending' && appointment.isPaidDeposit) {
-      return t('PatientAppointments.clinicStatus.booked', {
-        defaultValue: 'Booked',
+    if (
+      (appointment.status === 'Pending' ||
+        appointment.status === 'Confirmed') &&
+      appointment.isPaidDeposit
+    ) {
+      return t('PatientAppointments.clinicStatus.depositPaid', {
+        defaultValue: 'Deposit Paid',
       });
     }
     const mappedKey = CLINIC_STATUS_LABEL_KEYS[appointment.status];
@@ -371,6 +377,7 @@ const AppointmentsPage = () => {
                   )}
                   clinicLabel={t('PatientAppointments.labels.clinicVisit')}
                   onRate={() => setClinicFeedbackTarget(appointment)}
+                  onViewQR={() => setQrTarget(appointment)}
                   onSync={handleSync}
                   isSyncing={isSyncing}
                 />
@@ -395,6 +402,11 @@ const AppointmentsPage = () => {
           )}
         </section>
       </div>
+
+      <CheckInQRModal
+        appointment={qrTarget}
+        onClose={() => setQrTarget(null)}
+      />
 
       {bothEmpty && (
         <div className="relative mt-16 overflow-hidden rounded-[3rem] bg-slate-50 dark:bg-slate-900/40 p-16 text-center border border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-100 dark:shadow-none">
@@ -550,6 +562,7 @@ interface ClinicAppointmentCardProps {
   organisationLabel: string;
   clinicLabel: string;
   onRate: () => void;
+  onViewQR: () => void;
   onSync: (orderId: string) => void;
   isSyncing?: boolean;
 }
@@ -563,6 +576,7 @@ const ClinicAppointmentCard = ({
   organisationLabel,
   clinicLabel,
   onRate,
+  onViewQR,
   onSync,
   isSyncing,
 }: ClinicAppointmentCardProps) => {
@@ -611,7 +625,9 @@ const ClinicAppointmentCard = ({
             <span
               className={[
                 'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest shadow-sm border border-transparent transition-all',
-                appointment.status === 'Pending' && appointment.isPaidDeposit
+                (appointment.status === 'Pending' ||
+                  appointment.status === 'Confirmed') &&
+                appointment.isPaidDeposit
                   ? CLINIC_STATUS_STYLES.Booked
                   : (CLINIC_STATUS_STYLES[appointment.status] ??
                     CLINIC_STATUS_STYLES.Pending),
@@ -627,36 +643,54 @@ const ClinicAppointmentCard = ({
             </span>
           </div>
 
-          {appointment.status === 'Pending' && !appointment.isPaidDeposit && (
-            <div className="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 text-amber-700 dark:text-amber-400">
-                <Clock className="w-5 h-5 shrink-0" />
-                <p className="text-xs font-bold leading-tight">
-                  Vui lòng hoàn tất thanh toán đặt cọc để xác nhận lịch hẹn này.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {appointment.orderId && (
-                  <button
-                    onClick={() => onSync(appointment.orderId!)}
-                    disabled={isSyncing}
-                    className="p-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-700 transition-all disabled:opacity-50 group/sync"
-                    title="Cập nhật trạng thái"
+          {appointment.status === 'Pending' &&
+            !appointment.isPaidDeposit &&
+            (appointment.paidAmount ?? 0) <
+              (appointment.depositAmount ?? 0) && (
+              <div className="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 text-amber-700 dark:text-amber-400">
+                  <Clock className="w-5 h-5 shrink-0" />
+                  <p className="text-xs font-bold leading-tight">
+                    Vui lòng hoàn tất thanh toán đặt cọc để xác nhận lịch hẹn
+                    này.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {appointment.orderId && (
+                    <button
+                      onClick={() => onSync(appointment.orderId!)}
+                      disabled={isSyncing}
+                      className="p-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-700 transition-all disabled:opacity-50 group/sync"
+                      title="Cập nhật trạng thái"
+                    >
+                      <RefreshCw
+                        className={`w-4 h-4 ${isSyncing ? 'animate-spin' : 'group-hover/sync:rotate-180 transition-transform duration-500'}`}
+                      />
+                    </button>
+                  )}
+                  <Link
+                    to={resolvePathWithLocale('/patient/wallet')}
+                    className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-95 whitespace-nowrap"
                   >
-                    <RefreshCw
-                      className={`w-4 h-4 ${isSyncing ? 'animate-spin' : 'group-hover/sync:rotate-180 transition-transform duration-500'}`}
-                    />
-                  </button>
-                )}
-                <Link
-                  to={resolvePathWithLocale('/patient/wallet')}
-                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-95 whitespace-nowrap"
-                >
-                  Thanh toán ngay
-                </Link>
+                    Thanh toán ngay
+                  </Link>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+          {(appointment.status === 'Confirmed' ||
+            appointment.status === 'Pending') &&
+            appointment.isPaidDeposit && (
+              <div className="mb-6">
+                <button
+                  onClick={onViewQR}
+                  className="flex items-center gap-2 text-xs font-bold text-brand hover:text-brand/80 transition-colors"
+                >
+                  <QrCode className="w-4 h-4" />
+                  Show Check-in QR Code
+                </button>
+              </div>
+            )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
             <div className="flex flex-col sm:flex-row sm:items-center gap-6">
@@ -859,5 +893,76 @@ export const AppointmentsLoadingFallback = () => (
     </div>
   </PatientLayout>
 );
+
+const CheckInQRModal = ({
+  appointment,
+  onClose,
+}: {
+  appointment: ClinicAppointmentDto | null;
+  onClose: () => void;
+}) => {
+  if (!appointment) return null;
+
+  // Format matches ClinicStaffAppointmentsPage.tsx:parseClinicCheckInQrPayload
+  // Prefix|appointmentId|patientId|organisationId|date|start|end
+  const qrValue = [
+    'AURA-CLINIC-APPOINTMENT',
+    appointment.id,
+    appointment.patientId,
+    'current-clinic', // organisationId if available, or just skip if staff handles it
+    appointment.date,
+    appointment.startTime,
+    appointment.endTime,
+  ].join('|');
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 p-8 flex flex-col items-center text-center">
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors"
+        >
+          <XCircle size={24} />
+        </button>
+
+        <div className="w-16 h-16 bg-brand/10 text-brand rounded-2xl flex items-center justify-center mb-6">
+          <QrCode size={32} />
+        </div>
+
+        <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">
+          Check-in QR Code
+        </h3>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 px-4">
+          Show this code to the clinic receptionist to confirm your arrival.
+        </p>
+
+        <div className="p-6 bg-white rounded-3xl shadow-inner border border-slate-100 mb-8">
+          <QRCodeSVG value={qrValue} size={200} level="H" />
+        </div>
+
+        <div className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 mb-6">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+            Appointment Time
+          </p>
+          <p className="text-sm font-black text-slate-900 dark:text-white">
+            {format(new Date(appointment.date), 'MMMM dd, yyyy')}
+          </p>
+          <p className="text-xs font-bold text-brand">
+            {appointment.startTime} - {appointment.endTime}
+          </p>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="w-full py-4 bg-slate-900 dark:bg-brand text-white rounded-2xl font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-brand/20"
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  );
+};
+
+import { QrCode } from 'lucide-react';
 
 export default AppointmentsPage;
