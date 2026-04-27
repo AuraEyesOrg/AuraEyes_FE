@@ -447,11 +447,11 @@ const AppointmentsPage = () => {
           clinicFeedbackTarget
             ? {
                 clinicId: clinicFeedbackTarget.organisationId,
-                clinicName: clinicFeedbackTarget.organisationName,
+                clinicName: clinicFeedbackTarget.organisationName ?? undefined,
                 doctorId: clinicFeedbackTarget.ophthalId ?? undefined,
                 doctorName: clinicFeedbackTarget.ophthalFullName ?? undefined,
-                staffId: (clinicFeedbackTarget as any).staffId,
-                staffName: (clinicFeedbackTarget as any).staffName,
+                staffId: (clinicFeedbackTarget as any).staffId ?? undefined,
+                staffName: (clinicFeedbackTarget as any).staffName ?? undefined,
               }
             : undefined
         }

@@ -22,22 +22,21 @@ export interface MedicalRecordDto {
 }
 
 export enum MedicalRecordStatus {
-  Draft = 'Draft',
-  ClinicFilling = 'ClinicFilling',
-  DoctorFilling = 'DoctorFilling',
-  Completed = 'Completed',
-  Locked = 'Locked',
+  DraftAdmin = 'Draft_Admin',
+  PendingClinical = 'Pending_Clinical',
+  Finalized = 'Finalized',
 }
 
 export interface CreateMedicalRecordCommand {
   patientId: string;
   consultationSessionId?: string;
-  administrativeData: any;
+  medicalRecordNumber: string;
+  administrativeDataJson?: string;
 }
 
 export interface UpdateMedicalRecordClinicalCommand {
   id: string;
-  clinicalData: any;
+  clinicalDataJson: string;
   finalDiagnosis: string;
   treatmentPlan: string;
 }
@@ -68,6 +67,11 @@ export const medicalRecordApi = {
 
   finalize: (id: string) =>
     api.post<ApiResponse<boolean>>(`/api/medical-records/${id}/finalize`), // Updated to POST
+
+  downloadPdf: (id: string) =>
+    api.get<Blob>(`/api/medical-records/${id}/pdf`, {
+      responseType: 'blob',
+    }),
 
   getById: (id: string) =>
     api.get<ApiResponse<MedicalRecordDto>>(`/api/medical-records/${id}`),

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Printer, ArrowLeft, Save } from 'lucide-react';
+import { Printer, ArrowLeft, Save, Download } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { medicalRecordApi } from '../api/medical-record.api';
 import { useParams } from 'react-router-dom';
@@ -21,6 +21,7 @@ export default function ErmFormPatient() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [data, setData] = useState<any>(location.state?.formData || {});
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   useEffect(() => {
     const loadRecord = async () => {
@@ -85,6 +86,46 @@ export default function ErmFormPatient() {
     }
   };
 
+  const handleDownloadPdf = async () => {
+    if (!id || id === 'new') {
+      toast.warning('Hồ sơ chưa được tạo. Không thể tải PDF.');
+      return;
+    }
+
+    try {
+      setIsDownloadingPdf(true);
+      const response = await medicalRecordApi.downloadPdf(id);
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+
+      const contentDisposition = response.headers['content-disposition'] as
+        | string
+        | undefined;
+      const fallbackFileName = `EMR_${data.maYT || id}.pdf`;
+      const fileNameMatch = contentDisposition?.match(
+        /filename\*?=(?:UTF-8''|\")?([^\";]+)/i
+      );
+      const fileName = fileNameMatch?.[1]
+        ? decodeURIComponent(fileNameMatch[1].replace(/\"/g, '').trim())
+        : fallbackFileName;
+
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Đã tải EMR PDF thành công.');
+    } catch (error) {
+      console.error(error);
+      toast.error('Không thể tải EMR PDF. Vui lòng thử lại.');
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
   const renderSquare = (checked: boolean, field?: string, value?: string) => (
     <span
       onClick={() => {
@@ -124,6 +165,14 @@ export default function ErmFormPatient() {
         >
           <Printer className="w-4 h-4" /> IN BỆNH ÁN
         </button>
+        <button
+          onClick={handleDownloadPdf}
+          disabled={isDownloadingPdf}
+          className="bg-emerald-600 text-white px-8 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 hover:bg-emerald-700 shadow-xl transition-all disabled:opacity-50"
+        >
+          <Download className="w-4 h-4" />
+          {isDownloadingPdf ? 'ĐANG TẢI PDF...' : 'TẢI PDF'}
+        </button>
       </div>
 
       <main
@@ -137,7 +186,7 @@ export default function ErmFormPatient() {
               <img src="/logo.png" alt="AURA" className="h-10 w-auto" />
               <div className="text-[10px] font-bold leading-tight">
                 <p className="uppercase">Hệ thống phòng khám mắt</p>
-                <p className="text-primary uppercase">Aura Digital Clinic</p>
+                <p className="text-primary uppercase">AURA</p>
               </div>
             </div>
             <div className="text-[10px] font-bold uppercase space-y-0.5">

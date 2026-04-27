@@ -7,7 +7,6 @@ import {
   Eye,
   Activity,
   User,
-  FileText,
   Lock,
   RotateCcw,
 } from 'lucide-react';
@@ -33,9 +32,9 @@ interface DetailedEyeItem {
 }
 
 /**
- * ERM FORM DATA
+ * EMR FORM DATA
  */
-interface FullErmFormData {
+interface FullEmrFormData {
   khoa: string;
   giuong: string;
   soLuuTru: string;
@@ -104,7 +103,7 @@ const createInitialEyeData = () => {
   return data;
 };
 
-const INITIAL_VALUES: Partial<FullErmFormData> = {
+const INITIAL_VALUES: Partial<FullEmrFormData> = {
   fullName: '',
   gender: 'Nam',
   objectType: 'BHYT',
@@ -222,7 +221,7 @@ export default function ErmForm() {
   const { user } = useAuthStore();
 
   const [recordStatus, setRecordStatus] = React.useState<MedicalRecordStatus>(
-    MedicalRecordStatus.Draft
+    MedicalRecordStatus.DraftAdmin
   );
 
   // Custom Hooks
@@ -240,8 +239,8 @@ export default function ErmForm() {
   const isFinalizer = user?.permissions?.includes('medical-records:finalize');
 
   const { register, handleSubmit, setValue, reset, control } =
-    useForm<FullErmFormData>({
-      defaultValues: INITIAL_VALUES as FullErmFormData,
+    useForm<FullEmrFormData>({
+      defaultValues: INITIAL_VALUES as FullEmrFormData,
     });
 
   // Auto-transition to DoctorFilling if opened by Doctor
@@ -249,8 +248,7 @@ export default function ErmForm() {
     if (
       id &&
       isOphthalmologist &&
-      (recordStatus === MedicalRecordStatus.Draft ||
-        recordStatus === MedicalRecordStatus.ClinicFilling)
+      recordStatus === MedicalRecordStatus.DraftAdmin
     ) {
       startConsultationMutation.mutate(id);
     }
@@ -271,7 +269,7 @@ export default function ErmForm() {
     } else if (location.state?.formData) {
       const incoming = location.state.formData;
       Object.keys(incoming).forEach((key) => {
-        setValue(key as keyof FullErmFormData, incoming[key]);
+        setValue(key as keyof FullEmrFormData, incoming[key]);
       });
     }
   }, [record, location.state, reset, setValue]);
@@ -289,7 +287,7 @@ export default function ErmForm() {
     toast.success('Đã thiết lập trạng thái: Tất cả bình thường');
   };
 
-  const onSubmit = async (data: FullErmFormData) => {
+  const onSubmit = async (data: FullEmrFormData) => {
     const missingFields: string[] = [];
 
     // 1. Validate Administrative Data (Clinic Staff / Doctor)
@@ -410,7 +408,7 @@ export default function ErmForm() {
         await updateDiagnosisMutation.mutateAsync({
           id,
           data: {
-            clinicalData: clinicalData,
+            clinicalDataJson: JSON.stringify(clinicalData),
             finalDiagnosis: data.finalDiagnosisMain,
             treatmentPlan: data.finalDiagnosisExtra,
           },
@@ -449,9 +447,8 @@ export default function ErmForm() {
   );
 
   const canProceedToAi =
-    recordStatus === MedicalRecordStatus.ClinicFilling ||
-    recordStatus === MedicalRecordStatus.DoctorFilling ||
-    recordStatus === MedicalRecordStatus.Completed;
+    recordStatus === MedicalRecordStatus.PendingClinical ||
+    recordStatus === MedicalRecordStatus.Finalized;
 
   const renderEyeCell = (
     eye: 'rightEye' | 'leftEye',
@@ -530,19 +527,18 @@ export default function ErmForm() {
   };
 
   const renderStepIndicator = () => (
-    <div className="flex items-center justify-center mb-10">
-      <div className="flex items-center gap-4 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+    <div className="flex items-center justify-center mb-8">
+      <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200">
         <button
           onClick={() => setActiveStep('admin')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all ${activeStep === 'admin' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-400 hover:text-slate-600'}`}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all ${activeStep === 'admin' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
         >
           <User className="w-4 h-4" /> 1. HÀNH CHÍNH
         </button>
-        <div className="w-8 h-px bg-slate-100" />
         <button
           onClick={() => isOphthalmologist && setActiveStep('clinical')}
           disabled={!isOphthalmologist}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all ${activeStep === 'clinical' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-300 cursor-not-allowed'}`}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all ${activeStep === 'clinical' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-300 cursor-not-allowed hover:bg-slate-50'}`}
         >
           <Activity className="w-4 h-4" /> 2. KHÁM LÂM SÀNG
         </button>
@@ -555,21 +551,21 @@ export default function ErmForm() {
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-2xl border-b border-slate-200 px-8 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
-            <div className="bg-primary w-8 h-8 rounded-xl flex items-center justify-center">
-              <FileText className="w-5 h-5 text-white" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="AURA"
+              className="h-8 w-auto object-contain"
+            />
             <span className="font-black text-xl tracking-tighter text-slate-900">
-              AURA <span className="text-primary">EMR</span>
+              AURA
             </span>
           </div>
           <div className="h-6 w-px bg-slate-200 mx-2" />
           <div
             className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-              recordStatus === MedicalRecordStatus.Locked
-                ? 'bg-rose-100 text-rose-600'
-                : recordStatus === MedicalRecordStatus.Completed
-                  ? 'bg-emerald-100 text-emerald-600'
-                  : 'bg-blue-100 text-blue-600'
+              recordStatus === MedicalRecordStatus.Finalized
+                ? 'bg-emerald-100 text-emerald-600'
+                : 'bg-blue-100 text-blue-600'
             }`}
           >
             Trạng thái: {recordStatus}
@@ -605,7 +601,7 @@ export default function ErmForm() {
             <Eye className="w-4 h-4" /> BẢN IN
           </button>
 
-          {isFinalizer && recordStatus !== MedicalRecordStatus.Locked && (
+          {isFinalizer && recordStatus !== MedicalRecordStatus.Finalized && (
             <button
               onClick={handleFinalize}
               className="flex items-center gap-2 bg-rose-500 text-white px-8 py-2.5 rounded-2xl font-black text-[11px] hover:bg-rose-600 hover:shadow-xl hover:shadow-rose-500/20 transition-all"
@@ -619,7 +615,7 @@ export default function ErmForm() {
             disabled={
               updateDiagnosisMutation.isPending ||
               updateAdministrativeMutation.isPending ||
-              recordStatus === MedicalRecordStatus.Locked
+              recordStatus === MedicalRecordStatus.Finalized
             }
             className="flex items-center gap-2 bg-primary text-white px-8 py-2.5 rounded-2xl font-black text-[11px] hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/20 transition-all disabled:opacity-50"
           >
@@ -630,12 +626,7 @@ export default function ErmForm() {
       </nav>
 
       <main className="max-w-[1200px] mx-auto p-8">
-        <div className="flex flex-col items-center justify-center space-y-4 pt-4 mb-12">
-          <img
-            src="/logo.png"
-            alt="AURA"
-            className="h-14 w-auto object-contain"
-          />
+        <div className="flex flex-col items-center justify-center space-y-4 pt-4 mb-8">
           <h1 className="text-2xl font-black uppercase tracking-[0.3em] text-slate-800">
             Hồ sơ bệnh án điện tử
           </h1>
@@ -644,7 +635,7 @@ export default function ErmForm() {
 
         {renderStepIndicator()}
 
-        <div className="bg-white rounded-[3rem] shadow-2xl border border-white overflow-hidden p-2">
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
           {activeStep === 'admin' ? (
             <div className="p-8 md:p-12 space-y-12">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -865,7 +856,7 @@ export default function ErmForm() {
 
       {isOphthalmologist && (
         <button
-          onClick={() => reset(INITIAL_VALUES as FullErmFormData)}
+          onClick={() => reset(INITIAL_VALUES as FullEmrFormData)}
           className="fixed bottom-8 left-8 p-5 bg-white text-slate-400 hover:text-primary rounded-2xl shadow-2xl border border-slate-100 transition-all hover:scale-110 active:scale-95 z-40"
         >
           <RotateCcw className="w-6 h-6" />
