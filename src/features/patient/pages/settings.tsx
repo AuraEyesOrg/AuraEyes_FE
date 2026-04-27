@@ -4,7 +4,6 @@ import {
   User,
   Shield,
   Bell,
-  CreditCard,
   ChevronRight,
   Moon,
   Sun,
@@ -101,17 +100,6 @@ export default function SettingsPage() {
           titleKey: 'PatientSettings.items.notifications.title',
           descriptionKey: 'PatientSettings.items.notifications.description',
           path: '/patient/notifications',
-        },
-      ],
-    },
-    {
-      titleKey: 'PatientSettings.sections.billing',
-      items: [
-        {
-          icon: CreditCard,
-          titleKey: 'PatientSettings.items.paymentMethods.title',
-          descriptionKey: 'PatientSettings.items.paymentMethods.description',
-          path: '/patient/wallet',
         },
       ],
     },

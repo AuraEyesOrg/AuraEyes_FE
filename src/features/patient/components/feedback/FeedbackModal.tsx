@@ -101,6 +101,7 @@ export const FeedbackModal = ({
   showCategory = false,
   initialValues,
   labels,
+  targets,
   onClose,
   onSubmit,
 }: FeedbackModalProps) => {
