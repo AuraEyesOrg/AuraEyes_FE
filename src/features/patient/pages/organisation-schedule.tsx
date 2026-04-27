@@ -55,7 +55,6 @@ export default function OrganisationSchedulePage() {
   const navigate = useNavigate();
 
   // 1. Logic
-  const organisationId = '00000000-0000-0000-0000-000000000000'; // Should be dynamic in production
   const [selectedDate, setSelectedDate] = useState<Date>(
     startOfDay(new Date())
   );
@@ -74,7 +73,7 @@ export default function OrganisationSchedulePage() {
   }, [selectedDate]);
 
   const { data: schedule, isLoading: loadingSchedule } =
-    useOrganisationSchedule(organisationId, dateParams, true);
+    useOrganisationSchedule(dateParams, true);
 
   const { mutate: createBooking, isPending: isBooking } =
     useCreateClinicAppointment();
@@ -116,7 +115,6 @@ export default function OrganisationSchedulePage() {
 
     createBooking(
       {
-        organisationId,
         slotId: selectedDoctorSlot.slotId,
         visitReason: visitReason || 'Regular eye checkup',
       },

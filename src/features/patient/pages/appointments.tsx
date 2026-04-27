@@ -178,12 +178,9 @@ const AppointmentsPage = () => {
     if (!clinicFeedbackTarget) return;
     try {
       await createClinicFeedbackMutation.mutateAsync({
-        clinicId: clinicFeedbackTarget.organisationId,
-        request: {
-          appointmentId: clinicFeedbackTarget.id,
-          rating,
-          comment,
-        },
+        appointmentId: clinicFeedbackTarget.id,
+        rating,
+        comment,
       });
       setClinicFeedbackTarget(null);
       toast.success(t('PatientAppointments.toast.feedbackSubmitted'));
@@ -440,14 +437,14 @@ const AppointmentsPage = () => {
         subtitle={t('PatientAppointments.feedback.modalSubtitle')}
         contextLabel={
           clinicFeedbackTarget
-            ? `${clinicFeedbackTarget.organisationName ?? t('PatientAppointments.labels.clinicVisit')} - ${clinicFeedbackTarget.date}`
+            ? `${t('PatientAppointments.labels.clinicVisit')} - ${clinicFeedbackTarget.date}`
             : undefined
         }
         targets={
           clinicFeedbackTarget
             ? {
-                clinicId: clinicFeedbackTarget.organisationId,
-                clinicName: clinicFeedbackTarget.organisationName ?? undefined,
+                clinicId: '00000000-0000-0000-0000-000000000000',
+                clinicName: t('PatientAppointments.labels.clinicVisit'),
                 doctorId: clinicFeedbackTarget.ophthalId ?? undefined,
                 doctorName: clinicFeedbackTarget.ophthalFullName ?? undefined,
                 staffId: (clinicFeedbackTarget as any).staffId ?? undefined,
@@ -472,16 +469,13 @@ const AppointmentsPage = () => {
           if (!clinicFeedbackTarget) return;
           try {
             await createClinicFeedbackMutation.mutateAsync({
-              clinicId: values.targetId ?? clinicFeedbackTarget.organisationId,
-              request: {
-                appointmentId: clinicFeedbackTarget.id,
-                rating: values.rating,
-                comment: values.comment,
-                doctorId:
-                  values.targetType === 'DOCTOR' ? values.targetId : undefined,
-                staffId:
-                  values.targetType === 'STAFF' ? values.targetId : undefined,
-              },
+              appointmentId: clinicFeedbackTarget.id,
+              rating: values.rating,
+              comment: values.comment,
+              doctorId:
+                values.targetType === 'DOCTOR' ? values.targetId : undefined,
+              staffId:
+                values.targetType === 'STAFF' ? values.targetId : undefined,
             });
             setClinicFeedbackTarget(null);
           } catch (error) {
@@ -606,13 +600,11 @@ const ClinicAppointmentCard = ({
                   <Building2 className="h-3.5 w-3.5" strokeWidth={2.5} />
                 </div>
                 <span className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">
-                  {appointment.organisationName
-                    ? organisationLabel
-                    : 'General Appointment'}
+                  {clinicLabel}
                 </span>
               </div>
               <h3 className="text-2xl font-black text-slate-900 dark:text-white truncate tracking-tight">
-                {appointment.organisationName ?? clinicLabel}
+                {clinicLabel}
               </h3>
             </div>
 

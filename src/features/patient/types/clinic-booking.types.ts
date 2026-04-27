@@ -50,7 +50,6 @@ export interface OrganisationScheduleDto {
 }
 
 export interface CreateClinicAppointmentRequest {
-  organisationId: string;
   slotId: string;
   visitReason?: string;
 }
@@ -58,8 +57,6 @@ export interface CreateClinicAppointmentRequest {
 export interface ClinicAppointmentDto {
   id: string;
   patientId: string;
-  organisationId: string;
-  organisationName?: string | null;
   slotId: string;
   date: string;
   startTime: string;
