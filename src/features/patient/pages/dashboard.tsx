@@ -2,7 +2,6 @@ import {
   Calendar,
   FileText,
   Eye,
-  Wallet,
   MessageCircle,
   ArrowRight,
   ChevronRight,
@@ -18,7 +17,6 @@ import { useTranslation } from 'react-i18next';
 import PatientLayout from '../components/PatientLayout';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatShortDate } from '@/lib/date-utils';
-import { formatCurrency } from '@/lib/helper';
 import { screeningApi } from '../api/screening.api';
 
 // ============ HELPERS ============
@@ -75,15 +73,8 @@ export default function PatientDashboard() {
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
 
-  const {
-    profile,
-    wallet,
-    latestAnalysis,
-    latestReport,
-    recentReports,
-    nextAppointment,
-    isLoading,
-  } = useDashboard();
+  const { profile, latestReport, recentReports, nextAppointment, isLoading } =
+    useDashboard();
 
   const firstName =
     profile?.fullName?.split(' ')[0] ??
@@ -175,7 +166,7 @@ export default function PatientDashboard() {
   };
 
   const currentDate = formatShortDate(new Date().toISOString());
-  const latestReportRisk = latestReport?.riskLevel ?? latestAnalysis?.riskLevel;
+  const latestReportRisk = latestReport?.riskLevel;
   const effectiveLatestRisk = latestSessionRisk ?? latestReportRisk;
   const hasLatestSession = Boolean(latestSession);
   const hasHeroResult = Boolean(
@@ -266,20 +257,6 @@ export default function PatientDashboard() {
       valueColor: 'text-[var(--text-primary)]',
       bgColor: 'icon-bg-pink',
       iconColor: 'text-pink-500',
-    },
-    {
-      icon: Wallet,
-      label: t('PatientDashboard.stats.walletBalance'),
-      value: wallet
-        ? formatCurrency(wallet.balance, {
-            locale: 'vi-VN',
-            useCurrencyStyle: false,
-            suffix: ' VNĐ',
-          })
-        : t('PatientDashboard.stats.noWalletValue'),
-      valueColor: 'text-[var(--text-primary)]',
-      bgColor: 'icon-bg-orange',
-      iconColor: 'text-orange-500',
     },
   ];
 
