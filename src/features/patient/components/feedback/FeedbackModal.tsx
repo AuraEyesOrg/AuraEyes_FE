@@ -13,6 +13,8 @@ type ModalFormValues = {
   rating: number;
   comment?: string;
   category: WebsiteFeedbackCategory;
+  targetId?: string;
+  targetType: 'CLINIC' | 'DOCTOR' | 'STAFF';
 };
 
 const feedbackSchema: yup.ObjectSchema<ModalFormValues> = yup
@@ -26,6 +28,11 @@ const feedbackSchema: yup.ObjectSchema<ModalFormValues> = yup
     category: yup
       .mixed<WebsiteFeedbackCategory>()
       .oneOf(['BUG', 'UX', 'SUGGESTION', 'OTHER'])
+      .required(),
+    targetId: yup.string().optional(),
+    targetType: yup
+      .mixed<'CLINIC' | 'DOCTOR' | 'STAFF'>()
+      .oneOf(['CLINIC', 'DOCTOR', 'STAFF'])
       .required(),
   })
   .required();
@@ -54,10 +61,26 @@ interface FeedbackModalProps {
     discardDescription?: string;
     keepEditing?: string;
     discardDraft?: string;
+    targetTitle?: string;
+    targetClinic?: string;
+    targetDoctor?: string;
+    targetStaff?: string;
+  };
+  targets?: {
+    clinicId?: string;
+    clinicName?: string;
+    doctorId?: string;
+    doctorName?: string;
+    staffId?: string;
+    staffName?: string;
   };
   onClose: () => void;
   onSubmit: (
-    values: FeedbackFormValues & { category?: WebsiteFeedbackCategory }
+    values: FeedbackFormValues & {
+      category?: WebsiteFeedbackCategory;
+      targetType?: 'CLINIC' | 'DOCTOR' | 'STAFF';
+      targetId?: string;
+    }
   ) => Promise<void> | void;
 }
 
@@ -78,6 +101,7 @@ export const FeedbackModal = ({
   showCategory = false,
   initialValues,
   labels,
+  targets,
   onClose,
   onSubmit,
 }: FeedbackModalProps) => {
@@ -88,8 +112,10 @@ export const FeedbackModal = ({
       rating: initialValues?.rating ?? 0,
       comment: initialValues?.comment ?? '',
       category: initialValues?.category ?? 'UX',
+      targetType: (initialValues as any)?.targetType ?? 'CLINIC',
+      targetId: (initialValues as any)?.targetId ?? targets?.clinicId,
     }),
-    [initialValues]
+    [initialValues, targets]
   );
 
   const {
@@ -97,6 +123,7 @@ export const FeedbackModal = ({
     control,
     register,
     reset,
+    setValue,
     formState: { errors, isDirty },
     watch,
   } = useForm<ModalFormValues>({
@@ -168,10 +195,90 @@ export const FeedbackModal = ({
               rating: values.rating,
               comment: values.comment || undefined,
               category: values.category,
+              targetType: values.targetType,
+              targetId: values.targetId,
             });
           })}
-          className="space-y-5 px-6 py-5"
+          className="space-y-6 px-6 py-5"
         >
+          {targets && (
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-(--text-primary)">
+                {labels?.targetTitle ?? 'Bạn muốn đánh giá đối tượng nào?'}
+              </p>
+              <Controller
+                control={control}
+                name="targetType"
+                render={({ field }) => (
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        field.onChange('CLINIC');
+                        setValue('targetId', targets.clinicId);
+                      }}
+                      className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all ${
+                        field.value === 'CLINIC'
+                          ? 'border-primary bg-primary/5 text-primary'
+                          : 'border-(--border-color) bg-(--bg-secondary)/30 text-(--text-secondary) hover:bg-(--bg-secondary)'
+                      }`}
+                    >
+                      <span className="text-[10px] font-bold uppercase tracking-wider">
+                        {labels?.targetClinic ?? 'Phòng khám'}
+                      </span>
+                      <span className="truncate text-xs opacity-70">
+                        {targets.clinicName ?? 'Hệ thống'}
+                      </span>
+                    </button>
+
+                    {targets.doctorId && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          field.onChange('DOCTOR');
+                          setValue('targetId', targets.doctorId);
+                        }}
+                        className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all ${
+                          field.value === 'DOCTOR'
+                            ? 'border-primary bg-primary/5 text-primary'
+                            : 'border-(--border-color) bg-(--bg-secondary)/30 text-(--text-secondary) hover:bg-(--bg-secondary)'
+                        }`}
+                      >
+                        <span className="text-[10px] font-bold uppercase tracking-wider">
+                          {labels?.targetDoctor ?? 'Bác sĩ'}
+                        </span>
+                        <span className="truncate text-xs opacity-70">
+                          {targets.doctorName}
+                        </span>
+                      </button>
+                    )}
+
+                    {targets.staffId && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          field.onChange('STAFF');
+                          setValue('targetId', targets.staffId);
+                        }}
+                        className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all ${
+                          field.value === 'STAFF'
+                            ? 'border-primary bg-primary/5 text-primary'
+                            : 'border-(--border-color) bg-(--bg-secondary)/30 text-(--text-secondary) hover:bg-(--bg-secondary)'
+                        }`}
+                      >
+                        <span className="text-[10px] font-bold uppercase tracking-wider">
+                          {labels?.targetStaff ?? 'Nhân viên'}
+                        </span>
+                        <span className="truncate text-xs opacity-70">
+                          {targets.staffName}
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              />
+            </div>
+          )}
           <div>
             <p className="mb-2 text-sm font-semibold text-(--text-primary)">
               {labels?.rating ?? 'Rating'}

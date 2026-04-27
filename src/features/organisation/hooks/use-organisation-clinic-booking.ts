@@ -2,10 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   checkInClinicAppointment,
   completeClinicAppointment,
+  createClinicStaffAppointment,
+  getClinicStaffAvailableSlots,
   getOrganisationAppointments,
   markNoShowClinicAppointment,
   startClinicAppointment,
 } from '../api/organisation-clinic-booking.api';
+import type { CreateClinicStaffAppointmentRequest } from '../api/organisation-clinic-booking.api';
 
 export const organisationClinicBookingKeys = {
   all: ['organisation-clinic-booking'] as const,
@@ -16,6 +19,8 @@ export const organisationClinicBookingKeys = {
       organisationId,
       date,
     ] as const,
+  availableSlots: (date?: string) =>
+    [...organisationClinicBookingKeys.all, 'available-slots', date] as const,
 };
 
 export const useOrganisationAppointments = (
@@ -29,6 +34,28 @@ export const useOrganisationAppointments = (
     enabled: enabled && !!organisationId,
     staleTime: 10_000,
   });
+
+export const useClinicStaffAvailableSlots = (date?: string, enabled = true) =>
+  useQuery({
+    queryKey: organisationClinicBookingKeys.availableSlots(date),
+    queryFn: () => getClinicStaffAvailableSlots(date),
+    enabled,
+    staleTime: 15_000,
+  });
+
+export const useCreateClinicStaffAppointment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: CreateClinicStaffAppointmentRequest) =>
+      createClinicStaffAppointment(request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: organisationClinicBookingKeys.all,
+      });
+      queryClient.invalidateQueries({ queryKey: ['clinic-queue'] });
+    },
+  });
+};
 
 export const useCheckInClinicAppointment = () => {
   const queryClient = useQueryClient();
@@ -83,6 +110,34 @@ export const useMarkNoShowClinicAppointment = () => {
       queryClient.invalidateQueries({
         queryKey: organisationClinicBookingKeys.all,
       });
+    },
+  });
+};
+
+export const useCompleteOrderPayment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      orderId,
+      method = 'Cash',
+      returnUrl,
+      cancelUrl,
+    }: {
+      orderId: string;
+      method?: 'Cash' | 'PayOS';
+      returnUrl?: string;
+      cancelUrl?: string;
+    }) =>
+      import('@/features/clinic-staff/api/billing.api').then((m) =>
+        m.completeOrder(orderId, method, returnUrl, cancelUrl)
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: organisationClinicBookingKeys.all,
+      });
+      // Also invalidate billing/financial queries if they exist
+      queryClient.invalidateQueries({ queryKey: ['financial'] });
+      queryClient.invalidateQueries({ queryKey: ['system-admin', 'orders'] });
     },
   });
 };

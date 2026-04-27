@@ -3,6 +3,7 @@ export type ClinicAppointmentStatus =
   | 'Confirmed'
   | 'CheckedIn'
   | 'InProgress'
+  | 'WaitingForPayment'
   | 'Completed'
   | 'Cancelled'
   | 'NoShow';
@@ -19,19 +20,36 @@ export interface OrganisationSummaryDto {
   avatarUrl?: string | null;
 }
 
-export interface OrganisationAvailableSlotDto {
+export interface DoctorSlotDetailDto {
   slotId: string;
+  doctorId: string;
+  doctorName: string;
+  doctorAvatar?: string | null;
+  isBooked: boolean;
+  price: number;
+}
+
+export interface AggregatedSlotDto {
   date: string;
   startTime: string;
   endTime: string;
-  maxCapacity: number;
-  bookedCount: number;
-  remaining: number;
-  cost?: number | null;
+  doctors: DoctorSlotDetailDto[];
+  totalMaxCapacity: number;
+  totalBookedCount: number;
+  isAvailable: boolean;
+}
+
+export interface OrganisationScheduleDto {
+  id: string;
+  name: string;
+  address?: string | null;
+  description?: string | null;
+  ratingAverage: number;
+  ratingCount: number;
+  aggregatedSlots: AggregatedSlotDto[];
 }
 
 export interface CreateClinicAppointmentRequest {
-  organisationId: string;
   slotId: string;
   visitReason?: string;
 }
@@ -39,8 +57,6 @@ export interface CreateClinicAppointmentRequest {
 export interface ClinicAppointmentDto {
   id: string;
   patientId: string;
-  organisationId: string;
-  organisationName?: string | null;
   slotId: string;
   date: string;
   startTime: string;
@@ -48,12 +64,24 @@ export interface ClinicAppointmentDto {
   visitReason?: string | null;
   status: ClinicAppointmentStatus;
   createdAt?: string;
+  ophthalId?: string | null;
+  ophthalFullName?: string | null;
+  ophthalAvatarUrl?: string | null;
+  staffId?: string | null;
+  staffName?: string | null;
+  cost?: number | null;
   /**
    * True when the current patient has already submitted feedback for this
    * appointment. Populated server-side so the client never has to run an
    * N+1 existence-check across organisations.
    */
   hasFeedback?: boolean;
+  orderId?: string | null;
+  totalAmount?: number | null;
+  depositAmount?: number | null;
+  isPaidDeposit?: boolean;
+  paidAmount?: number | null;
+  orderStatus?: string | null;
 }
 
 /** Matches backend enum {@link Application.Scheduling.Appointments.Queries.GetPatientClinicAppointments.PatientAppointmentTab}. */
@@ -72,8 +100,24 @@ export interface PatientClinicAppointmentsQuery {
 export interface CreateClinicAppointmentResult {
   appointmentId: string;
   status: ClinicAppointmentStatus;
+  /** PayOS checkout URL – redirect patient here to complete the 30% deposit. */
+  paymentUrl: string | null;
+  /** The Order ID created for this booking deposit. */
+  orderId: string | null;
+  /** Deposit amount in VND (30% of full slot price). */
+  depositAmount?: number | null;
 }
 
 export interface CompleteClinicAppointmentRequest {
   notes?: string;
+}
+
+export interface OrganisationAvailableSlotDto {
+  slotId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  remaining: number;
+  maxCapacity: number;
+  cost?: number | null;
 }

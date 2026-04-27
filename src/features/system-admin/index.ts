@@ -13,6 +13,7 @@ export {
   UsersPage,
   AuditLogsPage,
   PermissionsPage,
+  SchedulingPage,
 } from './pages';
 
 // Components

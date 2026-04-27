@@ -15,14 +15,13 @@ export interface AuthUser {
   providerAvatarUrl?: string | null;
   roles: string[];
   emailConfirmed: boolean;
-  organizationId?: string | null;
   employmentType?: 'FullTime' | 'PartTime' | null;
   twoFactorEnabled: boolean;
-  mustChangePassword?: boolean | null;
   isVerified?: boolean | null;
   verificationStatus?: string | null;
   contractStatus?: string | null;
   permissions?: string[];
+  subRoles?: string[];
 }
 
 type AuthState = {
@@ -58,15 +57,14 @@ const isSameAuthUser = (a: AuthUser, b: AuthUser): boolean => {
     a.uploadedAvatarUrl === b.uploadedAvatarUrl &&
     a.providerAvatarUrl === b.providerAvatarUrl &&
     a.emailConfirmed === b.emailConfirmed &&
-    a.organizationId === b.organizationId &&
     a.employmentType === b.employmentType &&
     a.twoFactorEnabled === b.twoFactorEnabled &&
-    a.mustChangePassword === b.mustChangePassword &&
     a.isVerified === b.isVerified &&
     a.verificationStatus === b.verificationStatus &&
     a.contractStatus === b.contractStatus &&
     areStringArraysEqual(a.roles, b.roles) &&
-    areStringArraysEqual(a.permissions ?? [], b.permissions ?? [])
+    areStringArraysEqual(a.permissions ?? [], b.permissions ?? []) &&
+    areStringArraysEqual(a.subRoles ?? [], b.subRoles ?? [])
   );
 };
 
@@ -76,8 +74,25 @@ const normalizeAuthUser = (user: AuthUser): AuthUser => {
   const uploadedAvatarUrl = resolveAvatarUrl(user.uploadedAvatarUrl) ?? null;
   const providerAvatarUrl = resolveAvatarUrl(user.providerAvatarUrl) ?? null;
 
+  // Normalize roles to match frontend expectations (PascalCase)
+  const normalizedRoles = (user.roles ?? []).map((role) => {
+    const r = role.toLowerCase().replace(/[\s_-]/g, '');
+    if (r === 'systemadmin' || r === 'admin') return 'SystemAdmin';
+    if (r === 'ophthalmologist' || r === 'doctor') return 'Ophthalmologist';
+    if (r === 'clinicstaff') return 'ClinicStaff';
+    if (r === 'patient') return 'Patient';
+    return role; // Fallback
+  });
+
   return {
     ...user,
+    roles: normalizedRoles,
+    subRoles: (user as any).staffSubRoles
+      ? (user as any).staffSubRoles
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter(Boolean)
+      : [],
     uploadedAvatarUrl,
     providerAvatarUrl,
     avatarUrl:

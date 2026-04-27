@@ -17,8 +17,8 @@ import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import {
-  getOrganisationRecentPatients,
-  type OrganisationRecentPatientDto,
+  getClinicRecentPatients,
+  type ClinicRecentPatientDto,
 } from '../api/patients.api';
 import {
   orgScreeningApi,
@@ -274,8 +274,8 @@ export default function OrganisationPatientHistoryPage() {
   );
 
   const patientsQuery = useQuery({
-    queryKey: ['organisation-patients', 'recent'],
-    queryFn: getOrganisationRecentPatients,
+    queryKey: ['clinic-patients', 'recent'],
+    queryFn: getClinicRecentPatients,
     staleTime: 30_000,
   });
 
@@ -285,7 +285,7 @@ export default function OrganisationPatientHistoryPage() {
     staleTime: 30_000,
   });
 
-  const patient = useMemo<OrganisationRecentPatientDto | null>(() => {
+  const patient = useMemo<ClinicRecentPatientDto | null>(() => {
     if (!patientId) return null;
     return (
       (patientsQuery.data ?? []).find((item) => item.id === patientId) ?? null

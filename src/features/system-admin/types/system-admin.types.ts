@@ -143,6 +143,39 @@ export interface SystemAdminDashboardMetrics {
   topOrganisationsByRating: SystemAdminTopOrganisation[];
 }
 
+// ─── Real-Time Clinic Operations Dashboard Types ──────────────────────────────
+
+export interface TodaySummary {
+  totalAppointments: number;
+  checkedInPatients: number;
+  completedVisits: number;
+  noShowCount: number;
+}
+
+export interface SlotUtilization {
+  totalSlots: number;
+  bookedSlots: number;
+  remainingCapacity: number;
+  utilizationRate: number;
+}
+
+export interface LiveQueueItem {
+  visitId: string;
+  patientName: string;
+  status: string;
+  assignedDoctorName?: string;
+  waitingTimeMinutes: number;
+  checkedInAt?: string;
+}
+
+export interface DoctorStatusItem {
+  doctorId: string;
+  doctorName: string;
+  currentStatus: string;
+  patientsHandledToday: number;
+  activeLoad: number;
+}
+
 export interface SystemAdminPartTimeSlotQuotaUsage {
   date: string;
   usedSlots: number;
@@ -278,21 +311,23 @@ export interface ApproveOrganisationOnboardingResult {
 
 // ============ USERS & ROLES ============
 export type UserRole =
-  | 'system_admin'
-  | 'organisation_admin'
-  | 'doctor'
-  | 'operator'
-  | 'analyst';
+  | 'Patient'
+  | 'Ophthalmologist'
+  | 'ClinicStaff'
+  | 'SystemAdmin';
 
 export interface User {
   id: string;
-  name: string;
+  name: string; // Mapped from fullName if needed
+  fullName?: string; // Raw field from BE
   email: string;
-  role: UserRole;
-  status: 'active' | 'inactive' | 'locked';
+  role: UserRole; // Mapped from roles[0]
+  roles?: string[]; // Raw field from BE
+  status: string; // Supports 'Active', 'Online', 'Locked', 'inactive', etc.
   organisationId?: string;
   organisationName?: string;
-  lastLogin?: string;
+  lastLogin?: string; // Mapped from lastLoginAt
+  lastLoginAt?: string; // Raw field from BE
   createdAt: string;
   emailVerified: boolean;
 }

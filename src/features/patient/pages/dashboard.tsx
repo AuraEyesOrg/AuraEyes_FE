@@ -1,9 +1,7 @@
 import {
   Calendar,
   FileText,
-  Upload,
   Eye,
-  Wallet,
   MessageCircle,
   ArrowRight,
   ChevronRight,
@@ -19,7 +17,6 @@ import { useTranslation } from 'react-i18next';
 import PatientLayout from '../components/PatientLayout';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatShortDate } from '@/lib/date-utils';
-import { formatCurrency } from '@/lib/helper';
 import { screeningApi } from '../api/screening.api';
 
 // ============ HELPERS ============
@@ -76,15 +73,8 @@ export default function PatientDashboard() {
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
 
-  const {
-    profile,
-    wallet,
-    latestAnalysis,
-    latestReport,
-    recentReports,
-    nextAppointment,
-    isLoading,
-  } = useDashboard();
+  const { profile, latestReport, recentReports, nextAppointment, isLoading } =
+    useDashboard();
 
   const firstName =
     profile?.fullName?.split(' ')[0] ??
@@ -176,7 +166,7 @@ export default function PatientDashboard() {
   };
 
   const currentDate = formatShortDate(new Date().toISOString());
-  const latestReportRisk = latestReport?.riskLevel ?? latestAnalysis?.riskLevel;
+  const latestReportRisk = latestReport?.riskLevel;
   const effectiveLatestRisk = latestSessionRisk ?? latestReportRisk;
   const hasLatestSession = Boolean(latestSession);
   const hasHeroResult = Boolean(
@@ -268,20 +258,6 @@ export default function PatientDashboard() {
       bgColor: 'icon-bg-pink',
       iconColor: 'text-pink-500',
     },
-    {
-      icon: Wallet,
-      label: t('PatientDashboard.stats.walletBalance'),
-      value: wallet
-        ? formatCurrency(wallet.balance, {
-            locale: 'vi-VN',
-            useCurrencyStyle: false,
-            suffix: ' VNĐ',
-          })
-        : t('PatientDashboard.stats.noWalletValue'),
-      valueColor: 'text-[var(--text-primary)]',
-      bgColor: 'icon-bg-orange',
-      iconColor: 'text-orange-500',
-    },
   ];
 
   if (isLoading) {
@@ -311,11 +287,11 @@ export default function PatientDashboard() {
 
           <div className="flex flex-wrap items-center gap-4 w-full md:w-auto md:justify-end mt-4 md:mt-0">
             <Link
-              to="/patient/screening/new"
+              to="/patient/schedule"
               className="btn-primary flex items-center gap-2"
             >
-              <Upload className="w-4 h-4" />
-              {t('PatientDashboard.actions.newScreening')}
+              <Calendar className="w-4 h-4" />
+              {t('PatientDashboard.quickActions.bookAppointment')}
             </Link>
           </div>
         </header>
@@ -503,15 +479,7 @@ export default function PatientDashboard() {
                       {t('PatientDashboard.actions.openLatestSession')}
                     </Link>
                   </div>
-                ) : (
-                  <Link
-                    to="/patient/screening/new"
-                    className="btn-primary inline-flex items-center gap-2 self-center lg:self-end w-fit"
-                  >
-                    <Upload className="w-4 h-4" />
-                    {t('PatientDashboard.actions.uploadFirstScan')}
-                  </Link>
-                )}
+                ) : null}
               </div>
             </div>
           </section>
@@ -683,13 +651,27 @@ export default function PatientDashboard() {
               </Link>
 
               <Link
-                to="/patient/clinics"
+                to="/patient/schedule"
                 className="flex items-center justify-between w-full p-4 rounded-lg bg-(--bg-secondary) border border-(--border-color) text-(--text-primary) hover:border-brand/50 hover:bg-(--bg-tertiary) transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-purple-600" />
                   <span className="font-bold">
                     {t('PatientDashboard.quickActions.bookAppointment')}
+                  </span>
+                </div>
+                <ChevronRight className="w-4 h-4 opacity-50 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                to="/patient/follow-up"
+                className="flex items-center justify-between w-full p-4 rounded-lg bg-(--bg-secondary) border border-(--border-color) text-(--text-primary) hover:border-brand/50 hover:bg-(--bg-tertiary) transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <History className="w-5 h-5 text-indigo-600" />
+                  <span className="font-bold">
+                    {t('PatientDashboard.quickActions.bookFollowUp', {
+                      defaultValue: 'Đặt lịch tái khám',
+                    })}
                   </span>
                 </div>
                 <ChevronRight className="w-4 h-4 opacity-50 group-hover:translate-x-1 transition-transform" />

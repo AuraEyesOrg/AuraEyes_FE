@@ -15,7 +15,6 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import Spinner from '@/components/ui/spinner';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
-import useAuthStore from '@/store/auth-store';
 import { getOrganisationAppointments } from '../api/organisation-clinic-booking.api';
 import {
   organisationClinicBookingKeys,
@@ -124,7 +123,6 @@ function getPatientInitials(appointment: {
 
 function parseClinicCheckInQrPayload(rawValue: string): {
   appointmentId: string;
-  organisationId?: string;
   dateKey?: string;
 } | null {
   const value = rawValue.trim();
@@ -132,18 +130,28 @@ function parseClinicCheckInQrPayload(rawValue: string): {
 
   const parts = value.split('|').map((part) => part.trim());
 
-  if (parts.length >= 7 && parts[0] === CLINIC_CHECKIN_QR_PREFIX) {
+  if (parts[0] === CLINIC_CHECKIN_QR_PREFIX) {
     const appointmentId = parts[1] ?? '';
-    const organisationId = parts[3] ?? '';
-    const dateKey = parts[4] ?? '';
+    let organisationId = '';
+    let dateKey = '';
+
+    // Legacy payload:
+    // AURA-CLINIC-APPOINTMENT|appointmentId|patientId|date|start|end
+    if (parts.length >= 6) {
+      dateKey = parts[3] ?? '';
+    }
+
+    // Extended payload:
+    // AURA-CLINIC-APPOINTMENT|appointmentId|patientId|organisationId|date|start|end
+    if (parts.length >= 7) {
+      organisationId = parts[3] ?? '';
+      dateKey = parts[4] ?? '';
+    }
 
     if (!UUID_REGEX.test(appointmentId)) return null;
 
     return {
       appointmentId,
-      organisationId: UUID_REGEX.test(organisationId)
-        ? organisationId
-        : undefined,
       dateKey: /^\d{4}-\d{2}-\d{2}$/.test(dateKey) ? dateKey : undefined,
     };
   }
@@ -162,9 +170,7 @@ function isFutureDateKey(dateKey: string | undefined, todayKey: string) {
 }
 
 export default function CalendarPage() {
-  const { user } = useAuthStore();
   const { t } = useSafeTranslation();
-  const organisationId = user?.organizationId ?? '';
 
   const todayKey = toLocalDateKey(new Date());
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
@@ -195,12 +201,8 @@ export default function CalendarPage() {
 
   const weekAppointmentQueries = useQueries({
     queries: weekWindow.days.map((day) => ({
-      queryKey: organisationClinicBookingKeys.appointments(
-        organisationId,
-        day.dateKey
-      ),
-      queryFn: () => getOrganisationAppointments(organisationId, day.dateKey),
-      enabled: !!organisationId,
+      queryKey: organisationClinicBookingKeys.appointments(day.dateKey),
+      queryFn: () => getOrganisationAppointments(day.dateKey),
       staleTime: 10_000,
     })),
   });
@@ -346,21 +348,6 @@ export default function CalendarPage() {
               return;
             }
 
-            if (
-              parsed.organisationId &&
-              organisationId &&
-              parsed.organisationId.toLowerCase() !==
-                organisationId.toLowerCase()
-            ) {
-              toast.error(
-                t(
-                  'Organisation.calendar.toast.qrNotBelongOrganisation',
-                  'This QR code does not belong to your organisation.'
-                )
-              );
-              return;
-            }
-
             if (parsed.dateKey) {
               if (isFutureDateKey(parsed.dateKey, todayKey)) {
                 toast.error(
@@ -430,9 +417,6 @@ export default function CalendarPage() {
         });
     };
   }, [
-    checkInMutation,
-    isQrScannerOpen,
-    organisationId,
     scanTargetAppointmentId,
     selectedDate,
     t,
@@ -774,11 +758,7 @@ export default function CalendarPage() {
                           {appt.status === 'Pending' ? (
                             <button
                               type="button"
-                              disabled={
-                                isMutating ||
-                                !organisationId ||
-                                selectedDate > todayKey
-                              }
+                              disabled={isMutating || selectedDate > todayKey}
                               onClick={() => {
                                 if (selectedDate > todayKey) {
                                   toast.error(

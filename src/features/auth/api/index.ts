@@ -8,7 +8,6 @@ export {
   googleLogin,
   verifyTwoFactorLogin,
   registerPatient,
-  registerOphthalmologist,
   refreshToken,
   logout,
   forgotPassword,

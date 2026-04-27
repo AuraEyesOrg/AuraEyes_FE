@@ -6,11 +6,13 @@ export interface CreateWebsiteFeedbackRequest {
   comment?: string;
 }
 
-export interface CreateOrganisationFeedbackRequest {
+export type CreateClinicFeedbackRequest = {
   appointmentId: string;
   rating: number;
   comment?: string;
-}
+  doctorId?: string;
+  staffId?: string;
+};
 
 export interface CreateOphthalmologistFeedbackRequest {
   consultationSessionId: string;
@@ -25,15 +27,18 @@ export interface FeedbackRatingSummary {
   distribution: Record<number, number>;
 }
 
-export interface OrganisationFeedbackItem {
+export type ClinicFeedbackItem = {
   id: string;
   patientId: string;
-  organisationId: string;
+  patientFullName?: string;
+  organisationId?: string;
   appointmentId: string;
   rating: number;
   comment?: string;
+  doctorId?: string;
+  staffId?: string;
   createdAt: string;
-}
+};
 
 export interface OphthalmologistFeedbackItem {
   id: string;

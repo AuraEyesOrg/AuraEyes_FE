@@ -549,11 +549,7 @@ export default function ClinicsPage() {
     data: availableSlots = [],
     isLoading: loadingSlots,
     error: availableSlotsError,
-  } = useOrganisationAvailableSlots(
-    selectedOrganisationId,
-    undefined,
-    !!selectedOrganisationId
-  );
+  } = useOrganisationAvailableSlots(undefined, !!selectedOrganisationId);
 
   const createAppointmentMutation = useCreateClinicAppointment();
   const { data: walletData } = useWallet();
@@ -641,11 +637,21 @@ export default function ClinicsPage() {
     if (!selectedOrganisationId || !patientId || !selectedSlotId) return;
     setErrorMessage('');
     try {
-      await createAppointmentMutation.mutateAsync({
-        organisationId: selectedOrganisationId,
+      const result = await createAppointmentMutation.mutateAsync({
         slotId: selectedSlotId,
         visitReason: visitReason.trim() || undefined,
       });
+
+      if (result.paymentUrl) {
+        toast.info(
+          `Đặt lịch thành công! Đang chuyển đến trang thanh toán đặt cọc ${(result.depositAmount ?? 0).toLocaleString('vi-VN')} VND...`
+        );
+        setTimeout(() => {
+          window.location.href = result.paymentUrl!;
+        }, 1500);
+        return;
+      }
+
       toast.success(t('PatientClinics.toast.bookSuccess'));
       setSelectedSlotId('');
       setShowConfirmModal(false);

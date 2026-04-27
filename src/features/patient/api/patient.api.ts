@@ -13,7 +13,6 @@ import type {
   AppointmentSlot,
   BookAppointmentData,
   VerificationRequest,
-  HealthRoadmap,
   ChatConversation,
   ChatMessage,
   SendMessageData,
@@ -100,12 +99,6 @@ export const PATIENT_ENDPOINTS = {
     CREATE: '/patient/verifications',
     GET: (id: string) => `/patient/verifications/${id}`,
     CANCEL: (id: string) => `/patient/verifications/${id}/cancel`,
-  },
-
-  // Health Roadmaps
-  ROADMAPS: {
-    LIST: '/patient/roadmaps',
-    GET: (id: string) => `/patient/roadmaps/${id}`,
   },
 
   // Chat
@@ -857,22 +850,6 @@ export const createVerificationRequest = async (data: {
 
 export const cancelVerificationRequest = async (id: string): Promise<void> => {
   await api.post(PATIENT_ENDPOINTS.VERIFICATION.CANCEL(id));
-};
-
-// ============ ROADMAPS API ============
-
-export const getRoadmaps = async (): Promise<HealthRoadmap[]> => {
-  const response = await api.get<ApiResponse<HealthRoadmap[]>>(
-    PATIENT_ENDPOINTS.ROADMAPS.LIST
-  );
-  return response.data.data!;
-};
-
-export const getRoadmap = async (id: string): Promise<HealthRoadmap> => {
-  const response = await api.get<ApiResponse<HealthRoadmap>>(
-    PATIENT_ENDPOINTS.ROADMAPS.GET(id)
-  );
-  return response.data.data!;
 };
 
 // ============ CHAT API ============

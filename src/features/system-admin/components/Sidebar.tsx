@@ -3,9 +3,9 @@
  * Main navigation for system admin dashboard
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronRight, LogOut, Globe } from 'lucide-react';
+import { LogOut, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
@@ -13,7 +13,7 @@ import UserAvatar from '@/components/ui/UserAvatar';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { getUserAvatarMeta } from '@/lib/user-avatar';
 import usePermissions from '@/hooks/use-permissions';
-import { dashboardNavItem, sidebarNavGroups } from './sidebar-data';
+import { dashboardNavItem, sidebarNavItems } from './sidebar-data';
 import {
   DEFAULT_LOCALE,
   getLocaleFromPathname,
@@ -33,53 +33,11 @@ export default function Sidebar() {
 
   const activePath = stripLocaleFromPathname(location.pathname);
 
-  const filteredNavGroups = useMemo(() => {
-    return sidebarNavGroups
-      .map((group) => ({
-        ...group,
-        items: group.items.filter((item) =>
-          item.requiredPermission
-            ? hasPermission(item.requiredPermission)
-            : true
-        ),
-      }))
-      .filter((group) => group.items.length > 0);
+  const filteredNavItems = useMemo(() => {
+    return sidebarNavItems.filter((item) =>
+      item.requiredPermission ? hasPermission(item.requiredPermission) : true
+    );
   }, [hasPermission]);
-
-  const activeGroupIds = useMemo(
-    () =>
-      filteredNavGroups
-        .filter((group) =>
-          group.items.some((item) => activePath.startsWith(item.path))
-        )
-        .map((group) => group.id),
-    [activePath, filteredNavGroups]
-  );
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
-    () =>
-      Object.fromEntries(
-        filteredNavGroups.map((group) => [
-          group.id,
-          activeGroupIds.includes(group.id),
-        ])
-      )
-  );
-
-  useEffect(() => {
-    setExpandedGroups((prev) => {
-      const next = { ...prev };
-      let hasChanged = false;
-
-      for (const groupId of activeGroupIds) {
-        if (!next[groupId]) {
-          next[groupId] = true;
-          hasChanged = true;
-        }
-      }
-
-      return hasChanged ? next : prev;
-    });
-  }, [activeGroupIds]);
 
   const avatarMeta = getUserAvatarMeta(user?.fullName, systemAdminLabel);
   const displayName = avatarMeta.displayName;
@@ -101,13 +59,6 @@ export default function Sidebar() {
     navigate(newPath);
   };
 
-  const toggleGroup = (groupId: string) => {
-    setExpandedGroups((prev) => ({
-      ...prev,
-      [groupId]: !prev[groupId],
-    }));
-  };
-
   return (
     <aside className="w-70 bg-(--bg-secondary) flex flex-col justify-between shrink-0 transition-colors duration-300 z-20 h-screen">
       <div className="p-6 flex flex-col h-full">
@@ -116,7 +67,7 @@ export default function Sidebar() {
           <AuraLogo
             size="md"
             subtitle={systemAdminLabel}
-            to="/system-admin/dashboard"
+            to={resolvePathWithLocale('/system-admin/dashboard')}
           />
         </div>
 
@@ -150,106 +101,38 @@ export default function Sidebar() {
             )}
           </NavLink>
 
-          {filteredNavGroups.map((group) => {
-            const isOpen = expandedGroups[group.id] ?? false;
-            const isGroupActive = group.items.some((item) =>
-              activePath.startsWith(item.path)
-            );
-            const menuMaxHeight = isOpen
-              ? `${group.items.length * 40 + 8}px`
-              : '0px';
-
-            return (
-              <div key={group.id}>
-                <button
-                  type="button"
-                  onClick={() => toggleGroup(group.id)}
-                  className={`w-full group flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200 ${
-                    isGroupActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <group.icon
-                      className={`w-4 h-4 shrink-0 ${
-                        isGroupActive
-                          ? 'text-primary'
-                          : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300'
-                      }`}
-                    />
-                    <div className="text-left min-w-0">
-                      <p className="text-sm font-semibold leading-5 truncate">
-                        {t(
-                          `SystemAdmin.sidebar.groups.${group.id}.label`,
-                          group.label
-                        )}
-                      </p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-45">
-                        {t(
-                          `SystemAdmin.sidebar.groups.${group.id}.description`,
-                          group.description
-                        )}
-                      </p>
-                    </div>
-                  </div>
+          {filteredNavItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={resolvePathWithLocale(item.path)}
+              className={({ isActive }) =>
+                `group flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200 ${
+                  isActive || activePath.startsWith(item.path)
+                    ? 'bg-primary/10 text-primary font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
                   <span
-                    className={`shrink-0 text-slate-500 dark:text-slate-400 transition-transform duration-200 ${
-                      isOpen ? 'rotate-90' : ''
-                    }`}
+                    className={
+                      isActive || activePath.startsWith(item.path)
+                        ? 'text-primary'
+                        : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300'
+                    }
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <item.icon className="w-4 h-4" />
                   </span>
-                </button>
-
-                <div
-                  style={{ maxHeight: menuMaxHeight }}
-                  className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${
-                    isOpen ? 'opacity-100' : 'opacity-0'
-                  }`}
-                >
-                  <div className="pb-1.5 pl-8">
-                    {group.items.map((item) => (
-                      <NavLink
-                        key={item.path}
-                        to={resolvePathWithLocale(item.path)}
-                        className={({ isActive }) =>
-                          `group flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors duration-200 ${
-                            isActive
-                              ? 'bg-primary/10 text-primary font-semibold'
-                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
-                          }`
-                        }
-                      >
-                        {({ isActive }) => (
-                          <>
-                            <span
-                              className={`h-1.5 w-1.5 rounded-full shrink-0 ${
-                                isActive
-                                  ? 'bg-primary'
-                                  : 'bg-slate-400 dark:bg-slate-500 group-hover:bg-slate-600 dark:group-hover:bg-slate-300'
-                              }`}
-                            />
-                            <span className="text-sm truncate">
-                              {item.id === 'aura-network'
-                                ? t(
-                                    'Common.sidebar.auraNetwork',
-                                    'Aura Network'
-                                  )
-                                : t(
-                                    `SystemAdmin.sidebar.items.${item.id}`,
-                                    item.label
-                                  )}
-                            </span>
-                          </>
-                        )}
-                      </NavLink>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                  <span className="text-sm font-medium truncate">
+                    {item.id === 'aura-network'
+                      ? t('Common.sidebar.auraNetwork', 'Aura Network')
+                      : t(`SystemAdmin.sidebar.items.${item.id}`, item.label)}
+                  </span>
+                </>
+              )}
+            </NavLink>
+          ))}
         </nav>
 
         {/* User Profile Footer */}

@@ -24,6 +24,10 @@ export const API_ENDPOINTS = {
       RECENT_SCREENINGS: '/system-admin/dashboard/recent-screenings',
       SYSTEM_HEALTH: '/system-admin/dashboard/system-health',
       RISK_DISTRIBUTION: '/system-admin/dashboard/risk-analysis',
+      TODAY_SUMMARY: '/system-admin/dashboard/today-summary',
+      SLOT_UTILIZATION: '/system-admin/dashboard/slot-utilization',
+      LIVE_QUEUE: '/system-admin/dashboard/live-queue',
+      DOCTOR_STATUS: '/system-admin/dashboard/doctor-status',
     },
 
     // Organisation & Device Management (formerly Clinic)
@@ -58,9 +62,10 @@ export const API_ENDPOINTS = {
       LIST: '/system-admin/users',
       DETAIL: (id: string) => `/system-admin/users/${id}`,
       UPDATE_ROLE: (id: string) => `/system-admin/users/${id}/role`,
-      LOCK: (id: string) => `/system-admin/users/${id}/lock`,
-      UNLOCK: (id: string) => `/system-admin/users/${id}/unlock`,
-      STATS: '/system-admin/users/stats',
+      STATUS: (id: string) => `/system-admin/users/${id}/status`,
+      METRICS: '/system-admin/users/metrics',
+      // Backward-compatible alias for older callers.
+      STATS: '/system-admin/users/metrics',
     },
 
     // Ophthalmologist Management
@@ -199,7 +204,6 @@ export const API_ENDPOINTS = {
     SYSTEM_SETTINGS: '/system-settings',
     PATIENT_SEARCH: {
       OPHTHALMOLOGISTS: '/patient/search/ophthalmologists',
-      ORGANISATIONS: '/patient/search/organisations',
       AVAILABLE_SLOTS: '/patient/search/available-slots',
     },
     RESOURCES: {
@@ -210,6 +214,7 @@ export const API_ENDPOINTS = {
   // Ophthalmologist features
   OPHTHALMOLOGIST: {
     DASHBOARD_METRICS: '/ophthalmologists/dashboard-metrics',
+    REVIEW_QUEUE: '/ophthalmologists/review-queue',
     PATIENTS: '/ophthalmologist/patients',
     SCREENINGS: '/ophthalmologist/screenings',
     REPORTS: '/ophthalmologist/reports',
@@ -278,17 +283,17 @@ export const API_ENDPOINTS = {
     UNBLOCK: (slotId: string) => `/appointment-slots/${slotId}/unblock`,
   },
 
-  // Clinic booking flow (organisation visits)
+  // Clinic booking flow (flattened to single clinic)
   CLINIC_BOOKING: {
-    AVAILABLE_SLOTS: (orgId: string) =>
-      `/organisations/${orgId}/available-slots`,
-    ORGANISATION_APPOINTMENTS: (orgId: string) =>
-      `/organisations/${orgId}/appointments`,
+    AVAILABLE_SLOTS: () => '/appointment-slots/available',
+    ORGANISATION_APPOINTMENTS: () => '/clinic-appointments',
     PATIENT_CLINIC_APPOINTMENTS: (patientId: string) =>
       `/patients/${patientId}/clinic-appointments`,
+    ORGANISATION_SCHEDULE: () => '/clinic-schedule',
   },
 
   CLINIC_APPOINTMENTS: {
+    LIST: '/clinic-appointments',
     CREATE: '/clinic-appointments',
     CANCEL: (appointmentId: string) => `/clinic-appointments/${appointmentId}`,
     CHECK_IN: (appointmentId: string) =>
@@ -301,18 +306,42 @@ export const API_ENDPOINTS = {
       `/clinic-appointments/${appointmentId}/no-show`,
   },
 
+  CLINIC_SCREENINGS: {
+    CREATE_SESSION: '/clinic-screenings/create-session',
+    DETAIL: (screeningId: string) => `/clinic-screenings/${screeningId}`,
+    EXPORT_PDF: (screeningId: string) =>
+      `/clinic-screenings/${screeningId}/report-pdf`,
+    SHARE: (screeningId: string) => `/clinic-screenings/${screeningId}/share`,
+    HISTORY: '/clinic-screenings/history',
+  },
+
+  CLINIC_QUEUE: {
+    GET: '/clinic-queue',
+    SEND_TO_DOCTOR: (visitId: string) =>
+      `/clinic-queue/${visitId}/send-to-doctor`,
+    PAYMENT_CONTEXT: (visitId: string) =>
+      `/clinic-queue/${visitId}/payment-context`,
+    CREATE_PAYMENT: (visitId: string) => `/clinic-queue/${visitId}/payment`,
+  },
+
+  // Healthcare Roadmap (doctor-authored care plan timeline)
+  HEALTH_ROADMAP: {
+    GET_BY_PATIENT: (patientId: string) => `/roadmap/${patientId}`,
+    CREATE_STEP: '/roadmap/steps',
+    UPDATE_STEP: (stepId: string) => `/roadmap/steps/${stepId}`,
+    COMPLETE_STEP: (stepId: string) => `/roadmap/steps/${stepId}/complete`,
+    DELETE_STEP: (stepId: string) => `/roadmap/steps/${stepId}`,
+  },
+
   FEEDBACK: {
     WEBSITE: '/feedback/website',
-    ORGANISATION: (organisationId: string) =>
-      `/feedback/organisations/${organisationId}`,
+    CLINIC: '/feedback/clinics',
     OPHTHALMOLOGIST: (ophthalmologistId: string) =>
       `/feedback/ophthalmologists/${ophthalmologistId}`,
-    ORGANISATION_ITEMS: (organisationId: string) =>
-      `/feedback/organisations/${organisationId}/items`,
+    CLINIC_ITEMS: '/feedback/clinics/items',
     OPHTHALMOLOGIST_ITEMS: (ophthalmologistId: string) =>
       `/feedback/ophthalmologists/${ophthalmologistId}/items`,
-    ORGANISATION_RATING: (organisationId: string) =>
-      `/feedback/organisations/${organisationId}/rating`,
+    CLINIC_RATING: '/feedback/clinics/rating',
     OPHTHALMOLOGIST_RATING: (ophthalmologistId: string) =>
       `/feedback/ophthalmologists/${ophthalmologistId}/rating`,
   },
@@ -328,35 +357,33 @@ export const API_ENDPOINTS = {
     DELETE: (templateId: string) => `/schedule-templates/${templateId}`,
   },
 
-  // Organisation features (from existing setup)
+  // Clinic features (formerly Organisation)
   ORGANISATION: {
-    DASHBOARD: '/organisation/dashboard',
-    CONTRACT: {
-      MY_CONTRACT: '/organisations/my-contract',
-      UPLOAD: '/organisations/my-contract/upload',
-    },
-    DASHBOARD_METRICS: '/organisations/dashboard-metrics',
-    PATIENTS: '/organisations/patients',
-    CALENDAR: '/organisation/calendar',
-    ANALYTICS: '/organisation/analytics',
-    SETTINGS: '/organisations/settings',
+    DASHBOARD: '/clinic/dashboard',
+    DASHBOARD_METRICS: '/clinic/dashboard-metrics',
+    PATIENTS: '/clinic/patients',
+    CALENDAR: '/clinic/appointments',
+    ANALYTICS: '/clinic/analytics',
+    SETTINGS: '/clinic/settings',
     // Organisation Screening
     SCREENING: {
-      CREATE_SESSION: '/organisations/screenings/create-session',
-      DETAIL: (screeningId: string) =>
-        `/organisations/screenings/${screeningId}`,
+      CREATE_SESSION: '/clinic-screenings/create-session',
+      DETAIL: (screeningId: string) => `/clinic-screenings/${screeningId}`,
       EXPORT_PDF: (screeningId: string) =>
-        `/organisations/screenings/${screeningId}/report-pdf`,
-      SHARE: (screeningId: string) =>
-        `/organisations/screenings/${screeningId}/share`,
-      HISTORY: '/organisations/screenings/history',
+        `/clinic-screenings/${screeningId}/report-pdf`,
+      SHARE: (screeningId: string) => `/clinic-screenings/${screeningId}/share`,
+      HISTORY: '/clinic-screenings/history',
     },
-    BILLING_SUMMARY: '/organisations/billing/summary',
-    SCREENING_REPORTS: '/organisations/screening-reports',
+    BILLING_SUMMARY: '/clinic/billing/summary',
+    SCREENING_REPORTS: '/clinic-screenings/history',
     WALLET: {
-      GET: '/wallets',
-      TRANSACTIONS: '/wallets/transactions',
-      CREATE_DEPOSIT: '/wallets/deposit',
+      GET: '/organisation/wallet',
+      TRANSACTIONS: '/organisation/wallet/transactions',
+      CREATE_DEPOSIT: '/organisation/wallet/deposit',
+    },
+    CONTRACT: {
+      MY_CONTRACT: '/ophthalmologists/my-contract',
+      UPLOAD: '/ophthalmologists/my-contract/upload',
     },
   },
 
@@ -378,6 +405,15 @@ export const API_ENDPOINTS = {
       `/notifications/${notificationId}/mark-read`,
     /** POST - Mark all notifications as read */
     MARK_ALL_READ: '/notifications/mark-all-read',
+  },
+  // Financial - Order & Payment system (replaces wallet top-up for clinic bookings)
+  FINANCIAL: {
+    /** GET - Paginated payment order history for the current user */
+    MY_ORDERS: '/financial/my-orders',
+    /** GET - Single order with payments */
+    ORDER: (id: string) => `/financial/orders/${id}`,
+    /** POST - Create a new payment order */
+    CREATE_ORDER: '/financial/orders',
   },
 } as const;
 

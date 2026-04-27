@@ -85,6 +85,7 @@ export interface ConsultationSessionListDto {
   id: string;
   patientId: string;
   ophthalmologistId: string | null;
+  aiScreeningId?: string | null;
   // Optional human-readable names coming from BE
   patientName?: string | null;
   patientAvatarUrl?: string | null;
@@ -102,6 +103,7 @@ export interface ConsultationSessionListDto {
   meetingLink?: string | null;
   lastActivityAt: string;
   createdAt: string;
+  closedAt: string | null;
 
   // Consent flags + lightweight AI snapshot (for list displays).
   isRetinalImagesShared?: boolean;
@@ -131,6 +133,10 @@ export interface CreateVideoCallSessionRequest {
 export interface SubmitVerificationReportRequest {
   doctorId: string;
 
+  prescriptionItems?: PrescriptionItemRequest[];
+  prescriptionNote?: string;
+  noMedicationPrescribed?: boolean;
+
   // New payload fields.
   diagnosisCode?: string;
   codingSystem?: string;
@@ -149,6 +155,15 @@ export interface SubmitVerificationReportRequest {
   // Backward-compatible aliases for legacy clients.
   diagnosesCode?: string;
   diagnosesText?: string;
+}
+
+export interface PrescriptionItemRequest {
+  medicineName: string;
+  unit?: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  instruction?: string;
 }
 
 export interface SendMessageRequest {

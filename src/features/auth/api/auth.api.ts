@@ -11,10 +11,10 @@ import { unwrapApiData } from '@/types/api-response';
 import { resolveAvatarUrl, resolvePreferredAvatarUrl } from '@/lib/user-avatar';
 import type {
   LoginRequest,
+  LookupAccountByCitizenIdRequest,
+  LookupAccountByCitizenIdResponse,
   GoogleLoginRequest,
   RegisterPatientRequest,
-  RegisterOphthalmologistRequest,
-  RegisterOrganisationRequest,
   VerifyTwoFactorRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
@@ -187,6 +187,15 @@ export const login = async (
   return result;
 };
 
+export const lookupAccountByCitizenId = async (
+  data: LookupAccountByCitizenIdRequest
+): Promise<LookupAccountByCitizenIdResponse> => {
+  const response = await api.post<
+    ApiResponse<LookupAccountByCitizenIdResponse>
+  >(`${AUTH_BASE_URL}/lookup-account`, data);
+  return unwrapApiData<LookupAccountByCitizenIdResponse>(response.data);
+};
+
 /**
  * Returns AuthResponse on success, or TwoFactorRequiredResponse if 2FA is enabled
  */
@@ -268,106 +277,6 @@ export const registerPatient = async (
     data
   );
   return unwrapApiData<{ userId: string }>(response.data);
-};
-
-/**
- * Register a new ophthalmologist account
- * Uses FormData to support dynamic credential arrays with file uploads
- */
-export const registerOphthalmologist = async (
-  data: RegisterOphthalmologistRequest
-): Promise<{ userId: string }> => {
-  const formData = new FormData();
-  formData.append('email', data.email);
-  formData.append('password', data.password);
-  formData.append('confirmPassword', data.confirmPassword);
-  formData.append('fullName', data.fullName);
-  if (data.phone) formData.append('phone', data.phone);
-  if (data.bio) formData.append('bio', data.bio);
-  formData.append('yearsOfExperience', String(data.yearsOfExperience));
-  formData.append('employmentType', data.employmentType);
-  if (data.workingHoursPerWeek !== undefined) {
-    formData.append('workingHoursPerWeek', String(data.workingHoursPerWeek));
-  }
-  if (data.expectedMonthlySalary !== undefined) {
-    formData.append(
-      'expectedMonthlySalary',
-      String(data.expectedMonthlySalary)
-    );
-  }
-  if (data.organizationId)
-    formData.append('organizationId', data.organizationId);
-
-  let credentialIndex = 0;
-
-  data.degrees.forEach((item) => {
-    formData.append(`certificates[${credentialIndex}].type`, 'Degree');
-    formData.append(`certificates[${credentialIndex}].name`, item.name);
-    if (item.degreeLevel) {
-      formData.append(
-        `certificates[${credentialIndex}].degreeLevel`,
-        item.degreeLevel
-      );
-    }
-    if (item.issuingAuthority) {
-      formData.append(
-        `certificates[${credentialIndex}].issuingAuthority`,
-        item.issuingAuthority
-      );
-    }
-    formData.append(
-      `certificates[${credentialIndex}].issuedDate`,
-      item.issuedDate
-    );
-    formData.append(`certificates[${credentialIndex}].file`, item.file);
-
-    credentialIndex += 1;
-  });
-
-  data.certificates.forEach((item) => {
-    formData.append(`certificates[${credentialIndex}].type`, 'License');
-    formData.append(`certificates[${credentialIndex}].name`, item.name);
-    if (item.issuingAuthority) {
-      formData.append(
-        `certificates[${credentialIndex}].issuingAuthority`,
-        item.issuingAuthority
-      );
-    }
-    formData.append(
-      `certificates[${credentialIndex}].issuedDate`,
-      item.issuedDate
-    );
-    if (item.expiryDate) {
-      formData.append(
-        `certificates[${credentialIndex}].expiryDate`,
-        item.expiryDate
-      );
-    }
-    formData.append(`certificates[${credentialIndex}].file`, item.file);
-
-    credentialIndex += 1;
-  });
-
-  const response = await api.post<ApiResponse<{ userId: string }>>(
-    `${AUTH_BASE_URL}/register/ophthalmologist`,
-    formData,
-    {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      timeout: 120000,
-    }
-  );
-  return unwrapApiData<{ userId: string }>(response.data);
-};
-
-export const registerOrganisation = async (
-  data: RegisterOrganisationRequest
-): Promise<{ requestId: string; email: string; message: string }> => {
-  const response = await api.post<
-    ApiResponse<{ requestId: string; email: string; message: string }>
-  >(`${AUTH_BASE_URL}/register/organisation`, data);
-  return unwrapApiData<{ requestId: string; email: string; message: string }>(
-    response.data
-  );
 };
 
 /**

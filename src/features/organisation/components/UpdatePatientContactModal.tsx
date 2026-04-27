@@ -14,14 +14,14 @@ import { toast } from 'react-toastify';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
-  type OrganisationRecentPatientDto,
-  type UpdateOrganisationPatientRequest,
-  updateOrganisationPatient,
+  type ClinicRecentPatientDto,
+  type UpdateClinicPatientRequest,
+  updateClinicPatient,
 } from '../api/patients.api';
 
 interface UpdatePatientModalProps {
   isOpen: boolean;
-  patient: OrganisationRecentPatientDto | null;
+  patient: ClinicRecentPatientDto | null;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -85,7 +85,7 @@ export default function UpdatePatientContactModal({
           )
         );
 
-      const body: UpdateOrganisationPatientRequest = {};
+      const body: UpdateClinicPatientRequest = {};
 
       if (patient.isWalkIn) {
         // Walk-in: send admin fields
@@ -120,7 +120,7 @@ export default function UpdatePatientContactModal({
         );
       }
 
-      return updateOrganisationPatient(patient.id, body);
+      return updateClinicPatient(patient.id, body);
     },
     onSuccess: () => {
       toast.success(

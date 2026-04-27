@@ -7,9 +7,10 @@ import {
   Calendar,
   MapPin,
   MessageCircle,
-  Milestone,
   MessageSquareHeart,
   Globe,
+  FileText,
+  Stethoscope,
 } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
@@ -59,6 +60,12 @@ export default function PatientSidebar() {
       requiredPermission: Permissions.ScreeningRead,
     },
     {
+      icon: FileText,
+      label: t('PatientSidebar.nav.medicalHistory', 'Medical History'),
+      path: '/patient/medical-history',
+      requiredPermission: Permissions.ScreeningRead,
+    },
+    {
       icon: Calendar,
       label: t('PatientSidebar.nav.appointments', 'Appointments'),
       path: '/patient/appointments',
@@ -66,13 +73,13 @@ export default function PatientSidebar() {
     },
     {
       icon: MapPin,
-      label: t('PatientSidebar.nav.findClinics', 'Find Clinics'),
-      path: '/patient/clinics',
+      label: t('PatientSidebar.nav.clinicSchedule', 'Clinic Schedule'),
+      path: '/patient/schedule',
     },
     {
-      icon: Milestone,
-      label: t('PatientSidebar.nav.healthRoadmap', 'Health Roadmap'),
-      path: '/patient/roadmap',
+      icon: Stethoscope,
+      label: t('PatientSidebar.nav.carePlan', 'Care Plan'),
+      path: '/patient/care-plan',
       requiredPermission: Permissions.ScreeningRead,
     },
     {
@@ -84,9 +91,8 @@ export default function PatientSidebar() {
     },
     {
       icon: Wallet,
-      label: t('PatientSidebar.nav.wallet', 'Wallet'),
+      label: t('PatientSidebar.nav.wallet', 'Transaction History'),
       path: '/patient/wallet',
-      requiredPermission: Permissions.WalletsRead,
     },
     {
       icon: MessageSquareHeart,

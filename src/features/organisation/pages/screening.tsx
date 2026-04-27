@@ -21,8 +21,8 @@ import {
   type ScreeningFlowStep,
 } from '../components/OrganisationScreeningStepper';
 import AvatarFallback from '@/components/ui/avatar-fallback';
-import { getOrganisationRecentPatients } from '../api/patients.api';
-import type { OrganisationRecentPatientDto } from '../api/patients.api';
+import { getClinicRecentPatients } from '../api/patients.api';
+import type { ClinicRecentPatientDto } from '../api/patients.api';
 import { orgScreeningApi } from '../api/screening.api';
 import { orgBillingApi } from '../api/billing.api';
 import { organisationWalletApi } from '../api/wallet.api';
@@ -53,7 +53,7 @@ export default function OrganisationScreeningPage() {
   const [currentStep, setCurrentStep] =
     useState<ScreeningCreationStep>('upload-images');
   const [selectedPatient, setSelectedPatient] =
-    useState<OrganisationRecentPatientDto | null>(null);
+    useState<ClinicRecentPatientDto | null>(null);
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -62,8 +62,8 @@ export default function OrganisationScreeningPage() {
   const [quotaAmountInput, setQuotaAmountInput] = useState('50');
 
   const { data: patients = [] } = useQuery({
-    queryKey: ['organisation-patients', 'recent'],
-    queryFn: getOrganisationRecentPatients,
+    queryKey: ['clinic-patients', 'recent'],
+    queryFn: getClinicRecentPatients,
   });
 
   const { data: billingSummary, isLoading: isBillingLoading } = useQuery({

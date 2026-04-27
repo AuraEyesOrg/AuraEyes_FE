@@ -11,7 +11,6 @@ import {
   Shield,
   Zap,
   Activity,
-  Stethoscope,
   AlertCircle,
   CheckCircle,
   Loader2,
@@ -40,7 +39,6 @@ import {
 } from '../api';
 import type { TwoFactorRequiredResponse } from '../types';
 import useAuthStore from '@/store/auth-store';
-import { shouldRedirectToContract } from '../utils/contract-status';
 
 type AuthMode = 'login' | 'register';
 
@@ -208,15 +206,6 @@ const LoginPage = () => {
     navigate(toLocalizedAuthPath('/email-verification-required'));
   };
 
-  const isPendingVerification = (user?: {
-    isVerified?: boolean | null;
-    verificationStatus?: string | null;
-  }) =>
-    user?.verificationStatus === 'PendingVerification' ||
-    (user?.isVerified === false &&
-      (!user?.verificationStatus ||
-        user?.verificationStatus === 'PendingVerification'));
-
   const {
     register: registerLogin,
     handleSubmit: handleLoginSubmit,
@@ -267,6 +256,19 @@ const LoginPage = () => {
           authLogin(response.user);
         }
 
+        if (response.user?.mustUpdateProfile) {
+          const roles = response.user.roles || [];
+          if (roles.includes('Patient')) {
+            navigate('/patient/security');
+            return;
+          }
+
+          if (roles.includes('OrgAdmin')) {
+            navigate('/force-change-password');
+            return;
+          }
+        }
+
         // Navigate based on user role
         const roles = response.user?.roles || [];
         if (roles.includes('SystemAdmin')) {
@@ -274,13 +276,7 @@ const LoginPage = () => {
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
-          if (isPendingVerification(response.user)) {
-            navigate(toLocalizedAuthPath('/ophthalmologist/pending-approval'));
-          } else if (shouldRedirectToContract(response.user?.contractStatus)) {
-            navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
-          } else {
-            navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
-          }
+          navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
         } else if (roles.includes('OrgAdmin')) {
           navigate('/organisation/dashboard');
         } else if (roles.includes('ClinicStaff')) {
@@ -441,15 +437,7 @@ const LoginPage = () => {
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
-          if (isPendingVerification(loggedInUser)) {
-            navigate(toLocalizedAuthPath('/ophthalmologist/pending-approval'));
-          } else if (shouldRedirectToContract(loggedInUser?.contractStatus)) {
-            navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
-          } else {
-            navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
-          }
-        } else if (roles.includes('OrgAdmin')) {
-          navigate('/organisation/dashboard');
+          navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
         } else if (roles.includes('ClinicStaff')) {
           navigate('/clinic-staff/dashboard');
         } else {
@@ -1160,31 +1148,6 @@ const LoginPage = () => {
                       </button>
                     </div>
                   </form>
-
-                  <div className="p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl border-2 border-primary/20">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-primary/20 rounded-lg">
-                        <Stethoscope className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                          {t('AuthPages.login.registerForm.doctorCardTitle')}
-                        </h3>
-                        <p className="text-xs text-gray-600 mb-3">
-                          {t(
-                            'AuthPages.login.registerForm.doctorCardDescription'
-                          )}
-                        </p>
-                        <Link
-                          to={toLocalizedAuthPath('/register-doctor')}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-primary text-primary rounded-lg text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 group"
-                        >
-                          <Stethoscope className="h-4 w-4" />
-                          {t('AuthPages.login.registerForm.registerDoctor')}
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
 
                   {/* Footer Note */}
                   <div className="pt-6 border-t border-gray-100">

@@ -11,7 +11,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   CheckCircle2,
   ChevronDown,
-  ChevronRight,
   Clock,
   Edit2,
   Key,
@@ -23,7 +22,6 @@ import {
   ShieldOff,
   Tag,
   Trash2,
-  User,
   UserCheck,
   X,
   XCircle,
@@ -49,6 +47,7 @@ import type {
   User as AdminUser,
   UserEffectivePermissionsDto,
 } from '../types/system-admin.types';
+import { StaffPermissionPanel } from '../components/StaffPermissionPanel';
 
 // ─── Category helpers ────────────────────────────────────────────────────────
 
@@ -1794,38 +1793,31 @@ export default function PermissionsPage() {
                           {rolePerms.map((rp) => (
                             <div
                               key={rp.rolePermissionId}
-                              className="flex items-center gap-3 px-6 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                              className="px-6 py-4 flex items-center justify-between group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                             >
-                              <Key className="w-4 h-4 text-slate-400 shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                                  {rp.permissionDisplayName}
-                                </p>
-                                <code className="text-xs text-slate-500">
-                                  {rp.permissionName}
-                                </code>
+                              <div className="flex items-center gap-3">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                <div>
+                                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                                    {rp.permissionDisplayName ||
+                                      rp.permissionName}
+                                  </p>
+                                  <p className="text-xs text-slate-500">
+                                    {rp.permissionName}
+                                  </p>
+                                </div>
                               </div>
-                              {rp.category && (
-                                <span
-                                  className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${categoryClass(rp.category)}`}
-                                >
-                                  {getCategoryLabel(rp.category, t)}
-                                </span>
-                              )}
                               <button
                                 onClick={() =>
                                   handleRemoveFromRole(rp.rolePermissionId)
                                 }
-                                disabled={
-                                  removingRolePerm === rp.rolePermissionId
-                                }
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-all disabled:opacity-40"
+                                className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100"
                                 title={t(
-                                  'SystemAdmin.permissions.roles.actions.removeFromRole',
-                                  'Remove from role'
+                                  'SystemAdmin.permissions.roles.actions.revoke',
+                                  'Revoke permission'
                                 )}
                               >
-                                <X className="w-4 h-4" />
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
                           ))}
@@ -1837,434 +1829,7 @@ export default function PermissionsPage() {
               </div>
             )}
 
-            {/* ══════════════════════════════════════════════════════
-                TAB 3 — User Overrides
-            ══════════════════════════════════════════════════════ */}
-            {activeTab === 'users' && (
-              <div className="space-y-6">
-                {/* User search */}
-                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-                    {t(
-                      'SystemAdmin.permissions.users.searchTitle',
-                      'Search User'
-                    )}
-                  </h3>
-                  <div className="relative max-w-md" ref={userSearchRef}>
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      className={`${inputCls} pl-9`}
-                      placeholder={t(
-                        'SystemAdmin.permissions.users.searchPlaceholder',
-                        'Type name or email...'
-                      )}
-                      value={userSearch}
-                      onChange={(e) => handleUserSearchChange(e.target.value)}
-                      onFocus={() => {
-                        setShowUserDropdown(true);
-                        searchUsers(userSearch);
-                      }}
-                    />
-                    {showUserDropdown && userResults.length > 0 && (
-                      <div className="absolute z-30 mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden">
-                        {userResults.slice(0, 8).map((u) => (
-                          <button
-                            key={u.id}
-                            type="button"
-                            onClick={() => handleSelectUser(u)}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0"
-                          >
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-teal-500 flex items-center justify-center text-white font-bold text-xs shrink-0">
-                              {u.name
-                                .split(' ')
-                                .map((n) => n[0])
-                                .join('')
-                                .slice(0, 2)}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                                {u.name}
-                              </p>
-                              <p className="text-xs text-slate-500 truncate">
-                                {u.email}
-                              </p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Effective permissions panel */}
-                {selectedUser && (
-                  <div className="space-y-5">
-                    {/* Header bar */}
-                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 px-6 py-4 shadow-sm flex items-center justify-between flex-wrap gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-teal-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
-                          {selectedUser.name
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')
-                            .slice(0, 2)}
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-slate-900 dark:text-white">
-                            {selectedUser.name}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {selectedUser.email}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setGrantInitial(undefined);
-                          setShowGrantModal(true);
-                        }}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all"
-                      >
-                        <Plus className="w-4 h-4" />
-                        {t(
-                          'SystemAdmin.permissions.users.actions.addOverride',
-                          'Add Override'
-                        )}
-                      </button>
-                    </div>
-
-                    {userPermsLoading ? (
-                      <div className="h-48 rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
-                    ) : userEffective ? (
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        {/* Roles */}
-                        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
-                          <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                            {t(
-                              'SystemAdmin.permissions.users.rolesTitle',
-                              'Roles'
-                            )}
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {userEffective.roles.map((r) => (
-                              <span
-                                key={r}
-                                className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                              >
-                                <Shield className="w-3 h-3" />
-                                {r}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Effective permissions */}
-                        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
-                          <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                            {t(
-                              'SystemAdmin.permissions.users.effectivePermissionsTitle',
-                              'Effective Permissions ({{count}})',
-                              {
-                                count:
-                                  userEffective.effectivePermissionNames.length,
-                              }
-                            )}
-                          </h4>
-                          <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
-                            {userEffective.effectivePermissionNames.map((n) => (
-                              <span
-                                key={n}
-                                className="text-xs font-mono px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
-                              >
-                                {n}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Role-inherited permissions */}
-                        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                          <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
-                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                              {t(
-                                'SystemAdmin.permissions.users.inheritedFromRolesTitle',
-                                'Inherited from Roles ({{count}})',
-                                {
-                                  count: userEffective.rolePermissions.length,
-                                }
-                              )}
-                            </h4>
-                            <p className="text-xs text-slate-400 mt-0.5">
-                              {t(
-                                'SystemAdmin.permissions.users.inheritedFromRolesDescription',
-                                'Add a deny override to block a role permission'
-                              )}
-                            </p>
-                          </div>
-                          {userEffective.rolePermissions.length === 0 ? (
-                            <div className="py-8 text-center text-sm text-slate-500">
-                              {t(
-                                'SystemAdmin.permissions.users.states.noRolePermissions',
-                                'No role permissions'
-                              )}
-                            </div>
-                          ) : (
-                            <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
-                              {userEffective.rolePermissions.map((rp) => {
-                                const denied = userEffective.userOverrides.some(
-                                  (ov) =>
-                                    ov.permissionId === rp.id &&
-                                    !ov.isGranted &&
-                                    ov.isActive
-                                );
-                                return (
-                                  <div
-                                    key={rp.id}
-                                    className="flex items-center gap-3 px-5 py-3"
-                                  >
-                                    <Key className="w-4 h-4 text-slate-400 shrink-0" />
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                                        {rp.displayName}
-                                      </p>
-                                      <code className="text-xs text-slate-500">
-                                        {rp.name}
-                                      </code>
-                                    </div>
-                                    {denied ? (
-                                      <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 shrink-0">
-                                        {t(
-                                          'SystemAdmin.permissions.users.status.denied',
-                                          'Denied'
-                                        )}
-                                      </span>
-                                    ) : (
-                                      <button
-                                        onClick={() => {
-                                          setGrantInitial({
-                                            permissionId: rp.id,
-                                            isGranted: false,
-                                          });
-                                          setShowGrantModal(true);
-                                        }}
-                                        className="text-xs flex items-center gap-1 px-2.5 py-1 rounded-lg border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shrink-0"
-                                        title={t(
-                                          'SystemAdmin.permissions.users.actions.addDenyOverride',
-                                          'Add deny override'
-                                        )}
-                                      >
-                                        <ShieldOff className="w-3 h-3" />
-                                        {t(
-                                          'SystemAdmin.permissions.users.actions.deny',
-                                          'Deny'
-                                        )}
-                                      </button>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* User overrides — active only */}
-                        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                          <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                              {t(
-                                'SystemAdmin.permissions.users.activeOverridesTitle',
-                                'Active Overrides ({{count}})',
-                                {
-                                  count: userEffective.userOverrides.filter(
-                                    (ov) => ov.isActive
-                                  ).length,
-                                }
-                              )}
-                            </h4>
-                          </div>
-                          {userEffective.userOverrides.filter(
-                            (ov) => ov.isActive
-                          ).length === 0 ? (
-                            <div className="py-8 text-center text-sm text-slate-500">
-                              {t(
-                                'SystemAdmin.permissions.users.states.noActiveOverrides',
-                                'No active overrides'
-                              )}
-                            </div>
-                          ) : (
-                            <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
-                              {userEffective.userOverrides
-                                .filter((ov) => ov.isActive)
-                                .map((ov) => (
-                                  <div
-                                    key={ov.userPermissionId}
-                                    className="flex items-center gap-3 px-5 py-3"
-                                  >
-                                    <div
-                                      className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
-                                        ov.isGranted
-                                          ? 'bg-emerald-100 dark:bg-emerald-900/30'
-                                          : 'bg-red-100 dark:bg-red-900/30'
-                                      }`}
-                                    >
-                                      {ov.isGranted ? (
-                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                      ) : (
-                                        <XCircle className="w-3.5 h-3.5 text-red-500" />
-                                      )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                                        {ov.permissionDisplayName}
-                                      </p>
-                                      <code className="text-xs text-slate-500">
-                                        {ov.permissionName}
-                                      </code>
-                                    </div>
-                                    <span
-                                      className={`text-xs px-2 py-0.5 rounded-full font-semibold shrink-0 ${
-                                        ov.isGranted
-                                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                          : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
-                                      }`}
-                                    >
-                                      {ov.isGranted
-                                        ? t(
-                                            'SystemAdmin.permissions.users.status.granted',
-                                            'Granted'
-                                          )
-                                        : t(
-                                            'SystemAdmin.permissions.users.status.denied',
-                                            'Denied'
-                                          )}
-                                    </span>
-                                    <button
-                                      onClick={() =>
-                                        handleRevokeUserPerm(
-                                          ov.userPermissionId
-                                        )
-                                      }
-                                      disabled={
-                                        revokingUserPerm === ov.userPermissionId
-                                      }
-                                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-all disabled:opacity-40 shrink-0"
-                                      title={t(
-                                        'SystemAdmin.permissions.users.actions.removeOverride',
-                                        'Remove override'
-                                      )}
-                                    >
-                                      <X className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                ))}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Override history — inactive/revoked — full width, collapsible */}
-                        {(() => {
-                          const history = userEffective.userOverrides.filter(
-                            (ov) => !ov.isActive
-                          );
-                          if (history.length === 0) return null;
-                          return (
-                            <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setShowOverrideHistory((v) => !v)
-                                }
-                                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-200 dark:border-slate-700"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <Clock className="w-4 h-4 text-slate-400" />
-                                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                    {t(
-                                      'SystemAdmin.permissions.users.overrideHistoryTitle',
-                                      'Override History ({{count}} revoked / expired)',
-                                      {
-                                        count: history.length,
-                                      }
-                                    )}
-                                  </h4>
-                                </div>
-                                {showOverrideHistory ? (
-                                  <ChevronDown className="w-4 h-4 text-slate-400" />
-                                ) : (
-                                  <ChevronRight className="w-4 h-4 text-slate-400" />
-                                )}
-                              </button>
-                              {showOverrideHistory && (
-                                <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
-                                  {history.map((ov) => (
-                                    <div
-                                      key={ov.userPermissionId}
-                                      className="flex items-center gap-3 px-5 py-3 opacity-60"
-                                    >
-                                      <div className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
-                                        <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate">
-                                          {ov.permissionDisplayName}
-                                        </p>
-                                        <code className="text-xs text-slate-400">
-                                          {ov.permissionName}
-                                        </code>
-                                      </div>
-                                      <div className="flex flex-col items-end gap-0.5 shrink-0">
-                                        <span
-                                          className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                                            ov.isGranted
-                                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                              : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
-                                          }`}
-                                        >
-                                          {ov.isGranted
-                                            ? t(
-                                                'SystemAdmin.permissions.users.status.granted',
-                                                'Granted'
-                                              )
-                                            : t(
-                                                'SystemAdmin.permissions.users.status.denied',
-                                                'Denied'
-                                              )}
-                                        </span>
-                                        <span className="text-xs text-slate-400">
-                                          {ov.isExpired
-                                            ? t(
-                                                'SystemAdmin.permissions.users.status.expired',
-                                                'Expired'
-                                              )
-                                            : t(
-                                                'SystemAdmin.permissions.users.status.revoked',
-                                                'Revoked'
-                                              )}
-                                          {ov.expiresAt && ov.isExpired
-                                            ? ` · ${formatLocalizedDate(ov.expiresAt)}`
-                                            : ''}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    ) : (
-                      <div className="rounded-xl border border-slate-200 dark:border-slate-700 py-12 text-center text-sm text-slate-500">
-                        {t(
-                          'SystemAdmin.permissions.users.states.loadFailed',
-                          'Failed to load user permissions'
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+            {activeTab === 'users' && <StaffPermissionPanel />}
           </div>
         </main>
       </div>

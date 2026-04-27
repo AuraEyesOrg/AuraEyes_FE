@@ -1875,15 +1875,15 @@
   },
   "Contact": {
     "toast": {
-      "success": "Request submitted successfully. The System Admin has been notified by email.",
+      "success": "Your message has been sent successfully. Our team will get back to you soon.",
       "error": "Unable to submit request. Please try again."
     },
     "hero": {
-      "badge": "Join Our Network",
-      "titlePrefix": "Partner with",
-      "titleSuffix": "to Improve Vision Health Worldwide",
-      "description": "Whether you're a hospital or a clinic network, AURA provides the tools and support to bring advanced retinal screening to your patients.",
-      "primaryCta": "Apply for Partnership"
+      "badge": "Contact the AURA Team",
+      "titlePrefix": "Get in touch with",
+      "titleSuffix": "for quick support",
+      "description": "Need technical help, product guidance, or want to share feedback? Send us a message and our team will respond as soon as possible.",
+      "primaryCta": "Send a Message"
     },
     "partnerCard": {
       "title": "Medical Organization (Hospitals/Clinics)",
@@ -1896,8 +1896,8 @@
     },
     "info": {
       "badge": "Contact Information",
-      "title": "Let's Talk Partnership",
-      "description": "Reach out to our team for onboarding guidance, support, and partnership consultation.",
+      "title": "Connect with us",
+      "description": "Our team is here to help with platform questions, user support, and general inquiries about AURA.",
       "emailSupport": "Email Support",
       "responseTime": "Response Time",
       "responseTimeValue": "Within 24-48 business hours",
@@ -1905,11 +1905,11 @@
       "headquartersValue": "FPT University, HCM, VN"
     },
     "form": {
-      "title": "Partner with AURA",
-      "description": "Fill out the form to discuss volume licensing and API integrations",
-      "contactPerson": "Contact Person",
+      "title": "Send us a message",
+      "description": "Fill out the form below and we will get back to you shortly",
+      "contactPerson": "Contact details",
       "fullName": "Full Name",
-      "role": "Job Title / Role",
+      "role": "Subject",
       "workEmail": "Work Email",
       "workEmailPlaceholder": "contact@organization.com",
       "phone": "Phone Number",
@@ -1933,8 +1933,8 @@
       "termsOfService": "Terms of Service",
       "and": "and",
       "privacyPolicy": "Privacy Policy",
-      "sending": "Sending Request...",
-      "send": "Send Partnership Request"
+      "sending": "Sending message...",
+      "send": "Send message"
     },
     "impact": {
       "title": "Our Growing Impact",
@@ -1948,12 +1948,12 @@
       "title": "Frequently Asked Questions",
       "items": {
         "cost": {
-          "question": "Is there a cost to partner with AURA?",
-          "answer": "For individual clinicians and non-profit organizations, AURA is completely free. For large commercial enterprises, we offer tiered pricing based on volume."
+          "question": "When will I receive a response?",
+          "answer": "Our team typically responds within 24-48 business hours. Urgent requests are prioritized whenever possible."
         },
         "onboarding": {
-          "question": "How long does the onboarding process take?",
-          "answer": "Most organizations can be set up and running within 2-4 weeks depending on integration complexity."
+          "question": "What can I contact AURA about?",
+          "answer": "You can contact us about account support, technical issues, product feedback, collaboration opportunities, or any general platform question."
         }
       }
     }
@@ -2411,6 +2411,7 @@
     "clinicStatus": {
       "pending": "Pending",
       "confirmed": "Confirmed",
+      "depositPaid": "Deposit Paid",
       "checkedIn": "Checked In",
       "inProgress": "In Progress",
       "completed": "Completed",
@@ -3319,7 +3320,7 @@
       "findClinics": "Find Clinics",
       "healthRoadmap": "Health Roadmap",
       "chat": "Chat",
-      "wallet": "Wallet",
+      "wallet": "Transaction History",
       "helpFeedback": "Help & Feedback",
       "settings": "Settings"
     },
@@ -3345,7 +3346,7 @@
       "clinics": "Find Clinics",
       "roadmap": "Health Roadmap",
       "chat": "Chat",
-      "wallet": "Wallet",
+      "wallet": "Transaction History",
       "profile": "My Profile",
       "settings": "Settings",
       "security": "Security",
@@ -3640,6 +3641,7 @@
         "checkedIn": "Checked in",
         "completed": "Completed",
         "confirmed": "Confirmed",
+        "depositPaid": "Deposit Paid",
         "inProgress": "In progress",
         "noShow": "No-show",
         "pending": "Pending"
@@ -4607,1833 +4609,131 @@
   },
   "SystemAdmin": {
     "common": {
-      "systemAdmin": "System Admin",
-      "noDataAvailable": "No data available",
-      "loadingData": "Loading data...",
-      "notAvailable": "N/A",
-      "notProvided": "Not provided",
-      "noNotes": "No notes",
-      "doctor": "Doctor",
-      "createdAt": "Created at",
-      "reviewedAt": "Reviewed at",
-      "adminNote": "Admin note",
-      "status": {
-        "pending": "Pending",
-        "approved": "Approved",
-        "rejected": "Rejected",
-        "cancelled": "Cancelled",
-        "processing": "Processing",
-        "completed": "Completed",
-        "failed": "Failed"
-      },
-      "actions": {
-        "refresh": "Refresh",
-        "approve": "Approve",
-        "reject": "Reject",
-        "cancel": "Cancel",
-        "processing": "Processing...",
-        "confirmApprove": "Confirm approval",
-        "confirmReject": "Confirm rejection"
-      },
-      "pagination": {
-        "previous": "Previous page",
-        "next": "Next page",
-        "label": "Page {{page}}/{{total}}",
-        "page": "Page {{page}}"
-      }
-    },
-    "actions": {
-      "export": "Export"
-    },
-    "header": {
-      "breadcrumb": {
-        "pages": "Pages"
-      },
-      "searchPlaceholder": "Search any keywords",
-      "toggleTheme": "Toggle theme"
+      "systemAdmin": "System Admin"
     },
     "sidebar": {
       "dashboard": "Dashboard",
       "groups": {
         "user-directory": {
           "label": "User Directory",
-          "description": "Manage user directory"
-        },
-        "contract-management": {
-          "label": "Contract Management",
-          "description": "Manage contracts"
-        },
-        "billing-finance": {
-          "label": "Billing & Finance",
-          "description": "Financial & Billing management"
-        },
-        "system-administration": {
-          "label": "System Administration",
-          "description": "System administration tools"
+          "description": "Manage users and staff"
         }
       },
       "items": {
-        "organisations": "Organisations",
-        "ophthalmologists": "Ophthalmologists",
-        "leave-requests": "Leave Requests",
-        "employment-type-change-requests": "Employment Type Changes",
-        "patients": "Patients",
-        "verifications": "Verifications",
-        "contract-templates": "Contract Templates",
-        "contracts": "Contracts",
-        "transaction-ledger": "Transaction Ledger",
-        "withdrawal-requests": "Withdrawal Requests",
-        "permissions": "Permissions",
-        "audit-logs": "Audit Logs",
-        "settings": "Settings",
-        "aura-network": "Aura Network"
+        "staff-management": "Staff Management"
       }
     },
-    "dashboard": {
-      "page": {
-        "title": "System Admin Dashboard",
-        "description": "Growth, revenue, queue, and system status"
-      },
-      "actions": {
-        "exporting": "Exporting...",
-        "exportExcel": "Export Excel",
-        "exportPdf": "Export PDF"
-      },
-      "states": {
-        "metricsLoadError": "Unable to load live dashboard metrics."
-      },
-      "common": {
-        "noData": "No data"
-      },
-      "cards": {
-        "doctors": {
-          "title": "Doctors",
-          "description": "This month: {{current}} - Prev: {{previous}}"
-        },
-        "organisations": {
-          "title": "Organizations",
-          "description": "This month: {{current}} - Prev: {{previous}}"
-        },
-        "patients": {
-          "title": "Patients",
-          "description": "This month: {{current}} - Prev: {{previous}}"
-        },
-        "liveConsultations": {
-          "title": "Live consultations",
-          "description": "Sessions with open chat (active window)"
-        },
-        "walletTopUps": {
-          "title": "Wallet top-ups (YTD)",
-          "description": "Completed deposits (calendar year)"
-        },
-        "consultationCommission": {
-          "title": "Consultation commission (YTD)",
-          "description": "Platform share to system wallet"
-        }
-      },
-      "charts": {
-        "common": {
-          "walletTopUps": "Wallet top-ups",
-          "consultationCommission": "Consultation commission"
-        },
-        "monthlyRevenue": {
-          "title": "Monthly revenue (current year)",
-          "description": "Wallet top-ups vs platform commission"
-        },
-        "paymentMethods": {
-          "title": "Payment methods",
-          "description": "By total completed deposit amount"
-        },
-        "dailyRevenue": {
-          "title": "Last 7 days - top-ups & commission",
-          "description": "Daily movement (recent week)"
-        }
-      },
-      "quotaUsage": {
-        "title": "Part-time slot quota usage",
-        "description": "Reserved slots by day against global quota",
-        "filters": {
-          "from": "From",
-          "to": "To"
-        },
-        "states": {
-          "loadError": "Failed to load part-time slot quota usage.",
-          "empty": "No quota usage data"
-        },
-        "summary": {
-          "usedSlots": "Used slots",
-          "quotaCapacity": "Quota capacity",
-          "averageUtilization": "Avg utilization",
-          "nearLimitDays": "Near-limit days"
-        },
-        "chart": {
-          "used": "Used",
-          "remaining": "Remaining"
-        }
-      },
-      "quotas": {
-        "day7": "7d",
-        "day14": "14d",
-        "day30": "30d"
-      },
-      "pendingActions": {
-        "title": "Pending actions",
-        "description": "Queues that need your attention",
-        "items": {
-          "doctorProfileReviews": {
-            "title": "Doctor profile reviews",
-            "subtitle": "Pending verification"
-          },
-          "withdrawalRequests": {
-            "title": "Withdrawal requests",
-            "subtitle": "Pending / processing"
-          },
-          "organisationOnboarding": {
-            "title": "Organisation onboarding",
-            "subtitle": "Awaiting approval"
-          }
-        }
-      },
-      "systemStatus": {
-        "title": "System status",
-        "api": "API",
-        "database": "Database",
-        "operational": "Operational",
-        "issue": "Issue",
-        "connected": "Connected",
-        "unreachable": "Unreachable"
-      },
-      "topDoctors": {
-        "title": "Top doctors",
-        "description": "By consultation revenue (all time)",
-        "reviews": "reviews",
-        "noRatings": "No ratings yet",
-        "states": {
-          "empty": "No data yet"
-        }
-      },
-      "topOrganisations": {
-        "title": "Top organisations",
-        "description": "By average rating",
-        "states": {
-          "empty": "No data yet"
-        }
-      },
-      "export": {
-        "sheetName": "Dashboard",
-        "title": "System Admin Dashboard Export",
-        "subtitle": "Growth, revenue, queue, and system status",
-        "generatedBy": "AuraEyes System Admin",
-        "columns": {
-          "section": "Section",
-          "metric": "Metric",
-          "value": "Value"
-        },
-        "rows": {
-          "section": {
-            "users": "Users",
-            "operations": "Operations",
-            "pending": "Pending",
-            "revenueYtd": "Revenue (YTD)",
-            "paymentMethods": "Payment Methods",
-            "monthlyRevenue": "Monthly Revenue",
-            "monthlyPlatformCommission": "Monthly platform commission",
-            "dailyRevenue": "Daily Revenue",
-            "dailyPlatformCommission": "Daily platform commission",
-            "partTimeSlotQuotaUsage": "Part-time slot quota usage"
-          },
-          "metric": {
-            "doctorsTotal": "Doctors - Total",
-            "doctorsGrowth": "Doctors - Growth %",
-            "organisationsTotal": "Organisations - Total",
-            "organisationsGrowth": "Organisations - Growth %",
-            "patientsTotal": "Patients - Total",
-            "patientsGrowth": "Patients - Growth %",
-            "liveConsultationSessions": "Live consultation sessions",
-            "ophthalmologistVerifications": "Ophthalmologist verifications",
-            "withdrawalRequests": "Withdrawal requests",
-            "organisationOnboarding": "Organisation onboarding",
-            "walletTopUpsCalendarYear": "Wallet top-ups (calendar year)",
-            "consultationCommissionCalendarYear": "Consultation commission (calendar year)",
-            "quotaUsageDate": "{{date}} - used/quota/remaining"
-          }
-        }
-      },
-      "toasts": {
-        "noDataForExport": "No dashboard data available for export.",
-        "exportSuccess": "Dashboard data exported successfully.",
-        "exportError": "Failed to export dashboard data. Please try again.",
-        "exportPdfSuccess": "Dashboard PDF exported successfully.",
-        "exportPdfError": "Failed to export dashboard PDF. Please try again."
-      }
-    },
-    "ophthalmologists": {
-      "page": {
-        "title": "Ophthalmologist Management",
-        "description": "Manage doctors, monitor consultation requests, earnings, and feedback"
-      },
-      "actions": {
-        "export": "Export",
-        "exporting": "Exporting..."
-      },
-      "status": {
-        "available": "Available",
-        "busy": "Busy",
-        "unavailable": "Unavailable",
-        "fullyBooked": "Fully Booked"
-      },
-      "verification": {
-        "verified": "Verified",
-        "pending": "Pending",
-        "pendingUpdate": "Pending Update",
-        "rejected": "Rejected"
-      },
-      "toasts": {
-        "invalidSalaryForPayout": "Doctor has no valid actual salary to payout.",
-        "paySalarySuccess": "Salary paid to doctor wallet successfully.",
-        "paySalaryError": "Failed to pay salary. Please try again.",
-        "employmentTypeUnchanged": "Employment type is unchanged.",
-        "updateEmploymentSuccess": "Employment type updated successfully.",
-        "updateEmploymentError": "Failed to update employment type. Please try again.",
-        "deleteSuccess": "Doctor deleted successfully.",
-        "deleteError": "Failed to delete doctor. Please try again.",
-        "rejectError": "Rejection failed. Please try again.",
-        "noDataForExport": "No ophthalmologists available for export.",
-        "exportSuccess": "Exported {{count}} ophthalmologists.",
-        "exportError": "Failed to export ophthalmologists. Please try again."
-      },
-      "export": {
-        "sheetName": "Ophthalmologists",
-        "columns": {
-          "ophthalmologistId": "Ophthalmologist ID",
-          "fullName": "Full Name",
-          "email": "Email",
-          "phone": "Phone",
-          "verificationStatus": "Verification Status",
-          "isVerified": "Is Verified",
-          "activeStatus": "Active Status",
-          "yearsOfExperience": "Years of Experience",
-          "organisation": "Organisation",
-          "createdAt": "Created At"
-        },
-        "values": {
-          "yes": "Yes",
-          "no": "No",
-          "active": "Active",
-          "inactive": "Inactive"
-        }
-      },
-      "table": {
-        "columns": {
-          "doctor": "Doctor",
-          "status": "Status",
-          "verification": "Verification",
-          "requests": "Requests",
-          "monthlyEarnings": "Monthly Earnings",
-          "dealTerms": "Deal Terms",
-          "rating": "Rating",
-          "actions": "Actions"
-        },
-        "values": {
-          "yearsExperience": "{{count}} years exp.",
-          "pendingRequests": "{{count}} pending",
-          "totalRequests": "{{count}} total",
-          "commissionPending": "Commission pending"
-        },
-        "actions": {
-          "viewDetails": "View Details",
-          "approveVerification": "Approve Verification",
-          "rejectVerification": "Reject Verification",
-          "moreActions": "More actions",
-          "update": "Update",
-          "deleting": "Deleting...",
-          "delete": "Delete"
-        }
-      },
-      "tabs": {
-        "overview": "Overview",
-        "pendingVerification": "Pending Verification",
-        "feedback": "Feedback"
-      },
-      "stats": {
-        "totalDoctors": {
-          "title": "Total Doctors",
-          "description": "{{count}} verified"
-        },
-        "availableNow": {
-          "title": "Available Now",
-          "description": "Ready for consultations"
-        },
-        "pendingVerification": {
-          "title": "Pending Verification",
-          "description": "Require review"
-        },
-        "pendingRequests": {
-          "title": "Pending Requests",
-          "description": "Consultation requests"
-        },
-        "monthlyRevenue": {
-          "title": "Monthly Revenue",
-          "description": "Platform earnings"
-        }
-      },
-      "overview": {
-        "averageRating": {
-          "title": "Average Rating",
-          "basedOnReviews": "Based on {{count}} reviews"
-        },
-        "totalConsultations": {
-          "title": "Total Consultations",
-          "completed": "completed",
-          "totalRequests": "{{count}} total requests"
-        },
-        "pendingPayouts": {
-          "title": "Pending Payouts",
-          "description": "Awaiting transfer to doctors"
-        }
-      },
-      "filters": {
-        "searchPlaceholder": "Search by name or email...",
-        "verification": {
-          "all": "All Verification",
-          "pending": "Pending",
-          "approved": "Approved",
-          "rejected": "Rejected"
-        },
-        "status": {
-          "all": "All Status"
-        }
-      },
-      "feedback": {
-        "state": {
-          "inProgress": "Feedback feature is under development",
-          "comingSoon": "Coming soon"
-        }
-      },
-      "requestsBanner": {
-        "pendingDoctors": "{{count}} doctors are waiting for credential review",
-        "hint": "View attached documents in detail rows (eye icon)"
-      },
-      "states": {
-        "noPendingRequests": "No records are waiting for verification",
-        "empty": "No ophthalmologists found"
-      },
-      "pagination": {
-        "showing": "Showing {{shown}} of {{total}} doctors",
-        "previous": "Previous",
-        "page": "Page {{page}}",
-        "next": "Next"
-      },
-      "rejectModal": {
-        "title": "Reject verification",
-        "reasonLabel": "Rejection reason",
-        "reasonPlaceholder": "Enter rejection reason (for example: unclear license photo, insufficient credentials...)",
-        "hint": "The rejection reason will be emailed to the doctor. Please provide clear details so they can update the profile.",
-        "links": {
-          "viewLicense": "View license",
-          "viewDegree": "View degree"
-        },
-        "actions": {
-          "cancel": "Cancel",
-          "confirm": "Confirm rejection"
-        },
-        "validation": {
-          "reasonRequired": "Please enter a rejection reason."
-        }
-      },
-      "detail": {
-        "stats": {
-          "totalRequests": "Total Requests",
-          "pending": "Pending",
-          "monthlyEarnings": "Monthly Earnings",
-          "rating": "Rating"
-        },
-        "sections": {
-          "bio": "Bio",
-          "uploadedDocuments": "Uploaded Documents",
-          "rejectionReason": "Rejection Reason",
-          "financialSummary": "Financial Summary",
-          "contractDealTerms": "Contract Deal Terms"
-        },
-        "links": {
-          "viewLicense": "View License",
-          "viewDegree": "View Degree"
-        },
-        "financial": {
-          "totalEarnings": "Total Earnings",
-          "thisMonth": "This Month",
-          "pendingPayout": "Pending Payout"
-        },
-        "contract": {
-          "employment": "Employment",
-          "commission": "Commission",
-          "expectedSalary": "Expected Salary",
-          "actualSalary": "Actual Salary",
-          "pending": "Pending",
-          "hoursPerWeek": "{{count}}h/week",
-          "employmentType": {
-            "fullTime": "Full-time",
-            "partTime": "Part-time"
-          },
-          "actions": {
-            "saving": "Saving...",
-            "save": "Save",
-            "paying": "Paying...",
-            "paySalaryToWallet": "Pay salary to wallet"
-          }
-        }
-      },
-      "deleteModal": {
-        "title": "Delete ophthalmologist?",
-        "message": "Are you sure you want to delete doctor {{name}}? The profile will be marked as inactive.",
-        "confirmLabel": "Delete",
-        "cancelLabel": "Cancel"
-      }
-    },
-    "leaveRequests": {
-      "title": "Leave Requests",
-      "description": "Review and manage leave requests from full-time ophthalmologists",
-      "summary": {
-        "pending": "Pending",
-        "approved": "Approved",
-        "total": "Total requests"
-      },
-      "filters": {
-        "searchPlaceholder": "Search doctor, email, leave reason...",
-        "status": {
-          "all": "All statuses"
-        }
-      },
-      "states": {
-        "empty": "No leave requests found.",
-        "noActionAvailable": "No actions available"
-      },
-      "dialog": {
-        "approveTitle": "Approve leave request",
-        "rejectTitle": "Reject leave request",
-        "period": "Period",
-        "adminNoteOptional": "Admin note (optional)",
-        "adminNotePlaceholder": "Add a note to explain your decision to the doctor"
-      },
-      "toasts": {
-        "approveSuccess": "Leave request approved. The system cancelled {{cancelledSessions}} consultation sessions, {{cancelledAppointments}} appointments, and blocked {{blockedSlots}} slots.",
-        "approveError": "Unable to approve leave request.",
-        "rejectSuccess": "Leave request rejected.",
-        "rejectError": "Unable to reject leave request."
-      }
-    },
-    "employmentTypeChangeRequests": {
-      "title": "Employment Type Change Requests",
-      "description": "Review requests to change ophthalmologist employment type",
-      "summary": {
-        "pending": "Pending",
-        "approved": "Approved",
-        "total": "Total requests"
-      },
-      "filters": {
-        "searchPlaceholder": "Search doctor, email, request reason...",
-        "status": {
-          "all": "All statuses"
-        }
-      },
-      "states": {
-        "empty": "No employment type change requests found.",
-        "noActionAvailable": "No actions available"
-      },
-      "dialog": {
-        "approveTitle": "Approve employment type change request",
-        "rejectTitle": "Reject employment type change request",
-        "transition": "Change type",
-        "adminNoteOptional": "Admin note (optional)",
-        "adminNotePlaceholder": "Add a note to explain your decision to the doctor"
-      },
-      "toasts": {
-        "approveSuccess": "Employment type change request approved.",
-        "approveError": "Unable to approve employment type change request.",
-        "rejectSuccess": "Employment type change request rejected.",
-        "rejectError": "Unable to reject employment type change request."
-      }
-    },
-    "withdrawalRequests": {
-      "title": "Withdrawal Requests",
-      "description": "Process withdrawal requests from ophthalmologists",
-      "summary": {
-        "pendingRequests": "Requests waiting for processing",
-        "totalAmountCurrentPage": "Total amount on current page"
-      },
-      "filters": {
-        "searchPlaceholder": "Search doctor, email, bank account...",
-        "status": {
-          "all": "All"
-        }
-      },
-      "states": {
-        "empty": "No withdrawal requests found."
-      },
-      "history": {
-        "title": "Withdrawal Transaction History",
-        "refresh": "Refresh history",
-        "loading": "Loading withdrawal history...",
-        "empty": "No withdrawal transaction history yet.",
-        "withdrawalType": "Withdrawal",
-        "columns": {
-          "created": "Created",
-          "doctor": "Doctor",
-          "amount": "Amount",
-          "type": "Type",
-          "reference": "Reference",
-          "description": "Description"
-        }
-      },
-      "modals": {
-        "confirm": {
-          "title": "Confirm transfer completed",
-          "transferReference": "Transfer reference",
-          "processing": "Confirming...",
-          "confirm": "Confirm"
-        },
-        "reject": {
-          "title": "Reject withdrawal request",
-          "reasonOptional": "Reason (optional)",
-          "processing": "Rejecting..."
-        }
-      },
-      "requestCard": {
-        "payOSLabel": "PayOS",
-        "amount": "Amount",
-        "bankAndAccount": "Bank / Account",
-        "bankBinLabel": "(BIN: {{bin}})",
-        "time": "Time",
-        "processedAt": "Processed at",
-        "contract": "Contract",
-        "transferCode": "Transfer code",
-        "doctorNote": "Doctor note",
-        "payOSId": "PayOS ID",
-        "reference": "Reference",
-        "tooltips": {
-          "payoutViaPayOS": "Automatically process payout via PayOS API",
-          "syncPayOS": "Sync payout status from PayOS"
-        },
-        "actions": {
-          "payoutProcessing": "Processing payout...",
-          "payoutViaPayOS": "Payout via PayOS",
-          "syncingPayOS": "Syncing...",
-          "syncPayOS": "Sync PayOS",
-          "confirmManual": "Manual confirm"
-        },
-        "warnings": {
-          "missingBankBin": "Missing BankBIN - cannot auto payout via PayOS"
-        }
-      },
-      "toasts": {
-        "confirmSuccess": "Withdrawal transfer confirmed successfully.",
-        "confirmError": "Unable to confirm withdrawal request.",
-        "rejectSuccess": "Withdrawal request rejected.",
-        "rejectError": "Unable to reject withdrawal request.",
-        "payosPayoutSuccess": "PayOS payout successful. State: {{state}}. PayOS ID: {{payOSId}}",
-        "payosPayoutError": "Unable to process payout via PayOS.",
-        "payosSyncSuccess": "Synced payout state: {{approvalState}} -> Withdrawal: {{withdrawalStatus}}",
-        "payosSyncError": "Unable to sync PayOS payout status."
-      }
-    },
-    "contractTemplateEditor": {
-      "titleCreate": "Create Contract Template",
-      "titleDetail": "Contract Template Detail",
-      "subtitle": "Upload DOCX only. No HTML or variable configuration.",
-      "status": {
-        "active": "Active",
-        "inactive": "Inactive"
-      },
-      "sections": {
-        "templateFile": "Template File",
-        "templateMetadata": "Template Metadata"
+    "staff": {
+      "modal": {
+        "title": "Add New Staff"
       },
       "fields": {
-        "title": {
-          "label": "Title",
-          "placeholder": "Template title"
-        },
-        "type": {
-          "label": "Type",
-          "ophthalmologist": "Ophthalmologist",
-          "medicalOrganization": "Medical Organization"
-        },
-        "employmentMode": {
-          "label": "Employment Mode",
-          "fullTime": "Full-time",
-          "partTime": "Part-time"
-        },
-        "version": {
-          "label": "Version",
-          "placeholder": "2026"
-        },
-        "effectiveDate": {
-          "label": "Effective Date"
-        }
-      },
-      "links": {
-        "previewUploadedFile": "Preview uploaded file",
-        "openCurrentTemplateFile": "Open current template file"
+        "fullName": "Full Name",
+        "email": "Email Address",
+        "phone": "Phone Number",
+        "role": "Staff Role"
       },
       "actions": {
-        "backToTemplates": "Back to contract templates",
-        "uploadDocxFile": "Upload DOCX file",
-        "updatingStatus": "Updating...",
-        "deactivate": "Deactivate",
-        "activate": "Activate",
-        "createTemplate": "Create Template",
-        "saveChanges": "Save Changes"
-      },
-      "metadata": {
-        "createdAt": "Created",
-        "updatedAt": "Updated",
-        "contractsUsingTemplate": "Contracts using template: {{count}}"
-      },
-      "errors": {
-        "templateNameRequired": "Template name is required.",
-        "contractVersionRequired": "Contract version is required.",
-        "employmentTypeRequired": "Please select Full-time or Part-time for ophthalmologist templates.",
-        "docxRequired": "Please upload a DOCX template file.",
-        "saveFailed": "Could not save contract template. Please try again."
-      }
-    },
-    "contractTemplates": {
-      "title": "Contract Templates",
-      "description": "Manage DOCX contract templates and activation status by version",
-      "status": {
-        "active": "Active",
-        "inactive": "Inactive"
-      },
-      "contractType": {
-        "ophthalmologist": "Ophthalmologist",
-        "organization": "Organization"
-      },
-      "card": {
-        "version": "Version",
-        "effective": "Effective",
-        "docxTemplate": "DOCX template",
-        "contractsCount": "{{count}} contracts"
-      },
-      "actions": {
-        "updatingStatus": "Updating...",
-        "deactivate": "Deactivate",
-        "activate": "Activate",
-        "editTemplate": "Edit Template",
-        "preview": "Preview",
-        "duplicate": "Duplicate",
-        "delete": "Delete",
-        "newTemplate": "New Template",
-        "createNewTemplate": "Create New Template"
-      },
-      "summary": {
-        "totalTemplates": "Total Templates",
-        "contractsIssued": "Contracts Issued",
-        "templateCount": "{{count}} template(s)"
-      },
-      "filters": {
-        "searchPlaceholder": "Search templates...",
-        "status": {
-          "all": "All statuses",
-          "activeOnly": "Active only",
-          "inactiveOnly": "Inactive only"
-        }
-      },
-      "states": {
-        "loadError": "Failed to load templates.",
-        "loadErrorPrefix": "Failed to load templates",
-        "unknownError": "Unknown error",
-        "empty": "No templates found"
-      },
-      "deleteDialog": {
-        "title": "Delete Template?",
-        "description": "Are you sure you want to delete {{name}}? This action cannot be undone."
-      }
-    },
-    "contracts": {
-      "title": "Contract Management",
-      "description": "Review contracts and verify signed contracts from ophthalmologists",
-      "status": {
-        "draft": "Draft",
-        "pendingSignature": "Pending signature",
-        "active": "Active",
-        "expired": "Expired",
-        "terminated": "Terminated",
-        "cancelled": "Cancelled"
-      },
-      "upload": {
-        "uploaded": "Uploaded",
-        "missing": "Not uploaded"
-      },
-      "summary": {
-        "totalContracts": "Total contracts",
-        "pendingVerification": "Pending verification",
-        "pendingUpload": "Pending upload"
-      },
-      "filters": {
-        "searchPlaceholder": "Search by name, email, contract number...",
-        "status": {
-          "all": "All"
-        }
-      },
-      "states": {
-        "empty": "No contracts found.",
-        "emptyValue": "—"
-      },
-      "table": {
-        "columns": {
-          "contractCode": "Contract code",
-          "doctor": "Doctor",
-          "status": "Status",
-          "upload": "Upload",
-          "createdDate": "Created date",
-          "actions": "Actions"
-        },
-        "actions": {
-          "viewDetails": "View details",
-          "verifyContract": "Enter deal terms and verify contract",
-          "dealAndVerify": "Deal & verify"
-        }
-      },
-      "detailDialog": {
-        "title": "Contract details",
-        "closeAriaLabel": "Close contract details",
-        "fields": {
-          "contractNumber": "Contract number",
-          "status": "Status",
-          "fullName": "Full name",
-          "email": "Email",
-          "template": "Contract template",
-          "createdDate": "Created date",
-          "signedDate": "Signed date",
-          "aiQuota": "AI quota",
-          "monthlyAiQuota": "Monthly AI quota",
-          "commission": "Commission",
-          "actualMonthlySalary": "Actual monthly salary",
-          "confirmedMonthlyQuota": "Confirmed monthly quota",
-          "commissionRatePercent": "Commission rate (%)",
-          "actualMonthlySalaryVnd": "Actual monthly salary (VND)"
-        },
-        "sections": {
-          "quotaTerms": "Quota terms (admin confirmation)",
-          "dealTerms": "Deal terms (admin confirmation)",
-          "signedContract": "Signed contract",
-          "templateDocx": "Contract template (DOCX)"
-        },
-        "validation": {
-          "monthlyQuotaRequired": "Enter a monthly quota greater than 0 before confirming the contract.",
-          "dealTermsRequired": "Enter commission rate (0-100) and actual monthly salary before confirming the contract."
-        },
-        "scannedContractAlt": "Scanned contract",
-        "pdfHint": "PDF file. Click the link below to open it.",
-        "notFinalized": "Not finalized yet",
-        "currency": {
-          "vnd": "VND"
-        },
-        "actions": {
-          "openOriginalFile": "Open original file in new tab",
-          "openTemplateFile": "Open contract template file",
-          "close": "Close",
-          "confirmContract": "Confirm contract"
-        }
-      },
-      "pagination": {
-        "label": "Page {{page}} / {{totalPages}}"
-      }
-    },
-    "users": {
-      "title": "User & Role Management",
-      "description": "Manage platform users, assign roles, and control access permissions",
-      "actions": {
-        "addUser": "Add User",
-        "exporting": "Exporting...",
-        "lockUser": "Lock User",
-        "unlockUser": "Unlock User"
-      },
-      "roles": {
-        "systemAdmin": "System Admin",
-        "organisationAdmin": "Org Admin",
-        "doctor": "Doctor",
-        "operator": "Operator",
-        "analyst": "Analyst"
-      },
-      "filters": {
-        "searchPlaceholder": "Search by name, email, or ID...",
-        "roleLabel": "Role",
-        "options": {
-          "allRoles": "All Roles"
-        }
-      },
-      "stats": {
-        "totalUsers": "Total Users",
-        "totalUsersDescription": "All registered users",
-        "activeUsers": "Active Users",
-        "activeUsersDescription": "+12 this month",
-        "lockedAccounts": "Locked Accounts",
-        "lockedAccountsDescription": "Require attention",
-        "roleTypes": "Role Types",
-        "roleTypesDescription": "Available roles"
-      },
-      "table": {
-        "columns": {
-          "id": "ID",
-          "user": "User",
-          "role": "Role",
-          "organization": "Organization",
-          "lastLogin": "Last Login",
-          "status": "Status",
-          "actions": "Actions"
-        },
-        "values": {
-          "unknownUser": "Unknown User"
-        }
-      },
-      "status": {
-        "active": "Active",
-        "inactive": "Inactive",
-        "locked": "Locked"
-      },
-      "states": {
-        "empty": "No users found"
-      },
-      "summary": {
-        "showing": "Showing {{shown}} of {{total}} users"
-      },
-      "export": {
-        "columns": {
-          "name": "Name",
-          "email": "Email",
-          "createdAt": "Created At",
-          "emailVerified": "Email Verified"
-        },
-        "sheetName": "Users",
-        "yes": "Yes",
-        "no": "No"
+        "create": "Create Staff"
       },
       "toasts": {
-        "userUnlocked": "User account has been unlocked.",
-        "userLocked": "User account has been locked.",
-        "toggleLockError": "Failed to update user lock status. Please try again.",
-        "exportNoData": "No users available for export.",
-        "exportSuccess": "Exported {{count}} users.",
-        "exportError": "Failed to export users. Please try again."
-      }
-    },
-    "patients": {
-      "title": "Patient Management",
-      "description": "Manage patient accounts, view screening history, and monitor patient activity",
-      "actions": {
-        "exporting": "Exporting...",
-        "viewDetails": "View Details",
-        "viewMedicalHistory": "View Medical History",
-        "walkInCannotBeLocked": "Walk-in patients cannot be locked",
-        "lockPatient": "Lock Patient",
-        "unlockPatient": "Unlock Patient"
-      },
-      "filters": {
-        "searchPlaceholder": "Search by name or email...",
-        "status": {
-          "all": "All Status",
-          "registered": "Registered",
-          "walkIn": "Walk-in"
-        }
-      },
-      "stats": {
-        "totalPatients": "Total Patients",
-        "totalPatientsDescription": "Registered and walk-in patients",
-        "registeredPatients": "Registered Patients",
-        "registeredPatientsDescription": "Patients with login accounts",
-        "walkInPatients": "Walk-in Patients",
-        "walkInPatientsDescription": "Clinic-managed patient profiles",
-        "lockedAccounts": "Locked Accounts",
-        "lockedAccountsDescription": "Registered accounts requiring attention"
-      },
-      "table": {
-        "columns": {
-          "patient": "Patient",
-          "patientType": "Patient Type",
-          "linkedOrganisation": "Linked Organisation",
-          "lastLogin": "Last Login",
-          "joined": "Joined",
-          "status": "Status",
-          "actions": "Actions"
-        },
-        "values": {
-          "walkInProfile": "Walk-in profile",
-          "walkIn": "Walk-in",
-          "registered": "Registered",
-          "unassigned": "Unassigned",
-          "thisPatient": "this patient"
-        }
-      },
-      "status": {
-        "active": "Active",
-        "inactive": "Inactive",
-        "locked": "Locked"
-      },
-      "states": {
-        "empty": "No patients found"
-      },
-      "summary": {
-        "showing": "Showing {{shown}} of {{total}} patients"
-      },
-      "confirmModal": {
-        "lockTitle": "Lock patient account?",
-        "lockMessage": "Are you sure you want to lock {{name}}? They will not be able to access the system until re-activated.",
-        "confirmLock": "Lock account",
-        "cancelLock": "Keep active"
-      },
-      "export": {
-        "columns": {
-          "fullName": "Full Name",
-          "email": "Email",
-          "phone": "Phone",
-          "emailConfirmed": "Email Confirmed",
-          "createdAt": "Created At"
-        },
-        "sheetName": "Patients",
-        "yes": "Yes",
-        "no": "No"
-      },
-      "toasts": {
-        "walkInNoLogin": "Walk-in patients do not have login accounts to lock/unlock.",
-        "activatedSuccess": "Patient has been activated successfully.",
-        "lockedSuccess": "Patient has been locked successfully.",
-        "updateStatusError": "Failed to update patient status. Please try again.",
-        "exportNoData": "No patients available for export.",
-        "exportSuccess": "Exported {{count}} patients.",
-        "exportError": "Failed to export patients. Please try again."
-      }
-    },
-    "organisations": {
-      "page": {
-        "title": "Organisation Management",
-        "description": "Manage organizations, contracts, billing, and AI usage reports"
-      },
-      "actions": {
-        "exporting": "Exporting...",
-        "exportReport": "Export Report",
-        "reviewOnboarding": "Review Onboarding",
-        "viewContracts": "View contracts",
-        "viewBilling": "View billing",
-        "editMonthlyQuota": "Edit monthly quota",
-        "viewOrganisation": "View organisation",
-        "viewContract": "View Contract",
-        "renew": "Renew",
-        "cancel": "Cancel",
-        "saving": "Saving...",
-        "saveQuota": "Save quota"
-      },
-      "tabs": {
-        "allOrganisations": "All Organisations",
-        "billingPayments": "Billing & Payments",
-        "contracts": "Contracts"
-      },
-      "stats": {
-        "totalOrganisations": "Total Organisations",
-        "totalOrganisationsDescription": "Current page is server-paginated",
-        "activeOrganisations": "Active Organisations",
-        "activeOrganisationsDescription": "{{count}} total",
-        "purchasedQuota": "Purchased Quota",
-        "purchasedQuotaDescription": "Credits purchased by organisations",
-        "inactiveOrganisations": "Inactive Organisations",
-        "inactiveOrganisationsDescription": "Need admin review"
-      },
-      "filters": {
-        "searchPlaceholder": "Search organisations...",
-        "status": {
-          "all": "All Status"
-        }
-      },
-      "status": {
-        "active": "Active",
-        "inactive": "Inactive",
-        "suspended": "Suspended"
-      },
-      "orgType": {
-        "clinic": "Clinic",
-        "hospital": "Hospital",
-        "organization": "Organization",
-        "eye_center": "Eye Center",
-        "other": "Other"
-      },
-      "onboarding": {
-        "title": "Organisation Onboarding Requests",
-        "description": "Review submissions from the public form and provision organisation admin accounts.",
-        "pendingLabel": "Pending",
-        "approvalSuccess": "Organisation account provisioned successfully",
-        "empty": "No onboarding requests are pending review.",
-        "submittedAt": "Submitted at",
-        "approving": "Provisioning account...",
-        "approveAction": "Approve & provision account",
-        "fields": {
-          "email": "Email",
-          "phone": "Phone",
-          "contactPerson": "Contact person",
-          "license": "License",
-          "taxCode": "Tax code",
-          "address": "Address",
-          "notes": "Notes"
-        }
-      },
-      "table": {
-        "empty": "No organisations found",
-        "contractStatus": {
-          "active": "Active",
-          "pending": "Pending",
-          "expired": "Expired",
-          "suspended": "Suspended"
-        },
-        "organisations": {
-          "columns": {
-            "organisation": "Organisation",
-            "location": "Location",
-            "users": "Users",
-            "purchasedQuota": "Purchased Quota",
-            "monthlyQuota": "Monthly Quota",
-            "aiScreenings": "AI Screenings",
-            "contract": "Contract",
-            "status": "Status",
-            "actions": "Actions"
-          },
-          "values": {
-            "credits": "credits",
-            "limit": "limit",
-            "used": "used",
-            "remaining": "remaining"
-          }
-        },
-        "billing": {
-          "columns": {
-            "organisation": "Organisation",
-            "monthlyAiUsage": "Monthly AI Usage",
-            "purchasedQuota": "Purchased Quota",
-            "monthlyQuota": "Monthly Quota",
-            "managedPatients": "Managed Patients",
-            "monthlyBilling": "Monthly Billing",
-            "pendingPayment": "Pending Payment",
-            "status": "Status",
-            "actions": "Actions"
-          },
-          "values": {
-            "screenings": "screenings",
-            "credits": "credits",
-            "registered": "registered",
-            "walkIn": "walk-in",
-            "paid": "Paid",
-            "pending": "Pending"
-          }
-        },
-        "contracts": {
-          "columns": {
-            "organisation": "Organisation",
-            "contractStart": "Contract Start",
-            "contractEnd": "Contract End",
-            "contractStatus": "Contract Status",
-            "actions": "Actions"
-          }
-        }
-      },
-      "pagination": {
-        "showingSummary": "Showing {{shown}} of {{total}} organisations",
-        "previous": "Previous",
-        "page": "Page {{page}}",
-        "next": "Next"
-      },
-      "quotaModal": {
-        "title": "Update Monthly Quota",
-        "monthlyQuotaLimitLabel": "Monthly quota limit",
-        "currentUsage": "Current usage: {{used}} credits"
-      },
-      "export": {
-        "columns": {
-          "name": "Name",
-          "type": "Type",
-          "address": "Address",
-          "contactEmail": "Contact Email",
-          "licenseNumber": "License Number",
-          "taxCode": "Tax Code",
-          "deviceCount": "Device Count",
-          "usersCount": "Users Count",
-          "status": "Status",
-          "createdAt": "Created At"
-        },
-        "sheetName": "Organisations"
-      },
-      "toasts": {
-        "loadOnboardingError": "Failed to load onboarding requests.",
-        "approveOnboardingError": "Failed to approve onboarding request.",
-        "exportNoData": "No organisations available for export.",
-        "exportSuccess": "Exported {{count}} organisations.",
-        "exportError": "Failed to export organisations. Please try again.",
-        "updateQuotaInvalid": "Monthly quota must be a non-negative integer.",
-        "updateQuotaSuccess": "Monthly quota updated successfully.",
-        "updateQuotaError": "Failed to update monthly quota."
-      }
-    },
-    "auditLogs": {
-      "title": "Audit Logs & Compliance",
-      "description": "Track all system changes - Insert, Update, Delete operations",
-      "actions": {
-        "exportExcel": "Export Excel",
-        "exporting": "Exporting...",
-        "viewJsonDetails": "View JSON details",
-        "insert": "Insert",
-        "update": "Update",
-        "delete": "Delete"
-      },
-      "summary": {
-        "totalEntries": "total entries"
-      },
-      "filters": {
-        "searchPlaceholder": "Search by entity name, action, or entity ID... (Enter to search)",
-        "actionLabel": "Action:",
-        "entityLabel": "Entity:",
-        "entityPlaceholder": "e.g. WalletTransaction",
-        "updating": "Updating...",
-        "actionOptions": {
-          "all": "All",
-          "insert": "Insert",
-          "update": "Update",
-          "delete": "Delete"
-        }
-      },
-      "table": {
-        "columns": {
-          "timestamp": "Timestamp",
-          "user": "User",
-          "action": "Action",
-          "entity": "Entity",
-          "ipAddress": "IP Address",
-          "details": "Details"
-        }
-      },
-      "states": {
-        "loadFailedTitle": "Failed to load audit logs",
-        "loadFailedDescription": "Please check your connection and try again.",
-        "empty": "No audit logs found"
-      },
-      "pagination": {
-        "previous": "Previous",
-        "next": "Next",
-        "summary": "Page {{page}} of {{totalPages}} · {{totalCount}} total entries"
-      },
-      "export": {
-        "noData": "No audit logs available for export.",
-        "success": "Exported {{count}} audit logs.",
-        "failed": "Failed to export audit logs. Please try again.",
-        "sheetName": "Audit Logs",
-        "columns": {
-          "timestamp": "Timestamp",
-          "userName": "User Name",
-          "userId": "User ID",
-          "action": "Action",
-          "entityName": "Entity Name",
-          "entityId": "Entity ID",
-          "ipAddress": "IP Address"
-        }
-      },
-      "time": {
-        "justNow": "Just now",
-        "minutesAgo": "{{count}}m ago",
-        "hoursAgo": "{{count}}h ago",
-        "daysAgo": "{{count}}d ago"
-      },
-      "values": {
-        "system": "System"
-      }
-    },
-    "permissions": {
-      "page": {
-        "title": "Permission Management",
-        "description": "Define permissions, assign them to roles, and manage per-user overrides",
-        "actions": {
-          "newPermission": "New Permission"
-        }
-      },
-      "tabs": {
-        "allPermissions": "All Permissions",
-        "roleAssignments": "Role Assignments",
-        "userOverrides": "User Overrides"
-      },
-      "stats": {
-        "totalPermissions": "Total Permissions",
-        "totalPermissionsDescription": "All defined permissions",
-        "active": "Active",
-        "activeDescription": "Currently assignable",
-        "inactive": "Inactive",
-        "inactiveDescription": "Deactivated / archived",
-        "categories": "Categories",
-        "categoriesDescription": "Distinct categories"
-      },
-      "filters": {
-        "searchPlaceholder": "Search by name or display name...",
-        "categories": {
-          "all": "All Categories"
-        },
-        "status": {
-          "all": "All Status"
-        }
-      },
-      "status": {
-        "active": "Active",
-        "inactive": "Inactive"
-      },
-      "table": {
-        "columns": {
-          "permission": "Permission",
-          "category": "Category",
-          "description": "Description",
-          "status": "Status",
-          "actions": "Actions"
-        },
-        "actions": {
-          "edit": "Edit",
-          "deactivate": "Deactivate"
-        }
-      },
-      "states": {
-        "empty": "No permissions found"
-      },
-      "pagination": {
-        "showing": "Showing {{shown}} of {{total}} permissions",
-        "previous": "Previous",
-        "page": "Page {{page}}",
-        "next": "Next"
-      },
-      "categories": {
-        "users": "Users",
-        "permissions": "Permissions",
-        "patients": "Patients",
-        "ophthalmologists": "Ophthalmologists",
-        "organisations": "Organisations",
-        "screening": "Screening",
-        "consultations": "Consultations",
-        "audit": "Audit",
-        "dashboard": "Dashboard",
-        "appointments": "Appointments",
-        "scheduling": "Scheduling",
-        "quotas": "Quotas",
-        "wallets": "Wallets",
-        "financial": "Financial",
-        "contracts": "Contracts",
-        "platform": "Platform",
-        "settings": "Settings",
-        "notifications": "Notifications"
-      },
-      "common": {
-        "loading": "Loading...",
-        "actions": {
-          "cancel": "Cancel",
-          "saving": "Saving..."
-        }
-      },
-      "modals": {
-        "create": {
-          "title": "Create Permission",
-          "actions": {
-            "create": "Create"
-          },
-          "fields": {
-            "name": "Name",
-            "namePlaceholder": "e.g. users:read",
-            "namePatternHint": "Letters, digits, underscore, dot, colon, or hyphen only",
-            "nameConventionPrefix": "Convention:",
-            "nameConventionSuffix": "(e.g. screening:approve)",
-            "displayName": "Display Name",
-            "displayNamePlaceholder": "e.g. Read Users",
-            "category": "Category",
-            "none": "- None -",
-            "description": "Description",
-            "descriptionPlaceholder": "What does this permission allow?"
-          },
-          "errors": {
-            "createFailed": "Failed to create permission."
-          }
-        },
-        "edit": {
-          "title": "Edit Permission",
-          "actions": {
-            "saveChanges": "Save Changes"
-          },
-          "fields": {
-            "nameReadonly": "Name (read-only)",
-            "displayName": "Display Name",
-            "category": "Category",
-            "none": "- None -",
-            "description": "Description"
-          },
-          "errors": {
-            "updateFailed": "Failed to update permission."
-          }
-        },
-        "delete": {
-          "title": "Deactivate Permission",
-          "actions": {
-            "deactivate": "Deactivate"
-          },
-          "messagePrefix": "Are you sure you want to deactivate",
-          "messageNote": "The permission record is kept for audit purposes but will no longer be assignable to roles or users.",
-          "errors": {
-            "deactivateFailed": "Failed to deactivate permission."
-          }
-        },
-        "assign": {
-          "title": "Assign Permission - {{roleName}}",
-          "searchPlaceholder": "Search permissions...",
-          "empty": "No available permissions",
-          "actions": {
-            "assign": "Assign"
-          },
-          "errors": {
-            "assignFailed": "Failed to assign permission."
-          }
-        },
-        "userOverride": {
-          "title": "Add Permission Override",
-          "subtitle": "Adding override for",
-          "fields": {
-            "overrideType": "Override Type",
-            "permission": "Permission",
-            "searchPermissionPlaceholder": "Search...",
-            "expiresAt": "Expires At (optional)"
-          },
-          "types": {
-            "grant": "Grant",
-            "grantDescription": "Extra permission",
-            "revoke": "Revoke",
-            "revokeDescription": "Remove from role"
-          },
-          "actions": {
-            "saveOverride": "Save Override"
-          },
-          "errors": {
-            "saveFailed": "Failed to save override."
-          }
-        }
-      },
-      "roles": {
-        "selectRole": "Select Role",
-        "roleCardHint": "Click to view permissions",
-        "emptySelectRole": "Select a role to manage its permissions",
-        "assignedCount": "{{count}} permission(s) assigned",
-        "empty": "No permissions assigned to this role yet",
-        "actions": {
-          "assign": "Assign",
-          "removeFromRole": "Remove from role"
-        }
-      },
-      "users": {
-        "searchTitle": "Search User",
-        "searchPlaceholder": "Type name or email...",
-        "rolesTitle": "Roles",
-        "effectivePermissionsTitle": "Effective Permissions ({{count}})",
-        "inheritedFromRolesTitle": "Inherited from Roles ({{count}})",
-        "inheritedFromRolesDescription": "Add a deny override to block a role permission",
-        "activeOverridesTitle": "Active Overrides ({{count}})",
-        "overrideHistoryTitle": "Override History ({{count}} revoked / expired)",
-        "status": {
-          "granted": "Granted",
-          "denied": "Denied",
-          "expired": "Expired",
-          "revoked": "Revoked"
-        },
-        "states": {
-          "noRolePermissions": "No role permissions",
-          "noActiveOverrides": "No active overrides",
-          "loadFailed": "Failed to load user permissions"
-        },
-        "actions": {
-          "addOverride": "Add Override",
-          "addDenyOverride": "Add deny override",
-          "deny": "Deny",
-          "removeOverride": "Remove override"
-        }
-      }
-    },
-    "settings": {
-      "page": {
-        "title": "System Settings",
-        "description": "Configure system-wide settings and preferences",
-        "actions": {
-          "saveChanges": "Save Changes",
-          "saving": "Saving...",
-          "resetChanges": "Reset",
-          "stickyHint": "Review changes before saving. You can reset unsaved edits anytime."
-        }
-      },
-      "sections": {
-        "general": {
-          "title": "General Settings",
-          "description": "Configure basic system settings"
-        },
-        "notifications": {
-          "title": "Notifications",
-          "description": "Manage notification preferences"
-        },
-        "security": {
-          "title": "Security",
-          "description": "Security and authentication settings"
-        },
-        "data": {
-          "title": "Data Management",
-          "description": "Backup, export, and data retention"
-        }
-      },
-      "toasts": {
-        "saveSuccess": "Settings saved successfully",
-        "saveFailed": "Failed to save settings"
-      },
-      "general": {
-        "platformName": "Platform Name",
-        "supportEmail": "Support Email",
-        "timezone": "Timezone",
-        "timezoneOptions": {
-          "americaNewYork": "Eastern Time (ET)",
-          "americaLosAngeles": "Pacific Time (PT)",
-          "europeLondon": "London (GMT)",
-          "asiaHoChiMinh": "Vietnam (ICT)"
-        },
-        "defaultLanguage": "Default Language",
-        "languageOptions": {
-          "en": {
-            "native": "English",
-            "label": "English"
-          },
-          "vi": {
-            "native": "Tiếng Việt",
-            "label": "Vietnamese"
-          }
-        },
-        "minAdvanceBookingHours": "Minimum advance booking time (hours)",
-        "aiQuotaUnitPrice": "AI Quota Unit Price (VND per quota)",
-        "aiQuotaUnitPriceHint": "Total purchase cost = quantity x unit price.",
-        "freeAiQuota": "Free AI Quota (Per Patient)",
-        "partTimeMaxSlotsPerDay": "Part-time max slots per day",
-        "partTimeMaxSlotsPerDayHint": "Global daily quota for all part-time ophthalmologist slots.",
-        "fullTimeSlotWindowDays": "Full-time generation window (days)",
-        "fullTimeSlotWindowDaysHint": "Number of forward days Hangfire keeps generated for full-time schedules.",
-        "fullTimeRequiredHoursWeek": "Full-time required workload (hours/week)",
-        "fullTimeRequiredHoursWeekHint": "Target consultation workload for full-time doctors in weekly dashboards.",
-        "fullTimeRequiredHoursMonth": "Full-time required workload (hours/month)",
-        "fullTimeRequiredHoursMonthHint": "Target consultation workload for full-time doctors in monthly dashboards.",
-        "fullTimeMinSlotCost": "Full-time minimum slot cost (VND)",
-        "fullTimeMaxSlotCost": "Full-time maximum slot cost (VND)",
-        "fullTimeMaxSlotCostHint": "Auto-generated full-time slot cost is clamped between min and max.",
-        "pricingBands": {
-          "title": "Part-time pricing bands by experience",
-          "description": "Update min/max price for each seeded experience band.",
-          "empty": "No pricing bands found.",
-          "experienceBand": "Experience band",
-          "experienceBandValue": "{{min}} - {{max}} years",
-          "minPrice": "Min price (VND)",
-          "maxPrice": "Max price (VND)"
-        },
-        "aiQuotaBillingNote": "This unit price is used directly by backend billing when purchasing AI quota.",
-        "trustedDomains": {
-          "title": "Trusted Medical Domains for AI Resources",
-          "descriptionPrefix": "Google search results will be restricted to these domains (e.g.",
-          "descriptionSuffix": ").",
-          "empty": "No domains configured - using built-in defaults.",
-          "removeDomainAria": "Remove {{domain}}",
-          "placeholder": "e.g. benhvienmathanoi.vn",
-          "add": "Add"
-        },
-        "maintenanceMode": {
-          "title": "Maintenance Mode",
-          "description": "Enable to temporarily disable user access for system maintenance"
-        }
-      },
-      "notifications": {
-        "items": {
-          "emailNotifications": {
-            "label": "Email Notifications",
-            "description": "Receive email notifications for important events"
-          },
-          "screeningAlerts": {
-            "label": "Screening Alerts",
-            "description": "Get notified when new screenings need review"
-          },
-          "systemAlerts": {
-            "label": "System Alerts",
-            "description": "Receive alerts about system health and issues"
-          },
-          "weeklyReports": {
-            "label": "Weekly Reports",
-            "description": "Receive weekly summary reports via email"
-          },
-          "marketingEmails": {
-            "label": "Marketing Emails",
-            "description": "Receive product updates and announcements"
-          }
-        }
-      },
-      "security": {
-        "requireTwoFactor": {
-          "title": "Require Two-Factor Authentication",
-          "description": "Require all users to enable 2FA for their accounts"
-        },
-        "sessionTimeout": "Session Timeout (minutes)",
-        "minimumPasswordLength": "Minimum Password Length",
-        "maxLoginAttempts": "Max Login Attempts",
-        "ipWhitelist": "IP Whitelist (comma separated)",
-        "ipWhitelistPlaceholder": "192.168.1.1, 10.0.0.1"
-      },
-      "data": {
-        "databaseBackup": {
-          "title": "Database Backup",
-          "lastBackup": "Last backup: 2 hours ago",
-          "createNow": "Create Backup Now"
-        },
-        "exportData": {
-          "title": "Export Data",
-          "description": "Download all system data",
-          "exportToEmail": "Export to Email"
-        },
-        "dangerZone": {
-          "title": "Danger Zone",
-          "description": "Irreversible actions - proceed with caution",
-          "clearCache": "Clear Cache",
-          "resetStatistics": "Reset Statistics"
-        }
-      }
-    },
-    "statusPage": {
-      "title": "System Status",
-      "description": "Infrastructure health and BetterStack heartbeats",
-      "common": {
-        "yes": "Yes",
-        "no": "No"
-      },
-      "states": {
-        "loadError": "Unable to load status metrics."
-      },
-      "cards": {
-        "api": {
-          "title": "API",
-          "description": "Backend API availability",
-          "values": {
-            "operational": "Operational",
-            "issue": "Issue"
-          }
-        },
-        "database": {
-          "title": "Database",
-          "description": "Primary data store health",
-          "values": {
-            "connected": "Connected",
-            "unreachable": "Unreachable"
-          }
-        },
-        "liveConsultations": {
-          "title": "Live consultations",
-          "description": "Sessions with open chat window"
-        }
-      },
-      "betterStack": {
-        "title": "BetterStack heartbeats",
-        "description": "Background workers and Hangfire recurring jobs",
-        "embedTitle": "BetterStack heartbeats",
-        "actions": {
-          "openBetterStack": "Open BetterStack"
-        },
-        "summary": {
-          "enabledLabel": "Enabled",
-          "configuredMonitorsLabel": "Configured monitors"
-        },
-        "states": {
-          "emptyMonitors": "No monitors available.",
-          "embedNotConfigured": "BetterStack embed URL is not configured yet."
-        }
+        "createSuccess": "Staff created successfully. Temporary password sent.",
+        "createError": "Failed to create staff"
       }
     },
     "cashflow": {
       "title": "Payment Transactions",
-      "description": "Manage wallet top-up and withdrawal transactions in one financial table",
-      "roles": {
-        "patient": "Patient",
-        "ophthalmologist": "Ophthalmologist",
-        "organisation": "Organisation"
+      "description": "Manage cashflow and system-wide transactions",
+      "stats": {
+        "totalVolume": "Total Volume",
+        "pendingAmount": "Pending Amount",
+        "completedOrders": "Completed Orders",
+        "avgOrderValue": "Avg Order Value"
+      },
+      "filters": {
+        "all": "All Transactions",
+        "pending": "Pending",
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "table": {
+        "orderId": "Order ID",
+        "customer": "Customer",
+        "amount": "Amount",
+        "status": "Status",
+        "date": "Date Created",
+        "actions": "Actions",
+        "list": "Order List",
+        "defaultDescription": "Clinic Payment",
+        "deposited": "Deposited",
+        "remaining": "Remaining",
+        "onlineDeposit": "Online Deposit",
+        "fullPayment": "Full Payment",
+        "patientFallback": "Patient"
       },
       "status": {
+        "pending": "Pending Payment",
+        "confirmed": "Confirmed",
+        "processing": "Processing",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "failed": "Failed",
         "refunded": "Refunded"
       },
-      "summary": {
-        "totalCurrentPage": "Total on current page",
-        "patients": "Patients",
-        "ophthalmologists": "Ophthalmologists",
-        "organisations": "Organisations"
-      },
-      "filters": {
-        "searchPlaceholder": "Search actor, reference, description...",
-        "role": {
-          "all": "All roles"
-        },
-        "status": {
-          "all": "All statuses"
-        }
-      },
-      "states": {
-        "loading": "Loading transaction records...",
-        "loadError": "Unable to load transaction records from API.",
-        "empty": "No transaction records found."
-      },
-      "table": {
-        "columns": {
-          "date": "Date",
-          "actor": "Actor",
-          "role": "Role",
-          "type": "Type",
-          "amount": "Amount",
-          "status": "Status",
-          "reference": "Reference",
-          "action": "Action"
-        },
-        "actions": {
-          "details": "Details"
-        }
-      },
       "pagination": {
-        "pageSummary": "Showing page {{page}} of {{totalPages}}"
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page"
       },
-      "detailModal": {
-        "title": "Payment Transaction Details",
-        "idLabel": "ID",
-        "sections": {
-          "general": "General Information",
-          "topUp": "Top-up Information",
-          "withdrawal": "Withdrawal Information"
-        },
-        "fields": {
-          "createdAt": "Created At",
-          "status": "Status",
-          "actor": "Actor",
-          "actorEmail": "Actor Email",
-          "actorRole": "Actor Role",
-          "amount": "Amount",
-          "transactionType": "Transaction Type",
-          "referenceType": "Reference Type",
-          "referenceId": "Reference ID",
-          "description": "Description",
-          "orderCode": "Order Code",
-          "paymentMethod": "Payment Method",
-          "completedAt": "Completed At",
-          "providerTxnRef": "Provider Txn Ref",
-          "failureReason": "Failure Reason",
-          "paymentUrl": "Payment URL",
-          "returnUrl": "Return URL",
-          "cancelUrl": "Cancel URL",
-          "providerResponse": "Provider Response",
-          "processedAt": "Processed At",
-          "processedByAdmin": "Processed By Admin",
-          "bankName": "Bank Name",
-          "bankAccountNumber": "Bank Account Number",
-          "accountHolder": "Account Holder",
-          "bankBin": "Bank BIN",
-          "transferReference": "Transfer Reference",
-          "payOSExternalPayoutId": "PayOS External Payout ID",
-          "payOSReferenceId": "PayOS Reference ID",
-          "payOSTransactionId": "PayOS Transaction ID",
-          "payOSApprovalState": "PayOS Approval State",
-          "payoutFee": "Payout Fee"
-        }
-      }
+      "noData": "No transactions found",
+      "error": "An error occurred while loading data"
     },
-    "verificationRequests": {
-      "title": "Verification Requests",
-      "description": "Review and approve ophthalmologist credential submissions",
-      "common": {
-        "experienceYears": "{{count}} years of experience",
-        "shortExperienceYears": "{{count}} yrs exp"
+    "dashboard": {
+      "title": "Clinic Operations",
+      "subtitle": "Real-time overview of today's patient flow",
+      "refresh": "Refresh",
+      "error": "Failed to load dashboard data.",
+      "stats": {
+        "totalAppointments": "Today's Appointments",
+        "checkedIn": "Checked In",
+        "completed": "Completed",
+        "noShow": "No-Show"
       },
-      "degreeLevels": {
-        "bachelor": "Bachelor",
-        "master": "Master",
-        "doctorate": "Doctorate",
-        "associateProfessor": "Associate Professor",
-        "professor": "Professor"
-      },
-      "requestType": {
-        "credentialUpdate": {
-          "label": "Credential Update Review",
-          "hint": "Doctor submitted updated credentials after prior approval."
-        },
-        "onboarding": {
-          "label": "Onboarding Verification",
-          "hint": "Initial verification profile for newly registered doctor."
-        }
-      },
-      "approveModal": {
-        "title": "Confirm approval",
-        "description": "Are you sure you want to approve this doctor credential profile? This action grants full access in the AURA system.",
-        "notice": "The doctor will receive an email notification and can start accepting consultations immediately."
-      },
-      "rejectModal": {
-        "title": "Reject verification",
-        "reasonLabel": "Rejection reason",
-        "reasonPlaceholder": "Describe why this request is rejected (for example: unreadable license image, expired certificate, missing required specialist degree).",
-        "notice": "This reason will be sent to the doctor by email. Please be specific so they can correct and resubmit.",
-        "errors": {
-          "reasonRequired": "Please provide a rejection reason."
-        }
-      },
-      "imagePreview": {
-        "alt": "Credential preview"
-      },
-      "detailModal": {
-        "title": "Verification Details",
-        "sections": {
-          "licenses": "Licenses / Certificates ({{count}})",
-          "degrees": "Degrees ({{count}})"
-        },
-        "fields": {
-          "issuingAuthority": "Issuing authority",
-          "degreeLevel": "Degree level",
-          "issuedDate": "Issued date",
-          "expiryDate": "Expiry date"
-        },
-        "actions": {
-          "zoomImage": "Zoom image",
-          "openDocument": "Open document"
-        },
-        "states": {
-          "emptyLicenses": "The doctor has not provided valid licenses or certificates yet.",
-          "emptyDegrees": "The doctor has not provided degree information yet."
-        }
-      },
-      "summary": {
-        "pendingCount": "{{count}} profiles pending review",
-        "description": "Each doctor profile should be carefully reviewed before approval."
-      },
-      "filters": {
-        "searchPlaceholder": "Search by name, email..."
-      },
-      "table": {
-        "columns": {
-          "doctor": "Doctor",
-          "credentialsSummary": "Credentials Summary",
-          "verificationType": "Verification Type",
-          "submittedAt": "Submitted At",
-          "actions": "Actions"
-        },
-        "credentialsSummaryValue": "{{licenseCount}} licenses, {{degreeCount}} degrees",
-        "credentialsSummaryHint": "Click \"View Details\" to inspect full credentials."
-      },
+      "liveQueue": "Live Queue",
+      "active": "active",
+      "queueEmpty": "No patients in queue.",
+      "patient": "Patient",
+      "status": "Status",
+      "doctor": "Doctor",
+      "waitTime": "Wait",
+      "doctorStatus": "Doctor Status",
+      "busy": "busy",
+      "noDoctors": "No doctors on duty.",
+      "handled": "handled",
+      "activeLoad": "active",
+      "slotUtilization": "Slot Utilization",
+      "booked": "booked",
+      "remaining": "Remaining",
+      "bottlenecks": "Bottleneck Alerts",
+      "noBottlenecks": "No bottlenecks detected. Operations running smoothly.",
+      "bottleneckLongWait": "{{count}} patient(s) waiting over {{minutes}} min",
+      "bottleneckFullCapacity": "Slots at full capacity for today",
+      "bottleneckOverloaded": "{{count}} doctor(s) overloaded (>3 active)",
+      "quickActions": "Quick Actions",
       "actions": {
-        "viewDetails": "View details"
+        "createSlot": "Create Slot",
+        "createSlotDesc": "Add a new appointment slot",
+        "assignDoctor": "Assign Doctor",
+        "assignDoctorDesc": "Manage doctor assignments",
+        "viewSchedule": "View Schedule",
+        "viewScheduleDesc": "See today's full schedule",
+        "addWalkIn": "Add Walk-in",
+        "addWalkInDesc": "Register a new walk-in patient"
       },
-      "states": {
-        "emptyTitle": "No profiles are pending review",
-        "emptyDescription": "All requests have been processed."
-      },
-      "pagination": {
-        "showing": "Showing {{shown}} / {{total}} profiles",
-        "page": "Page {{page}}"
-      },
-      "toasts": {
-        "approveSuccess": "Doctor verification approved successfully.",
-        "approveError": "Approval failed. Please try again.",
-        "rejectSuccess": "Doctor verification rejected successfully.",
-        "rejectError": "Rejection failed. Please try again."
+      "statusBadge": {
+        "waiting": "Waiting",
+        "inProgress": "In Progress",
+        "payment": "Payment"
       }
     }
   },
@@ -6858,6 +5158,252 @@
         "expires": "Expires",
         "viewFile": "View file"
       }
+    }
+  },
+  "ClinicStaffDashboard": {
+    "greetings": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening",
+      "welcome": "Here's what's happening today."
+    },
+    "subtitle": "AURA Clinic • Real-time operational overview",
+    "common": {
+      "staffFallback": "Staff"
+    },
+    "stats": {
+      "todayAppointments": "Today's Appointments",
+      "scheduled": "Scheduled",
+      "patientsCheckedIn": "Checked In",
+      "today": "Today",
+      "pendingTasks": "Pending Tasks",
+      "requiresAction": "Require action",
+      "completedToday": "Completed"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "subtitle": "Common tasks for today",
+      "newAppointment": "New Appointment",
+      "newAppointmentDesc": "Schedule a new patient appointment",
+      "registerPatient": "Register Patient",
+      "registerPatientDesc": "Add a new patient to the system",
+      "viewSchedule": "View Schedule",
+      "viewScheduleDesc": "See today's full schedule",
+      "cashierDesk": "Cashier desk",
+      "cashierDeskDesc": "Review finalized visits and collect payment"
+    },
+    "activity": {
+      "title": "Recent Activity",
+      "subtitle": "Live patient check-ins and appointment updates",
+      "empty": "No recent activity. A fresh day begins!"
+    }
+  },
+  "ClinicStaffSidebar": {
+    "portalSubtitle": "Clinic Staff",
+    "nav": {
+      "dashboard": "Dashboard",
+      "queue": "Queue Management",
+      "appointments": "Appointments",
+      "patients": "Patient Records",
+      "screenings": "Screening Sessions",
+      "schedules": "Staff Schedules",
+      "cashier": "Cashier",
+      "billing": "Billing & Invoices",
+      "wallet": "Wallet",
+      "settings": "Settings",
+      "profile": "My Profile"
+    },
+    "actions": {
+      "logout": "Log out"
+    }
+  },
+  "ClinicStaffHeader": {
+    "breadcrumb": {
+      "home": "Home"
+    },
+    "search": {
+      "placeholder": "Search patients, appointments..."
+    },
+    "pages": {
+      "dashboard": "Dashboard Overview",
+      "queue": "Queue Management",
+      "appointments": "Appointments",
+      "patients": "Patient Records",
+      "screenings": "Screening Sessions",
+      "schedules": "Staff Schedules",
+      "cashier": "Cashier",
+      "billing": "Billing & Invoices",
+      "wallet": "Wallet",
+      "settings": "Settings",
+      "profile": "My Profile",
+      "security": "Security",
+      "notifications": "Notifications"
+    },
+    "actions": {
+      "toggleTheme": "Toggle theme"
+    },
+    "Cashier": {
+      "header": {
+        "workspace": "Cashier workspace",
+        "title": "Manual cashier for finalized visits",
+        "description": "Select a finalized visit to enter medication prices and service fees. The total will be computed instantly to support fast and accurate payment confirmation."
+      },
+      "stats": {
+        "finalizedVisits": "Finalized visits",
+        "selectedVisit": "Selected",
+        "noVisitSelected": "No visit selected"
+      },
+      "queue": {
+        "title": "Visits awaiting cashier",
+        "loading": "Loading queue...",
+        "error": "Unable to load cashier queue. Please try again later.",
+        "empty": "No visits ready for cashier yet",
+        "emptyDesc": "The system will auto-update as soon as a doctor finalizes a visit.",
+        "selected": "Selected",
+        "doctor": "Doctor: {{name}}"
+      },
+      "pricingPanel": {
+        "title": "Manual Pricing Table",
+        "subtitle": "Enter costs for each medication and service in the selected visit.",
+        "selectedVisitId": "Visit {{id}}",
+        "noVisitSelected": "No visit selected",
+        "selectToStart": "Select a visit to start pricing",
+        "selectToStartDesc": "The visit list is on the left column. Once selected, prescription details will appear here.",
+        "loading": "Loading...",
+        "error": "Unable to load payment context for this visit.",
+        "success": {
+          "title": "Payment successful!",
+          "message": "The visit for patient <0>{{name}}</0> has been completed and finalized successfully.",
+          "backToList": "Back to list"
+        },
+        "patient": "Patient",
+        "doctor": "Assigned Doctor",
+        "noMedication": "The doctor marked no medication prescribed for this case.",
+        "medicationCount": "There are {{count}} items in prescription",
+        "medicationPrice": "Medicine Price (VND)",
+        "manualPricePlaceholder": "Enter manual price",
+        "subtotal": "Subtotal: {{amount}}",
+        "serviceFee": "Consultation / Other Fees",
+        "serviceFeeDesc": "Enter fees outside of medication if applicable.",
+        "serviceFeeLabel": "Service Fee (VND)",
+        "totalManual": "Total Manual Amount",
+        "payButton": "PayOS Payment"
+      },
+      "confirmModal": {
+        "title": "Confirm PayOS Payment",
+        "message": "Are you sure you want to create a PayOS payment request for patient {{patientName}} with a total amount of {{total}}?",
+        "confirm": "Proceed to Payment",
+        "cancel": "Go back"
+      },
+      "toast": {
+        "success": "PayOS payment link created successfully!",
+        "error": "Unable to create PayOS payment request."
+      }
+    }
+  },
+  "Cashier": {
+    "header": {
+      "badge": "Cashier workspace",
+      "title": "Manual cashier for finalized visits",
+      "description": "Select a finalized visit to input medication prices and service fees."
+    },
+    "stats": {
+      "finalizedCount": "Finalized visits",
+      "currentlySelecting": "Currently selecting",
+      "noVisitSelected": "No visit selected"
+    },
+    "queue": {
+      "title": "Pending Cashier List",
+      "loadError": "Could not load cashier list.",
+      "empty": "No visits ready",
+      "emptySub": "Updates automatically after doctor finalizes.",
+      "selectedBadge": "Selecting",
+      "doctorName": "Doctor"
+    },
+    "pricingPanel": {
+      "title": "Manual Pricing Panel",
+      "description": "Enter costs for medications and services.",
+      "noVisitSelectedBadge": "No visit selected",
+      "selectPrompt": "Select a visit to start",
+      "selectPromptSub": "Visit list is on the left.",
+      "contextLoadError": "Could not load payment context.",
+      "paymentSuccessTitle": "Payment Successful!",
+      "paymentSuccessDescription": "Visit for <0>{{name}}</0> finalized.",
+      "backToList": "Back to list",
+      "patientLabel": "Patient",
+      "doctorLabel": "Doctor",
+      "noMedication": "No medication prescribed.",
+      "medicationCount": "{{count}} medications",
+      "medicinePriceLabel": "Medicine Price (VND)",
+      "manualPricePlaceholder": "Enter price",
+      "estimated": "Estimated",
+      "serviceFeeLabel": "Service fee",
+      "serviceFeeDescription": "Other fees if applicable.",
+      "serviceFeeInputLabel": "Service Fee (VND)",
+      "totalManual": "Total Amount",
+      "payButton": "Pay via PayOS"
+    },
+    "confirmModal": {
+      "title": "Confirm Payment",
+      "message": "Create PayOS payment for {{name}} with amount {{amount}}?",
+      "confirm": "Proceed",
+      "cancel": "Back"
+    },
+    "toast": {
+      "createSuccess": "Link created!",
+      "createError": "Error creating link."
+    }
+  },
+  "ClinicStaffBilling": {
+    "page": {
+      "title": "Billing Management",
+      "subtitle": "Monitor all medical payment orders for patients."
+    },
+    "stats": {
+      "totalRevenue": "Total Revenue (Est.)",
+      "totalRefund": "Refunded",
+      "orders": "Total Orders"
+    },
+    "transactions": {
+      "title": "Order List",
+      "loadFailed": "Failed to load data",
+      "emptyTitle": "No orders found"
+    },
+    "filters": {
+      "all": "All",
+      "completed": "Completed",
+      "pending": "Pending",
+      "cancelled": "Cancelled"
+    },
+    "orderDetails": {
+      "description": "Clinic Payment",
+      "depositOnline": "Online Deposit",
+      "walkInFull": "Walk-in / Full",
+      "idLabel": "Order:",
+      "patientLabel": "Patient:",
+      "doctorLabel": "Doctor:",
+      "noMedication": "No medication prescribed.",
+      "medicationCount": "{{count}} medications in prescription",
+      "medicinePriceLabel": "Medicine Price (VND)",
+      "manualPricePlaceholder": "Enter price manually",
+      "serviceFeeLabel": "Examination / Other service fee",
+      "serviceFeeDescription": "Enter fees other than medication if applicable.",
+      "serviceFeeInputLabel": "Service Fee (VND)",
+      "totalManual": "Total Manual Amount",
+      "note": "Note: Backend currently provides diagnosis/prescription for cashier but no endpoint for price breakdown submission yet.",
+      "confirmedDeposit": "Paid deposit/100%",
+      "remaining": "Remaining:",
+      "paid": "Paid:",
+      "processing": "Processing...",
+      "confirmFinalPayment": "Confirm Final Payment"
+    },
+    "pagination": {
+      "previous": "Prev",
+      "next": "Next",
+      "pageOf": "Page {{page}} of {{total}}"
+    },
+    "error": {
+      "retry": "Retry"
     }
   }
 }

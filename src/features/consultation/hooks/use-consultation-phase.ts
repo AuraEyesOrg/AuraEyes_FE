@@ -31,6 +31,7 @@ export interface ConsultationPhaseInfo {
 export function deriveConsultationPhase(
   chatStatus: ChatStatus,
   appointmentTime: string | null,
+  closedAt: string | null,
   nowMs: number
 ): ConsultationPhaseInfo {
   if (chatStatus === ChatStatus.Locked) {
@@ -47,14 +48,20 @@ export function deriveConsultationPhase(
   }
 
   if (chatStatus === ChatStatus.Archived) {
+    const isGracePeriodExpired = closedAt
+      ? nowMs > new Date(closedAt).getTime() + 14 * 24 * 60 * 60 * 1000
+      : false;
+
     return {
       phase: 'COMPLETED',
-      canSend: false,
-      patientCanSend: false,
+      canSend: !isGracePeriodExpired,
+      patientCanSend: false, // Patients can only read after completion (unless business rule says otherwise)
       doctorCanSend: false,
       meetingActive: false,
-      label: 'Completed',
-      description: 'Consultation has been completed. Chat is now read-only.',
+      label: isGracePeriodExpired ? 'Closed' : 'Completed',
+      description: isGracePeriodExpired
+        ? 'The 14-day grace period has expired. This chat is now fully closed.'
+        : 'Consultation completed. Chat is read-only (14-day history access active).',
       msUntilNextTransition: null,
     };
   }
@@ -99,6 +106,7 @@ export function deriveConsultationPhase(
 export function useConsultationPhase(
   chatStatus: ChatStatus | undefined,
   appointmentTime: string | null,
+  closedAt: string | null,
   nowMs: number
 ): ConsultationPhaseInfo {
   return useMemo(
@@ -106,8 +114,9 @@ export function useConsultationPhase(
       deriveConsultationPhase(
         chatStatus ?? ChatStatus.Locked,
         appointmentTime,
+        closedAt,
         nowMs
       ),
-    [chatStatus, appointmentTime, nowMs]
+    [chatStatus, appointmentTime, closedAt, nowMs]
   );
 }

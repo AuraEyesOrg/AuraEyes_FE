@@ -23,6 +23,11 @@ export enum SlotType {
   Emergency = 4,
 }
 
+export enum PricingType {
+  AutoAssign = 1,
+  DoctorSelected = 2,
+}
+
 // ============ DTOs (match BE Application layer) ============
 
 /** List item - maps to ScheduleListDto */
@@ -112,36 +117,38 @@ export const SLOT_TYPE_LABELS: Record<SlotType, string> = {
 /** List item DTO for appointment slots - matches BE AppointmentSlotListDto */
 export interface AppointmentSlotListDto {
   id: string;
+  ophthalId: string;
   scheduleTemplateId: string;
-  ophthalId: string | null;
-  orgId: string | null;
   date: string; // "YYYY-MM-DD"
   startTime: string; // "HH:mm:ss"
   endTime: string; // "HH:mm:ss"
   status: string; // "Available", "Reserved", "Booked", "Blocked"
-  cost: number | null;
   maxCapacity: number;
   bookedCount: number;
   availableCapacity: number;
+  ophthalFullName?: string;
+  ophthalAvatarUrl?: string;
+  cost: number | null;
+  reservationExpireAt?: string | null;
   createdAt: string;
 }
 
 /** Full detail DTO for appointment slot - matches BE AppointmentSlotDto */
 export interface AppointmentSlotDto {
   id: string;
+  ophthalId: string;
   scheduleTemplateId: string;
-  ophthalId: string | null;
-  orgId: string | null;
   date: string; // "YYYY-MM-DD"
   startTime: string; // "HH:mm:ss"
   endTime: string; // "HH:mm:ss"
   status: string; // "Available", "Reserved", "Booked", "Blocked"
-  cost: number | null;
   maxCapacity: number;
   bookedCount: number;
   availableCapacity: number;
-  reservedBy: string | null;
-  reservationExpireAt: string | null;
+  ophthalFullName?: string;
+  ophthalAvatarUrl?: string;
+  cost: number | null;
+  reservationExpireAt?: string | null;
   createdAt: string;
   updatedAt: string | null;
 }
@@ -178,6 +185,15 @@ export interface ReleaseReservationRequest {
   patientId: string;
 }
 
+export interface CreateClinicAppointmentRequest {
+  slotId: string;
+  visitReason?: string;
+  pricingType: PricingType;
+  requestedDoctorId?: string;
+  returnUrl?: string;
+  cancelUrl?: string;
+}
+
 export interface BlockSlotRequest {
   ophthalmologistId: string;
   reason?: string;
@@ -207,31 +223,41 @@ export type ScheduleTemplateSource = 'Doctor' | 'SystemGenerated';
 
 export interface ScheduleTemplateDto {
   id: string;
-  ophthalmologistId: string;
-  organisationId: string | null;
-  dayOfWeek: number; // 0=Sunday, 1=Monday, etc.
+  ophthalmologistId?: string;
+  organisationId?: string | null;
+  dayOfWeek: number | string; // BE might return string like "Friday"
   startTime: string;
   endTime: string;
   slotDuration: number; // minutes
-  slotType: SlotType;
+  slotType: number;
   slotTypeName: string;
-  cost: number;
   maxCapacity: number;
+  cost?: number;
   isActive: boolean;
   source?: ScheduleTemplateSource;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CreateScheduleTemplateRequest {
-  ophthalId: string;
+  ophthalId?: string;
   organisationId?: string;
+  dayOfWeek: number; // 0=Sunday, 1=Monday, etc.
+  startTime: string;
+  endTime: string;
+  slotDuration: number;
+  slotType?: number;
+  maxCapacity?: number;
+  cost?: number;
+}
+
+export interface UpdateScheduleTemplateRequest {
   dayOfWeek: number;
   startTime: string;
   endTime: string;
   slotDuration: number;
-  slotType?: SlotType;
-  cost?: number;
   maxCapacity?: number;
+  isActive?: boolean;
 }
 
 // ============ QUERY PARAMS ============

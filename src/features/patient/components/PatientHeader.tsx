@@ -34,7 +34,6 @@ export default function PatientHeader() {
       appointments: t('PatientHeader.pages.appointments', 'Appointments'),
       doctors: t('PatientHeader.pages.doctors', 'Find Doctors'),
       clinics: t('PatientHeader.pages.clinics', 'Find Clinics'),
-      roadmap: t('PatientHeader.pages.roadmap', 'Health Roadmap'),
       chat: t('PatientHeader.pages.chat', 'Chat'),
       wallet: t('PatientHeader.pages.wallet', 'Wallet'),
       profile: t('PatientHeader.pages.profile', 'My Profile'),

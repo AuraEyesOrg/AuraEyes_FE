@@ -5,7 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { walletKeys } from './use-wallet';
+import { financialKeys } from './use-financial';
 import {
   cancelClinicAppointment,
   checkInClinicAppointment,
@@ -13,6 +13,7 @@ import {
   createClinicAppointment,
   getOrganisationAppointments,
   getOrganisationAvailableSlots,
+  getOrganisationSchedule,
   getOrganisations,
   getPatientClinicAppointments,
   markNoShowClinicAppointment,
@@ -28,13 +29,8 @@ import type {
 export const clinicBookingKeys = {
   all: ['clinic-booking'] as const,
   organisations: () => [...clinicBookingKeys.all, 'organisations'] as const,
-  availableSlots: (organisationId: string, date?: string) =>
-    [
-      ...clinicBookingKeys.all,
-      'available-slots',
-      organisationId,
-      date,
-    ] as const,
+  availableSlots: (date?: string) =>
+    [...clinicBookingKeys.all, 'available-slots', date] as const,
   patientAppointments: (
     patientId: string,
     query: PatientClinicAppointmentsQuery = {}
@@ -47,12 +43,14 @@ export const clinicBookingKeys = {
       query.pageNumber ?? 1,
       query.pageSize ?? 10,
     ] as const,
-  organisationAppointments: (organisationId: string, date?: string) =>
+  organisationAppointments: (date?: string) =>
+    [...clinicBookingKeys.all, 'organisation-appointments', date] as const,
+  organisationSchedule: (params?: { fromDate?: string; toDate?: string }) =>
     [
       ...clinicBookingKeys.all,
-      'organisation-appointments',
-      organisationId,
-      date,
+      'organisation-schedule',
+      params?.fromDate,
+      params?.toDate,
     ] as const,
 };
 
@@ -63,15 +61,11 @@ export const useOrganisations = () =>
     staleTime: 60_000,
   });
 
-export const useOrganisationAvailableSlots = (
-  organisationId: string,
-  date?: string,
-  enabled = true
-) =>
+export const useOrganisationAvailableSlots = (date?: string, enabled = true) =>
   useQuery({
-    queryKey: clinicBookingKeys.availableSlots(organisationId, date),
-    queryFn: () => getOrganisationAvailableSlots(organisationId, date),
-    enabled: enabled && !!organisationId,
+    queryKey: clinicBookingKeys.availableSlots(date),
+    queryFn: () => getOrganisationAvailableSlots(date),
+    enabled: enabled,
     staleTime: 15_000,
   });
 
@@ -134,16 +128,23 @@ export const usePatientClinicAppointmentCounts = (
   };
 };
 
-export const useOrganisationAppointments = (
-  organisationId: string,
-  date?: string,
+export const useOrganisationAppointments = (date?: string, enabled = true) =>
+  useQuery({
+    queryKey: clinicBookingKeys.organisationAppointments(date),
+    queryFn: () => getOrganisationAppointments(date),
+    enabled: enabled,
+    staleTime: 10_000,
+  });
+
+export const useOrganisationSchedule = (
+  params?: { fromDate?: string; toDate?: string },
   enabled = true
 ) =>
   useQuery({
-    queryKey: clinicBookingKeys.organisationAppointments(organisationId, date),
-    queryFn: () => getOrganisationAppointments(organisationId, date),
-    enabled: enabled && !!organisationId,
-    staleTime: 10_000,
+    queryKey: clinicBookingKeys.organisationSchedule(params),
+    queryFn: () => getOrganisationSchedule(params),
+    enabled: enabled,
+    staleTime: 15_000,
   });
 
 export const useCreateClinicAppointment = () => {
@@ -151,12 +152,10 @@ export const useCreateClinicAppointment = () => {
   return useMutation({
     mutationFn: (request: CreateClinicAppointmentRequest) =>
       createClinicAppointment(request),
-    onSuccess: (_data, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: clinicBookingKeys.all });
-      queryClient.invalidateQueries({
-        queryKey: clinicBookingKeys.availableSlots(variables.organisationId),
-      });
-      queryClient.invalidateQueries({ queryKey: walletKeys.all });
+      // Invalidate payment order history so the wallet page reflects new deposit
+      queryClient.invalidateQueries({ queryKey: financialKeys.all });
     },
   });
 };

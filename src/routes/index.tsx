@@ -37,6 +37,12 @@ const PersonalDataPage = lazy(
 const PrivacyPage = lazy(() => import('@/features/guest/pages/Privacy'));
 const SecurityPage = lazy(() => import('@/features/guest/pages/Security'));
 const TermsOfUsePage = lazy(() => import('@/features/guest/pages/TermsofUse'));
+const ErmFormPage = lazy(
+  () => import('@/features/medical-records/pages/ErmForm')
+);
+const ErmFormPatientPage = lazy(
+  () => import('@/features/medical-records/pages/ErmFormPatient')
+);
 
 // Auth pages
 const LoginPage = lazy(() => import('@/features/auth/pages/login'));
@@ -61,16 +67,8 @@ const ResetPasswordPage = lazy(
 const ForceChangePasswordPage = lazy(
   () => import('@/features/auth/pages/force-change-password')
 );
-const RegisterDoctorPage = lazy(
-  () => import('@/features/auth/pages/register-doctor')
-);
 const RegisterOrganisationPage = lazy(
   () => import('@/features/auth/pages/register-organisation')
-);
-
-// Pending Approval page
-const PendingApprovalPage = lazy(
-  () => import('@/features/auth/pages/pending-approval')
 );
 
 // Patient pages
@@ -88,8 +86,10 @@ const ProfilePage = lazy(() => import('@/features/patient/pages/profile'));
 const SettingsPage = lazy(() => import('@/features/patient/pages/settings'));
 const ClinicsPage = lazy(() => import('@/features/patient/pages/clinics'));
 const DoctorsPage = lazy(() => import('@/features/patient/pages/doctors'));
+const OrganisationSchedulePage = lazy(
+  () => import('@/features/patient/pages/organisation-schedule')
+);
 
-const RoadmapPage = lazy(() => import('@/features/patient/pages/roadmap'));
 const ChatPage = lazy(() => import('@/features/patient/pages/chat'));
 const WalletPage = lazy(() => import('@/features/patient/pages/wallet'));
 const PaymentCallbackPage = lazy(
@@ -118,9 +118,62 @@ const ViewAllNotificationsPage = lazy(
   () => import('@/features/notifications/pages/view-all')
 );
 
+const FollowUpPage = lazy(() => import('@/features/patient/pages/follow-up'));
+const MedicalHistoryPage = lazy(
+  () => import('@/features/patient/pages/medical-history')
+);
+
 // Clinic Staff pages
 const ClinicStaffDashboard = lazy(
   () => import('@/features/clinic-staff/pages/dashboard')
+);
+const ClinicStaffMedicalRecords = lazy(
+  () => import('@/features/clinic-staff/pages/medical-records')
+);
+const ClinicStaffQueuePage = lazy(
+  () => import('@/features/clinic-staff/pages/queue')
+);
+const ClinicStaffScreeningsPage = lazy(
+  () => import('@/features/clinic-staff/pages/screenings')
+);
+const ClinicStaffScreeningNewPage = lazy(
+  () => import('@/features/clinic-staff/pages/screening-new')
+);
+const ClinicStaffScreeningResultPage = lazy(
+  () => import('@/features/clinic-staff/pages/screening-result')
+);
+const ClinicStaffPatientsPage = lazy(
+  () => import('@/features/clinic-staff/pages/patients')
+);
+const ClinicStaffAppointmentsPage = lazy(
+  () => import('@/features/clinic-staff/pages/appointments')
+);
+const ClinicStaffPatientHistoryPage = lazy(
+  () => import('@/features/clinic-staff/pages/patient-history')
+);
+const ClinicStaffSchedulesPage = lazy(
+  () => import('@/features/clinic-staff/pages/schedules')
+);
+const ClinicStaffBillingPage = lazy(
+  () => import('@/features/clinic-staff/pages/billing')
+);
+const ClinicStaffCashierPage = lazy(
+  () => import('@/features/clinic-staff/pages/cashier')
+);
+const ClinicStaffWalletPage = lazy(
+  () => import('@/features/clinic-staff/pages/wallet')
+);
+const ClinicStaffSettingsPage = lazy(
+  () => import('@/features/clinic-staff/pages/settings')
+);
+const ClinicStaffProfilePage = lazy(
+  () => import('@/features/clinic-staff/pages/profile')
+);
+const ClinicStaffSecurityPage = lazy(
+  () => import('@/features/clinic-staff/pages/security')
+);
+const ClinicStaffNotificationsPage = lazy(
+  () => import('@/features/clinic-staff/pages/notifications')
 );
 
 // Organisation pages
@@ -180,18 +233,16 @@ const OphthalmologistAppointmentsPage = lazy(
 const OphthalmologistSettingsPage = lazy(
   () => import('@/features/ophthalmologist/pages/settings')
 );
+const OphthalmologistProfilePage = lazy(
+  () => import('@/features/ophthalmologist/pages/profile')
+);
 const OphthalmologistConsultationsPage = lazy(
   () => import('@/features/ophthalmologist/pages/consultations')
 );
 const OphthalmologistScreeningReviewPage = lazy(
   () => import('@/features/ophthalmologist/pages/screening-review')
 );
-const OphthalmologistSlotManagementPage = lazy(
-  () => import('@/features/ophthalmologist/pages/slot-management')
-);
-const OphthalmologistContractPage = lazy(
-  () => import('@/features/ophthalmologist/pages/contract')
-);
+
 const OphthalmologistWalletPage = lazy(
   () => import('@/features/ophthalmologist/pages/wallet')
 );
@@ -201,6 +252,14 @@ const OphthalmologistLeaveRequestsPage = lazy(
 const OphthalmologistEmploymentTypeChangeRequestsPage = lazy(
   () =>
     import('@/features/ophthalmologist/pages/employment-type-change-requests')
+);
+const OphthalmologistPatientCarePlanPage = lazy(
+  () => import('@/features/ophthalmologist/pages/patient-care-plan')
+);
+
+// Care Plan pages (shared)
+const PatientCarePlanPage = lazy(
+  () => import('@/features/patient/pages/care-plan')
 );
 
 // System Admin pages
@@ -234,6 +293,9 @@ const SystemAdminEmploymentTypeChangeRequests = lazy(
 const SystemAdminUsers = lazy(
   () => import('@/features/system-admin/pages/users')
 );
+const SystemAdminStaffManagement = lazy(
+  () => import('@/features/system-admin/pages/staff-management')
+);
 const SystemAdminAuditLogs = lazy(
   () => import('@/features/system-admin/pages/audit-logs')
 );
@@ -254,6 +316,9 @@ const SystemAdminContracts = lazy(
 );
 const SystemAdminCashflow = lazy(
   () => import('@/features/system-admin/pages/cashflow')
+);
+const SchedulingPage = lazy(
+  () => import('@/features/system-admin/pages/scheduling')
 );
 
 // Professional Network pages
@@ -279,6 +344,9 @@ const NetworkProfilePage = lazy(
 );
 const NetworkOrganisationPage = lazy(
   () => import('@/features/professional-network/pages/organisation')
+);
+const NetworkCollaborationPage = lazy(
+  () => import('@/features/professional-network/pages/collaboration')
 );
 
 /**
@@ -422,6 +490,18 @@ const Router = () => (
           }
         />
         <Route path="/404" element={<LocalizedRedirect target="/404" />} />
+        <Route path="/medical-records/new" element={<ErmFormPage />} />
+        <Route path="/medical-records/:id" element={<ErmFormPage />} />
+        <Route
+          path="/medical-records/patient/:id"
+          element={<ErmFormPatientPage />}
+        />
+        <Route
+          path="/system-admin/staff-management"
+          element={
+            <LocalizedRedirect target="/system-admin/staff-management" />
+          }
+        />
         <Route
           path="/ophthalmologist/analytics"
           element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
@@ -444,10 +524,6 @@ const Router = () => (
         <Route
           path="/:locale/reset-password"
           element={<LocalizedPublicRoute element={<ResetPasswordPage />} />}
-        />
-        <Route
-          path="/:locale/register-doctor"
-          element={<LocalizedPublicRoute element={<RegisterDoctorPage />} />}
         />
         <Route
           path="/:locale/register-organisation"
@@ -473,28 +549,19 @@ const Router = () => (
           path="/:locale/two-factor-verify"
           element={<LocalizedPublicRoute element={<TwoFactorVerifyPage />} />}
         />
+        <Route path="/:locale/medical-records/new" element={<ErmFormPage />} />
+        <Route path="/:locale/medical-records/:id" element={<ErmFormPage />} />
+        <Route
+          path="/:locale/medical-records/patient/:id"
+          element={<ErmFormPatientPage />}
+        />
         <Route
           path="/:locale/force-change-password"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin', 'Organization']}
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<ForceChangePasswordPage />}
             />
-          }
-        />
-        <Route
-          path="/:locale/ophthalmologist/pending-approval"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Ophthalmologist']}
-              element={<PendingApprovalPage />}
-            />
-          }
-        />
-        <Route
-          path="/:locale/pending-approval"
-          element={
-            <LocalizedRedirect target="/ophthalmologist/pending-approval" />
           }
         />
         <Route
@@ -525,6 +592,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/ophthalmologist/patients/:patientId/care-plan"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Ophthalmologist']}
+              element={<OphthalmologistPatientCarePlanPage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/ophthalmologist/screenings"
           element={
             <LocalizedPrivateRoute
@@ -534,11 +610,11 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/ophthalmologist/appointments"
+          path="/:locale/ophthalmologist/profile"
           element={
             <LocalizedPrivateRoute
               allowedRoles={['Ophthalmologist']}
-              element={<OphthalmologistAppointmentsPage />}
+              element={<OphthalmologistProfilePage />}
             />
           }
         />
@@ -579,33 +655,6 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/ophthalmologist/schedules"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Ophthalmologist']}
-              element={<OphthalmologistSlotManagementPage />}
-            />
-          }
-        />
-        <Route
-          path="/:locale/ophthalmologist/slot-management"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Ophthalmologist']}
-              element={<OphthalmologistSlotManagementPage />}
-            />
-          }
-        />
-        <Route
-          path="/:locale/ophthalmologist/contract"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Ophthalmologist']}
-              element={<OphthalmologistContractPage />}
-            />
-          }
-        />
-        <Route
           path="/:locale/ophthalmologist/wallet"
           element={
             <LocalizedPrivateRoute
@@ -623,16 +672,25 @@ const Router = () => (
             />
           }
         />
+
         <Route
-          path="/:locale/ophthalmologist/employment-type-change-requests"
+          path="/:locale/staff/dashboard"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['Ophthalmologist']}
-              element={<OphthalmologistEmploymentTypeChangeRequestsPage />}
+              allowedRoles={['ClinicStaff']}
+              element={<ClinicStaffDashboard />}
             />
           }
         />
-
+        <Route
+          path="/:locale/staff/medical-records"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff']}
+              element={<ClinicStaffMedicalRecords />}
+            />
+          }
+        />
         <Route
           path="/:locale/patient/dashboard"
           element={
@@ -701,12 +759,11 @@ const Router = () => (
           element={
             <LocalizedPrivateRoute
               allowedRoles={[
-                'Patient',
                 'SystemAdmin',
-                'Admin',
-                'OrgAdmin',
                 'Ophthalmologist',
                 'ClinicStaff',
+                'OrgAdmin',
+                'Organization',
               ]}
               element={<ViewAllNotificationsPage />}
             />
@@ -767,6 +824,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/patient/schedule"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient']}
+              element={<OrganisationSchedulePage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/patient/doctors"
           element={
             <LocalizedPrivateRoute
@@ -776,11 +842,11 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/patient/roadmap"
+          path="/:locale/patient/care-plan"
           element={
             <LocalizedPrivateRoute
               allowedRoles={['Patient']}
-              element={<RoadmapPage />}
+              element={<PatientCarePlanPage />}
             />
           }
         />
@@ -803,6 +869,24 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/patient/follow-up"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient']}
+              element={<FollowUpPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/patient/medical-history"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient']}
+              element={<MedicalHistoryPage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/patient/help-feedback"
           element={
             <LocalizedPrivateRoute
@@ -815,7 +899,43 @@ const Router = () => (
           path="/:locale/patient/wallet/payment-callback"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['Patient']}
+              allowedRoles={['Patient', 'ClinicStaff']}
+              element={<PaymentCallbackPage />}
+            />
+          }
+        />
+        <Route
+          path="/payment/success"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient', 'ClinicStaff']}
+              element={<PaymentCallbackPage />}
+            />
+          }
+        />
+        <Route
+          path="/payment/cancel"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient', 'ClinicStaff']}
+              element={<PaymentCallbackPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/payment/success"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient', 'ClinicStaff']}
+              element={<PaymentCallbackPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/payment/cancel"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient', 'ClinicStaff']}
               element={<PaymentCallbackPage />}
             />
           }
@@ -835,8 +955,143 @@ const Router = () => (
           path="/:locale/clinic-staff/dashboard"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['ClinicStaff']}
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<ClinicStaffDashboard />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/queue"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff']}
+              element={<ClinicStaffQueuePage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/screenings"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffScreeningsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/screenings/new"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffScreeningNewPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/screenings/result"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffScreeningResultPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/patients"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffPatientsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/patients/:patientId/history"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffPatientHistoryPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/appointments"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffAppointmentsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/schedules"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffSchedulesPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/cashier"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffCashierPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/billing"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffBillingPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/wallet"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffWalletPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/settings"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffSettingsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/profile"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffProfilePage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/security"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffSecurityPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/clinic-staff/notifications"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffNotificationsPage />}
             />
           }
         />
@@ -845,7 +1100,7 @@ const Router = () => (
           path="/:locale/organisation/dashboard"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin']}
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<OrganisationDashboard />}
             />
           }
@@ -854,7 +1109,7 @@ const Router = () => (
           path="/:locale/organisation/patients"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin']}
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<OrganisationPatientsPage />}
             />
           }
@@ -863,7 +1118,7 @@ const Router = () => (
           path="/:locale/organisation/patients/:patientId/history"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin', 'Organization']}
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<OrganisationPatientHistoryPage />}
             />
           }
@@ -872,7 +1127,7 @@ const Router = () => (
           path="/:locale/organisation/analytics"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin']}
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<OrganisationAnalyticsPage />}
             />
           }
@@ -881,7 +1136,7 @@ const Router = () => (
           path="/:locale/organisation/screening"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin']}
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<OrganisationScreeningPage />}
             />
           }
@@ -890,7 +1145,7 @@ const Router = () => (
           path="/:locale/organisation/screening/result"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin']}
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<OrganisationScreeningResultPage />}
             />
           }
@@ -899,7 +1154,7 @@ const Router = () => (
           path="/:locale/organisation/wallet"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin']}
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<OrganisationWalletPage />}
             />
           }
@@ -908,7 +1163,7 @@ const Router = () => (
           path="/:locale/organisation/billing"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin']}
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<OrganisationBillingPage />}
             />
           }
@@ -917,7 +1172,7 @@ const Router = () => (
           path="/:locale/organisation/reports"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin']}
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<OrganisationReportsPage />}
             />
           }
@@ -926,7 +1181,7 @@ const Router = () => (
           path="/:locale/organisation/calendar"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin']}
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<OrganisationCalendarPage />}
             />
           }
@@ -935,7 +1190,7 @@ const Router = () => (
           path="/:locale/organisation/slots"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin']}
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<OrganisationSlotManagementPage />}
             />
           }
@@ -944,7 +1199,7 @@ const Router = () => (
           path="/:locale/organisation/contract"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin']}
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<OrganisationContractPage />}
             />
           }
@@ -953,7 +1208,7 @@ const Router = () => (
           path="/:locale/organisation/settings"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin']}
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<OrganisationSettingsPage />}
             />
           }
@@ -963,7 +1218,7 @@ const Router = () => (
           path="/:locale/system-admin/dashboard"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminDashboard />}
             />
           }
@@ -972,7 +1227,7 @@ const Router = () => (
           path="/:locale/system-admin/status"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminStatus />}
             />
           }
@@ -981,7 +1236,7 @@ const Router = () => (
           path="/:locale/system-admin/organisations"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminOrganisations />}
             />
           }
@@ -990,7 +1245,7 @@ const Router = () => (
           path="/:locale/system-admin/patients"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminPatients />}
             />
           }
@@ -999,7 +1254,7 @@ const Router = () => (
           path="/:locale/system-admin/ophthalmologists"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminOphthalmologists />}
             />
           }
@@ -1008,7 +1263,7 @@ const Router = () => (
           path="/:locale/system-admin/verifications"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminVerificationRequests />}
             />
           }
@@ -1017,7 +1272,7 @@ const Router = () => (
           path="/:locale/system-admin/withdrawal-requests"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminWithdrawalRequests />}
             />
           }
@@ -1026,8 +1281,17 @@ const Router = () => (
           path="/:locale/system-admin/cashflow"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminCashflow />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/scheduling"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin']}
+              element={<SchedulingPage />}
             />
           }
         />
@@ -1035,7 +1299,7 @@ const Router = () => (
           path="/:locale/system-admin/leave-requests"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminLeaveRequests />}
             />
           }
@@ -1044,7 +1308,7 @@ const Router = () => (
           path="/:locale/system-admin/employment-type-change-requests"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminEmploymentTypeChangeRequests />}
             />
           }
@@ -1053,8 +1317,17 @@ const Router = () => (
           path="/:locale/system-admin/users"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminUsers />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/staff-management"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin']}
+              element={<SystemAdminStaffManagement />}
             />
           }
         />
@@ -1062,7 +1335,7 @@ const Router = () => (
           path="/:locale/system-admin/audit-logs"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminAuditLogs />}
             />
           }
@@ -1071,7 +1344,7 @@ const Router = () => (
           path="/:locale/system-admin/settings"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminSettings />}
             />
           }
@@ -1080,7 +1353,7 @@ const Router = () => (
           path="/:locale/system-admin/permissions"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminPermissions />}
             />
           }
@@ -1089,7 +1362,7 @@ const Router = () => (
           path="/:locale/system-admin/contract-templates"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminContractTemplates />}
             />
           }
@@ -1098,7 +1371,7 @@ const Router = () => (
           path="/:locale/system-admin/contract-templates/:id/edit"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminContractTemplateEditor />}
             />
           }
@@ -1107,7 +1380,7 @@ const Router = () => (
           path="/:locale/system-admin/contract-templates/new"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminContractTemplateEditor />}
             />
           }
@@ -1116,7 +1389,7 @@ const Router = () => (
           path="/:locale/system-admin/contracts"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin', 'Admin']}
+              allowedRoles={['SystemAdmin']}
               element={<SystemAdminContracts />}
             />
           }
@@ -1165,14 +1438,6 @@ const Router = () => (
           }
         />
         <Route
-          path="/register-doctor"
-          element={
-            <PublicRoute>
-              <RegisterDoctorPage />
-            </PublicRoute>
-          }
-        />
-        <Route
           path="/register-organisation"
           element={
             <PublicRoute>
@@ -1199,24 +1464,20 @@ const Router = () => (
         <Route
           path="/force-change-password"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin', 'Organization']}>
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
               <ForceChangePasswordPage />
             </PrivateRoute>
           }
         />
         <Route
           path="/ophthalmologist/pending-approval"
-          element={
-            <PrivateRoute allowedRoles={['Ophthalmologist']}>
-              <PendingApprovalPage />
-            </PrivateRoute>
-          }
+          element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
         />
         <Route
           path="/pending-approval"
-          element={
-            <LocalizedRedirect target="/ophthalmologist/pending-approval" />
-          }
+          element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
         />
 
         {/* ============ PATIENT ROUTES ============ */}
@@ -1289,12 +1550,11 @@ const Router = () => (
           element={
             <PrivateRoute
               allowedRoles={[
-                'Patient',
                 'SystemAdmin',
-                'Admin',
-                'OrgAdmin',
                 'Ophthalmologist',
                 'ClinicStaff',
+                'OrgAdmin',
+                'Organization',
               ]}
             >
               <ViewAllNotificationsPage />
@@ -1358,10 +1618,10 @@ const Router = () => (
           }
         />
         <Route
-          path="/patient/roadmap"
+          path="/patient/care-plan"
           element={
             <PrivateRoute allowedRoles={['Patient']}>
-              <RoadmapPage />
+              <PatientCarePlanPage />
             </PrivateRoute>
           }
         />
@@ -1392,7 +1652,7 @@ const Router = () => (
         <Route
           path="/patient/wallet/payment-callback"
           element={
-            <PrivateRoute allowedRoles={['Patient']}>
+            <PrivateRoute allowedRoles={['Patient', 'ClinicStaff']}>
               <PaymentCallbackPage />
             </PrivateRoute>
           }
@@ -1410,8 +1670,170 @@ const Router = () => (
         <Route
           path="/clinic-staff/dashboard"
           element={
-            <PrivateRoute allowedRoles={['ClinicStaff']}>
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
               <ClinicStaffDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/medical-records"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffMedicalRecords />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/queue"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffQueuePage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/screenings"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffScreeningsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/screenings/new"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffScreeningNewPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/screenings/result"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffScreeningResultPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/patients"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffPatientsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/patients/:patientId/history"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffPatientHistoryPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/appointments"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffAppointmentsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/schedules"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffSchedulesPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/cashier"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffCashierPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/billing"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffBillingPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/wallet"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffWalletPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/settings"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffSettingsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/profile"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffProfilePage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/security"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffSecurityPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clinic-staff/notifications"
+          element={
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
+              <ClinicStaffNotificationsPage />
             </PrivateRoute>
           }
         />
@@ -1420,7 +1842,9 @@ const Router = () => (
         <Route
           path="/organisation/dashboard"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin']}>
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
               <OrganisationDashboard />
             </PrivateRoute>
           }
@@ -1428,7 +1852,9 @@ const Router = () => (
         <Route
           path="/organisation/patients"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin']}>
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
               <OrganisationPatientsPage />
             </PrivateRoute>
           }
@@ -1444,7 +1870,9 @@ const Router = () => (
         <Route
           path="/organisation/analytics"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin']}>
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
               <OrganisationAnalyticsPage />
             </PrivateRoute>
           }
@@ -1452,7 +1880,9 @@ const Router = () => (
         <Route
           path="/organisation/calendar"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin']}>
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
               <OrganisationCalendarPage />
             </PrivateRoute>
           }
@@ -1460,7 +1890,9 @@ const Router = () => (
         <Route
           path="/organisation/slots"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin']}>
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
               <OrganisationSlotManagementPage />
             </PrivateRoute>
           }
@@ -1468,7 +1900,9 @@ const Router = () => (
         <Route
           path="/organisation/contract"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin']}>
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
               <OrganisationContractPage />
             </PrivateRoute>
           }
@@ -1476,7 +1910,9 @@ const Router = () => (
         <Route
           path="/organisation/wallet"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin']}>
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
               <OrganisationWalletPage />
             </PrivateRoute>
           }
@@ -1484,7 +1920,9 @@ const Router = () => (
         <Route
           path="/organisation/settings"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin']}>
+            <PrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+            >
               <OrganisationSettingsPage />
             </PrivateRoute>
           }
@@ -1508,6 +1946,14 @@ const Router = () => (
           }
         />
         <Route
+          path="/ophthalmologist/patients/:patientId/care-plan"
+          element={
+            <PrivateRoute allowedRoles={['Ophthalmologist']}>
+              <OphthalmologistPatientCarePlanPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/ophthalmologist/screenings"
           element={
             <PrivateRoute allowedRoles={['Ophthalmologist']}>
@@ -1520,6 +1966,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['Ophthalmologist']}>
               <OphthalmologistAppointmentsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/ophthalmologist/profile"
+          element={
+            <PrivateRoute allowedRoles={['Ophthalmologist']}>
+              <OphthalmologistProfilePage />
             </PrivateRoute>
           }
         />
@@ -1556,28 +2010,8 @@ const Router = () => (
           }
         />
         <Route
-          path="/ophthalmologist/schedules"
-          element={
-            <PrivateRoute allowedRoles={['Ophthalmologist']}>
-              <OphthalmologistSlotManagementPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/ophthalmologist/slot-management"
-          element={
-            <PrivateRoute allowedRoles={['Ophthalmologist']}>
-              <OphthalmologistSlotManagementPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
           path="/ophthalmologist/contract"
-          element={
-            <PrivateRoute allowedRoles={['Ophthalmologist']}>
-              <OphthalmologistContractPage />
-            </PrivateRoute>
-          }
+          element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
         />
         <Route
           path="/ophthalmologist/leave-requests"
@@ -1600,7 +2034,7 @@ const Router = () => (
         <Route
           path="/system-admin/dashboard"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminDashboard />
             </PrivateRoute>
           }
@@ -1608,7 +2042,7 @@ const Router = () => (
         <Route
           path="/system-admin/status"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminStatus />
             </PrivateRoute>
           }
@@ -1616,7 +2050,7 @@ const Router = () => (
         <Route
           path="/system-admin/organisations"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminOrganisations />
             </PrivateRoute>
           }
@@ -1624,7 +2058,7 @@ const Router = () => (
         <Route
           path="/system-admin/patients"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminPatients />
             </PrivateRoute>
           }
@@ -1632,7 +2066,15 @@ const Router = () => (
         <Route
           path="/system-admin/ophthalmologists"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute
+              allowedRoles={[
+                'SystemAdmin',
+                'Ophthalmologist',
+                'ClinicStaff',
+                'OrgAdmin',
+                'Organization',
+              ]}
+            >
               <SystemAdminOphthalmologists />
             </PrivateRoute>
           }
@@ -1640,7 +2082,7 @@ const Router = () => (
         <Route
           path="/system-admin/verifications"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminVerificationRequests />
             </PrivateRoute>
           }
@@ -1648,7 +2090,7 @@ const Router = () => (
         <Route
           path="/system-admin/withdrawal-requests"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminWithdrawalRequests />
             </PrivateRoute>
           }
@@ -1656,7 +2098,7 @@ const Router = () => (
         <Route
           path="/system-admin/leave-requests"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminLeaveRequests />
             </PrivateRoute>
           }
@@ -1664,7 +2106,7 @@ const Router = () => (
         <Route
           path="/system-admin/employment-type-change-requests"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminEmploymentTypeChangeRequests />
             </PrivateRoute>
           }
@@ -1672,7 +2114,7 @@ const Router = () => (
         <Route
           path="/system-admin/cashflow"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminCashflow />
             </PrivateRoute>
           }
@@ -1680,15 +2122,23 @@ const Router = () => (
         <Route
           path="/system-admin/users"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminUsers />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/system-admin/staff-management"
+          element={
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
+              <SystemAdminStaffManagement />
             </PrivateRoute>
           }
         />
         <Route
           path="/system-admin/audit-logs"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminAuditLogs />
             </PrivateRoute>
           }
@@ -1696,7 +2146,7 @@ const Router = () => (
         <Route
           path="/system-admin/settings"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminSettings />
             </PrivateRoute>
           }
@@ -1704,7 +2154,7 @@ const Router = () => (
         <Route
           path="/system-admin/permissions"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminPermissions />
             </PrivateRoute>
           }
@@ -1712,7 +2162,7 @@ const Router = () => (
         <Route
           path="/system-admin/contract-templates"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminContractTemplates />
             </PrivateRoute>
           }
@@ -1720,7 +2170,7 @@ const Router = () => (
         <Route
           path="/system-admin/contract-templates/:id/edit"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminContractTemplateEditor />
             </PrivateRoute>
           }
@@ -1728,7 +2178,7 @@ const Router = () => (
         <Route
           path="/system-admin/contract-templates/new"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminContractTemplateEditor />
             </PrivateRoute>
           }
@@ -1736,7 +2186,7 @@ const Router = () => (
         <Route
           path="/system-admin/contracts"
           element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminContracts />
             </PrivateRoute>
           }
@@ -1749,8 +2199,9 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={[
                 'SystemAdmin',
-                'Admin',
+                'ClinicStaff',
                 'OrgAdmin',
+                'Organization',
                 'Ophthalmologist',
               ]}
               element={<NetworkLayout />}
@@ -1768,6 +2219,7 @@ const Router = () => (
             path="organisation/:id"
             element={<NetworkOrganisationPage />}
           />
+          <Route path="collaboration" element={<NetworkCollaborationPage />} />
         </Route>
 
         <Route
@@ -1776,8 +2228,9 @@ const Router = () => (
             <PrivateRoute
               allowedRoles={[
                 'SystemAdmin',
-                'Admin',
+                'ClinicStaff',
                 'OrgAdmin',
+                'Organization',
                 'Ophthalmologist',
               ]}
             >
@@ -1796,6 +2249,7 @@ const Router = () => (
             path="organisation/:id"
             element={<NetworkOrganisationPage />}
           />
+          <Route path="collaboration" element={<NetworkCollaborationPage />} />
         </Route>
 
         <Route path="*" element={<LocalizedRedirect target="/404" />} />

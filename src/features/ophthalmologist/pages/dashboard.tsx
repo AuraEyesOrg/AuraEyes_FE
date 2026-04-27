@@ -1,13 +1,22 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { CalendarClock, ClipboardList, Siren, Stethoscope } from 'lucide-react';
-import { DoctorSidebar, DoctorHeader, StatsCardGrid } from '../components';
+import { ClipboardList, RefreshCw } from 'lucide-react';
+import {
+  DoctorSidebar,
+  DoctorHeader,
+  StatsCardGrid,
+  ReviewQueue,
+  QueueFilters,
+  PatientPreviewPanel,
+} from '../components';
+import type { QueueFilter } from '../components/QueueFilters';
 import Spinner from '@/components/ui/spinner';
 import useAuthStore from '@/store/auth-store';
 import {
   getOphthalmologistDashboardMetrics,
-  type OphthalmologistUrgentCase,
+  getReviewQueue,
+  type ReviewQueueItem,
 } from '../api/dashboard.api';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
@@ -26,9 +35,21 @@ function getGreeting(
 export default function OphthalmologistDashboard() {
   const { t } = useSafeTranslation();
   const { user } = useAuthStore();
+  const [selectedItem, setSelectedItem] = useState<ReviewQueueItem | null>(
+    null
+  );
+  const [activeFilter, setActiveFilter] = useState<QueueFilter>('all');
+
   const metricsQuery = useQuery({
     queryKey: ['ophthalmologist-dashboard', 'metrics'],
     queryFn: getOphthalmologistDashboardMetrics,
+  });
+
+  const queueQuery = useQuery({
+    queryKey: ['ophthalmologist-dashboard', 'review-queue'],
+    queryFn: getReviewQueue,
+    refetchInterval: 15_000,
+    staleTime: 30_000,
   });
 
   useEffect(() => {
@@ -49,58 +70,61 @@ export default function OphthalmologistDashboard() {
     openSlotsToday: 0,
     urgentCaseList: [],
   };
+
+  const queueItems = queueQuery.data ?? [];
+
+  const filterCounts = useMemo(
+    () => ({
+      all: queueItems.length,
+      highRisk: queueItems.filter((i) => {
+        const r = i.riskLevel.toLowerCase();
+        return r === 'high' || r === 'critical';
+      }).length,
+      waitingLong: queueItems.filter((i) => i.waitingMinutes >= 30).length,
+    }),
+    [queueItems]
+  );
+
+  const filteredItems = useMemo(() => {
+    if (activeFilter === 'high_risk') {
+      return queueItems.filter((i) => {
+        const r = i.riskLevel.toLowerCase();
+        return r === 'high' || r === 'critical';
+      });
+    }
+    if (activeFilter === 'waiting_long') {
+      return queueItems.filter((i) => i.waitingMinutes >= 30);
+    }
+    return queueItems;
+  }, [queueItems, activeFilter]);
+
+  // Auto-select first item when queue loads/refreshes and nothing is selected
+  useEffect(() => {
+    if (filteredItems.length > 0 && !selectedItem) {
+      setSelectedItem(filteredItems[0]);
+    }
+    // If selected item is no longer in the filtered list, reset
+    if (
+      selectedItem &&
+      !filteredItems.some(
+        (i) => i.consultationSessionId === selectedItem.consultationSessionId
+      )
+    ) {
+      setSelectedItem(filteredItems[0] ?? null);
+    }
+  }, [filteredItems, selectedItem]);
+
+  const handleSelect = useCallback((item: ReviewQueueItem) => {
+    setSelectedItem(item);
+  }, []);
+
   const displayName =
     user?.fullName || t('Ophthalmologist.common.doctor', 'Doctor');
-  const organisationHint = user?.organizationId
-    ? `${t('Ophthalmologist.dashboard.organisationLabel', 'Organisation')} ${user.organizationId.slice(0, 8)}`
-    : t('Ophthalmologist.dashboard.defaultOrganisation', 'AURA Care Network');
   const greeting = getGreeting(new Date().getHours(), t);
 
-  const formatScheduleLabel = (appointmentTime: string | null) => {
-    if (!appointmentTime) {
-      return t(
-        'Ophthalmologist.dashboard.priorityList.noSchedule',
-        'No fixed schedule'
-      );
-    }
-
-    const date = new Date(appointmentTime);
-    if (Number.isNaN(date.getTime())) {
-      return t(
-        'Ophthalmologist.dashboard.priorityList.noSchedule',
-        'No fixed schedule'
-      );
-    }
-
-    return date.toLocaleString('vi-VN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      day: '2-digit',
-      month: '2-digit',
-    });
-  };
-
-  const riskToneClass = (riskLevel: string) => {
-    const normalized = riskLevel.toLowerCase();
-    if (normalized === 'critical') {
-      return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
-    }
-    if (normalized === 'high') {
-      return 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300';
-    }
-    return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
-  };
-
-  const sortedUrgentCases = [...metrics.urgentCaseList].sort(
-    (a: OphthalmologistUrgentCase, b: OphthalmologistUrgentCase) => {
-      const aCritical = a.riskLevel.toLowerCase() === 'critical' ? 1 : 0;
-      const bCritical = b.riskLevel.toLowerCase() === 'critical' ? 1 : 0;
-      if (aCritical !== bCritical) {
-        return bCritical - aCritical;
-      }
-      return b.confidenceScore - a.confidenceScore;
-    }
-  );
+  const metricsFirstLoad = metricsQuery.isLoading && !metricsQuery.data;
+  const queueFirstLoad = queueQuery.isLoading && !queueQuery.data;
+  const queueRefetching = queueQuery.isFetching && !queueFirstLoad;
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
@@ -110,19 +134,7 @@ export default function OphthalmologistDashboard() {
         <DoctorHeader />
 
         <main className="p-6">
-          {metricsQuery.isLoading || !metricsQuery.data ? (
-            <div className="flex items-center justify-center h-[60vh]">
-              <div className="flex flex-col items-center gap-3">
-                <Spinner size={40} />
-                <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  {t(
-                    'Ophthalmologist.dashboard.loading',
-                    'Loading dashboard...'
-                  )}
-                </p>
-              </div>
-            </div>
-          ) : metricsQuery.isError ? (
+          {metricsQuery.isError ? (
             <div className="flex items-center justify-center h-[60vh]">
               <div className="rounded-xl border border-slate-200 bg-white px-6 py-5 text-center dark:border-[#1e3a5f] dark:bg-[#0a1f44]">
                 <p className="text-slate-700 dark:text-slate-200">
@@ -144,222 +156,123 @@ export default function OphthalmologistDashboard() {
             </div>
           ) : (
             <>
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  {greeting}, {displayName}
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400">
-                  {organisationHint} •{' '}
-                  {t(
-                    'Ophthalmologist.dashboard.subtitle',
-                    'Live review and scheduling workload'
-                  )}
-                </p>
-              </div>
-
-              <div className="mb-6">
-                <StatsCardGrid stats={metrics} />
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-[#1e3a5f] dark:bg-[#0a1f44]">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-50 dark:bg-cyan-900/30">
-                      <ClipboardList className="h-6 w-6 text-cyan-600 dark:text-cyan-400" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {t(
-                          'Ophthalmologist.dashboard.reviewQueue.title',
-                          'Review Queue Snapshot'
-                        )}
-                      </h2>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {t(
-                          'Ophthalmologist.dashboard.reviewQueue.description',
-                          'Live counts from consultation sessions and screening risk analysis.'
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="rounded-xl bg-gray-50 p-4 dark:bg-[#0a1929]">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {t(
-                          'Ophthalmologist.dashboard.reviewQueue.pendingReviews',
-                          'Pending reviews'
-                        )}
-                      </p>
-                      <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-                        {metrics.pendingReviews}
-                      </p>
-                    </div>
-                    <div className="rounded-xl bg-gray-50 p-4 dark:bg-[#0a1929]">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {t(
-                          'Ophthalmologist.dashboard.reviewQueue.urgentCases',
-                          'Urgent cases'
-                        )}
-                      </p>
-                      <p className="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">
-                        {metrics.urgentCases}
-                      </p>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-[#1e3a5f] dark:bg-[#0a1f44]">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-900/30">
-                      <CalendarClock className="h-6 w-6 text-violet-600 dark:text-violet-400" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {t(
-                          'Ophthalmologist.dashboard.capacity.title',
-                          "Today's Capacity"
-                        )}
-                      </h2>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {t(
-                          'Ophthalmologist.dashboard.capacity.description',
-                          'Open slots and completed appointments for the current day.'
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="rounded-xl bg-gray-50 p-4 dark:bg-[#0a1929]">
-                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                        <Stethoscope className="h-4 w-4" />
-                        {t(
-                          'Ophthalmologist.dashboard.capacity.completedToday',
-                          'Completed today'
-                        )}
-                      </div>
-                      <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-                        {metrics.completedToday}
-                      </p>
-                    </div>
-                    <div className="rounded-xl bg-gray-50 p-4 dark:bg-[#0a1929]">
-                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                        <Siren className="h-4 w-4" />
-                        {t(
-                          'Ophthalmologist.dashboard.capacity.openSlotsToday',
-                          'Open slots today'
-                        )}
-                      </div>
-                      <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-                        {metrics.openSlotsToday}
-                      </p>
-                    </div>
-                  </div>
-                </section>
-              </div>
-
-              <section className="mt-6 rounded-2xl border border-gray-100 bg-white p-6 dark:border-[#1e3a5f] dark:bg-[#0a1f44]">
-                <div className="flex items-center justify-between gap-3 mb-4">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {t(
-                        'Ophthalmologist.dashboard.priorityList.title',
-                        'Priority List - High Risk / Critical Cases'
-                      )}
-                    </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {t(
-                        'Ophthalmologist.dashboard.priorityList.description',
-                        'Prioritized queue from pending consultations linked to high-risk AI results.'
-                      )}
-                    </p>
-                  </div>
-                  <Link
-                    to="/ophthalmologist/consultations"
-                    className="text-sm font-semibold text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
-                  >
+              {/* Top bar: Greeting + Mini Stats */}
+              <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                    {greeting}, {displayName}
+                  </h1>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {t(
-                      'Ophthalmologist.dashboard.priorityList.viewAll',
-                      'View all consultations'
+                      'Ophthalmologist.dashboard.subtitle',
+                      'Your workspace — review queue and patient cases'
                     )}
-                  </Link>
+                  </p>
                 </div>
+                <div className="shrink-0">
+                  {metricsFirstLoad ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="h-20 animate-pulse rounded-2xl border border-gray-100 bg-white p-5 dark:border-[#1e3a5f] dark:bg-[#0a1f44]" />
+                      <div className="h-20 animate-pulse rounded-2xl border border-gray-100 bg-white p-5 dark:border-[#1e3a5f] dark:bg-[#0a1f44]" />
+                    </div>
+                  ) : (
+                    <StatsCardGrid stats={metrics} />
+                  )}
+                </div>
+              </div>
 
-                {sortedUrgentCases.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-gray-200 p-5 text-sm text-gray-500 dark:border-[#2d4a6f] dark:text-gray-400">
-                    {t(
-                      'Ophthalmologist.dashboard.priorityList.empty',
-                      'No pending high-risk or critical consultation at the moment.'
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {sortedUrgentCases.map((item) => (
-                      <div
-                        key={item.consultationSessionId}
-                        className="rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-[#2d4a6f] dark:bg-[#0a1929]"
-                      >
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                          <div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {t(
-                                'Ophthalmologist.dashboard.priorityList.patient',
-                                'Patient'
-                              )}
-                            </p>
-                            <p className="text-base font-semibold text-gray-900 dark:text-white">
-                              {item.patientName}
-                            </p>
-                          </div>
-
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${riskToneClass(item.riskLevel)}`}
-                          >
-                            {item.riskLevel}
-                          </span>
-                        </div>
-
-                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3 text-sm">
-                          <div>
-                            <p className="text-gray-500 dark:text-gray-400">
-                              {t(
-                                'Ophthalmologist.dashboard.priorityList.confidence',
-                                'AI confidence'
-                              )}
-                            </p>
-                            <p className="font-semibold text-gray-900 dark:text-white">
-                              {item.confidenceScore.toFixed(1)}%
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500 dark:text-gray-400">
-                              {t(
-                                'Ophthalmologist.dashboard.priorityList.schedule',
-                                'Schedule'
-                              )}
-                            </p>
-                            <p className="font-semibold text-gray-900 dark:text-white">
-                              {formatScheduleLabel(item.appointmentTime)}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500 dark:text-gray-400">
-                              {t(
-                                'Ophthalmologist.dashboard.priorityList.sessionId',
-                                'Session'
-                              )}
-                            </p>
-                            <p className="font-semibold text-gray-900 dark:text-white">
-                              {item.consultationSessionId
-                                .slice(0, 8)
-                                .toUpperCase()}
-                            </p>
-                          </div>
-                        </div>
+              {/* Main workspace: Queue (left) + Preview Panel (right) */}
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
+                {/* LEFT: Review Queue */}
+                <section className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-[#1e3a5f] dark:bg-[#0a1f44]">
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 dark:bg-cyan-900/30">
+                        <ClipboardList className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
                       </div>
-                    ))}
+                      <div>
+                        <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+                          {t(
+                            'Ophthalmologist.dashboard.reviewQueue.title',
+                            'Review Queue'
+                          )}
+                        </h2>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">
+                          {t(
+                            'Ophthalmologist.dashboard.reviewQueue.description',
+                            'Cases sorted by risk level and waiting time'
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {queueRefetching && (
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                          {t(
+                            'Ophthalmologist.dashboard.queue.updating',
+                            'Updating...'
+                          )}
+                        </span>
+                      )}
+                      <Link
+                        to="/ophthalmologist/screenings"
+                        className="text-xs font-semibold text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
+                      >
+                        {t(
+                          'Ophthalmologist.dashboard.reviewQueue.viewAll',
+                          'View all screenings'
+                        )}
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void queueQuery.refetch();
+                        }}
+                        disabled={queueQuery.isFetching}
+                        className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-[#1a2f4f] dark:hover:text-gray-300 disabled:opacity-50"
+                      >
+                        <RefreshCw
+                          className={`h-4 w-4 ${queueQuery.isFetching ? 'animate-spin' : ''}`}
+                        />
+                      </button>
+                    </div>
                   </div>
-                )}
-              </section>
+
+                  {/* Quick Filters */}
+                  <div className="mb-4">
+                    <QueueFilters
+                      active={activeFilter}
+                      onChange={setActiveFilter}
+                      counts={filterCounts}
+                    />
+                  </div>
+
+                  {/* Queue List */}
+                  {queueFirstLoad ? (
+                    <div className="flex items-center justify-center py-10">
+                      <Spinner size={28} />
+                    </div>
+                  ) : (
+                    <ReviewQueue
+                      items={filteredItems}
+                      selectedId={selectedItem?.consultationSessionId ?? null}
+                      onSelect={handleSelect}
+                    />
+                  )}
+                </section>
+
+                {/* RIGHT: Patient Preview Panel */}
+                <aside className="hidden lg:block">
+                  <div className="sticky top-6">
+                    <PatientPreviewPanel item={selectedItem} />
+                  </div>
+                </aside>
+              </div>
+
+              {/* Mobile: show preview below queue when selected */}
+              <div className="mt-4 lg:hidden">
+                {selectedItem && <PatientPreviewPanel item={selectedItem} />}
+              </div>
             </>
           )}
         </main>

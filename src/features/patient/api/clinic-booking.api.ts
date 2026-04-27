@@ -11,6 +11,7 @@ import type {
   CreateClinicAppointmentRequest,
   CreateClinicAppointmentResult,
   OrganisationAvailableSlotDto,
+  OrganisationScheduleDto,
   OrganisationSummaryDto,
   PatientClinicAppointmentsQuery,
 } from '../types/clinic-booking.types';
@@ -58,12 +59,11 @@ export const getOrganisations = async (): Promise<OrganisationSummaryDto[]> => {
 };
 
 export const getOrganisationAvailableSlots = async (
-  organisationId: string,
   date?: string
 ): Promise<OrganisationAvailableSlotDto[]> => {
   const response = await api.get<
     PatientApiResponse<OrganisationAvailableSlotDto[]>
-  >(API_ENDPOINTS.CLINIC_BOOKING.AVAILABLE_SLOTS(organisationId), {
+  >(API_ENDPOINTS.CLINIC_BOOKING.AVAILABLE_SLOTS(), {
     params: {
       date,
     },
@@ -122,11 +122,10 @@ export const getPatientClinicAppointments = async (
 };
 
 export const getOrganisationAppointments = async (
-  organisationId: string,
   date?: string
 ): Promise<ClinicAppointmentDto[]> => {
   const response = await api.get<PatientApiResponse<ClinicAppointmentDto[]>>(
-    API_ENDPOINTS.CLINIC_BOOKING.ORGANISATION_APPOINTMENTS(organisationId),
+    API_ENDPOINTS.CLINIC_BOOKING.ORGANISATION_APPOINTMENTS(),
     {
       params: {
         date,
@@ -163,4 +162,20 @@ export const markNoShowClinicAppointment = async (
   appointmentId: string
 ): Promise<void> => {
   await api.put(API_ENDPOINTS.CLINIC_APPOINTMENTS.NO_SHOW(appointmentId));
+};
+
+export const getOrganisationSchedule = async (params?: {
+  fromDate?: string;
+  toDate?: string;
+}): Promise<OrganisationScheduleDto> => {
+  const response = await api.get<PatientApiResponse<OrganisationScheduleDto>>(
+    API_ENDPOINTS.CLINIC_BOOKING.ORGANISATION_SCHEDULE(),
+    { params }
+  );
+
+  if (!response.data.data) {
+    throw new Error('Organisation schedule not found.');
+  }
+
+  return response.data.data;
 };

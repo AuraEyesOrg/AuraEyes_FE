@@ -3,7 +3,7 @@ import { API_ENDPOINTS } from '@/lib/endpoints';
 import type { ApiResponse } from '@/types/api-response';
 import { unwrapApiData } from '@/types/api-response';
 
-export interface OrganisationRecentPatientDto {
+export interface ClinicRecentPatientDto {
   id: string;
   name: string;
   age: number;
@@ -23,7 +23,7 @@ export interface OrganisationRecentPatientDto {
   priority: 'low' | 'medium' | 'high';
 }
 
-export interface UpdateOrganisationPatientRequest {
+export interface UpdateClinicPatientRequest {
   // Walk-in only (ignored by backend for registered)
   fullName?: string;
   dateOfBirth?: string;
@@ -36,19 +36,19 @@ export interface UpdateOrganisationPatientRequest {
   diseaseHistory?: string;
 }
 
-export const getOrganisationRecentPatients = async (): Promise<
-  OrganisationRecentPatientDto[]
+export const getClinicRecentPatients = async (): Promise<
+  ClinicRecentPatientDto[]
 > => {
-  const response = await api.get<ApiResponse<OrganisationRecentPatientDto[]>>(
+  const response = await api.get<ApiResponse<ClinicRecentPatientDto[]>>(
     API_ENDPOINTS.ORGANISATION.PATIENTS
   );
 
-  return unwrapApiData<OrganisationRecentPatientDto[]>(response.data);
+  return unwrapApiData<ClinicRecentPatientDto[]>(response.data);
 };
 
-export const updateOrganisationPatient = async (
+export const updateClinicPatient = async (
   patientId: string,
-  request: UpdateOrganisationPatientRequest
+  request: UpdateClinicPatientRequest
 ): Promise<string> => {
   const response = await api.put<ApiResponse<string>>(
     `${API_ENDPOINTS.ORGANISATION.PATIENTS}/${patientId}`,
@@ -57,3 +57,9 @@ export const updateOrganisationPatient = async (
 
   return unwrapApiData<string>(response.data);
 };
+
+// Backward-compatible aliases during migration from organisation wording.
+export type OrganisationRecentPatientDto = ClinicRecentPatientDto;
+export type UpdateOrganisationPatientRequest = UpdateClinicPatientRequest;
+export const getOrganisationRecentPatients = getClinicRecentPatients;
+export const updateOrganisationPatient = updateClinicPatient;

@@ -105,6 +105,7 @@ interface RawConsultationSessionListDto {
   id: string;
   patientId: string;
   ophthalmologistId: string | null;
+  aiScreeningId?: string | null;
   patientName?: string | null;
   patientAvatarUrl?: string | null;
   ophthalmologistName?: string | null;
@@ -121,6 +122,11 @@ interface RawConsultationSessionListDto {
   meetingLink?: string | null;
   lastActivityAt: string;
   createdAt: string;
+  closedAt: string | null;
+  isRetinalImagesShared?: boolean;
+  isAIResultShared?: boolean;
+  caseSnapshot?: RawConsultationCaseSnapshotDto | null;
+  latestMessagePreview?: string | null;
 }
 
 const consultationTypeMap: Record<string, ConsultationSessionType> = {
@@ -266,6 +272,7 @@ const mapConsultationSessionListItem = (
     id: session.id,
     patientId: session.patientId,
     ophthalmologistId: session.ophthalmologistId,
+    aiScreeningId: session.aiScreeningId ?? null,
     patientName: session.patientName ?? null,
     patientAvatarUrl: session.patientAvatarUrl ?? null,
     ophthalmologistName: session.ophthalmologistName ?? null,
@@ -282,6 +289,11 @@ const mapConsultationSessionListItem = (
     meetingLink: session.meetingLink ?? null,
     lastActivityAt: session.lastActivityAt,
     createdAt: session.createdAt,
+    closedAt: session.closedAt ?? null,
+    isRetinalImagesShared: Boolean(session.isRetinalImagesShared),
+    isAIResultShared: Boolean(session.isAIResultShared),
+    caseSnapshot: mapCaseSnapshot(session.caseSnapshot),
+    latestMessagePreview: session.latestMessagePreview ?? null,
   };
 };
 
