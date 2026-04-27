@@ -17,7 +17,6 @@ import {
   Loader2,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { registerOrganisation } from '../api/auth.api';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import {
   DEFAULT_LOCALE,
@@ -81,17 +80,9 @@ export default function RegisterOrganisationPage() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      await registerOrganisation({
-        organisationName: data.organisationName.trim(),
-        orgType: Number(data.orgType),
-        contactFullName: data.contactFullName.trim(),
-        contactEmail: data.contactEmail.trim(),
-        contactPhone: data.contactPhone.trim() || undefined,
-        address: data.address.trim() || undefined,
-        licenseNumber: data.licenseNumber.trim() || undefined,
-        taxCode: data.taxCode.trim() || undefined,
-        notes: data.notes.trim() || undefined,
-      });
+      // Registration is now handled by System Admin directly in single-clinic model
+      console.log('Organisation registration request:', data);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       setSubmittedEmail(data.contactEmail.trim());
       setIsSubmitted(true);
       setRedirectCountdown(5);

@@ -16,12 +16,11 @@ import type {
 
 export const feedbackKeys = {
   all: ['feedback'] as const,
-  clinicRating: (clinicId: string) =>
-    [...feedbackKeys.all, 'clinic-rating', clinicId] as const,
+  clinicRating: () => [...feedbackKeys.all, 'clinic-rating'] as const,
   ophthalmologistRating: (ophthalmologistId: string) =>
     [...feedbackKeys.all, 'ophthalmologist-rating', ophthalmologistId] as const,
-  clinicItems: (clinicId: string, page = 1, size = 10) =>
-    [...feedbackKeys.all, 'clinic-items', clinicId, page, size] as const,
+  clinicItems: (page = 1, size = 10) =>
+    [...feedbackKeys.all, 'clinic-items', page, size] as const,
   ophthalmologistItems: (ophthalmologistId: string, page = 1, size = 10) =>
     [
       ...feedbackKeys.all,
@@ -49,17 +48,12 @@ export const useCreateClinicFeedback = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      clinicId,
-      request,
-    }: {
-      clinicId: string;
-      request: CreateClinicFeedbackRequest;
-    }) => createClinicFeedback(clinicId, request),
-    onSuccess: (_data, variables) => {
+    mutationFn: (request: CreateClinicFeedbackRequest) =>
+      createClinicFeedback(request),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: feedbackKeys.all });
       queryClient.invalidateQueries({
-        queryKey: feedbackKeys.clinicRating(variables.clinicId),
+        queryKey: feedbackKeys.clinicRating(),
       });
       queryClient.invalidateQueries({ queryKey: ['clinic-booking'] });
     },
@@ -89,11 +83,11 @@ export const useCreateOphthalmologistFeedback = () => {
   });
 };
 
-export const useClinicRatingSummary = (clinicId: string, enabled = true) =>
+export const useClinicRatingSummary = (enabled = true) =>
   useQuery({
-    queryKey: feedbackKeys.clinicRating(clinicId),
-    queryFn: () => getClinicRatingSummary(clinicId),
-    enabled: enabled && !!clinicId,
+    queryKey: feedbackKeys.clinicRating(),
+    queryFn: () => getClinicRatingSummary(),
+    enabled: enabled,
     staleTime: 30_000,
   });
 
@@ -108,16 +102,11 @@ export const useOphthalmologistRatingSummary = (
     staleTime: 30_000,
   });
 
-export const useClinicFeedbackItems = (
-  clinicId: string,
-  page = 1,
-  size = 10,
-  enabled = true
-) =>
+export const useClinicFeedbackItems = (page = 1, size = 10, enabled = true) =>
   useQuery({
-    queryKey: feedbackKeys.clinicItems(clinicId, page, size),
-    queryFn: () => listClinicFeedback(clinicId, page, size),
-    enabled: enabled && !!clinicId,
+    queryKey: feedbackKeys.clinicItems(page, size),
+    queryFn: () => listClinicFeedback(page, size),
+    enabled: enabled,
     staleTime: 30_000,
   });
 

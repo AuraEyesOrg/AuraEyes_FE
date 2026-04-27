@@ -24,11 +24,10 @@ export const createWebsiteFeedback = async (
 };
 
 export const createClinicFeedback = async (
-  clinicId: string,
   request: CreateClinicFeedbackRequest
 ): Promise<string> => {
   const response = await api.post<string | ApiResponse<string>>(
-    API_ENDPOINTS.FEEDBACK.CLINIC(clinicId),
+    API_ENDPOINTS.FEEDBACK.CLINIC,
     request
   );
 
@@ -47,15 +46,14 @@ export const createOphthalmologistFeedback = async (
   return unwrapApiData<string>(response.data);
 };
 
-export const getClinicRatingSummary = async (
-  clinicId: string
-): Promise<FeedbackRatingSummary> => {
-  const response = await api.get<
-    FeedbackRatingSummary | ApiResponse<FeedbackRatingSummary>
-  >(API_ENDPOINTS.FEEDBACK.CLINIC_RATING(clinicId));
+export const getClinicRatingSummary =
+  async (): Promise<FeedbackRatingSummary> => {
+    const response = await api.get<
+      FeedbackRatingSummary | ApiResponse<FeedbackRatingSummary>
+    >(API_ENDPOINTS.FEEDBACK.CLINIC_RATING);
 
-  return unwrapApiData<FeedbackRatingSummary>(response.data);
-};
+    return unwrapApiData<FeedbackRatingSummary>(response.data);
+  };
 
 export const getOphthalmologistRatingSummary = async (
   ophthalmologistId: string
@@ -68,7 +66,6 @@ export const getOphthalmologistRatingSummary = async (
 };
 
 export const listClinicFeedback = async (
-  clinicId: string,
   pageNumber = 1,
   pageSize = 10
 ): Promise<PagedResult<ClinicFeedbackItem>> => {
@@ -76,7 +73,7 @@ export const listClinicFeedback = async (
     | PagedResult<ClinicFeedbackItem>
     | ApiResponse<PagedResult<ClinicFeedbackItem>>
   >(
-    `${API_ENDPOINTS.FEEDBACK.CLINIC_ITEMS(clinicId)}?pageNumber=${pageNumber}&pageSize=${pageSize}`
+    `${API_ENDPOINTS.FEEDBACK.CLINIC_ITEMS}?pageNumber=${pageNumber}&pageSize=${pageSize}`
   );
 
   return unwrapApiData<PagedResult<ClinicFeedbackItem>>(response.data);

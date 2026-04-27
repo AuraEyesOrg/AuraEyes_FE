@@ -204,7 +204,6 @@ export const API_ENDPOINTS = {
     SYSTEM_SETTINGS: '/system-settings',
     PATIENT_SEARCH: {
       OPHTHALMOLOGISTS: '/patient/search/ophthalmologists',
-      ORGANISATIONS: '/patient/search/organisations',
       AVAILABLE_SLOTS: '/patient/search/available-slots',
     },
     RESOURCES: {
@@ -284,16 +283,13 @@ export const API_ENDPOINTS = {
     UNBLOCK: (slotId: string) => `/appointment-slots/${slotId}/unblock`,
   },
 
-  // Clinic booking flow (organisation visits)
+  // Clinic booking flow (flattened to single clinic)
   CLINIC_BOOKING: {
-    AVAILABLE_SLOTS: (orgId: string) =>
-      `/organisations/${orgId}/available-slots`,
-    ORGANISATION_APPOINTMENTS: (orgId: string) =>
-      `/organisations/${orgId}/appointments`,
+    AVAILABLE_SLOTS: () => '/appointment-slots/available',
+    ORGANISATION_APPOINTMENTS: () => '/clinic-appointments',
     PATIENT_CLINIC_APPOINTMENTS: (patientId: string) =>
       `/patients/${patientId}/clinic-appointments`,
-    ORGANISATION_SCHEDULE: (orgId: string) =>
-      `/patient/search/organisations/${orgId}/schedule`,
+    ORGANISATION_SCHEDULE: () => '/clinic-schedule',
   },
 
   CLINIC_APPOINTMENTS: {
@@ -339,13 +335,13 @@ export const API_ENDPOINTS = {
 
   FEEDBACK: {
     WEBSITE: '/feedback/website',
-    CLINIC: (clinicId: string) => `/feedback/clinics/${clinicId}`,
+    CLINIC: '/feedback/clinics',
     OPHTHALMOLOGIST: (ophthalmologistId: string) =>
       `/feedback/ophthalmologists/${ophthalmologistId}`,
-    CLINIC_ITEMS: (clinicId: string) => `/feedback/clinics/${clinicId}/items`,
+    CLINIC_ITEMS: '/feedback/clinics/items',
     OPHTHALMOLOGIST_ITEMS: (ophthalmologistId: string) =>
       `/feedback/ophthalmologists/${ophthalmologistId}/items`,
-    CLINIC_RATING: (clinicId: string) => `/feedback/clinics/${clinicId}/rating`,
+    CLINIC_RATING: '/feedback/clinics/rating',
     OPHTHALMOLOGIST_RATING: (ophthalmologistId: string) =>
       `/feedback/ophthalmologists/${ophthalmologistId}/rating`,
   },
@@ -361,35 +357,33 @@ export const API_ENDPOINTS = {
     DELETE: (templateId: string) => `/schedule-templates/${templateId}`,
   },
 
-  // Organisation features (from existing setup)
+  // Clinic features (formerly Organisation)
   ORGANISATION: {
-    DASHBOARD: '/organisation/dashboard',
-    CONTRACT: {
-      MY_CONTRACT: '/organisations/my-contract',
-      UPLOAD: '/organisations/my-contract/upload',
-    },
-    DASHBOARD_METRICS: '/organisations/dashboard-metrics',
-    PATIENTS: '/organisations/patients',
-    CALENDAR: '/organisation/calendar',
-    ANALYTICS: '/organisation/analytics',
-    SETTINGS: '/organisations/settings',
+    DASHBOARD: '/clinic/dashboard',
+    DASHBOARD_METRICS: '/clinic/dashboard-metrics',
+    PATIENTS: '/clinic/patients',
+    CALENDAR: '/clinic/appointments',
+    ANALYTICS: '/clinic/analytics',
+    SETTINGS: '/clinic/settings',
     // Organisation Screening
     SCREENING: {
-      CREATE_SESSION: '/organisations/screenings/create-session',
-      DETAIL: (screeningId: string) =>
-        `/organisations/screenings/${screeningId}`,
+      CREATE_SESSION: '/clinic-screenings/create-session',
+      DETAIL: (screeningId: string) => `/clinic-screenings/${screeningId}`,
       EXPORT_PDF: (screeningId: string) =>
-        `/organisations/screenings/${screeningId}/report-pdf`,
-      SHARE: (screeningId: string) =>
-        `/organisations/screenings/${screeningId}/share`,
-      HISTORY: '/organisations/screenings/history',
+        `/clinic-screenings/${screeningId}/report-pdf`,
+      SHARE: (screeningId: string) => `/clinic-screenings/${screeningId}/share`,
+      HISTORY: '/clinic-screenings/history',
     },
-    BILLING_SUMMARY: '/organisations/billing/summary',
-    SCREENING_REPORTS: '/organisations/screening-reports',
+    BILLING_SUMMARY: '/clinic/billing/summary',
+    SCREENING_REPORTS: '/clinic-screenings/history',
     WALLET: {
-      GET: '/wallets',
-      TRANSACTIONS: '/wallets/transactions',
-      CREATE_DEPOSIT: '/wallets/deposit',
+      GET: '/organisation/wallet',
+      TRANSACTIONS: '/organisation/wallet/transactions',
+      CREATE_DEPOSIT: '/organisation/wallet/deposit',
+    },
+    CONTRACT: {
+      MY_CONTRACT: '/ophthalmologists/my-contract',
+      UPLOAD: '/ophthalmologists/my-contract/upload',
     },
   },
 
