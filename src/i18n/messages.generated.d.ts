@@ -4182,6 +4182,87 @@ declare module 'i18next' {
       };
       organisation: {
         title: string;
+        common: {
+          gender: {
+            male: string;
+            female: string;
+          };
+          yearsAbbr: string;
+          idLabel: string;
+          notAvailable: string;
+        };
+        screening: {
+          title: string;
+          navigation: {
+            cancelAndReturn: string;
+            proceedToReview: string;
+            transferringFiles: string;
+            executingAiModel: string;
+            startAiAnalysis: string;
+          };
+          upload: {
+            title: string;
+            subtitle: string;
+            dropzone: {
+              title: string;
+              supportedFormats: string;
+            };
+            analyzingQuality: string;
+          };
+          quality: {
+            notFundus: string;
+            croppedEdges: string;
+            blurry: string;
+            tooDark: string;
+            overexposed: string;
+            optimal: string;
+            acceptable: string;
+            poor: string;
+            validationServiceError: string;
+          };
+          launch: {
+            title: string;
+            readyDescription: string;
+            clinicalAdvisory: {
+              title: string;
+              description: string;
+            };
+            includedScans: string;
+          };
+          quotaBanner: {
+            title: string;
+            description: string;
+          };
+          quotaModal: {
+            title: string;
+            quantityLabel: string;
+            unitPriceLabel: string;
+            totalPaymentLabel: string;
+            walletBalanceLabel: string;
+            walletSufficient: string;
+            walletInsufficient: string;
+            suggestedTopUp: string;
+          };
+          actions: {
+            buyMoreQuota: string;
+            buyQuota: string;
+            topUpWallet: string;
+          };
+          toast: {
+            buyQuotaSuccess: string;
+            walletInsufficient: string;
+            buyQuotaFailed: string;
+            paymentLinkUnavailable: string;
+            createTopUpFailed: string;
+            noPatientSelected: string;
+            quotaExhausted: string;
+            quotaUnitPriceUnavailable: string;
+            invalidTopUpAmount: string;
+          };
+          wallet: {
+            topUpDescription: string;
+          };
+        };
         types: {
           hospital: string;
           clinic: string;
@@ -4577,62 +4658,83 @@ declare module 'i18next' {
       };
     };
     ClinicStaff: {
-      queue: {
-        toast: {
-          sentToDoctorSuccess: string;
-          sentToDoctorFailed: string;
-          screeningRequired: string;
-          loadDoctorsFailed: string;
-          copyDoctorConsultationLinkSuccess: string;
-          copyDoctorConsultationLinkFailed: string;
+      screeningNew: {
+        title: string;
+        subtitle: string;
+        steps: {
+          upload: string;
+          launch: string;
         };
-        error: {
+        quality: {
           title: string;
-          message: string;
+          lighting: string;
+          lightingDesc: string;
+          focus: string;
+          focusDesc: string;
+          centered: string;
+          centeredDesc: string;
+          supportedFormats: string;
+          supportedFormatsList: string;
+        };
+        launch: {
+          title: string;
+          readyCount: string;
+          advisory: {
+            title: string;
+            description: string;
+          };
+          scansIncluded: string;
+          scansWarning: string;
         };
         actions: {
-          retry: string;
-          refresh: string;
-          fillErm: string;
-          createScreening: string;
-          viewScreening: string;
-          sending: string;
-          sendToDoctor: string;
-          copyDoctorLink: string;
+          proceed: string;
+          launch: string;
+          cancel: string;
+          back: string;
+          uploading: string;
+          analyzing: string;
         };
-        page: {
-          title: string;
-          subtitle: string;
+        toast: {
+          noPatient: string;
         };
-        tabs: {
-          all: string;
+      };
+      queue: {
+        doctor: {
+          yearsExp: string;
+          notAssigned: string;
         };
-        empty: {
-          title: string;
-          message: string;
-        };
-        table: {
-          patient: string;
-          checkedIn: string;
-          status: string;
-          screening: string;
-          doctor: string;
-          action: string;
+        screening: {
+          completed: string;
+          pending: string;
         };
         states: {
-          awaitingDoctor: string;
-          inConsultation: string;
-          completed: string;
+          checkedIn: string;
+          screeningPending: string;
+          aiCompleted: string;
+          sentToDoctor: string;
+          consultationInProgress: string;
+          finalized: string;
         };
-        sendDoctorModal: {
-          title: string;
-          doctorLabel: string;
-          loadingDoctors: string;
-          selectDoctor: string;
-          noDoctors: string;
+      };
+      patients: {
+        summary: {
+          countFound: string;
+          patients: string;
+          patient: string;
+        };
+        risk: {
+          low: string;
+          medium: string;
+          high: string;
         };
       };
       common: {
+        gender: {
+          male: string;
+          female: string;
+        };
+        yearsAbbr: string;
+        idLabel: string;
         close: string;
       };
     };
