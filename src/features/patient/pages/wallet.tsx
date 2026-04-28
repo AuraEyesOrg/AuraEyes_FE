@@ -1,9 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   AlertCircle,
-  Calendar,
   CheckCircle,
-  Clock3,
   ChevronLeft,
   ChevronRight,
   CreditCard,
@@ -170,149 +168,118 @@ export default function WalletPage() {
 
   return (
     <PatientLayout>
-      <div className="max-w-[1200px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        {/* ── Header ─────────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 px-8 py-12 md:px-12">
-          <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-brand/20 blur-[100px]" />
-          <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-blue-500/10 blur-[80px]" />
+      <div className="max-w-[1200px] mx-auto flex flex-col gap-8">
+        {/* Header Section */}
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              {t('PatientWallet.page.paymentOrdersTitle', {
+                defaultValue: 'Lịch sử giao dịch',
+              })}
+            </h1>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+              {t('PatientWallet.page.paymentOrdersSubtitle', {
+                defaultValue: 'Quản lý hồ sơ tài chính và giao dịch của bạn',
+              })}
+            </p>
+          </div>
 
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="h-1 w-8 rounded-full bg-brand" />
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand">
-                  Financial Hub
-                </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSyncAll}
+              disabled={
+                isSyncingAll ||
+                !orders.some(
+                  (o) => o.status === 'Pending' || o.status === 'Processing'
+                )
+              }
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white transition-all hover:bg-brand/90 active:scale-95 disabled:opacity-40"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${isSyncingAll ? 'animate-spin' : ''}`}
+                strokeWidth={2}
+              />
+              {isSyncingAll
+                ? t('PatientWallet.actions.syncing', {
+                    defaultValue: 'Đang cập nhật...',
+                  })
+                : t('PatientWallet.actions.syncAll', {
+                    defaultValue: 'Cập nhật trạng thái',
+                  })}
+            </button>
+          </div>
+        </header>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Total Paid */}
+          <div className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 transition-all hover:shadow-lg hover:-translate-y-1">
+            <div className="relative z-10 flex items-center justify-between mb-4">
+              <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20">
+                <CreditCard className="w-5 h-5 text-red-500" strokeWidth={2} />
               </div>
-              <h1 className="text-4xl font-black tracking-tight text-white md:text-5xl">
-                {t('PatientWallet.page.paymentOrdersTitle', {
-                  defaultValue: 'Transaction history',
-                })}
-              </h1>
-              <p className="max-w-[45ch] text-lg font-medium text-slate-400">
-                {t('PatientWallet.page.paymentOrdersSubtitle', {
-                  defaultValue:
-                    'Manage your medical appointments and financial records securely.',
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                Chi tiêu
+              </span>
+            </div>
+            <div className="relative z-10">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">
+                {t('PatientWallet.stats.totalPaid', {
+                  defaultValue: 'Tổng chi tiêu',
                 })}
               </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <button
-                onClick={handleSyncAll}
-                disabled={
-                  isSyncingAll ||
-                  !orders.some(
-                    (o) => o.status === 'Pending' || o.status === 'Processing'
-                  )
-                }
-                className="flex items-center gap-3 bg-white/10 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all border border-white/10 px-6 py-4 rounded-2xl group"
-              >
-                <div
-                  className={`w-10 h-10 rounded-xl bg-brand/20 flex items-center justify-center text-brand ${isSyncingAll ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`}
-                >
-                  <RefreshCw className="w-5 h-5" />
-                </div>
-                <div className="text-left">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">
-                    Update Status
-                  </p>
-                  <p className="text-sm font-black text-white leading-none mt-1">
-                    Sync All
-                  </p>
-                </div>
-              </button>
-
-              <div className="flex items-center gap-4 bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl">
-                <div className="w-14 h-14 rounded-2xl bg-brand/20 flex items-center justify-center text-brand">
-                  <History className="w-7 h-7" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-tight">
-                    Lifetime records
-                  </p>
-                  <p className="text-3xl font-black text-white leading-none mt-1">
-                    {summary.orderCount}
-                  </p>
-                </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-black tracking-tight text-red-500">
+                  {formatCurrency(summary.totalPaid, { absolute: true })}
+                </span>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Stats ──────────────────────────────────────────────────────── */}
-        <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {/* Total Paid */}
-          <div className="group relative overflow-hidden rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 transition-all hover:shadow-2xl hover:shadow-red-500/5 hover:-translate-y-1">
-            <div className="relative z-10 flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-tight">
-                  {t('PatientWallet.stats.totalPaid', {
-                    defaultValue: 'Total amount spent',
-                  })}
-                </p>
-                <div className="flex items-baseline gap-2 pt-1">
-                  <span className="text-4xl font-black text-slate-900 dark:text-white">
-                    {formatCurrency(summary.totalPaid, { absolute: true })}
-                  </span>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    VND
-                  </span>
-                </div>
-              </div>
-              <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20 group-hover:scale-110 transition-transform duration-500">
-                <CreditCard className="w-8 h-8" />
-              </div>
-            </div>
-            <div className="absolute bottom-0 left-0 h-1 w-full bg-red-500/10">
-              <div className="h-full w-2/3 bg-red-500 rounded-r-full" />
             </div>
           </div>
 
           {/* Total Refund */}
-          <div className="group relative overflow-hidden rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 transition-all hover:shadow-2xl hover:shadow-emerald-500/5 hover:-translate-y-1">
-            <div className="relative z-10 flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-tight">
-                  {t('PatientWallet.stats.totalRefund', {
-                    defaultValue: 'Total refunded',
-                  })}
-                </p>
-                <div className="flex items-baseline gap-2 pt-1">
-                  <span className="text-4xl font-black text-slate-900 dark:text-white">
-                    {formatCurrency(summary.totalRefund, { absolute: true })}
-                  </span>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    VND
-                  </span>
-                </div>
+          <div className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 transition-all hover:shadow-lg hover:-translate-y-1">
+            <div className="relative z-10 flex items-center justify-between mb-4">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                <RefreshCw
+                  className="w-5 h-5 text-emerald-500"
+                  strokeWidth={2}
+                />
               </div>
-              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover:scale-110 transition-transform duration-500">
-                <RefreshCw className="w-8 h-8" />
-              </div>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                Hoàn tiền
+              </span>
             </div>
-            <div className="absolute bottom-0 left-0 h-1 w-full bg-emerald-500/10">
-              <div className="h-full w-1/3 bg-emerald-500 rounded-r-full" />
+            <div className="relative z-10">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">
+                {t('PatientWallet.stats.totalRefund', {
+                  defaultValue: 'Tổng hoàn tiền',
+                })}
+              </p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-black tracking-tight text-emerald-500">
+                  {formatCurrency(summary.totalRefund, { absolute: true })}
+                </span>
+              </div>
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* ── Order List ─────────────────────────────────────────────────── */}
-        <section className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-brand/10 flex items-center justify-center text-brand">
-                <CreditCard className="w-6 h-6" />
+        {/* Order List Section */}
+        <section className="rounded-[2rem] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+          <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-brand">
+                <CreditCard className="w-5 h-5" strokeWidth={1.5} />
               </div>
-              <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+              <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
                 {t('PatientWallet.transactions.paymentOrderTitle', {
-                  defaultValue: 'Orders & Payments',
+                  defaultValue: 'Giao dịch & Đơn hàng',
                 })}
               </h2>
             </div>
 
             {/* Filter tabs */}
-            <div className="inline-flex p-1.5 bg-slate-100 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+            <div className="inline-flex p-1.5 bg-slate-100 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-x-auto">
               {(
                 ['all', 'completed', 'pending', 'cancelled'] as FilterType[]
               ).map((option) => {
@@ -326,22 +293,26 @@ export default function WalletPage() {
                       setPage(1);
                     }}
                     className={[
-                      'relative px-5 py-2 rounded-xl text-xs font-bold transition-all duration-300',
+                      'relative px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 whitespace-nowrap',
                       active
                         ? 'bg-white dark:bg-slate-700 text-brand shadow-sm'
                         : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300',
                     ].join(' ')}
                   >
                     {option === 'all'
-                      ? t('PatientWallet.filters.all', { defaultValue: 'All' })
+                      ? t('PatientWallet.filters.all', {
+                          defaultValue: 'Tất cả',
+                        })
                       : option === 'completed'
                         ? t('PatientWallet.filters.payment', {
-                            defaultValue: 'Completed',
+                            defaultValue: 'Đã thanh toán',
                           })
                         : option === 'pending'
-                          ? 'Pending'
+                          ? t('PatientWallet.filters.pending', {
+                              defaultValue: 'Chờ thanh toán',
+                            })
                           : t('PatientWallet.filters.refund', {
-                              defaultValue: 'Cancelled',
+                              defaultValue: 'Hủy/Hoàn tiền',
                             })}
                   </button>
                 );
@@ -349,266 +320,237 @@ export default function WalletPage() {
             </div>
           </div>
 
-          {/* Skeleton */}
-          {isLoading && (
-            <div className="space-y-4">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div
-                  key={`order-skeleton-${index}`}
-                  className="rounded-3xl border border-slate-100 dark:border-slate-800 p-6 animate-pulse bg-slate-50/50 dark:bg-slate-800/50"
-                >
-                  <div className="flex items-center gap-6">
-                    <div className="h-14 w-14 rounded-2xl bg-slate-200 dark:bg-slate-700" />
-                    <div className="flex-1 space-y-3">
-                      <div className="h-4 w-1/3 rounded bg-slate-200 dark:bg-slate-700" />
-                      <div className="h-3 w-1/4 rounded bg-slate-200 dark:bg-slate-700" />
+          <div className="p-6">
+            {/* Skeleton */}
+            {isLoading && (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div
+                    key={`order-skeleton-${index}`}
+                    className="rounded-xl border border-slate-100 dark:border-slate-800 p-4 animate-pulse bg-slate-50/50 dark:bg-slate-800/50"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-lg bg-slate-200 dark:bg-slate-700" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-3 w-1/3 rounded bg-slate-200 dark:bg-slate-700" />
+                        <div className="h-2 w-1/4 rounded bg-slate-200 dark:bg-slate-700" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Error */}
-          {error && !isLoading && (
-            <div className="rounded-[2rem] border-2 border-dashed border-red-500/20 bg-red-500/5 p-12 text-center">
-              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                Connection Error
-              </h3>
-              <p className="text-slate-500 dark:text-slate-400 mb-6">
-                {t('PatientWallet.transactions.loadFailed')}
-              </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="rounded-2xl bg-red-500 px-8 py-3 text-sm font-bold text-white transition-all hover:scale-105 shadow-lg shadow-red-500/20"
-              >
-                {t('PatientWallet.error.retry', {
-                  defaultValue: 'Retry connection',
-                })}
-              </button>
-            </div>
-          )}
-
-          {/* Empty state */}
-          {!isLoading && !error && visibleOrders.length === 0 && (
-            <div className="text-center py-20 px-6">
-              <div className="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-6">
-                <History className="w-10 h-10 text-slate-300" />
+                ))}
               </div>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">
-                {activeFilter === 'all'
-                  ? t('PatientWallet.transactions.emptyPaymentOrdersTitle', {
-                      defaultValue: 'No transactions yet',
-                    })
-                  : t('PatientWallet.transactions.emptyByFilterTitle', {
-                      defaultValue: 'No records found',
-                    })}
-              </h3>
-              <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                {activeFilter === 'all'
-                  ? t(
-                      'PatientWallet.transactions.emptyPaymentOrdersDescription',
-                      {
+            )}
+
+            {/* Error */}
+            {error && !isLoading && (
+              <div className="rounded-xl border-2 border-dashed border-red-500/20 bg-red-500/5 p-8 text-center">
+                <AlertCircle
+                  className="w-10 h-10 text-red-500 mx-auto mb-3"
+                  strokeWidth={1.5}
+                />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2">
+                  {t('PatientWallet.transactions.loadFailed', {
+                    defaultValue: 'Không thể tải giao dịch',
+                  })}
+                </h3>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="mt-4 rounded-xl bg-red-500 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-red-600"
+                >
+                  {t('PatientWallet.error.retry', {
+                    defaultValue: 'Thử lại',
+                  })}
+                </button>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {!isLoading && !error && visibleOrders.length === 0 && (
+              <div className="text-center py-12">
+                <History
+                  className="w-12 h-12 text-slate-300 mx-auto mb-4"
+                  strokeWidth={1.5}
+                />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
+                  {activeFilter === 'all'
+                    ? t('PatientWallet.transactions.emptyPaymentOrdersTitle', {
+                        defaultValue: 'Chưa có giao dịch',
+                      })
+                    : t('PatientWallet.transactions.emptyByFilterTitle', {
+                        defaultValue: 'Không tìm thấy giao dịch',
+                      })}
+                </h3>
+                <p className="text-sm text-slate-500">
+                  {activeFilter === 'all'
+                    ? t(
+                        'PatientWallet.transactions.emptyPaymentOrdersDescription',
+                        {
+                          defaultValue:
+                            'Khi bạn đặt lịch, giao dịch sẽ hiển thị ở đây.',
+                        }
+                      )
+                    : t('PatientWallet.transactions.emptyByFilterDescription', {
                         defaultValue:
-                          'When you make a booking, your transaction history will appear here.',
-                      }
-                    )
-                  : t('PatientWallet.transactions.emptyByFilterDescription', {
-                      defaultValue:
-                        'Try adjusting your filters to see more results.',
-                    })}
-              </p>
-            </div>
-          )}
+                          'Hãy thử thay đổi bộ lọc để xem kết quả khác.',
+                      })}
+                </p>
+              </div>
+            )}
 
-          {/* Order list */}
-          {!isLoading && !error && visibleOrders.length > 0 && (
-            <>
-              <div className="grid grid-cols-1 gap-4">
-                {visibleOrders.map((order) => {
-                  const isCompleted =
-                    order.status === 'Completed' ||
-                    order.status === 'Confirmed' ||
-                    order.status === 'FullyPaid' ||
-                    order.status === 'PartiallyPaid';
-                  const isRefunded = order.status === 'Refunded';
-                  const isCancelled = order.status === 'Cancelled';
-                  const isPending =
-                    order.status === 'Pending' || order.status === 'Processing';
-                  const paymentUrl = getPaymentUrl(order.id);
-                  const firstPayment = order.payments?.[0];
+            {/* Order list */}
+            {!isLoading && !error && visibleOrders.length > 0 && (
+              <>
+                <div className="space-y-3">
+                  {visibleOrders.map((order) => {
+                    const isCompleted =
+                      order.status === 'Completed' ||
+                      order.status === 'Confirmed' ||
+                      order.status === 'FullyPaid' ||
+                      order.status === 'PartiallyPaid';
+                    const isRefunded = order.status === 'Refunded';
+                    const isCancelled = order.status === 'Cancelled';
+                    const isPending =
+                      order.status === 'Pending' ||
+                      order.status === 'Processing';
+                    const paymentUrl = getPaymentUrl(order.id);
 
-                  return (
-                    <article
-                      key={order.id}
-                      className="group rounded-3xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-6 transition-all hover:border-brand/40 hover:shadow-xl hover:shadow-brand/5"
-                    >
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="flex items-center gap-5 min-w-0 flex-1">
-                          {/* Icon Container */}
-                          <div className="shrink-0 transition-transform group-hover:scale-110">
+                    return (
+                      <article
+                        key={order.id}
+                        className="group rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-4 transition-all hover:border-brand/40 hover:shadow-md"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
                             {getOrderStatusIcon(order.status)}
+                            <div className="min-w-0 space-y-1">
+                              <p className="font-semibold text-slate-900 dark:text-white truncate text-sm">
+                                {cleanDescription(order.description) ||
+                                  t('PatientWallet.transactions.medicalAppt', {
+                                    defaultValue: 'Đặt lịch khám tại cơ sở',
+                                  })}
+                              </p>
+                              <p className="text-xs text-slate-600 dark:text-slate-400">
+                                {formatDateTimeWithYear(order.createdAt)} •{' '}
+                                {t('PatientWallet.transactions.ref', {
+                                  defaultValue: 'Mã',
+                                })}
+                                : {order.id.slice(0, 8)}
+                              </p>
+                            </div>
                           </div>
 
-                          {/* Info */}
-                          <div className="min-w-0 space-y-1">
-                            <h4 className="text-lg font-extrabold text-slate-900 dark:text-white truncate pr-4">
-                              {cleanDescription(order.description) ||
-                                'Medical Appointment Booking'}
-                            </h4>
-                            <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                              <span className="flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5" />
-                                {formatDateTimeWithYear(order.createdAt)}
-                              </span>
-                              <span className="flex items-center gap-1.5">
-                                <Clock3 className="w-3.5 h-3.5" />
-                                REF: {order.id.slice(0, 8)}
+                          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                            <div className="text-right">
+                              <p
+                                className={`text-lg font-black tabular-nums ${
+                                  isRefunded
+                                    ? 'text-purple-600 dark:text-purple-400'
+                                    : isCancelled
+                                      ? 'text-slate-400'
+                                      : isCompleted
+                                        ? 'text-red-500 dark:text-red-400'
+                                        : 'text-amber-500'
+                                }`}
+                              >
+                                {formatCurrency(
+                                  order.paidAmount > 0
+                                    ? order.paidAmount
+                                    : (order.depositAmount ??
+                                        order.totalAmount),
+                                  {
+                                    absolute: true,
+                                  }
+                                )}
+                              </p>
+
+                              <span
+                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${
+                                  isCompleted
+                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                    : isCancelled
+                                      ? 'bg-slate-500/10 text-slate-400'
+                                      : isRefunded
+                                        ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                }`}
+                              >
+                                {isCompleted && (
+                                  <CheckCircle
+                                    className="w-2.5 h-2.5"
+                                    strokeWidth={2}
+                                  />
+                                )}
+                                {ORDER_STATUS_LABEL[order.status]}
                               </span>
                             </div>
 
-                            {/* Internal Payment Status Badge */}
-                            {firstPayment && (
-                              <div className="pt-1.5">
-                                <span
-                                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${PAYMENT_STATUS_COLOR[firstPayment.status]}`}
-                                >
-                                  {order.status === 'FullyPaid' ||
-                                  order.status === 'Completed'
-                                    ? 'Payment completed'
-                                    : order.status === 'PartiallyPaid' ||
-                                        order.status === 'Confirmed'
-                                      ? 'Deposit paid'
-                                      : firstPayment.status === 'Completed'
-                                        ? 'Payment successful'
-                                        : firstPayment.status === 'Pending'
-                                          ? 'Payment required'
-                                          : firstPayment.status === 'Cancelled'
-                                            ? 'Transaction cancelled'
-                                            : firstPayment.status === 'Failed'
-                                              ? 'Payment failed'
-                                              : firstPayment.status ===
-                                                  'Refunded'
-                                                ? 'Amount refunded'
-                                                : 'Transaction processing'}
-                                </span>
-                              </div>
+                            {isPending && paymentUrl && (
+                              <a
+                                href={paymentUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-brand/90 active:scale-95"
+                              >
+                                <ExternalLink
+                                  className="w-3 h-3"
+                                  strokeWidth={2}
+                                />
+                                {t('PatientWallet.transactions.payNow', {
+                                  defaultValue: 'Thanh toán',
+                                })}
+                              </a>
                             )}
                           </div>
                         </div>
-
-                        {/* Amount + Action */}
-                        <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-3 shrink-0">
-                          <div className="space-y-1 text-right">
-                            <p
-                              className={`text-2xl font-black tabular-nums ${
-                                isRefunded
-                                  ? 'text-purple-600 dark:text-purple-400'
-                                  : isCancelled
-                                    ? 'text-slate-300'
-                                    : isCompleted
-                                      ? 'text-red-500 dark:text-red-400'
-                                      : 'text-amber-500'
-                              }`}
-                            >
-                              {formatCurrency(
-                                order.paidAmount > 0
-                                  ? order.paidAmount
-                                  : (order.depositAmount ?? order.totalAmount),
-                                {
-                                  absolute: true,
-                                }
-                              )}
-                              <span className="text-xs ml-1 opacity-60">đ</span>
-                            </p>
-
-                            <span
-                              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.1em] ${
-                                isCompleted
-                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                                  : isCancelled
-                                    ? 'bg-slate-500/10 text-slate-400'
-                                    : isRefunded
-                                      ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
-                                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                              }`}
-                            >
-                              {isCompleted && (
-                                <CheckCircle className="w-3 h-3" />
-                              )}
-                              {ORDER_STATUS_LABEL[order.status]}
-                            </span>
-                          </div>
-
-                          {/* Pay now button for pending orders */}
-                          {isPending && (
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => syncOrder(order.id)}
-                                className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all group/sync"
-                                title="Check payment status"
-                              >
-                                <RefreshCw className="w-4 h-4 text-slate-500 group-hover/sync:rotate-180 transition-transform duration-500" />
-                              </button>
-                              {paymentUrl && (
-                                <a
-                                  href={paymentUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-brand/20 transition-all hover:scale-105 hover:bg-brand/90"
-                                >
-                                  <ExternalLink className="w-3.5 h-3.5" />
-                                  Pay Now
-                                </a>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-
-              {/* Pagination */}
-              {ordersData && ordersData.totalPages > 1 && (
-                <div className="flex items-center justify-between mt-10 pt-6 border-t border-slate-100 dark:border-slate-800">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={!ordersData.hasPrevious}
-                    className="group inline-flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-slate-800 px-5 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-300 transition-all hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40"
-                  >
-                    <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                    {t('PatientWallet.pagination.previous')}
-                  </button>
-
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Page
-                    </span>
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-xs font-black text-white shadow-xl shadow-brand/20">
-                      {ordersData.pageNumber}
-                    </span>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      of {ordersData.totalPages}
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={() =>
-                      setPage((p) => Math.min(ordersData.totalPages, p + 1))
-                    }
-                    disabled={!ordersData.hasNext}
-                    className="group inline-flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-slate-800 px-5 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-300 transition-all hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40"
-                  >
-                    {t('PatientWallet.pagination.next')}
-                    <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </button>
+                      </article>
+                    );
+                  })}
                 </div>
-              )}
-            </>
-          )}
+
+                {/* Pagination */}
+                {ordersData && ordersData.totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
+                    <button
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={!ordersData.hasPrevious}
+                      className="inline-flex items-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 transition-all hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40"
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
+                      {t('PatientWallet.pagination.previous')}
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase text-slate-400">
+                        {t('PatientWallet.pagination.page', {
+                          defaultValue: 'Trang',
+                        })}
+                      </span>
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-[10px] font-black text-white">
+                        {ordersData.pageNumber}
+                      </span>
+                      <span className="text-[10px] font-bold uppercase text-slate-400">
+                        {t('PatientWallet.pagination.of', {
+                          defaultValue: 'trên',
+                        })}{' '}
+                        {ordersData.totalPages}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        setPage((p) => Math.min(ordersData.totalPages, p + 1))
+                      }
+                      disabled={!ordersData.hasNext}
+                      className="inline-flex items-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 transition-all hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40"
+                    >
+                      {t('PatientWallet.pagination.next')}
+                      <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </section>
       </div>
     </PatientLayout>
