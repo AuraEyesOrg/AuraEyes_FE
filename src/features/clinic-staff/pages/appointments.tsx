@@ -23,11 +23,8 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import Spinner from '@/components/ui/spinner';
 import useAuthStore from '@/store/auth-store';
 import PaymentConfirmationModal from '../components/PaymentConfirmationModal';
-import CreateWalkInPatientModal from '@/features/organisation/components/CreateWalkInPatientModal';
-import {
-  getClinicRecentPatients,
-  type ClinicRecentPatientDto,
-} from '@/features/organisation/api/patients.api';
+import CreateWalkInPatientModal from '../components/CreateWalkInPatientModal';
+import { getClinicPatients, type ClinicPatientDto } from '../api/patients.api';
 import { getCurrentClinicAppointments } from '@/features/organisation/api/organisation-clinic-booking.api';
 import {
   organisationClinicBookingKeys,
@@ -262,7 +259,7 @@ export default function ClinicStaffAppointmentsPage() {
   const appointmentsError = selectedDayQuery?.error;
   const recentPatientsQuery = useQuery({
     queryKey: ['clinic-patients', 'recent'],
-    queryFn: getClinicRecentPatients,
+    queryFn: getClinicPatients,
     enabled: isWalkInModalOpen,
     staleTime: 30_000,
   });
@@ -425,7 +422,7 @@ export default function ClinicStaffAppointmentsPage() {
     setIsWalkInModalOpen(true);
   };
 
-  const getPatientMeta = (patient: ClinicRecentPatientDto) =>
+  const getPatientMeta = (patient: ClinicPatientDto) =>
     [
       patient.isWalkIn
         ? t('Organisation.patients.type.walkIn', 'Walk-in')

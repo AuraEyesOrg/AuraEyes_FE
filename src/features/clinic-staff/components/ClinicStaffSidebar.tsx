@@ -80,7 +80,7 @@ export default function ClinicStaffSidebar() {
       icon: FileText,
       label: t('ClinicStaffSidebar.nav.medicalRecords', 'Medical Records'),
       path: '/clinic-staff/medical-records',
-      requiredPermission: Permissions.DashboardRead,
+      requiredPermission: Permissions.MedicalRecordsRead,
     },
     {
       icon: Stethoscope,

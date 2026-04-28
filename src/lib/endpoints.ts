@@ -387,6 +387,16 @@ export const API_ENDPOINTS = {
     },
   },
 
+  // Clinic Staff specific endpoints
+  CLINIC_STAFF: {
+    PATIENTS: {
+      LIST: '/clinic/patients',
+      UPDATE: (patientId: string) => `/clinic/patients/${patientId}`,
+      WALK_IN: '/clinic-staff/patients/walk-in',
+    },
+    DASHBOARD_METRICS: '/clinic/dashboard-metrics',
+  },
+
   // AI Quota Management
   QUOTAS: {
     BALANCE: '/quotas/balance',
