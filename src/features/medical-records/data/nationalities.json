@@ -1,0 +1,15 @@
+[
+  { "name": "Việt Nam", "code": "VN" },
+  { "name": "Hàn Quốc", "code": "KR" },
+  { "name": "Nhật Bản", "code": "JP" },
+  { "name": "Hoa Kỳ", "code": "US" },
+  { "name": "Trung Quốc", "code": "CN" },
+  { "name": "Pháp", "code": "FR" },
+  { "name": "Đức", "code": "DE" },
+  { "name": "Anh", "code": "GB" },
+  { "name": "Úc", "code": "AU" },
+  { "name": "Singapore", "code": "SG" },
+  { "name": "Thái Lan", "code": "TH" },
+  { "name": "Lào", "code": "LA" },
+  { "name": "Campuchia", "code": "KH" }
+]

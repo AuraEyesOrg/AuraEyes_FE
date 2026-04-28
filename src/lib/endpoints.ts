@@ -425,6 +425,15 @@ export const API_ENDPOINTS = {
     /** POST - Create a new payment order */
     CREATE_ORDER: '/financial/orders',
   },
+
+  // Master Data
+  MASTER_DATA: {
+    COUNTRIES: '/MasterData/countries',
+    PROVINCES: '/MasterData/provinces',
+    DISTRICTS: (provinceCode: number) =>
+      `/MasterData/districts/${provinceCode}`,
+    WARDS: (districtCode: number) => `/MasterData/wards/${districtCode}`,
+  },
 } as const;
 
 export type ApiEndpoints = typeof API_ENDPOINTS;

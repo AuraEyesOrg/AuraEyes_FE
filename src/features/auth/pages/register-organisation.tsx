@@ -23,6 +23,7 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { AuraLogo } from '@/components/ui/aura-logo';
 
 interface OrganisationFormData {
   organisationName: string;
@@ -106,12 +107,7 @@ export default function RegisterOrganisationPage() {
       <div className="min-h-screen grid lg:grid-cols-[0.9fr_1.1fr] bg-slate-950 text-white">
         <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(0,229,255,0.18),_transparent_32%),linear-gradient(160deg,#06131a_0%,#0f172a_55%,#111827_100%)] p-8 lg:p-14">
           <div className="flex items-center gap-3 text-cyan-300">
-            <img
-              src="/logo.png"
-              alt="AURA"
-              className="h-9 w-9 object-contain"
-            />
-            <span className="text-2xl font-bold tracking-[0.2em]">AURA</span>
+            <AuraLogo size="md" className="tracking-[0.2em]" variant="light" />
           </div>
           <div className="mt-20 max-w-xl">
             <p className="mb-4 text-sm uppercase tracking-[0.35em] text-cyan-200/70">
@@ -169,8 +165,7 @@ export default function RegisterOrganisationPage() {
     <div className="min-h-screen grid lg:grid-cols-[0.9fr_1.1fr] bg-slate-950 text-white">
       <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(0,229,255,0.18),_transparent_32%),linear-gradient(160deg,#06131a_0%,#0f172a_55%,#111827_100%)] p-8 lg:p-14">
         <div className="flex items-center gap-3 text-cyan-300">
-          <img src="/logo.png" alt="AURA" className="h-9 w-9 object-contain" />
-          <span className="text-2xl font-bold tracking-[0.2em]">AURA</span>
+          <AuraLogo size="md" className="tracking-[0.2em]" variant="light" />
         </div>
         <div className="mt-20 max-w-xl">
           <p className="mb-4 text-sm uppercase tracking-[0.35em] text-cyan-200/70">

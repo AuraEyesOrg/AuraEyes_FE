@@ -269,6 +269,18 @@ export default function ClinicStaffQueuePage() {
   };
 
   const handleCreateScreening = (item: ClinicQueueItem) => {
+    // Validation: Require basic info (Age, Gender, MRN, Admission Reason)
+    // Since MRN and Admission Reason are in the Medical Record, we at least require medicalRecordId to exist.
+    if (!item.medicalRecordId || !item.isAdminCompleted) {
+      toast.error(
+        t(
+          'ClinicStaff.queue.toast.missingBasicInfo',
+          'Vui lòng hoàn thiện thông tin hành chính (Tuổi/GT, Mã Y tế, Lý do khám) trong Hồ sơ bệnh án trước khi tạo Screening.'
+        )
+      );
+      return;
+    }
+
     navigate(
       resolvePathWithLocale(
         `/clinic-staff/screenings/new?patientId=${item.patientId}`

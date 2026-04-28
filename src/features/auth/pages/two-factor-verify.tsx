@@ -14,6 +14,7 @@ import {
 import Spinner from '@/components/ui/spinner';
 import { verifyTwoFactorLogin } from '../api/auth.api';
 import useAuthStore from '@/store/auth-store';
+import { AuraLogo } from '@/components/ui/aura-logo';
 import '@/styles/auth-animations.css';
 
 interface TwoFactorVerifyForm {
@@ -163,12 +164,7 @@ const TwoFactorVerifyPage = () => {
         {/* Header */}
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
-            <img
-              src="/logo.png"
-              alt="AURA"
-              className="w-10 h-10 object-contain"
-            />
-            <span className="text-2xl font-bold tracking-tight">AURA</span>
+            <AuraLogo size="md" variant="light" />
           </div>
         </div>
 
@@ -195,8 +191,7 @@ const TwoFactorVerifyPage = () => {
       <div className="lg:w-[60%] w-full bg-white flex flex-col items-center justify-center p-6 sm:p-12 lg:p-24 relative">
         {/* Mobile Brand Header */}
         <div className="lg:hidden absolute top-6 left-6 flex items-center gap-2 text-[#1A202C]">
-          <img src="/logo.png" alt="AURA" className="w-6 h-6 object-contain" />
-          <span className="font-bold">AURA</span>
+          <AuraLogo size="sm" variant="dark" />
         </div>
 
         <div className="w-full max-w-[480px] flex flex-col gap-8">

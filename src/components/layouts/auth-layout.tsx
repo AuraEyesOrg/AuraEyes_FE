@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { AuraLogo } from '../ui/aura-logo';
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -9,18 +10,8 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo/Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-white shadow-lg mb-4 border border-gray-100 overflow-hidden p-2">
-            <img
-              src="/logo.png"
-              alt="AURA Logo"
-              className="h-full w-full object-contain"
-            />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">AURA</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Retinal Health Screening System
-          </p>
+        <div className="text-center mb-8 flex flex-col items-center">
+          <AuraLogo size="lg" subtitle="Retinal Health Screening System" />
         </div>
 
         {/* Auth Card */}
