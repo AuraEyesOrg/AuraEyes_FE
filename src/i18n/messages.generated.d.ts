@@ -5223,6 +5223,7 @@ declare module 'i18next' {
         queue: string;
         appointments: string;
         patients: string;
+        medicalRecords: string;
         screenings: string;
         schedules: string;
         cashier: string;
@@ -5247,6 +5248,7 @@ declare module 'i18next' {
         queue: string;
         appointments: string;
         patients: string;
+        'medical-records': string;
         screenings: string;
         schedules: string;
         cashier: string;

@@ -130,6 +130,9 @@ const ClinicStaffDashboard = lazy(
 const ClinicStaffMedicalRecords = lazy(
   () => import('@/features/clinic-staff/pages/medical-records')
 );
+const ErmFormPatient = lazy(
+  () => import('@/features/medical-records/pages/ErmFormPatient')
+);
 const ClinicStaffQueuePage = lazy(
   () => import('@/features/clinic-staff/pages/queue')
 );
@@ -674,24 +677,6 @@ const Router = () => (
         />
 
         <Route
-          path="/:locale/staff/dashboard"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['ClinicStaff']}
-              element={<ClinicStaffDashboard />}
-            />
-          }
-        />
-        <Route
-          path="/:locale/staff/medical-records"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['ClinicStaff']}
-              element={<ClinicStaffMedicalRecords />}
-            />
-          }
-        />
-        <Route
           path="/:locale/patient/dashboard"
           element={
             <LocalizedPrivateRoute
@@ -1006,6 +991,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/clinic-staff/medical-records"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              element={<ClinicStaffMedicalRecords />}
+            />
+          }
+        />
+        <Route
           path="/:locale/clinic-staff/patients/:patientId/history"
           element={
             <LocalizedPrivateRoute
@@ -1092,6 +1086,21 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<ClinicStaffNotificationsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/medical-records/patient/:id"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={[
+                'ClinicStaff',
+                'Ophthalmologist',
+                'Patient',
+                'OrgAdmin',
+                'Organization',
+              ]}
+              element={<ErmFormPatient />}
             />
           }
         />
