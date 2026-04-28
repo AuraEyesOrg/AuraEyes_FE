@@ -45,8 +45,22 @@ type ActionMenuPosition = { top: number; left: number };
 export default function ClinicStaffPatientsPage() {
   const navigate = useNavigate();
   const { t: i18nT } = useTranslation();
-  const t = (key: string, defaultValue?: string) =>
-    i18nT(key as never, { defaultValue } as never) as unknown as string;
+  const t = (
+    key: string,
+    defaultValueOrOptions?: string | any,
+    options?: any
+  ) => {
+    if (typeof defaultValueOrOptions === 'object') {
+      return i18nT(
+        key as never,
+        defaultValueOrOptions as never
+      ) as unknown as string;
+    }
+    return i18nT(
+      key as never,
+      { defaultValue: defaultValueOrOptions, ...options } as never
+    ) as unknown as string;
+  };
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
