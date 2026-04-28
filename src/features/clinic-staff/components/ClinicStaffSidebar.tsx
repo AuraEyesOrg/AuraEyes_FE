@@ -26,7 +26,6 @@ import {
 import { resolvePathWithLocale, persistLocale } from '@/i18n/middleware';
 import type { AppLocale } from '@/i18n/locales';
 import usePermissions from '@/hooks/use-permissions';
-import { Permissions } from '@/constants/permissions';
 
 /**
  * Sidebar navigation for ClinicStaff role (Receptionist, Coordinator, Cashier).
@@ -56,73 +55,79 @@ export default function ClinicStaffSidebar() {
       icon: Home,
       label: t('ClinicStaffSidebar.nav.dashboard', 'Dashboard'),
       path: '/clinic-staff/dashboard',
-      requiredPermission: Permissions.DashboardRead,
     },
     {
       icon: ListOrdered,
       label: t('ClinicStaffSidebar.nav.queue', 'Queue'),
       path: '/clinic-staff/queue',
-      requiredPermission: Permissions.DashboardRead,
+      requiredSubRole: 'Receptionist',
     },
     {
       icon: Calendar,
       label: t('ClinicStaffSidebar.nav.appointments', 'Appointments'),
       path: '/clinic-staff/appointments',
-      requiredPermission: Permissions.AppointmentsRead,
+      requiredAnySubRole: ['Receptionist', 'Cashier'],
     },
     {
       icon: Users,
       label: t('ClinicStaffSidebar.nav.patients', 'Patients'),
       path: '/clinic-staff/patients',
-      requiredPermission: Permissions.PatientsRead,
+      requiredSubRole: 'Receptionist',
     },
     {
       icon: FileText,
       label: t('ClinicStaffSidebar.nav.medicalRecords', 'Medical Records'),
       path: '/clinic-staff/medical-records',
-      requiredPermission: Permissions.MedicalRecordsRead,
+      requiredSubRole: 'Coordinator',
     },
     {
       icon: Stethoscope,
       label: t('ClinicStaffSidebar.nav.screenings', 'Screenings'),
       path: '/clinic-staff/screenings',
-      requiredPermission: Permissions.ScreeningRead,
+      requiredSubRole: 'Coordinator',
     },
     {
       icon: ClipboardList,
       label: t('ClinicStaffSidebar.nav.schedules', 'Schedules'),
       path: '/clinic-staff/schedules',
-      requiredPermission: Permissions.SchedulesManage,
+      requiredSubRole: 'Receptionist',
     },
     {
       icon: CreditCard,
       label: t('ClinicStaffSidebar.nav.cashier', 'Cashier'),
       path: '/clinic-staff/cashier',
-      requiredPermission: Permissions.OrdersRead,
+      requiredSubRole: 'Cashier',
     },
     {
-      icon: CreditCard,
-      label: t('ClinicStaffSidebar.nav.billing', 'Billing'),
+      icon: FileText,
+      label: t('ClinicStaffSidebar.nav.transactions', 'Transaction History'),
       path: '/clinic-staff/billing',
-      requiredPermission: Permissions.OrdersRead,
+      requiredAnySubRole: ['Receptionist', 'Cashier'],
     },
     {
       icon: Wallet,
       label: t('ClinicStaffSidebar.nav.wallet', 'Wallet'),
       path: '/clinic-staff/wallet',
-      requiredPermission: Permissions.WalletsRead,
+      requiredSubRole: 'Cashier',
     },
     {
       icon: Settings,
       label: t('ClinicStaffSidebar.nav.settings', 'Settings'),
       path: '/clinic-staff/settings',
-      requiredPermission: Permissions.SettingsRead,
     },
   ];
 
-  const visibleNavItems = navItems.filter((item) =>
-    item.requiredPermission ? hasPermission(item.requiredPermission) : true
-  );
+  const { hasSubRole } = usePermissions();
+
+  const visibleNavItems = navItems.filter((item) => {
+    if (item.requiredSubRole) {
+      return hasSubRole(item.requiredSubRole);
+    }
+    if (item.requiredAnySubRole) {
+      return item.requiredAnySubRole.some((role) => hasSubRole(role));
+    }
+    return true;
+  });
 
   const displayName = user?.fullName;
   const displayEmail = user?.email;

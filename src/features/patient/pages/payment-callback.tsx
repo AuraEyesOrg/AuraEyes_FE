@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   CheckCircle,
   XCircle,
@@ -15,6 +16,7 @@ import { toast } from 'react-toastify';
 import { getOrderById } from '../api/financial.api';
 import { formatCurrency } from '@/lib/helper';
 import { useTranslation } from 'react-i18next';
+import useAuthStore from '@/store/auth-store';
 import type { OrderDto } from '../types/financial.types';
 
 type CallbackStatus = 'loading' | 'success' | 'failed' | 'cancelled';
@@ -46,8 +48,30 @@ export default function PaymentCallbackPage() {
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const handleFinish = (target: 'appointments' | 'dashboard') => {
+    // Invalidate queries to ensure fresh data
+    queryClient.invalidateQueries({
+      queryKey: ['organisation-clinic-booking'],
+    });
+    queryClient.invalidateQueries({ queryKey: ['financial'] });
+    queryClient.invalidateQueries({ queryKey: ['clinic-queue'] });
+
+    const user = useAuthStore.getState().user;
+    const isStaff = user?.roles.includes('ClinicStaff');
+
+    if (target === 'appointments') {
+      navigate(
+        isStaff ? '/clinic-staff/appointments' : '/patient/appointments'
+      );
+    } else {
+      navigate(isStaff ? '/clinic-staff/dashboard' : '/patient/wallet');
+    }
+  };
 
   const orderId = searchParams.get('orderId') ?? '';
+  const orderCode = searchParams.get('orderCode') ?? '';
   const callbackType = (searchParams.get('type') ?? 'deposit') as CallbackType;
   const appointmentId = searchParams.get('appointmentId') ?? '';
   const cancelled =
@@ -89,7 +113,10 @@ export default function PaymentCallbackPage() {
         const firstPayment = order.payments?.[0];
         const paymentDone = firstPayment?.status === 'Completed';
         const orderDone =
-          order.status === 'Completed' || order.status === 'Confirmed';
+          order.status === 'Completed' ||
+          order.status === 'Confirmed' ||
+          order.status === 'FullyPaid' ||
+          order.status === 'PartiallyPaid';
         const isCancelled =
           order.status === 'Cancelled' ||
           firstPayment?.status === 'Cancelled' ||
@@ -97,10 +124,14 @@ export default function PaymentCallbackPage() {
 
         if (paymentDone || orderDone) {
           setStatus('success');
+          const isFullyPaid =
+            order.status === 'Completed' || order.status === 'FullyPaid';
           toast.success(
-            callbackType === 'clinic-booking'
-              ? 'Thanh toán đặt cọc thành công! Lịch khám đã được xác nhận.'
-              : t('PatientPaymentCallback.toast.depositSuccess')
+            isFullyPaid
+              ? 'Thanh toán hoàn tất thành công!'
+              : callbackType === 'clinic-booking'
+                ? 'Thanh toán đặt cọc thành công! Lịch khám đã được xác nhận.'
+                : t('PatientPaymentCallback.toast.depositSuccess')
           );
           return;
         }
@@ -174,9 +205,11 @@ export default function PaymentCallbackPage() {
                 <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
               </div>
               <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
-                {isClinicBooking
-                  ? 'Thanh toán đặt cọc thành công!'
-                  : t('PatientPaymentCallback.success.title')}
+                {orderData?.status === 'Completed'
+                  ? 'Thanh toán hoàn tất!'
+                  : isClinicBooking
+                    ? 'Thanh toán đặt cọc thành công!'
+                    : t('PatientPaymentCallback.success.title')}
               </h1>
               <p className="text-(--text-secondary) mb-6 text-sm">
                 {isClinicBooking
@@ -190,11 +223,23 @@ export default function PaymentCallbackPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-(--text-secondary) flex items-center gap-1.5">
                       <CreditCard className="w-4 h-4" />
-                      {isClinicBooking ? 'Số tiền đặt cọc (30%)' : 'Số tiền'}
+                      {orderData.status === 'Completed'
+                        ? 'Số tiền thanh toán nốt'
+                        : isClinicBooking
+                          ? 'Số tiền đặt cọc (30%)'
+                          : 'Số tiền'}
                     </span>
                     <span className="font-bold text-green-600 dark:text-green-400">
                       {formatCurrency(
-                        orderData.depositAmount ?? orderData.totalAmount
+                        orderData.payments?.find(
+                          (p) => p.paymentOrderCode === orderCode
+                        )?.amount ??
+                          (orderData.status === 'Completed' ||
+                          orderData.status === 'FullyPaid'
+                            ? orderData.totalAmount -
+                              (orderData.depositAmount ?? 0)
+                            : (orderData.depositAmount ??
+                              orderData.totalAmount))
                       )}
                     </span>
                   </div>
@@ -229,19 +274,23 @@ export default function PaymentCallbackPage() {
               <div className="flex gap-3">
                 {isClinicBooking && appointmentId && (
                   <button
-                    onClick={() => navigate('/patient/appointments')}
+                    onClick={() => handleFinish('appointments')}
                     className="flex-1 py-3 bg-brand hover:brightness-110 text-white rounded-xl font-semibold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
                   >
                     <Calendar className="w-4 h-4" />
-                    Xem lịch hẹn
+                    {useAuthStore.getState().user?.roles.includes('ClinicStaff')
+                      ? 'Quay lại Lịch hẹn'
+                      : 'Xem lịch hẹn'}
                   </button>
                 )}
                 <button
-                  onClick={() => navigate('/patient/wallet')}
+                  onClick={() => handleFinish('dashboard')}
                   className="flex-1 py-3 bg-(--bg-secondary) hover:bg-(--bg-tertiary) text-(--text-primary) border border-(--border-color) rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Lịch sử thanh toán
+                  {useAuthStore.getState().user?.roles.includes('ClinicStaff')
+                    ? 'Về Dashboard'
+                    : 'Lịch sử thanh toán'}
                 </button>
               </div>
             </>

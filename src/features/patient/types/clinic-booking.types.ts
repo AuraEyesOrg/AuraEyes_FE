@@ -80,6 +80,7 @@ export interface ClinicAppointmentDto {
   totalAmount?: number | null;
   depositAmount?: number | null;
   isPaidDeposit?: boolean;
+  paidAmount?: number | null;
   orderStatus?: string | null;
 }
 

@@ -2413,6 +2413,7 @@ declare module 'i18next' {
       clinicStatus: {
         pending: string;
         confirmed: string;
+        depositPaid: string;
         checkedIn: string;
         inProgress: string;
         completed: string;
@@ -3658,6 +3659,7 @@ declare module 'i18next' {
           checkedIn: string;
           completed: string;
           confirmed: string;
+          depositPaid: string;
           inProgress: string;
           noShow: string;
           pending: string;
@@ -5221,6 +5223,7 @@ declare module 'i18next' {
         queue: string;
         appointments: string;
         patients: string;
+        medicalRecords: string;
         screenings: string;
         schedules: string;
         cashier: string;
@@ -5245,6 +5248,7 @@ declare module 'i18next' {
         queue: string;
         appointments: string;
         patients: string;
+        'medical-records': string;
         screenings: string;
         schedules: string;
         cashier: string;

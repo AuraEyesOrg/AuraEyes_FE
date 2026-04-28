@@ -21,6 +21,7 @@ export interface AuthUser {
   verificationStatus?: string | null;
   contractStatus?: string | null;
   permissions?: string[];
+  subRoles?: string[];
 }
 
 type AuthState = {
@@ -62,7 +63,8 @@ const isSameAuthUser = (a: AuthUser, b: AuthUser): boolean => {
     a.verificationStatus === b.verificationStatus &&
     a.contractStatus === b.contractStatus &&
     areStringArraysEqual(a.roles, b.roles) &&
-    areStringArraysEqual(a.permissions ?? [], b.permissions ?? [])
+    areStringArraysEqual(a.permissions ?? [], b.permissions ?? []) &&
+    areStringArraysEqual(a.subRoles ?? [], b.subRoles ?? [])
   );
 };
 
@@ -85,6 +87,12 @@ const normalizeAuthUser = (user: AuthUser): AuthUser => {
   return {
     ...user,
     roles: normalizedRoles,
+    subRoles: (user as any).staffSubRoles
+      ? (user as any).staffSubRoles
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter(Boolean)
+      : [],
     uploadedAvatarUrl,
     providerAvatarUrl,
     avatarUrl:

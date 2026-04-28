@@ -2410,6 +2410,7 @@
     "clinicStatus": {
       "pending": "Chờ xác nhận",
       "confirmed": "Đã xác nhận",
+      "depositPaid": "Đã đặt cọc",
       "checkedIn": "Đã check-in",
       "inProgress": "Đang khám",
       "completed": "Hoàn thành",
@@ -3655,6 +3656,7 @@
         "checkedIn": "Đã check-in",
         "completed": "Hoàn tất",
         "confirmed": "Đã xác nhận",
+        "depositPaid": "Đã đặt cọc",
         "inProgress": "Đang tư vấn",
         "noShow": "Vắng mặt",
         "pending": "Chờ xác nhận"

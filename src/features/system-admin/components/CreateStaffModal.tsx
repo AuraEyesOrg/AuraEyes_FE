@@ -23,6 +23,7 @@ interface FormValues {
   phone: string;
   role: UserRole;
   consultationFee?: number;
+  subRoles: string[];
 }
 
 const schema = yup.object().shape({
@@ -50,6 +51,15 @@ const schema = yup.object().shape({
         .required('Consultation fee is required'),
     otherwise: (schema) => schema.optional(),
   }),
+  subRoles: yup
+    .array()
+    .of(yup.string())
+    .when('role', {
+      is: 'ClinicStaff',
+      then: (schema) =>
+        schema.min(1, 'At least one sub-role is required').required(),
+      otherwise: (schema) => schema.optional(),
+    }) as any,
 });
 
 export default function CreateStaffModal({
@@ -65,6 +75,7 @@ export default function CreateStaffModal({
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: yupResolver(schema) as any,
@@ -74,12 +85,25 @@ export default function CreateStaffModal({
       phone: '',
       role: 'ClinicStaff',
       consultationFee: 0,
+      subRoles: ['Receptionist'],
     },
   });
 
   const selectedRole = watch('role');
+  const selectedSubRoles = watch('subRoles') || [];
 
   if (!isOpen) return null;
+
+  const toggleSubRole = (subRole: string) => {
+    const current = [...selectedSubRoles];
+    const index = current.indexOf(subRole);
+    if (index > -1) {
+      if (current.length > 1) current.splice(index, 1);
+    } else {
+      current.push(subRole);
+    }
+    setValue('subRoles', current);
+  };
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
@@ -230,6 +254,37 @@ export default function CreateStaffModal({
               <p className="text-sm text-red-500">{errors.role.message}</p>
             )}
           </div>
+
+          {/* Sub Roles (Conditional) */}
+          {selectedRole === 'ClinicStaff' && (
+            <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-200">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                {t('SystemAdmin.staff.fields.subRoles', 'Functional Roles')}{' '}
+                <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {['Receptionist', 'Coordinator', 'Cashier'].map((sub) => (
+                  <button
+                    key={sub}
+                    type="button"
+                    onClick={() => toggleSubRole(sub)}
+                    className={`px-3 py-2 rounded-lg text-xs font-bold border-2 transition-all ${
+                      selectedSubRoles.includes(sub)
+                        ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
+                        : 'border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-200 dark:hover:border-slate-700'
+                    }`}
+                  >
+                    {sub}
+                  </button>
+                ))}
+              </div>
+              {errors.subRoles && (
+                <p className="text-sm text-red-500">
+                  {errors.subRoles.message as string}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Consultation Fee (Conditional) */}
           {selectedRole === 'Ophthalmologist' && (

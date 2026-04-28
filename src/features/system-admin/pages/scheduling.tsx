@@ -131,15 +131,31 @@ export default function SystemAdminScheduling() {
       templateId: string;
       isActive: boolean;
       template: ScheduleTemplateDto;
-    }) =>
-      schedulingApi.updateTemplate(templateId, {
-        dayOfWeek: Number(template.dayOfWeek),
+    }) => {
+      const getDayNumber = (day: string | number): number => {
+        if (typeof day === 'number') return day;
+        const days = [
+          'Sunday',
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+        ];
+        const index = days.indexOf(day);
+        return index !== -1 ? index : 1;
+      };
+
+      return schedulingApi.updateTemplate(templateId, {
+        dayOfWeek: getDayNumber(template.dayOfWeek),
         startTime: template.startTime,
         endTime: template.endTime,
         slotDuration: Number(template.slotDuration),
         maxCapacity: Number(template.maxCapacity),
         isActive: isActive,
-      }),
+      });
+    },
     onSuccess: () => {
       toast.success(
         t(

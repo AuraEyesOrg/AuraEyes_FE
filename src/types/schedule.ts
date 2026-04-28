@@ -190,6 +190,8 @@ export interface CreateClinicAppointmentRequest {
   visitReason?: string;
   pricingType: PricingType;
   requestedDoctorId?: string;
+  returnUrl?: string;
+  cancelUrl?: string;
 }
 
 export interface BlockSlotRequest {

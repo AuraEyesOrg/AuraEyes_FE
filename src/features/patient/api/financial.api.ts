@@ -20,13 +20,14 @@ export const getMyOrders = async (
   pageNumber = 1,
   pageSize = 20
 ): Promise<UserOrdersResult> => {
-  const response = await api.get<UserOrdersResult>(
-    API_ENDPOINTS.FINANCIAL.MY_ORDERS,
-    { params: { pageNumber, pageSize } }
-  );
+  const response = await api.get<any>(API_ENDPOINTS.FINANCIAL.MY_ORDERS, {
+    params: { pageNumber, pageSize },
+  });
+
+  const data = response.data.data || response.data;
 
   return (
-    response.data ?? {
+    data ?? {
       items: [],
       totalCount: 0,
       pageNumber,
@@ -43,8 +44,8 @@ export const getMyOrders = async (
  */
 export const getOrderById = async (id: string): Promise<OrderDto | null> => {
   try {
-    const response = await api.get<OrderDto>(API_ENDPOINTS.FINANCIAL.ORDER(id));
-    return response.data ?? null;
+    const response = await api.get<any>(API_ENDPOINTS.FINANCIAL.ORDER(id));
+    return response.data?.data || response.data || null;
   } catch {
     return null;
   }

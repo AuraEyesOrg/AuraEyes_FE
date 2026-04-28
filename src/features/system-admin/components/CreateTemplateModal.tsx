@@ -38,8 +38,13 @@ export default function CreateTemplateModal({
 
   useEffect(() => {
     if (editTemplate) {
+      const dayNum =
+        typeof editTemplate.dayOfWeek === 'number'
+          ? editTemplate.dayOfWeek
+          : getDayOfWeekNumber(editTemplate.dayOfWeek);
+
       setFormData({
-        dayOfWeek: Number(editTemplate.dayOfWeek),
+        dayOfWeek: dayNum,
         startTime: editTemplate.startTime.substring(0, 5),
         endTime: editTemplate.endTime.substring(0, 5),
         slotDuration: Number(editTemplate.slotDuration),
@@ -223,7 +228,7 @@ export default function CreateTemplateModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2.5 rounded-xl bg-primary hover:opacity-90 text-slate-900 font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
             >
               {isSubmitting
                 ? t('common.saving', 'Saving...')
