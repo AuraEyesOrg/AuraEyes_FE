@@ -205,35 +205,23 @@ const AppointmentsPage = () => {
   const bothEmpty = !isLoadingClinic && clinicCounts.All === 0;
 
   const PageHeader = () => (
-    <div className="relative mb-10 overflow-hidden rounded-[2.5rem] bg-slate-900 px-8 py-12 md:px-12 shadow-2xl">
-      <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-brand/30 blur-[100px]" />
-      <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-blue-500/10 blur-[80px]" />
-
-      <div className="relative flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <span className="h-1.5 w-10 rounded-full bg-brand shadow-[0_0_15px_rgba(var(--brand-rgb),0.5)]" />
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-brand/90">
-              {t('PatientAppointments.page.eyebrow')}
-            </p>
-          </div>
-
-          <h1 className="text-4xl font-black tracking-tighter text-white md:text-5xl">
-            {t('PatientAppointments.page.title')}
-          </h1>
-        </div>
-
-        <Link
-          to={resolvePathWithLocale('/patient/schedule')}
-          className="group relative flex items-center justify-center gap-3 overflow-hidden rounded-2xl bg-brand px-10 py-5 text-sm font-black text-white transition-all hover:scale-[1.03] active:scale-95 shadow-[0_20px_50px_rgba(var(--brand-rgb),0.3)]"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-          <PlusCircle className="h-5 w-5" strokeWidth={2.5} />
-          <span className="uppercase tracking-widest">
-            {t('PatientAppointments.actions.bookNew')}
-          </span>
-        </Link>
+    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-1">
+        <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+          {t('PatientAppointments.page.title')}
+        </h1>
+        <p className="text-sm font-medium text-slate-500">
+          Quản lý và theo dõi lịch hẹn y tế của bạn
+        </p>
       </div>
+
+      <Link
+        to={resolvePathWithLocale('/patient/schedule')}
+        className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3 text-sm font-bold text-white transition-all hover:bg-brand/90 active:scale-95 shadow-sm"
+      >
+        <PlusCircle className="h-5 w-5" strokeWidth={2} />
+        <span>{t('PatientAppointments.actions.bookNew')}</span>
+      </Link>
     </div>
   );
 
