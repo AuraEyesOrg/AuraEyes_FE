@@ -40,7 +40,8 @@
     "switchToLight": "Switch to light mode",
     "sidebar": {
       "auraNetwork": "Aura Network"
-    }
+    },
+    "noPermission": "You don't have permission to access this feature."
   },
   "GuestFooter": {
     "platform": "Platform",
@@ -2365,7 +2366,9 @@
       "upcoming": "Upcoming",
       "completed": "Completed",
       "total": "Total",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "slots": "Slots",
+      "awaitingPayment": "Awaiting payment"
     },
     "filters": {
       "label": "Filter",
@@ -2386,7 +2389,9 @@
       "joinCall": "Join Call",
       "cancel": "Cancel",
       "viewDetails": "View Details",
-      "bookFirstAppointment": "Book Your First Appointment"
+      "bookFirstAppointment": "Book Your First Appointment",
+      "showCheckInQr": "Show Check-in QR",
+      "payNow": "Pay Now"
     },
     "labels": {
       "clinicVisit": "Clinic Visit",
@@ -2395,7 +2400,8 @@
       "notScheduledYet": "Not scheduled yet",
       "doctorName": "Doctor: {{name}}",
       "videoConsultation": "Video consultation",
-      "videoConsultationReady": "Video consultation (link ready)"
+      "videoConsultationReady": "Video consultation (link ready)",
+      "consultingDoctor": "Consulting Doctor"
     },
     "sessionType": {
       "verification": "Verification",
@@ -2452,9 +2458,83 @@
       "afternoon": "Good Afternoon",
       "evening": "Good Evening"
     },
-    "fallback": {
-      "firstName": "there"
+    "header": {
+      "retinalOverview": "Retinal Health Overview"
     },
+    "stats": {
+      "latestAiRiskStatus": "Latest AI Risk",
+      "noScans": "No Scans",
+      "nextAppointment": "Next Appointment",
+      "noneScheduled": "None Scheduled"
+    },
+    "hero": {
+      "title": {
+        "aiScreening": "Latest AI Analysis",
+        "specialistVerified": "Specialist Verified"
+      },
+      "awaitingAnalysis": "Awaiting Analysis",
+      "latestRetinalScanAlt": "Latest retinal scan",
+      "scanId": "Scan ID: {{id}}",
+      "latestAnalysisResult": "Latest Analysis Result",
+      "dateScanned": "Date Scanned",
+      "nextScreening": "Next Screening",
+      "processingTitle": "Processing...",
+      "processingDescription": "Your images are being analyzed by our AI system.",
+      "noResultsTitle": "No Data",
+      "noResultsDescription": "You haven't performed any retinal scans yet."
+    },
+    "actions": {
+      "viewFullReport": "View Full Report",
+      "openLatestSession": "Open Latest Session"
+    },
+    "history": {
+      "title": "Recent Screening History",
+      "viewAll": "View All",
+      "sessionLabel": "Clinic Session",
+      "imagesSingle": "{{count}} image",
+      "imagesMultiple": "{{count}} images",
+      "recentScreeningAlt": "Screening image",
+      "empty": "No screening history yet."
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "messageSpecialist": "Message Specialist",
+      "bookAppointment": "Book Clinic Appointment",
+      "bookFollowUp": "Book Follow-up"
+    }
+  },
+  "PatientCarePlan": {
+    "page": {
+      "title": "Care Plan",
+      "subtitle": "Your doctor's structured timeline of upcoming care steps. Items are sorted by date so you can plan ahead."
+    },
+    "stats": {
+      "upcoming": "Upcoming",
+      "overdue": "Overdue",
+      "completed": "Completed"
+    },
+    "loading": "Loading your care plan...",
+    "error": "Unable to load your healthcare roadmap. Please refresh and try again.",
+    "empty": {
+      "title": "No care plan steps yet.",
+      "subtitle": "Your doctor will add steps here after your next visit."
+    }
+  },
+  "PatientHelpFeedback": {
+    "page": {
+      "title": "Help & Feedback",
+      "subtitle": "Share your website experience to help us make retinal care journeys better."
+    },
+    "whyFeedbackMatters": {
+      "title": "Why your feedback matters",
+      "items": {
+        "bookingAndConsultation": "Help us improve booking and consultation usability.",
+        "bugReporting": "Highlight bug issues before they impact more patients.",
+        "featureSuggestions": "Suggest features that make your care journey smoother."
+      }
+    }
+  },
+  "PatientDashboard_Legacy": {
     "risk": {
       "low": "Low Risk",
       "medium": "Moderate Risk",
@@ -3316,9 +3396,10 @@
     "nav": {
       "dashboard": "Dashboard",
       "myScans": "My Scans",
+      "medicalHistory": "Medical History",
       "appointments": "Appointments",
-      "findClinics": "Find Clinics",
-      "healthRoadmap": "Health Roadmap",
+      "clinicSchedule": "Clinic Schedule",
+      "carePlan": "Care Plan",
       "chat": "Chat",
       "wallet": "Transaction History",
       "helpFeedback": "Help & Feedback",
@@ -5161,24 +5242,21 @@
     }
   },
   "ClinicStaffDashboard": {
-    "greetings": {
-      "morning": "Good morning",
-      "afternoon": "Good afternoon",
-      "evening": "Good evening",
-      "welcome": "Here's what's happening today."
-    },
-    "subtitle": "AURA Clinic • Real-time operational overview",
-    "common": {
-      "staffFallback": "Staff"
-    },
+    "greeting": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "subtitle": "Real-time operational overview",
     "stats": {
-      "todayAppointments": "Today's Appointments",
-      "scheduled": "Scheduled",
-      "patientsCheckedIn": "Checked In",
+      "todayAppointments": "TODAY'S APPOINTMENTS",
+      "checkedIn": "CHECKED IN",
+      "pendingWork": "PENDING TASKS",
+      "completed": "COMPLETED",
       "today": "Today",
-      "pendingTasks": "Pending Tasks",
-      "requiresAction": "Require action",
-      "completedToday": "Completed"
+      "needsAction": "Require action"
+    },
+    "recentActivity": {
+      "title": "Recent Activity",
+      "subtitle": "Live patient check-ins and appointment updates"
     },
     "quickActions": {
       "title": "Quick Actions",
@@ -5189,13 +5267,25 @@
       "registerPatientDesc": "Add a new patient to the system",
       "viewSchedule": "View Schedule",
       "viewScheduleDesc": "See today's full schedule",
-      "cashierDesk": "Cashier desk",
-      "cashierDeskDesc": "Review finalized visits and collect payment"
+      "cashier": "Cashier",
+      "cashierDesc": "Review finalized visits and collect payment"
+    }
+  },
+  "ClinicStaffQueue": {
+    "page": {
+      "title": "Queue Management",
+      "subtitle": "Monitor and coordinate patients at the clinic"
     },
-    "activity": {
-      "title": "Recent Activity",
-      "subtitle": "Live patient check-ins and appointment updates",
-      "empty": "No recent activity. A fresh day begins!"
+    "tabs": {
+      "waiting": "Waiting",
+      "consulting": "Consulting",
+      "completed": "Completed"
+    }
+  },
+  "ClinicStaffCashier": {
+    "page": {
+      "title": "Cashier Desk",
+      "subtitle": "Manage patient bills and payments"
     }
   },
   "ClinicStaffSidebar": {
@@ -5205,11 +5295,11 @@
       "queue": "Queue Management",
       "appointments": "Appointments",
       "patients": "Patient Records",
+      "medicalRecords": "Medical Records",
       "screenings": "Screening Sessions",
-      "schedules": "Staff Schedules",
       "cashier": "Cashier",
-      "billing": "Billing & Invoices",
-      "wallet": "Wallet",
+      "transactions": "Transaction History",
+      "wallet": "Digital Wallet",
       "settings": "Settings",
       "profile": "My Profile"
     },

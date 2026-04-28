@@ -2,7 +2,6 @@ import {
   Home,
   Calendar,
   Users,
-  ClipboardList,
   Wallet,
   Settings,
   LogOut,
@@ -11,8 +10,10 @@ import {
   CreditCard,
   ListOrdered,
   FileText,
+  Lock,
 } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -60,7 +61,7 @@ export default function ClinicStaffSidebar() {
       icon: ListOrdered,
       label: t('ClinicStaffSidebar.nav.queue', 'Queue'),
       path: '/clinic-staff/queue',
-      requiredSubRole: 'Receptionist',
+      requiredSubRole: 'Coordinator',
     },
     {
       icon: Calendar,
@@ -87,12 +88,6 @@ export default function ClinicStaffSidebar() {
       requiredSubRole: 'Coordinator',
     },
     {
-      icon: ClipboardList,
-      label: t('ClinicStaffSidebar.nav.schedules', 'Schedules'),
-      path: '/clinic-staff/schedules',
-      requiredSubRole: 'Receptionist',
-    },
-    {
       icon: CreditCard,
       label: t('ClinicStaffSidebar.nav.cashier', 'Cashier'),
       path: '/clinic-staff/cashier',
@@ -117,17 +112,25 @@ export default function ClinicStaffSidebar() {
     },
   ];
 
+  const handleNavClick = (e: React.MouseEvent, item: any) => {
+    if (item.requiredSubRole && !hasSubRole(item.requiredSubRole)) {
+      e.preventDefault();
+      toast.warning(t('Common.noPermission'));
+      return;
+    }
+    if (
+      item.requiredAnySubRole &&
+      !item.requiredAnySubRole.some((role: string) => hasSubRole(role))
+    ) {
+      e.preventDefault();
+      toast.warning(t('Common.noPermission'));
+      return;
+    }
+  };
+
   const { hasSubRole } = usePermissions();
 
-  const visibleNavItems = navItems.filter((item) => {
-    if (item.requiredSubRole) {
-      return hasSubRole(item.requiredSubRole);
-    }
-    if (item.requiredAnySubRole) {
-      return item.requiredAnySubRole.some((role) => hasSubRole(role));
-    }
-    return true;
-  });
+  const visibleNavItems = navItems;
 
   const displayName = user?.fullName;
   const displayEmail = user?.email;
@@ -168,28 +171,43 @@ export default function ClinicStaffSidebar() {
 
         {/* Navigation */}
         <nav className="flex flex-col space-y-1 flex-1 overflow-y-auto">
-          {visibleNavItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={resolvePathWithLocale(item.path)}
-              className={({ isActive }) =>
-                `flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-colors ${
-                  isActive
-                    ? 'bg-primary/10 text-primary font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <div className="flex items-center gap-3">
-                  <span className={isActive ? 'text-primary' : ''}>
-                    <item.icon className="w-5 h-5" />
-                  </span>
-                  <span className="text-sm font-medium">{item.label}</span>
-                </div>
-              )}
-            </NavLink>
-          ))}
+          {visibleNavItems.map((item) => {
+            const isRestricted =
+              (item.requiredSubRole && !hasSubRole(item.requiredSubRole)) ||
+              (item.requiredAnySubRole &&
+                !item.requiredAnySubRole.some((role: string) =>
+                  hasSubRole(role)
+                ));
+
+            return (
+              <NavLink
+                key={item.path}
+                to={resolvePathWithLocale(item.path)}
+                onClick={(e) => handleNavClick(e, item)}
+                className={({ isActive }) =>
+                  `flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all ${
+                    isActive
+                      ? 'bg-primary/10 text-primary font-semibold'
+                      : isRestricted
+                        ? 'text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-70 grayscale'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <div className="flex items-center gap-3">
+                    <span className={isActive ? 'text-primary' : ''}>
+                      <item.icon className="w-5 h-5" />
+                    </span>
+                    <span className="text-sm font-medium">{item.label}</span>
+                    {isRestricted && (
+                      <Lock className="w-3.5 h-3.5 ml-auto opacity-40" />
+                    )}
+                  </div>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
 
         {/* User Profile Footer */}
