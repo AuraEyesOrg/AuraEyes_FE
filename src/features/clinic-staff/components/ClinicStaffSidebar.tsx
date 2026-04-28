@@ -2,7 +2,6 @@ import {
   Home,
   Calendar,
   Users,
-  ClipboardList,
   Wallet,
   Settings,
   LogOut,
@@ -60,7 +59,7 @@ export default function ClinicStaffSidebar() {
       icon: ListOrdered,
       label: t('ClinicStaffSidebar.nav.queue', 'Queue'),
       path: '/clinic-staff/queue',
-      requiredSubRole: 'Receptionist',
+      requiredSubRole: 'Coordinator',
     },
     {
       icon: Calendar,
@@ -85,12 +84,6 @@ export default function ClinicStaffSidebar() {
       label: t('ClinicStaffSidebar.nav.screenings', 'Screenings'),
       path: '/clinic-staff/screenings',
       requiredSubRole: 'Coordinator',
-    },
-    {
-      icon: ClipboardList,
-      label: t('ClinicStaffSidebar.nav.schedules', 'Schedules'),
-      path: '/clinic-staff/schedules',
-      requiredSubRole: 'Receptionist',
     },
     {
       icon: CreditCard,
