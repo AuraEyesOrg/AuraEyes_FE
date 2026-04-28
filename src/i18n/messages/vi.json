@@ -5225,6 +5225,87 @@
     },
     "organisation": {
       "title": "Tổ chức",
+      "common": {
+        "gender": {
+          "male": "Nam",
+          "female": "Nữ"
+        },
+        "yearsAbbr": "tuổi",
+        "idLabel": "Mã BN",
+        "notAvailable": "N/A"
+      },
+      "screening": {
+        "title": "Sàng lọc võng mạc",
+        "navigation": {
+          "cancelAndReturn": "Hủy & Quay lại",
+          "proceedToReview": "Tiếp tục xem xét",
+          "transferringFiles": "Đang tải ảnh lên...",
+          "executingAiModel": "Đang chạy mô hình AI...",
+          "startAiAnalysis": "Bắt đầu phân tích AI"
+        },
+        "upload": {
+          "title": "Thu nhận hình ảnh",
+          "subtitle": "Chọn hoặc kéo thả tệp quét võng mạc để xử lý.",
+          "dropzone": {
+            "title": "Kéo thả tệp hoặc nhấp để duyệt",
+            "supportedFormats": "Định dạng hỗ trợ: JPG, PNG, TIFF (Tối đa 50MB/tệp)"
+          },
+          "analyzingQuality": "Đang phân tích chất lượng ảnh..."
+        },
+        "quality": {
+          "notFundus": "Không phải ảnh quét võng mạc rõ ràng.",
+          "croppedEdges": "Ảnh có vẻ bị mất góc.",
+          "blurry": "Ảnh có vẻ bị nhòe.",
+          "tooDark": "Ảnh có vẻ quá tối.",
+          "overexposed": "Ảnh có vẻ quá sáng.",
+          "optimal": "Chất lượng tối ưu",
+          "acceptable": "Chất lượng chấp nhận được",
+          "poor": "Chất lượng kém",
+          "validationServiceError": "Lỗi dịch vụ kiểm định ảnh."
+        },
+        "launch": {
+          "title": "Chạy mô hình chẩn đoán",
+          "readyDescription": "Hệ thống đã sẵn sàng xử lý {{count}} ảnh. Quá trình này sẽ tiêu tốn 1 tín dụng sàng lọc AI.",
+          "clinicalAdvisory": {
+            "title": "Cố vấn lâm sàng",
+            "description": "Kết quả phân loại Aura AI chỉ cung cấp xác suất sơ bộ. Chúng không nhằm mục đích thay thế chẩn đoán chính thức của bác sĩ nhãn khoa hoặc chuyên gia lâm sàng."
+          },
+          "includedScans": "Các ảnh bao gồm"
+        },
+        "quotaBanner": {
+          "title": "Đã hết hạn mức AI",
+          "description": "Vui lòng mua thêm hạn mức từ ví. Nếu số dư không đủ, hãy nạp tiền vào ví trước."
+        },
+        "quotaModal": {
+          "title": "Mua thêm hạn mức AI",
+          "quantityLabel": "Số lượng tín dụng muốn mua",
+          "unitPriceLabel": "Đơn giá/tín dụng",
+          "totalPaymentLabel": "Tổng thanh toán",
+          "walletBalanceLabel": "Số dư ví",
+          "walletSufficient": "Số dư ví của bạn đủ để mua hạn mức.",
+          "walletInsufficient": "Số dư ví không đủ. Cần thêm {{amount}} VND.",
+          "suggestedTopUp": "Số tiền nạp gợi ý: {{amount}} VND"
+        },
+        "actions": {
+          "buyMoreQuota": "Mua thêm",
+          "buyQuota": "Mua hạn mức",
+          "topUpWallet": "Nạp tiền ví"
+        },
+        "toast": {
+          "buyQuotaSuccess": "Đã mua {{count}} tín dụng AI thành công.",
+          "walletInsufficient": "Số dư ví không đủ. Vui lòng nạp thêm tiền.",
+          "buyQuotaFailed": "Không thể mua hạn mức. Vui lòng thử lại.",
+          "paymentLinkUnavailable": "Không thể lấy liên kết thanh toán. Vui lòng thử lại.",
+          "createTopUpFailed": "Không thể tạo yêu cầu nạp tiền. Vui lòng thử lại.",
+          "noPatientSelected": "Chưa chọn bệnh nhân",
+          "quotaExhausted": "Hạn mức đã hết. Vui lòng mua thêm hoặc nạp tiền.",
+          "quotaUnitPriceUnavailable": "Giá hạn mức hiện không khả dụng. Vui lòng thử lại sau.",
+          "invalidTopUpAmount": "Số tiền nạp không hợp lệ."
+        },
+        "wallet": {
+          "topUpDescription": "Nạp tiền mua hạn mức AI cho tổ chức ({{amount}} VND)"
+        }
+      },
       "types": {
         "hospital": "Bệnh viện",
         "clinic": "Phòng khám",
@@ -6108,6 +6189,87 @@
     },
     "empty": {
       "description": "Vui lòng thực hiện một ca sàng lọc để xem kết quả."
+    }
+  },
+  "ClinicStaff": {
+    "screeningNew": {
+      "title": "Sàng lọc võng mạc mới",
+      "subtitle": "Tải ảnh quét võng mạc để phân loại chẩn đoán AI.",
+      "steps": {
+        "upload": "1. Tải ảnh",
+        "launch": "2. Chạy AI"
+      },
+      "quality": {
+        "title": "Tiêu chuẩn chất lượng ảnh",
+        "lighting": "Ánh sáng đồng đều",
+        "lightingDesc": "Tránh lóa và chiếu sáng không đều",
+        "focus": "Lấy nét sắc nét",
+        "focusDesc": "Ảnh phải rõ ràng và không bị nhòe",
+        "centered": "Đĩa thị trung tâm",
+        "centeredDesc": "Đĩa thị phải hiển thị rõ và nằm ở trung tâm",
+        "supportedFormats": "Định dạng hỗ trợ",
+        "supportedFormatsList": "JPG, PNG, TIFF, BMP"
+      },
+      "launch": {
+        "title": "Chạy mô hình chẩn đoán AI",
+        "readyCount": "Sẵn sàng phân tích {{count}} ảnh. Quá trình này sẽ tiêu tốn 1 tín dụng sàng lọc AI.",
+        "advisory": {
+          "title": "Cố vấn lâm sàng",
+          "description": "Kết quả phân loại AI chỉ cung cấp xác suất sơ bộ. Chúng không nhằm mục đích thay thế chẩn đoán chính thức của chuyên gia lâm sàng."
+        },
+        "scansIncluded": "Các ảnh tối ưu",
+        "scansWarning": "Các ảnh có cảnh báo (Vẫn có thể phân tích)"
+      },
+      "actions": {
+        "proceed": "Tiếp tục xem xét",
+        "launch": "Bắt đầu phân tích AI",
+        "cancel": "Hủy",
+        "back": "Quay lại",
+        "uploading": "Đang tải lên...",
+        "analyzing": "Đang chạy AI..."
+      },
+      "toast": {
+        "noPatient": "Chưa chọn bệnh nhân"
+      }
+    },
+    "queue": {
+      "doctor": {
+        "yearsExp": "{{count}} năm kinh nghiệm",
+        "notAssigned": "Chưa phân công"
+      },
+      "screening": {
+        "completed": "Đã hoàn thành",
+        "pending": "Đang chờ"
+      },
+      "states": {
+        "checkedIn": "Đã tiếp nhận",
+        "screeningPending": "Chờ sàng lọc",
+        "aiCompleted": "AI đã hoàn thành",
+        "sentToDoctor": "Đã chuyển bác sĩ",
+        "consultationInProgress": "Đang khám",
+        "finalized": "Đã hoàn tất"
+      }
+    },
+    "patients": {
+      "summary": {
+        "countFound": "Tìm thấy {{count}} {{unit}}",
+        "patients": "bệnh nhân",
+        "patient": "bệnh nhân"
+      },
+      "risk": {
+        "low": "Thấp",
+        "medium": "Trung bình",
+        "high": "Cao"
+      }
+    },
+    "common": {
+      "gender": {
+        "male": "Nam",
+        "female": "Nữ"
+      },
+      "yearsAbbr": "tuổi",
+      "idLabel": "ID BN",
+      "close": "Đóng"
     }
   }
 }

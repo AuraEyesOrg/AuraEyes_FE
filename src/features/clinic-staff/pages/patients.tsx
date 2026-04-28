@@ -279,11 +279,17 @@ export default function ClinicStaffPatientsPage() {
 
         {/* Results summary */}
         <p className="text-sm text-(--text-tertiary) mb-3 px-1">
-          {filteredPatients.length}{' '}
-          {filteredPatients.length !== 1
-            ? t('ClinicStaff.patients.summary.patients', 'patients')
-            : t('ClinicStaff.patients.summary.patient', 'patient')}{' '}
-          {t('ClinicStaff.patients.summary.found', 'found')}
+          {t(
+            'ClinicStaff.patients.summary.countFound',
+            '{{count}} {{unit}} found',
+            {
+              count: filteredPatients.length,
+              unit:
+                filteredPatients.length !== 1
+                  ? t('ClinicStaff.patients.summary.patients', 'patients')
+                  : t('ClinicStaff.patients.summary.patient', 'patient'),
+            }
+          )}
         </p>
 
         {/* Patient Table */}
@@ -389,7 +395,10 @@ export default function ClinicStaffPatientsPage() {
                         <span
                           className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getRiskBadge(patient.priority)}`}
                         >
-                          {patient.priority || 'low'}
+                          {t(
+                            `ClinicStaff.patients.risk.${patient.priority || 'low'}`,
+                            patient.priority || 'low'
+                          )}
                         </span>
                       </td>
 
