@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
+import useAuthStore from '@/store/auth-store';
 
 const LOGO_SRCSET = [
   '/icon_16x16.png 16w',
@@ -56,6 +57,24 @@ export function AuraLogo({
   variant = 'auto',
 }: AuraLogoProps) {
   const { theme } = useTheme();
+  const { isAuthenticated, user } = useAuthStore();
+
+  const getDashboardPath = () => {
+    if (!isAuthenticated || !user) return '/';
+
+    const roles = user.roles || [];
+
+    if (roles.includes('SystemAdmin')) return '/system-admin/dashboard';
+    if (roles.includes('Ophthalmologist')) return '/ophthalmologist/dashboard';
+    if (roles.includes('ClinicStaff')) return '/clinic-staff/dashboard';
+    if (roles.includes('OrgAdmin') || roles.includes('Organization'))
+      return '/organisation/dashboard';
+    if (roles.includes('Patient')) return '/patient/dashboard';
+
+    return '/';
+  };
+
+  const finalTo = to ?? getDashboardPath();
   const resolvedVariant: 'light' | 'dark' =
     variant === 'auto' ? (theme === 'dark' ? 'light' : 'dark') : variant;
 
@@ -95,10 +114,10 @@ export function AuraLogo({
     </div>
   );
 
-  if (to) {
+  if (finalTo) {
     return (
       <Link
-        to={to}
+        to={finalTo}
         className="outline-none focus-visible:ring-2 focus-visible:ring-[#00d1c0] rounded-lg"
       >
         {content}

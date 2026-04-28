@@ -77,6 +77,8 @@ export const useUpdateAdministrative = () => {
       queryClient.invalidateQueries({
         queryKey: medicalRecordKeys.detail(variables.id),
       });
+      // Also invalidate queue to update Age/Gender validation
+      queryClient.invalidateQueries({ queryKey: ['clinic-staff', 'queue'] });
     },
     onError: (error: any) => {
       toast.error(

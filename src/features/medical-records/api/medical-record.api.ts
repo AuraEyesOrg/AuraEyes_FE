@@ -43,42 +43,36 @@ export interface UpdateMedicalRecordClinicalCommand {
 
 export const medicalRecordApi = {
   create: (data: CreateMedicalRecordCommand) =>
-    api.post<ApiResponse<string>>('/api/medical-records', data),
+    api.post<ApiResponse<string>>('medical-records', data),
 
   updateAdministrative: (
     id: string,
     data: { administrativeDataJson: string }
   ) =>
-    api.put<ApiResponse<boolean>>(
-      `/api/medical-records/${id}/administrative`,
-      data
-    ),
+    api.put<ApiResponse<boolean>>(`medical-records/${id}/administrative`, data),
 
   updateClinical: (
     id: string,
     data: Omit<UpdateMedicalRecordClinicalCommand, 'id'>
-  ) =>
-    api.put<ApiResponse<boolean>>(`/api/medical-records/${id}/diagnosis`, data),
+  ) => api.put<ApiResponse<boolean>>(`medical-records/${id}/diagnosis`, data),
 
   startConsultation: (id: string) =>
-    api.post<ApiResponse<boolean>>(
-      `/api/medical-records/${id}/start-consultation`
-    ),
+    api.post<ApiResponse<boolean>>(`medical-records/${id}/start-consultation`),
 
   finalize: (id: string) =>
-    api.post<ApiResponse<boolean>>(`/api/medical-records/${id}/finalize`), // Updated to POST
+    api.post<ApiResponse<boolean>>(`medical-records/${id}/finalize`), // Updated to POST
 
   downloadPdf: (id: string) =>
-    api.get<Blob>(`/api/medical-records/${id}/pdf`, {
+    api.get<Blob>(`medical-records/${id}/pdf`, {
       responseType: 'blob',
     }),
 
   getById: (id: string) =>
-    api.get<ApiResponse<MedicalRecordDto>>(`/api/medical-records/${id}`),
+    api.get<ApiResponse<MedicalRecordDto>>(`medical-records/${id}`),
 
   getByPatient: (patientId: string) =>
     api.get<ApiResponse<MedicalRecordDto[]>>(
-      `/api/patients/${patientId}/medical-records`
+      `patients/${patientId}/medical-records`
     ),
 
   getAll: (params?: {
@@ -91,9 +85,9 @@ export const medicalRecordApi = {
   }) =>
     api.get<
       ApiResponse<{
-        data: MedicalRecordDto[];
+        items: MedicalRecordDto[];
         totalPages: number;
         totalCount: number;
       }>
-    >('/api/medical-records/all', { params }), // Added getAll with typing
+    >('medical-records/all', { params }), // Added getAll with typing
 };

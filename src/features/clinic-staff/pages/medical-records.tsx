@@ -70,7 +70,7 @@ export default function MedicalRecordsManagementPage() {
     pageSize: 10,
   });
 
-  const records: MedicalRecordDto[] = pagedData?.data || [];
+  const records: MedicalRecordDto[] = pagedData?.items || [];
 
   return (
     <ClinicStaffLayout>
