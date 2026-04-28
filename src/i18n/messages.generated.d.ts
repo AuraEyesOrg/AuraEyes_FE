@@ -612,946 +612,26 @@ declare module 'i18next' {
       };
     };
     Ophthalmologist: {
-      common: {
-        doctor: string;
-        role: string;
-        logout: string;
-        cancel: string;
-        back: string;
-        email: string;
-        next: string;
-        of: string;
-        other: string;
-        page: string;
-        previous: string;
-        refresh: string;
-        retry: string;
-        saving: string;
-        severity: {
-          mild: string;
-          severe: string;
-          critical: string;
-          moderate: string;
-        };
-        showing: string;
-        status: {
-          draft: string;
-          finalized: string;
-          reviewed: string;
-        };
-        submitting: string;
-        view: string;
-        confirm: string;
-        fullName: string;
-        loading: string;
-        nextPage: string;
-        notAvailable: string;
-        previousPage: string;
-        submitRequest: string;
-      };
-      header: {
-        pages: string;
-        searchPlaceholder: string;
-        toggleTheme: string;
-      };
-      sidebar: {
-        dashboard: string;
-        patients: string;
-        screenings: string;
-        appointments: string;
-        schedules: string;
-        leaveRequests: string;
-        employmentTypeChangeRequests: string;
-        consultations: string;
-        contract: string;
-        settings: string;
-        wallet: string;
-      };
-      leaveRequests: {
-        pageTitle: string;
-        submitTitle: string;
-        submitDescription: string;
-        startDate: string;
-        endDate: string;
-        reason: string;
-        reasonPlaceholder: string;
-        submitAction: string;
-        historyTitle: string;
-        empty: string;
-        submittedAt: string;
-        adminNote: string;
-        confirmCancel: string;
-        cancelAction: string;
-        status: {
-          all: string;
-          pending: string;
-          approved: string;
-          rejected: string;
-          cancelled: string;
-        };
-        toast: {
-          createSuccess: string;
-          createFailed: string;
-          cancelSuccess: string;
-          cancelFailed: string;
-          missingFields: string;
-          invalidDateRange: string;
-        };
-      };
-      employmentTypeChangeRequests: {
-        pageTitle: string;
-        submitTitle: string;
-        submitDescription: string;
-        currentType: string;
-        targetType: string;
-        reason: string;
-        reasonPlaceholder: string;
-        submitAction: string;
-        historyTitle: string;
-        empty: string;
-        createdAt: string;
-        reviewedAt: string;
-        adminNote: string;
-        confirmCancel: string;
-        cancelAction: string;
-        status: {
-          all: string;
-          pending: string;
-          approved: string;
-          rejected: string;
-          cancelled: string;
-        };
-        toast: {
-          createSuccess: string;
-          createFailed: string;
-          cancelSuccess: string;
-          cancelFailed: string;
-          missingReason: string;
-          sameType: string;
-        };
-      };
       dashboard: {
         greeting: {
           morning: string;
           afternoon: string;
           evening: string;
         };
-        loading: string;
         loadError: string;
-        organisationLabel: string;
-        defaultOrganisation: string;
         subtitle: string;
         reviewQueue: {
           title: string;
           description: string;
-          pendingReviews: string;
-          urgentCases: string;
-        };
-        capacity: {
-          title: string;
-          description: string;
-          completedToday: string;
-          openSlotsToday: string;
-        };
-        operationalSummary: {
-          title: string;
-          description: string;
-        };
-        priorityList: {
-          confidence: string;
-          description: string;
-          empty: string;
-          noSchedule: string;
-          patient: string;
-          schedule: string;
-          sessionId: string;
-          title: string;
           viewAll: string;
         };
-      };
-      settings: {
-        defaults: {
-          unknownDoctor: string;
-          noBio: string;
-        };
-        pageTitle: string;
-        profile: {
-          title: string;
-          edit: string;
-          loading: string;
-          verifiedPractitioner: string;
-          memberSince: string;
-          email: string;
-          phone: string;
-          experience: string;
-          experienceSuffix: string;
-          years: string;
-          specialty: string;
-          employmentType: string;
-          employmentTypeValues: {
-            fullTime: string;
-            partTime: string;
-          };
-          hospital: string;
-          address: string;
-          bio: string;
-        };
-        credentials: {
-          title: string;
-          upload: string;
-          degrees: string;
-          licenses: string;
-          issuedBy: string;
-          issued: string;
-          expires: string;
-          noDegrees: string;
-          noLicenses: string;
-          addNow: string;
-          status: {
-            verified: string;
-            pending: string;
-            expired: string;
-          };
-        };
-        wallet: {
-          title: string;
-          availableBalance: string;
-          withdrawFunds: string;
-          recentTransactions: string;
-          loadingTransactions: string;
-          noTransactions: string;
-          viewAllTransactions: string;
-          withdrawalAmount: string;
-          minimumWithdrawal: string;
-          withdrawalTo: string;
-          withdraw: string;
-        };
-        accountSettings: {
-          title: string;
-          security: string;
-          securityHint: string;
-          securityHintChecking: string;
-          securityHintEnabled: string;
-          securityHintDisabled: string;
-          resetPassword: string;
-          resetPasswordHint: string;
-          currentPassword: string;
-          newPassword: string;
-          confirmNewPassword: string;
-          updatePassword: string;
-          passwordChanged: string;
-          passwordChangeFailed: string;
-          language: string;
-          languageVi: string;
-          languageEn: string;
-        };
-        appearance: {
-          title: string;
-          darkMode: string;
-          currentlyOn: string;
-          currentlyOff: string;
-        };
-        notifications: {
-          title: string;
-          email: string;
-          emailHint: string;
-          push: string;
-          pushHint: string;
-          reminders: string;
-          remindersHint: string;
-        };
-        dangerZone: {
-          title: string;
-          deactivate: string;
-          description: string;
-        };
-        editModal: {
-          bioDescription: string;
-          fullName: string;
-          phoneNumber: string;
-          saveChanges: string;
-          title: string;
-        };
-        toast: {
-          avatarUploaded: string;
-          avatarUploadFailed: string;
-          fullNameRequired: string;
-          profileUpdated: string;
-          profileUpdateFailed: string;
-        };
-        validation: {
-          avatarFileSize: string;
-          avatarFileType: string;
+        queue: {
+          updating: string;
         };
       };
-      appointments: {
-        title: string;
-        subtitle: string;
-        loading: string;
-        manageSlots: string;
-        notScheduled: string;
-        invalidDate: string;
-        unknownPatient: string;
-        onlineConsultation: string;
-        inPersonConsultation: string;
-        open: string;
-        view: string;
-        searchPlaceholder: string;
-        filterLabel: string;
-        filter: {
-          all: string;
-          pending: string;
-          confirmed: string;
-          completed: string;
-          cancelled: string;
-        };
-        status: {
-          pending: string;
-          confirmed: string;
-          completed: string;
-          cancelled: string;
-        };
-        stats: {
-          today: string;
-          upcoming: string;
-          completed: string;
-          cancelled: string;
-        };
-        emptyTitle: string;
-        emptyAll: string;
-        emptyPrefix: string;
-        emptySuffix: string;
-        toast: {
-          missingDoctorIdentity: string;
-          cancelReason: string;
-          cancelSuccess: string;
-          cancelError: string;
-        };
-        tab: {
-          cancelled: string;
-          past: string;
-          today: string;
-          upcoming: string;
-        };
-        countdown: {
-          daysShort: string;
-          hoursShort: string;
-          in: string;
-          minutesShort: string;
-          startsIn: string;
-        };
-        emptySearch: string;
-        emptyTab: string;
-        joinCall: string;
-        now: string;
-        openPatientConversation: string;
-        todayTimeline: string;
-      };
-      schedules: {
-        title: string;
-        subtitle: string;
-        loading: string;
-        addSlot: string;
-        today: string;
-        noSlots: string;
-        cancelSlotTitle: string;
-        errorCreateSlot: string;
-        stats: {
-          thisWeek: string;
-          available: string;
-          booked: string;
-          cancelled: string;
-          blocked: string;
-          totalSlots: string;
-        };
-        filter: {
-          all: string;
-          available: string;
-          booked: string;
-          past: string;
-        };
-        modal: {
-          title: string;
-          date: string;
-          startTime: string;
-          endTime: string;
-          slotType: string;
-          costOptional: string;
-          createSlot: string;
-        };
-        toast: {
-          cancelError: string;
-          cancelSuccess: string;
-          createSuccess: string;
-        };
-        validation: {
-          invalidCost: string;
-          invalidRange: string;
-          missingDateTime: string;
-        };
-      };
-      consultations: {
-        title: string;
-        chat: {
-          patient: string;
-          doctor: string;
-          you: string;
-          loading: string;
-          searchPlaceholder: string;
-          stats: {
-            all: string;
-            open: string;
-            upcoming: string;
-          };
-          emptySearchTitle: string;
-          emptySearchSubtitle: string;
-          joinMeeting: string;
-          joinLocked: string;
-          joinAvailableAfter: string;
-          canJoinBeforePrefix: string;
-          minutes: string;
-          meetingEnded: string;
-          meetingWindowClosed: string;
-          meetingLinkReady: string;
-          linkPending: string;
-          schedulePending: string;
-          confirmCancelSession: string;
-          confirmCompleteSession: string;
-          cancelReason: string;
-          sendError: string;
-          complete: string;
-          hideSessionOverview: string;
-          showSessionOverview: string;
-          autoOpenAtSchedule: string;
-          opensIn: string;
-          savedAsDoctorNote: string;
-          deliveredToPatient: string;
-          patientPreVisitNote: string;
-          patientMessage: string;
-          reviewPatientNotes: string;
-          noMessagesInSession: string;
-          noMessagesYet: string;
-          preVisitEmptyDescription: string;
-          inProgressEmptyDescription: string;
-          completedEmptyDescription: string;
-          typeMessage: string;
-          encryptionNotice: string;
-          characters: string;
-          completedReadOnly: string;
-          preVisitReadOnly: string;
-          selectSession: string;
-          selectSessionDescription: string;
-          sessionOverview: string;
-          appointment: string;
-          lastActivity: string;
-          consultationFee: string;
-          phaseLabel: string;
-          conversationGuidance: string;
-          guidanceDescription: string;
-          phase: {
-            preVisit: string;
-            inProgress: string;
-            completed: string;
-            locked: string;
-            postVisit: string;
-            preVisitDescription: string;
-            inProgressDescription: string;
-            completedDescription: string;
-          };
-          shareCase: {
-            aiConfidence: string;
-            doctorSays: string;
-            finalDiagnosis: string;
-            patient: string;
-            riskLevel: string;
-            summary: string;
-            contentPlaceholder: string;
-            description: string;
-            doctorContent: string;
-            notEligible: string;
-            preview: string;
-            previewTitle: string;
-            retinalImages: string;
-            sharing: string;
-            success: string;
-            title: string;
-          };
-          aiAnnotated: string;
-          aiCaseSnapshot: string;
-          cancelSessionTitle: string;
-          characterLimitReached: string;
-          closeSessionOverview: string;
-          completeConsultationTitle: string;
-          completedPlaceholder: string;
-          confidence: string;
-          encryptionNoticeShort: string;
-          imageAttached: string;
-          invalidSchedule: string;
-          join: string;
-          na: string;
-          noOriginalImage: string;
-          original: string;
-          originalRetinalImage: string;
-          patientTyping: string;
-          pendingImage: string;
-          previewCompletedEmpty: string;
-          previewImageAttachment: string;
-          previewLocked: string;
-          previewNewMessage: string;
-          previewPreVisitEmpty: string;
-          previewScanAttachment: string;
-          previewUnavailable: string;
-          preVisitPlaceholder: string;
-          readyToShareImage: string;
-          risk: string;
-          saveResult: {
-            aiSummary: string;
-            doctorSays: string;
-            finalDiagnosis: string;
-          };
-          sharedImage: string;
-          unknown: string;
-          unreadActivity: string;
-        };
-      };
-      patients: {
-        title: string;
-        subtitle: string;
-        loading: string;
-        patientPrefix: string;
-        notAvailable: string;
-        searchPlaceholder: string;
-        moreFilters: string;
-        empty: string;
-        sessionsSuffix: string;
-        nextAppointment: string;
-        lastCompletedVisit: string;
-        upcoming: string;
-        completed: string;
-        viewDetails: string;
-        statusLabel: {
-          urgent: string;
-          active: string;
-          past: string;
-        };
-        filter: {
-          allStatus: string;
-          active: string;
-          urgent: string;
-          pastOnly: string;
-        };
-        stats: {
-          totalPatients: string;
-          active: string;
-          urgent: string;
-          pastOnly: string;
-        };
-        emptyTitle: string;
-        message: string;
-        chart: {
-          oneMonthAgo: string;
-          thisMonth: string;
-          twoMonthsAgo: string;
-        };
-        emptySearch: string;
-        lastDiagnosis: string;
-      };
-      slotManagement: {
-        title: string;
-        subtitle: string;
-        loading: string;
-        newTemplate: string;
-        noSlots: string;
-        notConfigured: string;
-        minutes: string;
-        create: string;
-        creating: string;
-        generate: string;
-        generating: string;
-        blockReason: string;
-        fullTimeNotice: string;
-        partTimeNotice: string;
-        subtitleFullTime: string;
-        subtitlePartTime: string;
-        fullTimeManualCreateBlocked: string;
-        fullTimeManualGenerateBlocked: string;
-        fullTimeDeleteTemplateBlocked: string;
-        confirmDeleteTemplate: string;
-        confirmDeleteTemplateMessage: string;
-        confirmDeleteTemplateAction: string;
-        blockThisSlot: string;
-        unblockThisSlot: string;
-        stats: {
-          totalSlots: string;
-          available: string;
-          booked: string;
-          blocked: string;
-        };
-        templates: {
-          title: string;
-          generateSlots: string;
-          empty: string;
-        };
-        legend: {
-          available: string;
-          reserved: string;
-          booked: string;
-          blocked: string;
-          expired: string;
-        };
-        modal: {
-          createTemplateTitle: string;
-          dayOfWeek: string;
-          startTime: string;
-          endTime: string;
-          slotDuration: string;
-          slotType: string;
-          costVnd: string;
-          generateTitle: string;
-          generateFromTemplatePrefix: string;
-          fromDate: string;
-          toDate: string;
-        };
-        messages: {
-          slotBlocked: string;
-          slotUnblocked: string;
-          templateCreated: string;
-          templateDeleted: string;
-          generatedPrefix: string;
-          generatedSuffix: string;
-        };
-        errors: {
-          onlyOwnBlock: string;
-          onlyOwnUnblock: string;
-          failedBlock: string;
-          failedUnblock: string;
-          failedCreateTemplate: string;
-          missingGenerateInputs: string;
-          failedGenerate: string;
-          failedDeleteTemplate: string;
-        };
-        pricing: {
-          allowedRangeHint: string;
-          allowedRangeLabel: string;
-          costRequired: string;
-          experienceLabel: string;
-          outOfRange: string;
-          positiveIntegerOnly: string;
-          rangeLoadFailed: string;
-          rangeLoading: string;
-          suggestedHint: string;
-        };
-      };
-      contract: {
-        title: string;
-        subtitle: string;
-        refresh: string;
-        loading: string;
-        emptyTitle: string;
-        emptyDescription: string;
-        contractCode: string;
-        signedDate: string;
-        contractInfo: string;
-        pdfDocument: string;
-        template: string;
-        type: string;
-        ophthalmologistType: string;
-        createdDate: string;
-        signer: string;
-        fullName: string;
-        actions: string;
-        viewTemplate: string;
-        viewTemplateHint: string;
-        downloadTemplate: string;
-        downloadTemplateHint: string;
-        downloadFailed: string;
-        activeTitle: string;
-        activeDescription: string;
-        redirectCountdown: string;
-        status: {
-          uploadedPendingApproval: string;
-          pendingSignature: string;
-          active: string;
-          draft: string;
-        };
-        upload: {
-          signedContract: string;
-          pdfUploaded: string;
-          waitingAdmin: string;
-          sentNotice: string;
-          openOriginal: string;
-          reupload: string;
-          cancelReupload: string;
-          dropzoneLabel: string;
-          selectFile: string;
-          dropzoneHint: string;
-          preview: string;
-          uploadSignedContract: string;
-          uploadFailed: string;
-          invalidType: string;
-          fileTooLarge: string;
-          uploadSignedTitle: string;
-          uploadSignedDescription: string;
-          steps: {
-            downloadPrint: string;
-            signStamp: string;
-            captureUpload: string;
-          };
-          uploadSuccess: string;
-        };
-        commission: string;
-        actualSalary: string;
-        pendingDeal: string;
-      };
-      screeningReview: {
-        note: string;
-        aiDisclaimer: string;
-        aiModel: string;
-        attentionNeeded: string;
-        backToScreenings: string;
-        boundingboxLabel: string;
-        captured: string;
-        demographics: string;
-        detectedFindings: string;
-        device: string;
-        generateReport: string;
-        imageDetails: string;
-        invalidIdentifier: string;
-        loadFailed: string;
-        loading: string;
-        magnification: string;
-        medicalConditions: string;
-        medicalConditionsHint: string;
-        modal: {
-          aiSummary: string;
-          clinicalFindings: string;
-          clinicalFindingsHint: string;
-          clinicalFindingsPlaceholder: string;
-          completeDiagnosis: string;
-          confidence: string;
-          confirmAndSave: string;
-          description: string;
-          diagnosisCode: string;
-          diagnosisCore: string;
-          exportingPdf: string;
-          exportPdf: string;
-          followUpDate: string;
-          linkingSession: string;
-          noAiSummary: string;
-          recommendations: string;
-          referralHint: string;
-          referralRequired: string;
-          riskLevel: string;
-          selectRecommendationTemplate: string;
-          selectTreatmentTemplate: string;
-          severityLevel: string;
-          treatmentAdvice: string;
-          treatmentPlan: string;
-          urgentCase: string;
-          urgentCaseHint: string;
-        };
-        modalityColorFundus: string;
-        noSelectedFundusImage: string;
-        noStructuredFindings: string;
-        notFound: string;
-        original: string;
-        overlayEditHint: string;
-        previousScans: string;
-        previousScansHint: string;
-        quality: string;
-        qualityGood: string;
-        qualityOptimal: string;
-        qualityPoor: string;
-        qualityUnknown: string;
-        referral: {
-          monitor: string;
-          recommended: string;
-          routine: string;
-        };
-        risk: {
-          critical: string;
-          high: string;
-          low: string;
-          moderate: string;
-          none: string;
-        };
-        saveButton: string;
-        screeningAi: string;
-        selectImageForDetails: string;
-        sessionLinkLoading: string;
-        share: {
-          failed: string;
-          header: string;
-          noImages: string;
-          selectImageTitle: string;
-          sendSelected: string;
-          success: string;
-        };
-        shareButton: string;
-        status: {
-          finalizedLocked: string;
-        };
-        subtitle: string;
-        tabs: {
-          currentExam: string;
-          medicalHistory: string;
-          patientSummary: string;
-          previousReports: string;
-        };
-        title: string;
-        toast: {
-          downloadReportError: string;
-          downloadReportSuccess: string;
-          saveFailed: string;
-          saveSuccess: string;
-        };
-        toolbar: {
-          addNewBox: string;
-          deleteBox: string;
-          editOverlay: string;
-          exitOverlayEdit: string;
-          fullscreen: string;
-          measure: string;
-          pan: string;
-          reset: string;
-          resetAiBoxes: string;
-          undo: string;
-          zoomIn: string;
-          zoomOut: string;
-        };
-        validation: {
-          invalidLinkedSession: string;
-          missingDoctorIdentity: string;
-          noLinkedSession: string;
-          requiredDiagnosisAndFindings: string;
-        };
-      };
-      screenings: {
-        confidence: {
-          high: string;
-          low: string;
-          moderate: string;
-          na: string;
-        };
-        filter: {
-          all: string;
-          approved: string;
-          flagged: string;
-          pending: string;
-          reviewed: string;
-        };
-        images: string;
-        pendingAnalysis: string;
-        review: string;
-        risk: {
-          high: string;
-          low: string;
-          medium: string;
-          unknown: string;
-        };
-        sort: {
-          byDate: string;
-          byPriority: string;
-        };
-        stats: {
-          approved: string;
-          flagged: string;
-          pending: string;
-          total: string;
-        };
-        status: {
-          approved: string;
-          flagged: string;
-          rejected: string;
-          reviewed: string;
-          pendingReview: string;
-        };
-        title: string;
-        aiPrediction: string;
-        consultationDate: string;
-        createdDate: string;
-        empty: {
-          default: string;
-          filtered: string;
-          title: string;
-        };
-        loadError: string;
-        loading: string;
-        needsAttention: string;
-        openChat: string;
-        reviewNow: string;
-        searchPlaceholder: string;
-        subtitle: string;
-        toggleSortOrder: string;
-      };
-      wallet: {
-        balance: string;
-        loading: string;
-        title: string;
-        transactionType: {
-          bonus: string;
-          deposit: string;
-          payment: string;
-          refund: string;
-          transfer: string;
-          transaction: string;
-          withdrawal: string;
-        };
-        transactions: string;
-        withdraw: {
-          status: {
-            cancelled: string;
-            failed: string;
-            pending: string;
-            processing: string;
-            completed: string;
-          };
-        };
-        yourNote: string;
-        actions: {
-          createWithdrawRequest: string;
-        };
-        adminNote: string;
-        consultationIncome: string;
-        consultationIncomeShort: string;
-        contractNumberPlaceholder: string;
-        contractReference: string;
-        loadError: string;
-        noTransactions: string;
-        noWithdrawRequests: string;
-        pendingWithdrawRequests: string;
-        requestsProcessing: string;
-        submittedAt: string;
-        subtitle: string;
-        thisMonthIn: string;
-        thisMonthInDescription: string;
-        toast: {
-          invalidWithdrawAmount: string;
-          missingBankBin: string;
-          missingBankInfo: string;
-          withdrawExceedsBalance: string;
-          withdrawSubmitFailed: string;
-          withdrawSubmitted: string;
-        };
-        transactionsInMonth: string;
-        transferReference: string;
-        withdrawModal: {
-          accountHolderLabel: string;
-          accountHolderPlaceholder: string;
-          accountNumberLabel: string;
-          accountNumberPlaceholder: string;
-          amountLabel: string;
-          amountPlaceholder: string;
-          bankLabel: string;
-          bankPlaceholder: string;
-          bankSearchPlaceholder: string;
-          contractLabel: string;
-          noBankFound: string;
-          noteLabel: string;
-          notePlaceholder: string;
-          title: string;
-        };
-        withdrawRequestsTitle: string;
+      common: {
+        doctor: string;
+        retry: string;
       };
     };
     MedicalTerms: {
@@ -2287,25 +1367,7 @@ declare module 'i18next' {
         title: string;
         subtitle: string;
       };
-      status: {
-        healthy: string;
-        low: string;
-        moderate: string;
-        high: string;
-      };
-      summary: {
-        healthy: string;
-        low: string;
-        moderate: string;
-        high: string;
-      };
-      empty: {
-        description: string;
-      };
-      sections: {
-        recommendedActions: string;
-        learnMore: string;
-      };
+      sessionLabel: string;
       labels: {
         retinalImage: string;
         retinalScanAlt: string;
@@ -2313,40 +1375,49 @@ declare module 'i18next' {
         scanId: string;
         capturedAt: string;
         aiAssessment: string;
-        aiConfidence: string;
-        pdfFormat: string;
         primaryRecommendation: string;
+        pdfFormat: string;
       };
-      descriptions: {
-        bookConsultation: string;
-        startNewAnalysis: string;
+      status: {
+        healthy: string;
+        high: string;
+      };
+      summary: {
+        healthy: string;
+        high: string;
+        moderate: string;
+        low: string;
       };
       findingsDetected: string;
       findingsMore: string;
-      backToDashboard: string;
-      sessionLabel: string;
       actions: {
-        startNewScreening: string;
         zoomImage: string;
         viewFullAnalysisDetails: string;
         bookConsultation: string;
         findSpecialist: string;
         askAuraAssistant: string;
-        downloadReport: string;
         downloadingReport: string;
+        downloadReport: string;
         newScan: string;
         viewAllResources: string;
+        startNewScreening: string;
+      };
+      sections: {
+        recommendedActions: string;
+        learnMore: string;
+      };
+      descriptions: {
+        bookConsultation: string;
+        startNewAnalysis: string;
       };
       consultation: {
         alreadyBookedTitle: string;
         alreadyBookedDescription: string;
         statusLabel: string;
         createdAtLabel: string;
-        chatLocked: string;
       };
-      footer: {
-        importantDisclaimer: string;
-        copyright: string;
+      empty: {
+        description: string;
       };
     };
     PatientAppointments: {
@@ -2466,14 +1537,21 @@ declare module 'i18next' {
         afternoon: string;
         evening: string;
       };
-      header: {
-        retinalOverview: string;
+      risk: {
+        notAvailable: string;
       };
-      stats: {
-        latestAiRiskStatus: string;
-        noScans: string;
-        nextAppointment: string;
-        noneScheduled: string;
+      badge: {
+        looksHealthy: string;
+        needsAttention: string;
+      };
+      detectedSummary: {
+        low: string;
+        medium: string;
+        high: string;
+        default: string;
+      };
+      fallback: {
+        firstName: string;
       };
       hero: {
         title: {
@@ -2487,9 +1565,24 @@ declare module 'i18next' {
         dateScanned: string;
         nextScreening: string;
         processingTitle: string;
-        processingDescription: string;
         noResultsTitle: string;
+        processingDescription: string;
         noResultsDescription: string;
+      };
+      stats: {
+        latestAiRiskStatus: string;
+        noScans: string;
+        nextAppointment: string;
+        noneScheduled: string;
+      };
+      header: {
+        retinalOverview: string;
+      };
+      quickActions: {
+        title: string;
+        bookAppointment: string;
+        bookFollowUp: string;
+        messageSpecialist: string;
       };
       actions: {
         viewFullReport: string;
@@ -2498,23 +1591,18 @@ declare module 'i18next' {
       history: {
         title: string;
         viewAll: string;
+        recentScreeningAlt: string;
         sessionLabel: string;
         imagesSingle: string;
         imagesMultiple: string;
-        recentScreeningAlt: string;
         empty: string;
-      };
-      quickActions: {
-        title: string;
-        messageSpecialist: string;
-        bookAppointment: string;
-        bookFollowUp: string;
       };
     };
     PatientCarePlan: {
+      badge: string;
       page: {
         title: string;
-        subtitle: string;
+        description: string;
       };
       stats: {
         upcoming: string;
@@ -2525,7 +1613,7 @@ declare module 'i18next' {
       error: string;
       empty: {
         title: string;
-        subtitle: string;
+        message: string;
       };
     };
     PatientHelpFeedback: {
@@ -2910,15 +1998,29 @@ declare module 'i18next' {
       };
     };
     PatientScreening: {
-      page: {
+      diagnosis: {
+        notAvailable: string;
+        type: {
+          aiScreening: string;
+          verifiedResult: string;
+        };
+        status: {
+          verified: string;
+        };
+        loading: string;
         title: string;
-        subtitle: string;
-      };
-      status: {
-        completed: string;
-        processing: string;
-        pending: string;
-        failed: string;
+        fields: {
+          createdAt: string;
+          diagnosisCode: string;
+          codingSystem: string;
+          severityLevel: string;
+          clinicalStatus: string;
+          urgentCase: string;
+          referralNeeded: string;
+        };
+        detailsTitle: string;
+        yes: string;
+        no: string;
       };
       risk: {
         low: string;
@@ -2926,9 +2028,20 @@ declare module 'i18next' {
         high: string;
         critical: string;
       };
-      badge: {
-        looksHealthy: string;
-        needsAttention: string;
+      status: {
+        pending: string;
+        completed: string;
+        processing: string;
+        failed: string;
+      };
+      labels: {
+        bothEyes: string;
+        finding: string;
+        findings: string;
+      };
+      page: {
+        title: string;
+        subtitle: string;
       };
       stats: {
         totalScans: string;
@@ -2939,20 +2052,7 @@ declare module 'i18next' {
       search: {
         placeholder: string;
       };
-      list: {
-        recentScans: string;
-      };
-      empty: {
-        title: string;
-        description: string;
-      };
-      labels: {
-        bothEyes: string;
-        finding: string;
-        findings: string;
-      };
       actions: {
-        newScreening: string;
         filter: string;
         viewReview: string;
         viewDiagnosis: string;
@@ -2960,45 +2060,16 @@ declare module 'i18next' {
         shareWithDoctor: string;
         delete: string;
       };
-      diagnosis: {
+      list: {
+        recentScans: string;
+      };
+      empty: {
         title: string;
-        loading: string;
-        detailsTitle: string;
-        notAvailable: string;
-        yes: string;
-        no: string;
-        type: {
-          aiScreening: string;
-          verifiedResult: string;
-        };
-        status: {
-          verified: string;
-        };
-        fields: {
-          createdAt: string;
-          diagnosisCode: string;
-          codingSystem: string;
-          severityLevel: string;
-          confidenceLevel: string;
-          clinicalStatus: string;
-          urgentCase: string;
-          referralNeeded: string;
-          followUpDate: string;
-          finalizedAt: string;
-          verifiedAt: string;
-          verifiedBy: string;
-        };
-        sections: {
-          clinicalSummary: string;
-          findings: string;
-          treatmentPlan: string;
-          lifestyleAdvice: string;
-          recommendations: string;
-        };
-        empty: {
-          findings: string;
-          recommendations: string;
-        };
+        description: string;
+      };
+      badge: {
+        looksHealthy: string;
+        needsAttention: string;
       };
     };
     PatientScreeningNew: {
@@ -3694,9 +2765,12 @@ declare module 'i18next' {
       calendar: {
         actions: {
           completeVisit: string;
+          newWalkIn: string;
           noShow: string;
+          payRemaining: string;
           scanQrCheckIn: string;
           startConsultation: string;
+          markNoShow: string;
         };
         pageName: string;
         patient: {
@@ -3707,6 +2781,11 @@ declare module 'i18next' {
           title: string;
         };
         states: {
+          billing: {
+            pending: string;
+            partiallyPaid: string;
+            fullyPaid: string;
+          };
           loadingAppointments: string;
           noAppointments: string;
           terminal: {
@@ -3742,6 +2821,50 @@ declare module 'i18next' {
           qrNotBelongOrganisation: string;
           qrNotMatchAppointment: string;
           visitCompleted: string;
+          noShowMarked: string;
+        };
+        bento: {
+          totalBill: string;
+          paidAmount: string;
+          balance: string;
+          remaining: string;
+        };
+        doctor: {
+          consultingDoctor: string;
+          defaultDoctor: string;
+        };
+        reason: string;
+        walkInModal: {
+          title: string;
+          subtitle: string;
+          patient: {
+            title: string;
+            hint: string;
+            create: string;
+            search: string;
+            loading: string;
+            empty: string;
+          };
+          date: {
+            label: string;
+          };
+          slot: {
+            title: string;
+            loading: string;
+            empty: string;
+            remaining: string;
+          };
+          reason: {
+            label: string;
+            placeholder: string;
+          };
+          summary: {
+            ready: string;
+            pending: string;
+          };
+          actions: {
+            create: string;
+          };
         };
       };
       contract: {
@@ -4693,86 +3816,6 @@ declare module 'i18next' {
       };
     };
     SystemAdmin: {
-      common: {
-        systemAdmin: string;
-      };
-      sidebar: {
-        dashboard: string;
-        groups: {
-          'user-directory': {
-            label: string;
-            description: string;
-          };
-        };
-        items: {
-          'staff-management': string;
-        };
-      };
-      staff: {
-        modal: {
-          title: string;
-        };
-        fields: {
-          fullName: string;
-          email: string;
-          phone: string;
-          role: string;
-        };
-        actions: {
-          create: string;
-        };
-        toasts: {
-          createSuccess: string;
-          createError: string;
-        };
-      };
-      cashflow: {
-        title: string;
-        description: string;
-        stats: {
-          totalVolume: string;
-          pendingAmount: string;
-          completedOrders: string;
-          avgOrderValue: string;
-        };
-        filters: {
-          all: string;
-          pending: string;
-          completed: string;
-          failed: string;
-        };
-        table: {
-          orderId: string;
-          customer: string;
-          amount: string;
-          status: string;
-          date: string;
-          actions: string;
-          list: string;
-          defaultDescription: string;
-          deposited: string;
-          remaining: string;
-          onlineDeposit: string;
-          fullPayment: string;
-          patientFallback: string;
-        };
-        status: {
-          pending: string;
-          confirmed: string;
-          processing: string;
-          completed: string;
-          cancelled: string;
-          failed: string;
-          refunded: string;
-        };
-        pagination: {
-          previous: string;
-          next: string;
-          page: string;
-        };
-        noData: string;
-        error: string;
-      };
       dashboard: {
         title: string;
         subtitle: string;
@@ -4783,6 +3826,14 @@ declare module 'i18next' {
           checkedIn: string;
           completed: string;
           noShow: string;
+        };
+        bottleneckLongWait: string;
+        bottleneckFullCapacity: string;
+        bottleneckOverloaded: string;
+        statusBadge: {
+          waiting: string;
+          inProgress: string;
+          payment: string;
         };
         liveQueue: string;
         active: string;
@@ -4801,9 +3852,6 @@ declare module 'i18next' {
         remaining: string;
         bottlenecks: string;
         noBottlenecks: string;
-        bottleneckLongWait: string;
-        bottleneckFullCapacity: string;
-        bottleneckOverloaded: string;
         quickActions: string;
         actions: {
           createSlot: string;
@@ -4814,11 +3862,6 @@ declare module 'i18next' {
           viewScheduleDesc: string;
           addWalkIn: string;
           addWalkInDesc: string;
-        };
-        statusBadge: {
-          waiting: string;
-          inProgress: string;
-          payment: string;
         };
       };
     };
@@ -5246,21 +4289,25 @@ declare module 'i18next' {
       };
     };
     ClinicStaffDashboard: {
-      greeting: string;
-      greetingAfternoon: string;
-      greetingEvening: string;
-      subtitle: string;
+      greetings: {
+        morning: string;
+        afternoon: string;
+        evening: string;
+      };
       stats: {
         todayAppointments: string;
-        checkedIn: string;
-        pendingWork: string;
-        completed: string;
+        scheduled: string;
+        patientsCheckedIn: string;
         today: string;
-        needsAction: string;
+        pendingTasks: string;
+        requiresAction: string;
+        completedToday: string;
       };
-      recentActivity: {
+      subtitle: string;
+      activity: {
         title: string;
         subtitle: string;
+        empty: string;
       };
       quickActions: {
         title: string;
@@ -5271,8 +4318,8 @@ declare module 'i18next' {
         registerPatientDesc: string;
         viewSchedule: string;
         viewScheduleDesc: string;
-        cashier: string;
-        cashierDesc: string;
+        cashierDesk: string;
+        cashierDeskDesc: string;
       };
     };
     ClinicStaffQueue: {
@@ -5397,6 +4444,10 @@ declare module 'i18next' {
       };
     };
     Cashier: {
+      toast: {
+        createSuccess: string;
+        createError: string;
+      };
       header: {
         badge: string;
         title: string;
@@ -5443,10 +4494,6 @@ declare module 'i18next' {
         message: string;
         confirm: string;
         cancel: string;
-      };
-      toast: {
-        createSuccess: string;
-        createError: string;
       };
     };
     ClinicStaffBilling: {
@@ -5499,6 +4546,94 @@ declare module 'i18next' {
       };
       error: {
         retry: string;
+      };
+    };
+    ClinicStaffSettings: {
+      title: string;
+      subtitle: string;
+      groups: {
+        account: string;
+      };
+      tabs: {
+        profile: string;
+        security: string;
+        notifications: string;
+      };
+      items: {
+        profileDescription: string;
+        securityDescription: string;
+        notificationsDescription: string;
+      };
+      appearance: {
+        title: string;
+        darkMode: string;
+        currentDark: string;
+        currentLight: string;
+        toggle: string;
+      };
+      language: {
+        title: string;
+        subtitle: string;
+      };
+    };
+    ClinicStaff: {
+      queue: {
+        toast: {
+          sentToDoctorSuccess: string;
+          sentToDoctorFailed: string;
+          screeningRequired: string;
+          loadDoctorsFailed: string;
+          copyDoctorConsultationLinkSuccess: string;
+          copyDoctorConsultationLinkFailed: string;
+        };
+        error: {
+          title: string;
+          message: string;
+        };
+        actions: {
+          retry: string;
+          refresh: string;
+          fillErm: string;
+          createScreening: string;
+          viewScreening: string;
+          sending: string;
+          sendToDoctor: string;
+          copyDoctorLink: string;
+        };
+        page: {
+          title: string;
+          subtitle: string;
+        };
+        tabs: {
+          all: string;
+        };
+        empty: {
+          title: string;
+          message: string;
+        };
+        table: {
+          patient: string;
+          checkedIn: string;
+          status: string;
+          screening: string;
+          doctor: string;
+          action: string;
+        };
+        states: {
+          awaitingDoctor: string;
+          inConsultation: string;
+          completed: string;
+        };
+        sendDoctorModal: {
+          title: string;
+          doctorLabel: string;
+          loadingDoctors: string;
+          selectDoctor: string;
+          noDoctors: string;
+        };
+      };
+      common: {
+        close: string;
       };
     };
   }

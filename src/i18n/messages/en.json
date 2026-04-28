@@ -3737,7 +3737,74 @@
         "qrCheckInSuccess": "Check-in successful via QR.",
         "qrNotBelongOrganisation": "This QR code does not belong to your organisation.",
         "qrNotMatchAppointment": "This QR code does not match the selected appointment.",
-        "visitCompleted": "Visit completed."
+        "visitCompleted": "Visit completed.",
+        "noShowMarked": "Marked as no-show."
+      },
+      "actions": {
+        "completeVisit": "Complete visit",
+        "newWalkIn": "New Walk-in",
+        "noShow": "No-show",
+        "payRemaining": "Pay Balance",
+        "scanQrCheckIn": "Scan QR check-in",
+        "startConsultation": "Start consultation",
+        "markNoShow": "No-show"
+      },
+      "states": {
+        "billing": {
+          "pending": "Pending Payment",
+          "partiallyPaid": "Deposit Paid",
+          "fullyPaid": "Fully Paid"
+        },
+        "loadingAppointments": "Loading appointments...",
+        "noAppointments": "No appointments on this day.",
+        "terminal": {
+          "cancelled": "Appointment cancelled",
+          "completed": "Visit completed",
+          "noShow": "Marked as no-show"
+        }
+      },
+      "bento": {
+        "totalBill": "Total Bill",
+        "paidAmount": "Paid Amount",
+        "balance": "Balance",
+        "remaining": "Remaining"
+      },
+      "doctor": {
+        "consultingDoctor": "Consulting Doctor",
+        "defaultDoctor": "Clinic Doctor"
+      },
+      "reason": "Visit Reason",
+      "walkInModal": {
+        "title": "Create Walk-in Appointment",
+        "subtitle": "The patient will be checked in and added to the clinic queue immediately.",
+        "patient": {
+          "title": "Patient",
+          "hint": "Search by name, phone, citizen ID, or email.",
+          "create": "New patient",
+          "search": "Search patient...",
+          "loading": "Loading patients...",
+          "empty": "No matching patients. Create a new patient first."
+        },
+        "date": {
+          "label": "Appointment date"
+        },
+        "slot": {
+          "title": "Available slot",
+          "loading": "Loading slots...",
+          "empty": "No available slots for this date.",
+          "remaining": "{{count}} seats left"
+        },
+        "reason": {
+          "label": "Visit reason",
+          "placeholder": "Optional notes for screening staff..."
+        },
+        "summary": {
+          "ready": "{{patient}} will enter the queue at {{time}}.",
+          "pending": "Choose a patient and slot to create the visit lifecycle."
+        },
+        "actions": {
+          "create": "Create and check in"
+        }
       }
     },
     "contract": {
@@ -5494,6 +5561,529 @@
     },
     "error": {
       "retry": "Retry"
+    }
+  },
+  "ClinicStaffSettings": {
+    "title": "Settings",
+    "subtitle": "Configure account, security, and staff portal preferences",
+    "groups": {
+      "account": "Account"
+    },
+    "tabs": {
+      "profile": "Profile",
+      "security": "Security",
+      "notifications": "Notifications"
+    },
+    "items": {
+      "profileDescription": "Manage personal information and upload avatar",
+      "securityDescription": "Two-factor authentication and account protection",
+      "notificationsDescription": "Review all notifications and reminders"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "darkMode": "Dark Mode",
+      "currentDark": "Current theme: Dark",
+      "currentLight": "Current theme: Light",
+      "toggle": "Toggle theme"
+    },
+    "language": {
+      "title": "Language",
+      "subtitle": "Choose your preferred language for the portal"
+    }
+  },
+  "ClinicStaffDashboard": {
+    "greetings": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "stats": {
+      "todayAppointments": "Today's Appointments",
+      "scheduled": "Scheduled",
+      "patientsCheckedIn": "Checked In",
+      "today": "Today",
+      "pendingTasks": "Pending Tasks",
+      "requiresAction": "Require action",
+      "completedToday": "Completed"
+    },
+    "subtitle": "AURA Clinic • Real-time operational overview",
+    "activity": {
+      "title": "Recent Activity",
+      "subtitle": "Live patient check-ins and appointment updates",
+      "empty": "No recent activity. A fresh day begins!"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "subtitle": "Common tasks for today",
+      "newAppointment": "New Appointment",
+      "newAppointmentDesc": "Schedule a new patient appointment",
+      "registerPatient": "Register Patient",
+      "registerPatientDesc": "Add a new patient to the system",
+      "viewSchedule": "View Schedule",
+      "viewScheduleDesc": "See today's full schedule",
+      "cashierDesk": "Cashier desk",
+      "cashierDeskDesc": "Review finalized visits and collect payment"
+    }
+  },
+  "ClinicStaff": {
+    "queue": {
+      "toast": {
+        "sentToDoctorSuccess": "Case sent to doctor successfully.",
+        "sentToDoctorFailed": "Unable to send this case to doctor.",
+        "screeningRequired": "Please complete AI screening before sending to doctor.",
+        "loadDoctorsFailed": "Unable to load available doctors.",
+        "copyDoctorConsultationLinkSuccess": "Doctor consultation link copied.",
+        "copyDoctorConsultationLinkFailed": "Failed to copy doctor consultation link."
+      },
+      "error": {
+        "title": "Failed to load queue",
+        "message": "Unable to fetch clinic queue. Please try again."
+      },
+      "actions": {
+        "retry": "Retry",
+        "refresh": "Refresh",
+        "fillErm": "Fill ERM",
+        "createScreening": "Create Screening",
+        "viewScreening": "View Screening",
+        "sending": "Sending...",
+        "sendToDoctor": "Send to Doctor",
+        "copyDoctorLink": "Copy Doctor Link"
+      },
+      "page": {
+        "title": "Clinic Queue",
+        "subtitle": "Monitor patient flow and coordinate care"
+      },
+      "tabs": {
+        "all": "All"
+      },
+      "empty": {
+        "title": "No patients in queue",
+        "message": "Patients will appear here as they check in"
+      },
+      "table": {
+        "patient": "Patient",
+        "checkedIn": "Checked In",
+        "status": "Status",
+        "screening": "Screening",
+        "doctor": "Doctor",
+        "action": "Action"
+      },
+      "states": {
+        "awaitingDoctor": "Awaiting doctor",
+        "inConsultation": "In consultation",
+        "completed": "Done"
+      },
+      "sendDoctorModal": {
+        "title": "Send Case to Doctor",
+        "doctorLabel": "Available Doctor",
+        "loadingDoctors": "Loading doctors…",
+        "selectDoctor": "Select an available doctor",
+        "noDoctors": "No available ophthalmologists were found."
+      }
+    },
+    "common": {
+      "close": "Close"
+    }
+  },
+  "Cashier": {
+    "toast": {
+      "createSuccess": "Payment request created.",
+      "createError": "Error creating payment request."
+    },
+    "header": {
+      "badge": "Cashier Desk",
+      "title": "Payment Workflow",
+      "description": "Enter medication prices and service fees to generate PayOS payment links."
+    },
+    "stats": {
+      "finalizedCount": "Finalized cases",
+      "currentlySelecting": "Currently selecting",
+      "noVisitSelected": "No visit selected"
+    },
+    "queue": {
+      "title": "Payment Queue",
+      "loadError": "Unable to load payment queue.",
+      "empty": "No pending payments",
+      "emptySub": "Visits will appear here after doctor finalization",
+      "selectedBadge": "Selected",
+      "doctorName": "Doctor"
+    },
+    "pricingPanel": {
+      "title": "Payment Details",
+      "description": "Please review all charges before creating request",
+      "noVisitSelectedBadge": "No visit selected",
+      "selectPrompt": "Select a patient from the list",
+      "selectPromptSub": "To start the payment and prescription process",
+      "contextLoadError": "Unable to load payment context.",
+      "paymentSuccessTitle": "Payment Success!",
+      "paymentSuccessDescription": "Visit for <0>{{name}}</0> has been completed and status updated successfully.",
+      "backToList": "Back to list",
+      "patientLabel": "Patient",
+      "doctorLabel": "Diagnosed by",
+      "noMedication": "No medication prescribed for this visit.",
+      "medicationCount": "Prescription ({{count}} items)",
+      "medicinePriceLabel": "Unit Price (VND)",
+      "manualPricePlaceholder": "Enter price...",
+      "estimated": "Subtotal",
+      "serviceFeeLabel": "Service Fee",
+      "serviceFeeDescription": "Includes consultation and clinic service fees",
+      "serviceFeeInputLabel": "Total service fee (VND)",
+      "totalManual": "Grand Total",
+      "payButton": "Pay Now"
+    },
+    "confirmModal": {
+      "title": "Confirm Payment",
+      "message": "Create payment request of {{amount}} for {{name}}?",
+      "confirm": "Confirm",
+      "cancel": "Cancel"
+    }
+  },
+  "PatientDashboard": {
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "risk": {
+      "notAvailable": "N/A"
+    },
+    "badge": {
+      "looksHealthy": "Looks Healthy",
+      "needsAttention": "Needs Attention"
+    },
+    "detectedSummary": {
+      "low": "Based on your latest AI scan, your retina looks healthy. Keep up with your regular checkups!",
+      "medium": "AI detected some mild anomalies. We recommend scheduling a consultation with a specialist for a detailed review.",
+      "high": "AI detected concerning signs of retinal disease. Please schedule an appointment with an ophthalmologist immediately.",
+      "default": "Perform an AI screening to check your retinal health."
+    },
+    "fallback": {
+      "firstName": "Friend"
+    },
+    "hero": {
+      "title": {
+        "aiScreening": "AI Screening",
+        "specialistVerified": "Specialist Verified"
+      },
+      "awaitingAnalysis": "Awaiting analysis...",
+      "latestRetinalScanAlt": "Latest retinal scan",
+      "scanId": "Scan ID: {{id}}",
+      "latestAnalysisResult": "Latest analysis result",
+      "dateScanned": "Date Scanned",
+      "nextScreening": "Next Screening",
+      "processingTitle": "Processing results",
+      "noResultsTitle": "No results found",
+      "processingDescription": "Our AI is currently analyzing your retinal images. Please check back in a few minutes.",
+      "noResultsDescription": "You haven't performed any screenings yet. Book an appointment to check your eye health today."
+    },
+    "stats": {
+      "latestAiRiskStatus": "Latest AI Risk Status",
+      "noScans": "No data",
+      "nextAppointment": "Next Appointment",
+      "noneScheduled": "None scheduled"
+    },
+    "header": {
+      "retinalOverview": "Retinal health overview"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "bookAppointment": "Book Appointment",
+      "bookFollowUp": "Book Follow-up",
+      "messageSpecialist": "Message Specialist"
+    },
+    "actions": {
+      "viewFullReport": "View full report",
+      "openLatestSession": "Open latest session"
+    },
+    "history": {
+      "title": "Screening History",
+      "viewAll": "View all",
+      "recentScreeningAlt": "Retinal scan",
+      "sessionLabel": "Screening session",
+      "imagesSingle": "{{count}} image",
+      "imagesMultiple": "{{count}} images",
+      "empty": "No screening history found."
+    }
+  },
+  "PatientCarePlan": {
+    "badge": "Care Plan",
+    "page": {
+      "title": "My Healthcare Roadmap",
+      "description": "Your doctor's structured timeline of upcoming care steps. Items are sorted by date so you can plan ahead."
+    },
+    "stats": {
+      "upcoming": "Upcoming",
+      "overdue": "Overdue",
+      "completed": "Completed"
+    },
+    "loading": "Loading your care plan...",
+    "error": "Unable to load your healthcare roadmap. Please refresh and try again.",
+    "empty": {
+      "title": "No care plan steps yet.",
+      "message": "Your doctor will add steps here after your next visit."
+    }
+  },
+  "PatientHelpFeedback": {
+    "page": {
+      "title": "Help & Feedback",
+      "subtitle": "Share your website experience to help us make retinal care journeys better."
+    },
+    "whyFeedbackMatters": {
+      "title": "Why your feedback matters",
+      "items": {
+        "bookingAndConsultation": "Help us improve booking and consultation usability.",
+        "bugReporting": "Highlight bug issues before they impact more patients.",
+        "featureSuggestions": "Suggest features that make your care journey smoother."
+      }
+    },
+    "form": {
+      "title": "Help & Feedback",
+      "subtitle": "Takes less than 30 seconds. Your feedback helps us improve the platform.",
+      "unlockHint": "Complete at least one analysis, report, or appointment to unlock website feedback.",
+      "success": {
+        "title": "Feedback submitted",
+        "message": "Thanks for helping us improve your care journey."
+      },
+      "actions": {
+        "leaveFeedback": "Leave website feedback"
+      }
+    },
+    "modal": {
+      "title": "Website feedback",
+      "subtitle": "Tell us what worked well and what can be improved.",
+      "submitLabel": "Submit website feedback",
+      "labels": {
+        "rating": "Rating",
+        "ratingValidation": "Please select a rating from 1 to 5.",
+        "category": "Category",
+        "commentOptional": "Comment (optional)",
+        "commentPlaceholder": "Tell us more about your experience"
+      },
+      "categories": {
+        "BUG": "Bug",
+        "UX": "UX",
+        "SUGGESTION": "Suggestion",
+        "OTHER": "Other"
+      },
+      "actions": {
+        "notNow": "Not now",
+        "submitting": "Submitting..."
+      },
+      "discard": {
+        "title": "Discard draft?",
+        "description": "Your current feedback has not been submitted yet. If you leave now, the draft will be lost.",
+        "keepEditing": "Keep editing",
+        "discardDraft": "Discard draft"
+      }
+    },
+    "toast": {
+      "feedbackSubmitted": "Feedback submitted"
+    }
+  },
+  "Ophthalmologist": {
+    "dashboard": {
+      "greeting": {
+        "morning": "Good Morning",
+        "afternoon": "Good Afternoon",
+        "evening": "Good Evening"
+      },
+      "loadError": "Unable to load the live ophthalmologist dashboard.",
+      "subtitle": "Your workspace — review queue and patient cases",
+      "reviewQueue": {
+        "title": "Review Queue",
+        "description": "Cases sorted by risk level and waiting time",
+        "viewAll": "View all screenings"
+      },
+      "queue": {
+        "updating": "Updating..."
+      }
+    },
+    "common": {
+      "doctor": "Doctor",
+      "retry": "Retry"
+    }
+  },
+  "SystemAdmin": {
+    "dashboard": {
+      "title": "Clinic Operations",
+      "subtitle": "Real-time overview of today's patient flow",
+      "refresh": "Refresh",
+      "error": "Failed to load dashboard data.",
+      "stats": {
+        "totalAppointments": "Today's Appointments",
+        "checkedIn": "Checked In",
+        "completed": "Completed",
+        "noShow": "No-Show"
+      },
+      "bottleneckLongWait": "{{count}} patient(s) waiting over {{minutes}} min",
+      "bottleneckFullCapacity": "Slots at full capacity for today",
+      "bottleneckOverloaded": "{{count}} doctor(s) overloaded (>3 active)",
+      "statusBadge": {
+        "waiting": "Waiting",
+        "inProgress": "In Progress",
+        "payment": "Payment"
+      },
+      "liveQueue": "Live Queue",
+      "active": "active",
+      "queueEmpty": "No patients in queue.",
+      "patient": "Patient",
+      "status": "Status",
+      "doctor": "Doctor",
+      "waitTime": "Wait",
+      "doctorStatus": "Doctor Status",
+      "busy": "busy",
+      "noDoctors": "No doctors on duty.",
+      "handled": "handled",
+      "activeLoad": "active",
+      "slotUtilization": "Slot Utilization",
+      "booked": "booked",
+      "remaining": "Remaining",
+      "bottlenecks": "Bottleneck Alerts",
+      "noBottlenecks": "No bottlenecks detected. Operations running smoothly.",
+      "quickActions": "Quick Actions",
+      "actions": {
+        "createSlot": "Create Slot",
+        "createSlotDesc": "Add a new appointment slot",
+        "assignDoctor": "Assign Doctor",
+        "assignDoctorDesc": "Manage doctor assignments",
+        "viewSchedule": "View Schedule",
+        "viewScheduleDesc": "See today's full schedule",
+        "addWalkIn": "Add Walk-in",
+        "addWalkInDesc": "Register a new walk-in patient"
+      }
+    }
+  },
+  "PatientScreening": {
+    "diagnosis": {
+      "notAvailable": "N/A",
+      "type": {
+        "aiScreening": "Retinal Screening",
+        "verifiedResult": "Verified Result"
+      },
+      "status": {
+        "verified": "Verified"
+      },
+      "loading": "Loading medical diagnosis details...",
+      "title": "Medical Diagnosis",
+      "fields": {
+        "createdAt": "Created At",
+        "diagnosisCode": "Diagnosis Code",
+        "codingSystem": "Coding System",
+        "severityLevel": "Severity Level",
+        "clinicalStatus": "Clinical Status",
+        "urgentCase": "Urgent Case",
+        "referralNeeded": "Referral Needed"
+      },
+      "detailsTitle": "Medical Diagnosis Details",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "risk": {
+      "low": "Low risk",
+      "medium": "Medium risk",
+      "high": "High risk",
+      "critical": "Critical risk"
+    },
+    "status": {
+      "pending": "Pending",
+      "completed": "Completed",
+      "processing": "Processing",
+      "failed": "Failed"
+    },
+    "labels": {
+      "bothEyes": "Both Eyes",
+      "finding": "finding",
+      "findings": "findings"
+    },
+    "page": {
+      "title": "My Scans",
+      "subtitle": "View and manage your retinal screening history"
+    },
+    "stats": {
+      "totalScans": "Total Scans",
+      "completed": "Completed",
+      "processing": "Processing",
+      "findings": "Findings"
+    },
+    "search": {
+      "placeholder": "Search scans..."
+    },
+    "actions": {
+      "filter": "Filter",
+      "viewReview": "View Review",
+      "viewDiagnosis": "Medical Diagnosis",
+      "downloadReport": "Download Report",
+      "shareWithDoctor": "Share with Doctor",
+      "delete": "Delete"
+    },
+    "list": {
+      "recentScans": "Recent scans ({{count}})"
+    },
+    "empty": {
+      "title": "No scans yet",
+      "description": "Start your first retinal screening to detect potential issues early"
+    },
+    "badge": {
+      "looksHealthy": "Looks Healthy",
+      "needsAttention": "Needs Attention"
+    }
+  },
+  "PatientReview": {
+    "page": {
+      "title": "Review & Next Steps",
+      "subtitle": "Analysis results from AuraEyes AI system"
+    },
+    "sessionLabel": "Session",
+    "labels": {
+      "retinalImage": "Retinal image",
+      "retinalScanAlt": "Retinal scan",
+      "noImage": "No image",
+      "scanId": "Scan ID: {{id}}",
+      "capturedAt": "Captured at",
+      "aiAssessment": "AI Assessment",
+      "primaryRecommendation": "Primary Recommendation",
+      "pdfFormat": "PDF Format"
+    },
+    "status": {
+      "healthy": "Looks Healthy",
+      "high": "Needs Attention"
+    },
+    "summary": {
+      "healthy": "Your scan looks healthy. No significant concerns were found - keep up with regular eye check-ups.",
+      "high": "We found areas worth discussing with an eye specialist. Early attention is the best path to protecting your vision.",
+      "moderate": "Findings were detected and should be reviewed by an eye specialist for confirmation and next steps.",
+      "low": "Low-risk findings were detected. Keep regular follow-up with your eye specialist."
+    },
+    "findingsDetected": "Detected findings include:",
+    "findingsMore": " and {{count}} more findings",
+    "actions": {
+      "zoomImage": "Zoom image",
+      "viewFullAnalysisDetails": "View full analysis details",
+      "bookConsultation": "Book Consultation",
+      "findSpecialist": "Find Specialist",
+      "askAuraAssistant": "Ask Aura Assistant",
+      "downloadingReport": "Downloading report...",
+      "downloadReport": "Download Report",
+      "newScan": "New Scan",
+      "viewAllResources": "View all resources",
+      "startNewScreening": "Start new screening"
+    },
+    "sections": {
+      "recommendedActions": "Recommended Actions",
+      "learnMore": "Learn More"
+    },
+    "descriptions": {
+      "bookConsultation": "Discuss these results with a specialist to get a professional assessment and a personalized care plan.",
+      "startNewAnalysis": "Start a new analysis for another eye or re-check."
+    },
+    "consultation": {
+      "alreadyBookedTitle": "You already submitted this case for consultation",
+      "alreadyBookedDescription": "To avoid duplicate bookings, specialist booking and AI chat are locked for this case.",
+      "statusLabel": "Status",
+      "createdAtLabel": "Booked at"
+    },
+    "empty": {
+      "description": "Please perform a screening to view results."
     }
   }
 }

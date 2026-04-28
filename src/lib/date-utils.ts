@@ -42,8 +42,11 @@ export function todayLocalKey(): string {
  * Converts a raw `"HH:MM"` or `"HH:MM:SS"` time string (as returned by the
  * slot API) into a 12-hour AM/PM display string, e.g. `"4:30 PM"`.
  */
-export function formatSlotTime(hhmm: string): string {
+export function formatSlotTime(hhmm: string, locale: string = EN_US): string {
   const [h, m] = hhmm.split(':');
+  if (locale === VI_VN) {
+    return `${h}:${m}`;
+  }
   const hour = parseInt(h, 10);
   const ampm = hour >= 12 ? 'PM' : 'AM';
   const display = hour % 12 || 12;
@@ -126,11 +129,14 @@ export function formatMonthYear(
  * Returns the **time portion** of an ISO datetime string in 12-hour format.
  * e.g. `"2:30 PM"`
  */
-export function formatShortTime(isoString: string): string {
-  return new Date(isoString).toLocaleTimeString(EN_US, {
+export function formatShortTime(
+  isoString: string,
+  locale: string = EN_US
+): string {
+  return new Date(isoString).toLocaleTimeString(locale, {
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true,
+    hour12: locale !== VI_VN,
   });
 }
 
@@ -150,13 +156,16 @@ export function formatShortDate(
  * Compact appointment slot label: `"Mar 17, 2:30 PM"`.
  * Used in chat headers and booking confirmations.
  */
-export function formatAppointmentSlot(isoString: string): string {
-  return new Date(isoString).toLocaleString(EN_US, {
+export function formatAppointmentSlot(
+  isoString: string,
+  locale: string = EN_US
+): string {
+  return new Date(isoString).toLocaleString(locale, {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true,
+    hour12: locale !== VI_VN,
   });
 }
 
@@ -164,14 +173,17 @@ export function formatAppointmentSlot(isoString: string): string {
  * Date + time with year: `"Mar 17, 2026, 2:30 PM"`.
  * Used in transaction history and wallet displays.
  */
-export function formatDateTimeWithYear(isoString: string): string {
-  return new Date(isoString).toLocaleString(EN_US, {
+export function formatDateTimeWithYear(
+  isoString: string,
+  locale: string = EN_US
+): string {
+  return new Date(isoString).toLocaleString(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true,
+    hour12: locale !== VI_VN,
   });
 }
 
@@ -179,15 +191,18 @@ export function formatDateTimeWithYear(isoString: string): string {
  * Full long datetime: `"Monday, March 17, 2026 at 2:30 PM"`.
  * Used in consultation session headers.
  */
-export function formatLongDateTime(isoString: string): string {
-  return new Date(isoString).toLocaleString(EN_US, {
+export function formatLongDateTime(
+  isoString: string,
+  locale: string = EN_US
+): string {
+  return new Date(isoString).toLocaleString(locale, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    hour12: true,
+    hour12: locale !== VI_VN,
   });
 }
 
@@ -201,8 +216,11 @@ export function formatMessageTime(isoString: string): string {
 /**
  * Chat date separator: `"Mon, Mar 17, 2026"`.
  */
-export function formatFullDate(isoString: string): string {
-  return new Date(isoString).toLocaleDateString(EN_US, {
+export function formatFullDate(
+  isoString: string,
+  locale: string = EN_US
+): string {
+  return new Date(isoString).toLocaleDateString(locale, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -213,8 +231,11 @@ export function formatFullDate(isoString: string): string {
 /**
  * Compact date used in session list cards and notification fallbacks: `"Mar 17"`.
  */
-export function formatCompactDate(isoString: string): string {
-  return new Date(isoString).toLocaleDateString(EN_US, {
+export function formatCompactDate(
+  isoString: string,
+  locale: string = EN_US
+): string {
+  return new Date(isoString).toLocaleDateString(locale, {
     month: 'short',
     day: 'numeric',
   });
@@ -412,12 +433,16 @@ export function getWeekOffsetFromDateKey(
  * @param startOfWeek - First day of the week (Monday/Sunday)
  * @param endOfWeek   - Last day of the week
  */
-export function formatWeekRange(startOfWeek: Date, endOfWeek: Date): string {
-  const start = startOfWeek.toLocaleDateString(EN_US, {
+export function formatWeekRange(
+  startOfWeek: Date,
+  endOfWeek: Date,
+  locale: string = EN_US
+): string {
+  const start = startOfWeek.toLocaleDateString(locale, {
     month: 'short',
     day: 'numeric',
   });
-  const end = endOfWeek.toLocaleDateString(EN_US, {
+  const end = endOfWeek.toLocaleDateString(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
