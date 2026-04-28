@@ -44,6 +44,7 @@ declare module 'i18next' {
       sidebar: {
         auraNetwork: string;
       };
+      noPermission: string;
     };
     GuestFooter: {
       platform: string;
@@ -2354,6 +2355,14 @@ declare module 'i18next' {
         title: string;
         subtitle: string;
       };
+      stats: {
+        upcoming: string;
+        completed: string;
+        total: string;
+        cancelled: string;
+        slots: string;
+        awaitingPayment: string;
+      };
       pagination: {
         prev: string;
         next: string;
@@ -2362,12 +2371,6 @@ declare module 'i18next' {
       loading: {
         appointments: string;
         clinicAppointments: string;
-      };
-      stats: {
-        upcoming: string;
-        completed: string;
-        total: string;
-        cancelled: string;
       };
       filters: {
         label: string;
@@ -2389,6 +2392,8 @@ declare module 'i18next' {
         cancel: string;
         viewDetails: string;
         bookFirstAppointment: string;
+        showCheckInQr: string;
+        payNow: string;
       };
       labels: {
         clinicVisit: string;
@@ -2398,6 +2403,7 @@ declare module 'i18next' {
         doctorName: string;
         videoConsultation: string;
         videoConsultationReady: string;
+        consultingDoctor: string;
       };
       sessionType: {
         verification: string;
@@ -2460,9 +2466,126 @@ declare module 'i18next' {
         afternoon: string;
         evening: string;
       };
-      fallback: {
-        firstName: string;
+      header: {
+        retinalOverview: string;
       };
+      stats: {
+        latestAiRiskStatus: string;
+        noScans: string;
+        nextAppointment: string;
+        noneScheduled: string;
+      };
+      hero: {
+        title: {
+          aiScreening: string;
+          specialistVerified: string;
+        };
+        awaitingAnalysis: string;
+        latestRetinalScanAlt: string;
+        scanId: string;
+        latestAnalysisResult: string;
+        dateScanned: string;
+        nextScreening: string;
+        processingTitle: string;
+        processingDescription: string;
+        noResultsTitle: string;
+        noResultsDescription: string;
+      };
+      actions: {
+        viewFullReport: string;
+        openLatestSession: string;
+      };
+      history: {
+        title: string;
+        viewAll: string;
+        sessionLabel: string;
+        imagesSingle: string;
+        imagesMultiple: string;
+        recentScreeningAlt: string;
+        empty: string;
+      };
+      quickActions: {
+        title: string;
+        messageSpecialist: string;
+        bookAppointment: string;
+        bookFollowUp: string;
+      };
+    };
+    PatientCarePlan: {
+      page: {
+        title: string;
+        subtitle: string;
+      };
+      stats: {
+        upcoming: string;
+        overdue: string;
+        completed: string;
+      };
+      loading: string;
+      error: string;
+      empty: {
+        title: string;
+        subtitle: string;
+      };
+    };
+    PatientHelpFeedback: {
+      page: {
+        title: string;
+        subtitle: string;
+      };
+      whyFeedbackMatters: {
+        title: string;
+        items: {
+          bookingAndConsultation: string;
+          bugReporting: string;
+          featureSuggestions: string;
+        };
+      };
+      form: {
+        title: string;
+        subtitle: string;
+        unlockHint: string;
+        success: {
+          title: string;
+          message: string;
+        };
+        actions: {
+          leaveFeedback: string;
+        };
+      };
+      modal: {
+        title: string;
+        subtitle: string;
+        submitLabel: string;
+        labels: {
+          rating: string;
+          ratingValidation: string;
+          category: string;
+          commentOptional: string;
+          commentPlaceholder: string;
+        };
+        categories: {
+          BUG: string;
+          UX: string;
+          SUGGESTION: string;
+          OTHER: string;
+        };
+        actions: {
+          notNow: string;
+          submitting: string;
+        };
+        discard: {
+          title: string;
+          description: string;
+          keepEditing: string;
+          discardDraft: string;
+        };
+      };
+      toast: {
+        feedbackSubmitted: string;
+      };
+    };
+    PatientDashboard_Legacy: {
       risk: {
         low: string;
         medium: string;
@@ -2566,63 +2689,6 @@ declare module 'i18next' {
       language: {
         title: string;
         subtitle: string;
-      };
-    };
-    PatientHelpFeedback: {
-      page: {
-        title: string;
-        subtitle: string;
-      };
-      whyFeedbackMatters: {
-        title: string;
-        items: {
-          bookingAndConsultation: string;
-          bugReporting: string;
-          featureSuggestions: string;
-        };
-      };
-      form: {
-        title: string;
-        subtitle: string;
-        unlockHint: string;
-        success: {
-          title: string;
-          message: string;
-        };
-        actions: {
-          leaveFeedback: string;
-        };
-      };
-      modal: {
-        title: string;
-        subtitle: string;
-        submitLabel: string;
-        labels: {
-          rating: string;
-          ratingValidation: string;
-          category: string;
-          commentOptional: string;
-          commentPlaceholder: string;
-        };
-        categories: {
-          BUG: string;
-          UX: string;
-          SUGGESTION: string;
-          OTHER: string;
-        };
-        actions: {
-          notNow: string;
-          submitting: string;
-        };
-        discard: {
-          title: string;
-          description: string;
-          keepEditing: string;
-          discardDraft: string;
-        };
-      };
-      toast: {
-        feedbackSubmitted: string;
       };
     };
     PatientRoadmap: {
@@ -3324,9 +3390,10 @@ declare module 'i18next' {
       nav: {
         dashboard: string;
         myScans: string;
+        medicalHistory: string;
         appointments: string;
-        findClinics: string;
-        healthRoadmap: string;
+        clinicSchedule: string;
+        carePlan: string;
         chat: string;
         wallet: string;
         helpFeedback: string;
@@ -5179,24 +5246,21 @@ declare module 'i18next' {
       };
     };
     ClinicStaffDashboard: {
-      greetings: {
-        morning: string;
-        afternoon: string;
-        evening: string;
-        welcome: string;
-      };
+      greeting: string;
+      greetingAfternoon: string;
+      greetingEvening: string;
       subtitle: string;
-      common: {
-        staffFallback: string;
-      };
       stats: {
         todayAppointments: string;
-        scheduled: string;
-        patientsCheckedIn: string;
+        checkedIn: string;
+        pendingWork: string;
+        completed: string;
         today: string;
-        pendingTasks: string;
-        requiresAction: string;
-        completedToday: string;
+        needsAction: string;
+      };
+      recentActivity: {
+        title: string;
+        subtitle: string;
       };
       quickActions: {
         title: string;
@@ -5207,13 +5271,25 @@ declare module 'i18next' {
         registerPatientDesc: string;
         viewSchedule: string;
         viewScheduleDesc: string;
-        cashierDesk: string;
-        cashierDeskDesc: string;
+        cashier: string;
+        cashierDesc: string;
       };
-      activity: {
+    };
+    ClinicStaffQueue: {
+      page: {
         title: string;
         subtitle: string;
-        empty: string;
+      };
+      tabs: {
+        waiting: string;
+        consulting: string;
+        completed: string;
+      };
+    };
+    ClinicStaffCashier: {
+      page: {
+        title: string;
+        subtitle: string;
       };
     };
     ClinicStaffSidebar: {
@@ -5225,9 +5301,8 @@ declare module 'i18next' {
         patients: string;
         medicalRecords: string;
         screenings: string;
-        schedules: string;
         cashier: string;
-        billing: string;
+        transactions: string;
         wallet: string;
         settings: string;
         profile: string;

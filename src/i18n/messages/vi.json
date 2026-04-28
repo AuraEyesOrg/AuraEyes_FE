@@ -40,7 +40,8 @@
     "switchToLight": "Chuyển sang giao diện sáng",
     "sidebar": {
       "auraNetwork": "Aura Network"
-    }
+    },
+    "noPermission": "Bạn không có quyền truy cập vào chức năng này."
   },
   "GuestFooter": {
     "platform": "Nền tảng",
@@ -2351,6 +2352,14 @@
       "title": "Lịch hẹn",
       "subtitle": "Quản lý lịch hẹn với bác sĩ và cơ sở y tế"
     },
+    "stats": {
+      "upcoming": "Sắp tới",
+      "completed": "Hoàn thành",
+      "total": "Tổng",
+      "cancelled": "Đã hủy",
+      "slots": "Lượt",
+      "awaitingPayment": "Chờ thanh toán"
+    },
     "pagination": {
       "prev": "Trước",
       "next": "Sau",
@@ -2364,7 +2373,9 @@
       "upcoming": "Sắp tới",
       "completed": "Hoàn thành",
       "total": "Tổng",
-      "cancelled": "Đã hủy"
+      "cancelled": "Đã hủy",
+      "slots": "Lượt",
+      "awaitingPayment": "Chờ thanh toán"
     },
     "filters": {
       "label": "Bộ lọc",
@@ -2385,7 +2396,9 @@
       "joinCall": "Tham gia gọi",
       "cancel": "Hủy",
       "viewDetails": "Xem chi tiết",
-      "bookFirstAppointment": "Đặt lịch hẹn đầu tiên"
+      "bookFirstAppointment": "Đặt lịch hẹn đầu tiên",
+      "showCheckInQr": "Hiện mã Check-in",
+      "payNow": "Thanh toán ngay"
     },
     "labels": {
       "clinicVisit": "Lịch khám cơ sở",
@@ -2394,7 +2407,8 @@
       "notScheduledYet": "Chưa lên lịch",
       "doctorName": "Bác sĩ: {{name}}",
       "videoConsultation": "Tư vấn video",
-      "videoConsultationReady": "Tư vấn video (đã có link)"
+      "videoConsultationReady": "Tư vấn video (đã có link)",
+      "consultingDoctor": "Bác sĩ phụ trách"
     },
     "sessionType": {
       "verification": "Xác minh",
@@ -2457,9 +2471,83 @@
       "afternoon": "Chào buổi chiều",
       "evening": "Chào buổi tối"
     },
-    "fallback": {
-      "firstName": "bạn"
+    "header": {
+      "retinalOverview": "Tổng quan sức khỏe võng mạc"
     },
+    "stats": {
+      "latestAiRiskStatus": "Rủi ro AI mới nhất",
+      "noScans": "Chưa có lượt quét",
+      "nextAppointment": "Lịch hẹn tiếp theo",
+      "noneScheduled": "Chưa lên lịch"
+    },
+    "hero": {
+      "title": {
+        "aiScreening": "Phân tích AI mới nhất",
+        "specialistVerified": "Bác sĩ đã xác nhận"
+      },
+      "awaitingAnalysis": "Đang chờ phân tích",
+      "latestRetinalScanAlt": "Hình ảnh võng mạc mới nhất",
+      "scanId": "Mã lượt quét: {{id}}",
+      "latestAnalysisResult": "Kết quả phân tích mới nhất",
+      "dateScanned": "Ngày quét",
+      "nextScreening": "Lần quét tiếp theo",
+      "processingTitle": "Đang xử lý...",
+      "processingDescription": "Hình ảnh của bạn đang được hệ thống AI phân tích.",
+      "noResultsTitle": "Chưa có dữ liệu",
+      "noResultsDescription": "Bạn chưa thực hiện lượt quét võng mạc nào."
+    },
+    "actions": {
+      "viewFullReport": "Xem báo cáo đầy đủ",
+      "openLatestSession": "Mở phiên mới nhất"
+    },
+    "history": {
+      "title": "Lịch sử lượt quét gần đây",
+      "viewAll": "Xem tất cả",
+      "sessionLabel": "Phiên khám",
+      "imagesSingle": "{{count}} hình ảnh",
+      "imagesMultiple": "{{count}} hình ảnh",
+      "recentScreeningAlt": "Hình ảnh lượt quét",
+      "empty": "Chưa có lịch sử lượt quét."
+    },
+    "quickActions": {
+      "title": "Thao tác nhanh",
+      "messageSpecialist": "Nhắn tin cho chuyên gia",
+      "bookAppointment": "Đặt lịch khám tại cơ sở",
+      "bookFollowUp": "Đặt lịch tái khám"
+    }
+  },
+  "PatientCarePlan": {
+    "page": {
+      "title": "Kế hoạch chăm sóc",
+      "subtitle": "Lộ trình chăm sóc sức khỏe được thiết lập bởi bác sĩ của bạn. Các bước được sắp xếp theo thời gian để bạn dễ dàng theo dõi."
+    },
+    "stats": {
+      "upcoming": "Sắp tới",
+      "overdue": "Quá hạn",
+      "completed": "Hoàn thành"
+    },
+    "loading": "Đang tải kế hoạch chăm sóc...",
+    "error": "Không thể tải lộ trình chăm sóc sức khỏe. Vui lòng thử lại.",
+    "empty": {
+      "title": "Chưa có kế hoạch chăm sóc.",
+      "subtitle": "Bác sĩ sẽ thêm các bước chăm sóc tại đây sau buổi thăm khám tiếp theo của bạn."
+    }
+  },
+  "PatientHelpFeedback": {
+    "page": {
+      "title": "Hỗ trợ & Phản hồi",
+      "subtitle": "Chia sẻ trải nghiệm của bạn để giúp chúng tôi cải thiện dịch vụ chăm sóc võng mạc."
+    },
+    "whyFeedbackMatters": {
+      "title": "Tại sao phản hồi của bạn quan trọng?",
+      "items": {
+        "bookingAndConsultation": "Giúp chúng tôi cải thiện trải nghiệm đặt lịch và tư vấn.",
+        "bugReporting": "Phát hiện lỗi sớm trước khi chúng ảnh hưởng đến nhiều bệnh nhân khác.",
+        "featureSuggestions": "Đề xuất các tính năng giúp hành trình chăm sóc của bạn thuận tiện hơn."
+      }
+    }
+  },
+  "PatientDashboard_Legacy": {
     "risk": {
       "low": "Nguy cơ thấp",
       "medium": "Nguy cơ trung bình",
@@ -5177,24 +5265,21 @@
     }
   },
   "ClinicStaffDashboard": {
-    "greetings": {
-      "morning": "Chào buổi sáng",
-      "afternoon": "Chào buổi chiều",
-      "evening": "Chào buổi tối",
-      "welcome": "Dưới đây là các hoạt động trong ngày hôm nay."
-    },
-    "subtitle": "AURA Clinic • Tổng quan vận hành thời gian thực",
-    "common": {
-      "staffFallback": "Nhân viên"
-    },
+    "greeting": "Chào buổi sáng",
+    "greetingAfternoon": "Chào buổi chiều",
+    "greetingEvening": "Chào buổi tối",
+    "subtitle": "Tổng quan vận hành thời gian thực",
     "stats": {
-      "todayAppointments": "Lịch hẹn hôm nay",
-      "scheduled": "Đã lên lịch",
-      "patientsCheckedIn": "Đã tiếp nhận",
+      "todayAppointments": "LỊCH HẸN HÔM NAY",
+      "checkedIn": "ĐÃ TIẾP NHẬN",
+      "pendingWork": "CÔNG VIỆC CHỜ XỬ LÝ",
+      "completed": "ĐÃ HOÀN TẤT",
       "today": "Hôm nay",
-      "pendingTasks": "Công việc chờ xử lý",
-      "requiresAction": "Cần xử lý",
-      "completedToday": "Đã hoàn tất"
+      "needsAction": "Cần xử lý"
+    },
+    "recentActivity": {
+      "title": "Hoạt động gần đây",
+      "subtitle": "Thông tin bệnh nhân tiếp nhận và cập nhật lịch hẹn trực tiếp"
     },
     "quickActions": {
       "title": "Thao tác nhanh",
@@ -5205,13 +5290,25 @@
       "registerPatientDesc": "Thêm bệnh nhân mới vào hệ thống",
       "viewSchedule": "Xem lịch biểu",
       "viewScheduleDesc": "Xem toàn bộ lịch trình hôm nay",
-      "cashierDesk": "Quầy thu ngân",
-      "cashierDeskDesc": "Kiểm tra các lượt khám đã hoàn tất và thu phí"
+      "cashier": "Quầy thu ngân",
+      "cashierDesc": "Kiểm tra các lượt khám đã hoàn tất và thu phí"
+    }
+  },
+  "ClinicStaffQueue": {
+    "page": {
+      "title": "Quản lý hàng đợi",
+      "subtitle": "Theo dõi và điều phối bệnh nhân tại phòng khám"
     },
-    "activity": {
-      "title": "Hoạt động gần đây",
-      "subtitle": "Thông tin bệnh nhân tiếp nhận và cập nhật lịch hẹn trực tiếp",
-      "empty": "Không có hoạt động gần đây. Một ngày mới bắt đầu!"
+    "tabs": {
+      "waiting": "Đang chờ",
+      "consulting": "Đang khám",
+      "completed": "Hoàn thành"
+    }
+  },
+  "ClinicStaffCashier": {
+    "page": {
+      "title": "Quầy thu ngân",
+      "subtitle": "Quản lý hóa đơn và thanh toán cho bệnh nhân"
     }
   },
   "ClinicStaffSidebar": {

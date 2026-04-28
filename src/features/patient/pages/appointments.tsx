@@ -136,7 +136,7 @@ const AppointmentsPage = () => {
       },
       {
         key: 'pending' as const,
-        label: 'Chờ thanh toán',
+        label: t('PatientAppointments.stats.awaitingPayment'),
         value:
           clinicCounts.All -
           (clinicCounts.Upcoming +
@@ -211,7 +211,7 @@ const AppointmentsPage = () => {
           {t('PatientAppointments.page.title')}
         </h1>
         <p className="text-sm font-medium text-slate-500">
-          Quản lý và theo dõi lịch hẹn y tế của bạn
+          {t('PatientAppointments.page.subtitle')}
         </p>
       </div>
 
@@ -260,7 +260,7 @@ const AppointmentsPage = () => {
                   {stat.value}
                 </span>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                  Slots
+                  {t('PatientAppointments.stats.slots')}
                 </span>
               </div>
               {/* Decorative accent */}
@@ -503,43 +503,49 @@ const SectionHeader = ({
   totalCount,
   refreshing,
   action,
-}: SectionHeaderProps) => (
-  <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-    <div className="flex items-center gap-5">
-      <div className="relative group">
-        <div className="absolute inset-0 bg-brand/30 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500" />
-        <span className="relative z-10 w-14 h-14 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 flex items-center justify-center text-brand transition-all group-hover:scale-110 group-hover:rotate-3">
-          {icon}
-        </span>
-      </div>
-      <div className="space-y-1">
-        <h2
-          id={id}
-          className="text-3xl font-black tracking-tight text-slate-900 dark:text-white"
-        >
-          {title}
-        </h2>
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-500 uppercase tracking-widest shadow-sm border border-slate-200/50 dark:border-slate-700/50">
-            {totalCount} Total
+}: SectionHeaderProps) => {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
+  return (
+    <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+      <div className="flex items-center gap-5">
+        <div className="relative group">
+          <div className="absolute inset-0 bg-brand/30 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500" />
+          <span className="relative z-10 w-14 h-14 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 flex items-center justify-center text-brand transition-all group-hover:scale-110 group-hover:rotate-3">
+            {icon}
           </span>
-          {refreshing && (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-brand/10 border border-brand/20">
-              <span className="flex h-1.5 w-1.5 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand"></span>
-              </span>
-              <span className="text-[9px] font-black text-brand uppercase tracking-tighter animate-pulse">
-                Syncing
-              </span>
-            </div>
-          )}
+        </div>
+        <div className="space-y-1">
+          <h2
+            id={id}
+            className="text-3xl font-black tracking-tight text-slate-900 dark:text-white"
+          >
+            {title}
+          </h2>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-500 uppercase tracking-widest shadow-sm border border-slate-200/50 dark:border-slate-700/50">
+              {totalCount} {t('PatientAppointments.stats.total')}
+            </span>
+            {refreshing && (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-brand/10 border border-brand/20">
+                <span className="flex h-1.5 w-1.5 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand"></span>
+                </span>
+                <span className="text-[9px] font-black text-brand uppercase tracking-tighter animate-pulse">
+                  Syncing
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+      {action}
     </div>
-    {action}
-  </div>
-);
+  );
+};
 
 interface ClinicAppointmentCardProps {
   appointment: ClinicAppointmentDto;
@@ -568,6 +574,10 @@ const ClinicAppointmentCard = ({
   onSync,
   isSyncing,
 }: ClinicAppointmentCardProps) => {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const dimmed =
     appointment.status === 'Cancelled' || appointment.status === 'NoShow';
 
@@ -639,8 +649,10 @@ const ClinicAppointmentCard = ({
                 <div className="flex items-center gap-3 text-amber-700 dark:text-amber-400">
                   <Clock className="w-5 h-5 shrink-0" />
                   <p className="text-xs font-bold leading-tight">
-                    Vui lòng hoàn tất thanh toán đặt cọc để xác nhận lịch hẹn
-                    này.
+                    {t('PatientAppointments.messages.completeDeposit', {
+                      defaultValue:
+                        'Vui lòng hoàn tất thanh toán đặt cọc để xác nhận lịch hẹn này.',
+                    })}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -660,7 +672,7 @@ const ClinicAppointmentCard = ({
                     to={resolvePathWithLocale('/patient/wallet')}
                     className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-95 whitespace-nowrap"
                   >
-                    Thanh toán ngay
+                    {t('PatientAppointments.actions.payNow')}
                   </Link>
                 </div>
               </div>
@@ -675,7 +687,7 @@ const ClinicAppointmentCard = ({
                   className="flex items-center gap-2 text-xs font-bold text-brand hover:text-brand/80 transition-colors"
                 >
                   <QrCode className="w-4 h-4" />
-                  Show Check-in QR Code
+                  {t('PatientAppointments.actions.showCheckInQr')}
                 </button>
               </div>
             )}
@@ -711,7 +723,7 @@ const ClinicAppointmentCard = ({
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
-                      Consulting Doctor
+                      {t('PatientAppointments.labels.consultingDoctor')}
                     </p>
                     <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-none">
                       {appointment.ophthalFullName ?? 'Clinic Doctor'}
