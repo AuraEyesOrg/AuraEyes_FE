@@ -93,6 +93,7 @@ function DoctorSelect({
   onChange: (val: string) => void;
   placeholder?: string;
 }) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const selectedDoctor = doctors.find((d) => d.id === value);
   const selectedDoctorName =
