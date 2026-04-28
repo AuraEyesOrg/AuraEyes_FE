@@ -31,6 +31,7 @@ jobs:
             VITE_N8N_WEBHOOK_URL=${{ secrets.VITE_N8N_WEBHOOK_URL }}
             VITE_API_END_AI_POINT=${{ secrets.VITE_API_END_AI_POINT }}
             VITE_AVATAR_FALLBACK_URL=https://api.dicebear.com/9.x/personas/svg?seed=
+            VITE_FARO_URL=${{ secrets.VITE_FARO_URL }}
 
   deploy:
     needs: build-and-push
