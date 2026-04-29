@@ -24,7 +24,7 @@ export interface CreateWalkInPatientResponse {
 export const orgWalkInPatientApi = {
   async createWalkInPatient(request: CreateWalkInPatientRequest) {
     const response = await api.post<ApiResponse<CreateWalkInPatientResponse>>(
-      '/organisations/patients/walk-in',
+      '/clinic-staff/patients/walk-in',
       request
     );
     return unwrapApiData<CreateWalkInPatientResponse>(response.data);

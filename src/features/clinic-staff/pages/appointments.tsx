@@ -24,11 +24,8 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import Spinner from '@/components/ui/spinner';
 import useAuthStore from '@/store/auth-store';
 import PaymentConfirmationModal from '../components/PaymentConfirmationModal';
-import CreateWalkInPatientModal from '@/features/organisation/components/CreateWalkInPatientModal';
-import {
-  getClinicRecentPatients,
-  type ClinicRecentPatientDto,
-} from '@/features/organisation/api/patients.api';
+import CreateWalkInPatientModal from '../components/CreateWalkInPatientModal';
+import { getClinicPatients, type ClinicPatientDto } from '../api/patients.api';
 import { getCurrentClinicAppointments } from '@/features/organisation/api/organisation-clinic-booking.api';
 import {
   organisationClinicBookingKeys,
@@ -206,6 +203,7 @@ export default function ClinicStaffAppointmentsPage() {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const { i18n: i18nObj } = useTranslation();
+  const currentLocale = i18nObj.language === 'vi' ? 'vi-VN' : 'en-US';
   const organisationId = 'current-clinic';
 
   const todayKey = toLocalDateKey(new Date());
@@ -237,12 +235,12 @@ export default function ClinicStaffAppointmentsPage() {
       const dateKey = toLocalDateKey(day);
       return {
         dateKey,
-        dayLabel: formatWeekDayLabel(day),
+        dayLabel: formatWeekDayLabel(day, currentLocale),
         dayNumber: day.getDate(),
         isToday: dateKey === todayKey,
       };
     });
-    return { label: formatWeekRange(weekStart, weekEnd), days };
+    return { label: formatWeekRange(weekStart, weekEnd, currentLocale), days };
   }, [currentWeekOffset, todayKey]);
 
   const weekAppointmentQueries = useQueries({
@@ -267,7 +265,7 @@ export default function ClinicStaffAppointmentsPage() {
   const appointmentsError = selectedDayQuery?.error;
   const recentPatientsQuery = useQuery({
     queryKey: ['clinic-patients', 'recent'],
-    queryFn: getClinicRecentPatients,
+    queryFn: getClinicPatients,
     enabled: isWalkInModalOpen,
     staleTime: 30_000,
   });
@@ -438,7 +436,7 @@ export default function ClinicStaffAppointmentsPage() {
     setIsWalkInModalOpen(true);
   };
 
-  const getPatientMeta = (patient: ClinicRecentPatientDto) =>
+  const getPatientMeta = (patient: ClinicPatientDto) =>
     [
       patient.isWalkIn
         ? t('Organisation.patients.type.walkIn', 'Walk-in')
@@ -891,9 +889,10 @@ export default function ClinicStaffAppointmentsPage() {
                   'Quiet day today'
                 )}
               </p>
-              <p className="mt-1 text-sm text-slate-400">
-                No appointments have been scheduled for this date.
-              </p>
+              {t(
+                'Organisation.calendar.states.noAppointmentsDescription',
+                'No appointments have been scheduled for this date.'
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4">
@@ -986,12 +985,14 @@ export default function ClinicStaffAppointmentsPage() {
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
                             <div className="flex items-center gap-2 bg-brand/5 text-brand px-3 py-1 rounded-full border border-brand/10">
                               <Clock className="h-3.5 w-3.5" />
-                              {formatSlotTime(appt.startTime)} -{' '}
-                              {formatSlotTime(appt.endTime)}
+                              {formatSlotTime(
+                                appt.startTime,
+                                currentLocale
+                              )} - {formatSlotTime(appt.endTime, currentLocale)}
                             </div>
                             <div className="flex items-center gap-2">
                               <Calendar className="h-3.5 w-3.5" />
-                              {formatDate(appt.date, 'short')}
+                              {formatDate(selectedDate, 'short', currentLocale)}
                             </div>
                           </div>
 
@@ -1013,10 +1014,17 @@ export default function ClinicStaffAppointmentsPage() {
                             </div>
                             <div className="flex flex-col">
                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
-                                Consulting Doctor
+                                {t(
+                                  'Organisation.calendar.doctor.consultingDoctor',
+                                  'Consulting Doctor'
+                                )}
                               </span>
                               <span className="text-sm font-black text-slate-800 dark:text-slate-100 group-hover/doc:text-brand transition-colors">
-                                {appt.ophthalFullName || 'Clinic Doctor'}
+                                {appt.ophthalFullName ||
+                                  t(
+                                    'Organisation.calendar.doctor.defaultDoctor',
+                                    'Clinic Doctor'
+                                  )}
                               </span>
                             </div>
                           </div>
@@ -1074,7 +1082,10 @@ export default function ClinicStaffAppointmentsPage() {
                             {appt.orderStatus === 'Cancelled' && (
                               <div className="flex items-center gap-2 rounded-xl bg-rose-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-rose-600 border border-rose-500/20">
                                 <UserX className="w-3.5 h-3.5" />
-                                Cancelled
+                                {t(
+                                  'Organisation.calendar.status.cancelled',
+                                  'Cancelled'
+                                )}
                               </div>
                             )}
                           </div>
@@ -1091,11 +1102,14 @@ export default function ClinicStaffAppointmentsPage() {
                           </div>
                           <div>
                             <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                              Total Bill
+                              {t(
+                                'Organisation.calendar.bento.totalBill',
+                                'Total Bill'
+                              )}
                             </p>
                             <p className="text-sm font-black text-slate-900 dark:text-white">
                               {appt.totalAmount
-                                ? new Intl.NumberFormat('vi-VN', {
+                                ? new Intl.NumberFormat(currentLocale, {
                                     style: 'currency',
                                     currency: 'VND',
                                   }).format(appt.totalAmount)
@@ -1110,10 +1124,13 @@ export default function ClinicStaffAppointmentsPage() {
                           </div>
                           <div>
                             <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                              Paid Amount
+                              {t(
+                                'Organisation.calendar.bento.paidAmount',
+                                'Paid Amount'
+                              )}
                             </p>
                             <p className="text-sm font-black text-emerald-600">
-                              {new Intl.NumberFormat('vi-VN', {
+                              {new Intl.NumberFormat(currentLocale, {
                                 style: 'currency',
                                 currency: 'VND',
                               }).format(appt.paidAmount || 0)}
@@ -1130,13 +1147,19 @@ export default function ClinicStaffAppointmentsPage() {
                           <div>
                             <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
                               {appt.remainingAmount === 0
-                                ? 'Balance'
-                                : 'Remaining'}
+                                ? t(
+                                    'Organisation.calendar.bento.balance',
+                                    'Balance'
+                                  )
+                                : t(
+                                    'Organisation.calendar.bento.remaining',
+                                    'Remaining'
+                                  )}
                             </p>
                             <p
                               className={`text-sm font-black ${appt.remainingAmount === 0 ? 'text-emerald-600' : 'text-rose-600 animate-pulse'}`}
                             >
-                              {new Intl.NumberFormat('vi-VN', {
+                              {new Intl.NumberFormat(currentLocale, {
                                 style: 'currency',
                                 currency: 'VND',
                               }).format(appt.remainingAmount ?? 0)}
@@ -1154,10 +1177,18 @@ export default function ClinicStaffAppointmentsPage() {
                           </div>
                           <div className="space-y-1">
                             <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/70">
-                              Visit Reason
+                              {t(
+                                'Organisation.calendar.reason',
+                                'Visit Reason'
+                              )}
                             </p>
                             <p className="text-xs font-bold text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
-                              {appt.visitReason}
+                              {appt.visitReason === 'Regular eye checkup'
+                                ? t(
+                                    'Organisation.calendar.reason.regular',
+                                    'Regular eye checkup'
+                                  )
+                                : appt.visitReason}
                             </p>
                           </div>
                         </div>
@@ -1246,10 +1277,18 @@ export default function ClinicStaffAppointmentsPage() {
                                       queryKey:
                                         organisationClinicBookingKeys.all,
                                     });
-                                    toast.success('Payment status synced');
+                                    toast.success(
+                                      t(
+                                        'Organisation.calendar.toast.paymentSynced',
+                                        'Payment status synced'
+                                      )
+                                    );
                                   } catch (e) {
                                     toast.error(
-                                      'Failed to sync payment status'
+                                      t(
+                                        'Organisation.calendar.toast.paymentSyncFailed',
+                                        'Failed to sync payment status'
+                                      )
                                     );
                                   }
                                 }}
@@ -1517,7 +1556,7 @@ export default function ClinicStaffAppointmentsPage() {
                             </div>
                             {slot.cost ? (
                               <span className="text-xs font-bold text-emerald-600">
-                                {new Intl.NumberFormat('vi-VN', {
+                                {new Intl.NumberFormat(currentLocale, {
                                   style: 'currency',
                                   currency: 'VND',
                                 }).format(slot.cost)}
@@ -1558,7 +1597,7 @@ export default function ClinicStaffAppointmentsPage() {
                         '{{patient}} will enter the queue at {{time}}.',
                         {
                           patient: selectedWalkInPatient.name,
-                          time: `${formatSlotTime(selectedWalkInSlot.startTime)} - ${formatSlotTime(selectedWalkInSlot.endTime)}`,
+                          time: `${formatSlotTime(selectedWalkInSlot.startTime, currentLocale)} - ${formatSlotTime(selectedWalkInSlot.endTime, currentLocale)}`,
                         }
                       )
                     : t(

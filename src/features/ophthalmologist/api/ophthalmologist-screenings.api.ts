@@ -48,6 +48,7 @@ export interface OphthalmologistScreeningDetailDto {
   reviewStatus: string;
   images: OphthalmologistRetinalImageDto[];
   latestResult?: OphthalmologistScreeningResultDto | null;
+  medicalRecordId?: string | null;
 }
 
 export async function listOphthalmologistScreenings(): Promise<

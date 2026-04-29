@@ -114,6 +114,12 @@ export const Permissions = {
 
   // Dashboard
   DashboardRead: 'dashboard:read',
+
+  // Medical Records
+  MedicalRecordsRead: 'medical-records:read',
+  MedicalRecordsCreate: 'medical-records:create',
+  MedicalRecordsUpdate: 'medical-records:update',
+  MedicalRecordsFinalize: 'medical-records:finalize',
 } as const;
 
 export type PermissionValue = (typeof Permissions)[keyof typeof Permissions];

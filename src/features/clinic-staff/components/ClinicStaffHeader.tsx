@@ -37,6 +37,10 @@ export default function ClinicStaffHeader() {
       dashboard: t('ClinicStaffHeader.pages.dashboard', 'Dashboard'),
       appointments: t('ClinicStaffHeader.pages.appointments', 'Appointments'),
       patients: t('ClinicStaffHeader.pages.patients', 'Patients'),
+      'medical-records': t(
+        'ClinicStaffHeader.pages.medical-records',
+        'Medical Records'
+      ),
       screenings: t('ClinicStaffHeader.pages.screenings', 'Screenings'),
       schedules: t('ClinicStaffHeader.pages.schedules', 'Schedules'),
       billing: t('ClinicStaffHeader.pages.billing', 'Billing'),

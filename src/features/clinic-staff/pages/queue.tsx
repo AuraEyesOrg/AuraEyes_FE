@@ -170,7 +170,7 @@ function DoctorSelect({
 
 export default function ClinicStaffQueuePage() {
   const navigate = useNavigate();
-  const { t: i18nT } = useTranslation();
+  const { t: i18nT, i18n } = useTranslation();
   const t = (key: string, defaultValue?: string) =>
     i18nT(key as never, { defaultValue } as never) as unknown as string;
   const queryClient = useQueryClient();
@@ -543,7 +543,7 @@ export default function ClinicStaffQueuePage() {
                           </div>
                           <div className="text-xs text-(--text-tertiary)">
                             {new Date(item.checkedInAt).toLocaleTimeString(
-                              'en-US',
+                              i18n.language,
                               { hour: '2-digit', minute: '2-digit' }
                             )}
                           </div>

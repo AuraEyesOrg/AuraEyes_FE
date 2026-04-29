@@ -3,9 +3,9 @@
  * Main navigation for system admin dashboard
  */
 
-import { useMemo } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LogOut, Globe } from 'lucide-react';
+import { LogOut, Globe, Lock } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
@@ -33,11 +33,18 @@ export default function Sidebar() {
 
   const activePath = stripLocaleFromPathname(location.pathname);
 
-  const filteredNavItems = useMemo(() => {
-    return sidebarNavItems.filter((item) =>
-      item.requiredPermission ? hasPermission(item.requiredPermission) : true
-    );
-  }, [hasPermission]);
+  const handleNavClick = (
+    e: React.MouseEvent,
+    item: (typeof sidebarNavItems)[number] | typeof dashboardNavItem
+  ) => {
+    if (item.requiredPermission && !hasPermission(item.requiredPermission)) {
+      e.preventDefault();
+      toast.warning(t('Common.noPermission'));
+      return;
+    }
+  };
+
+  const navItems = sidebarNavItems;
 
   const avatarMeta = getUserAvatarMeta(user?.fullName, systemAdminLabel);
   const displayName = avatarMeta.displayName;
@@ -75,62 +82,99 @@ export default function Sidebar() {
         <nav className="flex flex-col gap-1.5 flex-1 overflow-y-auto pr-1">
           <NavLink
             to={resolvePathWithLocale(dashboardNavItem.path)}
-            className={({ isActive }) =>
-              `group flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200 ${
+            onClick={(e) => handleNavClick(e, dashboardNavItem)}
+            className={({ isActive }) => {
+              const isLocked =
+                dashboardNavItem.requiredPermission &&
+                !hasPermission(dashboardNavItem.requiredPermission);
+              return `group flex items-center justify-between px-4 py-2.5 rounded-lg transition-all duration-200 ${
                 isActive
                   ? 'bg-primary/10 text-primary font-semibold'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
-              }`
-            }
+                  : isLocked
+                    ? 'text-slate-400 opacity-60 cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800/50'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+              }`;
+            }}
           >
-            {({ isActive }) => (
-              <>
-                <span
-                  className={
-                    isActive
-                      ? 'text-primary'
-                      : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300'
-                  }
-                >
-                  <dashboardNavItem.icon className="w-4 h-4" />
-                </span>
-                <span className="text-sm font-medium">
-                  {t('SystemAdmin.sidebar.dashboard', 'Dashboard')}
-                </span>
-              </>
-            )}
+            {({ isActive }) => {
+              const isLocked =
+                dashboardNavItem.requiredPermission &&
+                !hasPermission(dashboardNavItem.requiredPermission);
+              return (
+                <>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={
+                        isActive
+                          ? 'text-primary'
+                          : isLocked
+                            ? 'text-slate-400'
+                            : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300'
+                      }
+                    >
+                      <dashboardNavItem.icon className="w-4 h-4" />
+                    </span>
+                    <span className="text-sm font-medium">
+                      {t('SystemAdmin.sidebar.dashboard', 'Dashboard')}
+                    </span>
+                  </div>
+                  {isLocked && <Lock className="w-3.5 h-3.5 text-slate-400" />}
+                </>
+              );
+            }}
           </NavLink>
 
-          {filteredNavItems.map((item) => (
+          {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={resolvePathWithLocale(item.path)}
-              className={({ isActive }) =>
-                `group flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200 ${
+              onClick={(e) => handleNavClick(e, item)}
+              className={({ isActive }) => {
+                const isLocked =
+                  item.requiredPermission &&
+                  !hasPermission(item.requiredPermission);
+                return `group flex items-center justify-between px-4 py-2.5 rounded-lg transition-all duration-200 ${
                   isActive || activePath.startsWith(item.path)
                     ? 'bg-primary/10 text-primary font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
-                }`
-              }
+                    : isLocked
+                      ? 'text-slate-400 opacity-60 cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800/50'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                }`;
+              }}
             >
-              {({ isActive }) => (
-                <>
-                  <span
-                    className={
-                      isActive || activePath.startsWith(item.path)
-                        ? 'text-primary'
-                        : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300'
-                    }
-                  >
-                    <item.icon className="w-4 h-4" />
-                  </span>
-                  <span className="text-sm font-medium truncate">
-                    {item.id === 'aura-network'
-                      ? t('Common.sidebar.auraNetwork', 'Aura Network')
-                      : t(`SystemAdmin.sidebar.items.${item.id}`, item.label)}
-                  </span>
-                </>
-              )}
+              {({ isActive }) => {
+                const isLocked =
+                  item.requiredPermission &&
+                  !hasPermission(item.requiredPermission);
+                return (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={
+                          isActive || activePath.startsWith(item.path)
+                            ? 'text-primary'
+                            : isLocked
+                              ? 'text-slate-400'
+                              : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300'
+                        }
+                      >
+                        <item.icon className="w-4 h-4" />
+                      </span>
+                      <span className="text-sm font-medium truncate">
+                        {item.id === 'aura-network'
+                          ? t('Common.sidebar.auraNetwork', 'Aura Network')
+                          : t(
+                              `SystemAdmin.sidebar.items.${item.id}`,
+                              item.label
+                            )}
+                      </span>
+                    </div>
+                    {isLocked && (
+                      <Lock className="w-3.5 h-3.5 text-slate-400" />
+                    )}
+                  </>
+                );
+              }}
             </NavLink>
           ))}
         </nav>

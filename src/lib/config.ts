@@ -46,11 +46,11 @@ export const PWAConfig: Partial<VitePWAOptions> = {
   },
   workbox: {
     sourcemap: true,
-
     cleanupOutdatedCaches: true,
     clientsClaim: true,
     skipWaiting: true,
-
+    globIgnores: ['**/stats.html'],
+    maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4MB limit
     runtimeCaching: [
       {
         urlPattern: /\/icon_\d+x\d+\.png$/,
