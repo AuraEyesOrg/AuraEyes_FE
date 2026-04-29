@@ -180,7 +180,6 @@ export default function StaffManagementPage() {
 
       await ophthalmologistApi.updateEmploymentType({
         id: selectedUser.ophthalmologistId || selectedUser.id,
-        yearsOfExperience: (selectedUser as any).yearsOfExperience || 0,
         bio: (selectedUser as any).bio || '',
         employmentType: (selectedUser as any).employmentType || 'FullTime',
         consultationFee: feeValue,

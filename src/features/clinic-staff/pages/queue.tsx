@@ -155,11 +155,6 @@ function DoctorSelect({
                   >
                     <div className="flex flex-col">
                       <span className="font-medium">{doctorName}</span>
-                      {doctor.yearsOfExperience > 0 && (
-                        <span className="text-[10px] opacity-70">
-                          {doctor.yearsOfExperience} years exp
-                        </span>
-                      )}
                     </div>
                     {value === doctor.id && <Check className="h-4 w-4" />}
                   </button>

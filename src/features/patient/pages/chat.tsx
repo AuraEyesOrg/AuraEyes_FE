@@ -117,6 +117,11 @@ const QUICK_EMOJIS = [
   '✅',
 ];
 
+type ChatTranslateFn = (
+  key: string,
+  options?: Record<string, unknown>
+) => string;
+
 type PhaseUIEntry = {
   label: string;
   icon: typeof Lock;
@@ -125,17 +130,6 @@ type PhaseUIEntry = {
   bannerBg: string;
   description: string;
 };
-
-type MeetingAccessState = {
-  canJoin: boolean;
-  buttonLabel: string;
-  helperText: string;
-};
-
-type ChatTranslateFn = (
-  key: string,
-  options?: Record<string, unknown>
-) => string;
 
 const getPhaseUIConfig = (
   t: ChatTranslateFn
@@ -171,8 +165,6 @@ const formatAppointmentSlotOrPending = (
   t: ChatTranslateFn
 ) => (value ? formatAppointmentSlot(value) : t('PatientChat.schedule.pending'));
 
-const PREJOIN_OPEN_MINUTES = 10;
-const MEETING_ACTIVE_MINUTES = 30;
 const COUNTDOWN_VISIBILITY_MINUTES = 60;
 const MESSAGE_CHARACTER_LIMIT = 1000;
 const SPARKLINE_WINDOW_DAYS = 7;
@@ -420,68 +412,6 @@ const TrendIndicator = ({ trend }: { trend: TrendDirection }) => {
   );
 };
 
-const getMeetingAccessState = (
-  appointmentTime: string | null,
-  nowMs: number,
-  t: ChatTranslateFn
-): MeetingAccessState => {
-  if (!appointmentTime) {
-    return {
-      canJoin: false,
-      buttonLabel: t('PatientChat.meeting.joinLocked'),
-      helperText: t('PatientChat.schedule.pending'),
-    };
-  }
-
-  const appointmentMs = new Date(appointmentTime).getTime();
-  if (Number.isNaN(appointmentMs)) {
-    return {
-      canJoin: false,
-      buttonLabel: t('PatientChat.meeting.joinLocked'),
-      helperText: t('PatientChat.schedule.unavailable'),
-    };
-  }
-
-  const minutesUntilStart = Math.ceil((appointmentMs - nowMs) / 60000);
-  const unlockMs = appointmentMs - PREJOIN_OPEN_MINUTES * 60000;
-  const secondsUntilUnlock = Math.ceil((unlockMs - nowMs) / 1000);
-
-  if (minutesUntilStart > PREJOIN_OPEN_MINUTES) {
-    if (minutesUntilStart > COUNTDOWN_VISIBILITY_MINUTES) {
-      return {
-        canJoin: false,
-        buttonLabel: t('PatientChat.meeting.joinLocked'),
-        helperText: t('PatientChat.meeting.joinBeforeMinutes', {
-          minutes: PREJOIN_OPEN_MINUTES,
-        }),
-      };
-    }
-    return {
-      canJoin: false,
-      buttonLabel: t('PatientChat.meeting.joinLocked'),
-      helperText: t('PatientChat.meeting.unlockAfter', {
-        time: formatCountdown(secondsUntilUnlock),
-      }),
-    };
-  }
-
-  if (minutesUntilStart >= -MEETING_ACTIVE_MINUTES) {
-    return {
-      canJoin: true,
-      buttonLabel: t('PatientChat.meeting.joinMeeting'),
-      helperText: t('PatientChat.meeting.canJoinBeforeMinutes', {
-        minutes: PREJOIN_OPEN_MINUTES,
-      }),
-    };
-  }
-
-  return {
-    canJoin: false,
-    buttonLabel: t('PatientChat.meeting.ended'),
-    helperText: t('PatientChat.meeting.sessionExpired'),
-  };
-};
-
 const getInitials = (value: string) =>
   value
     .trim()
@@ -673,7 +603,6 @@ export default function ChatPage() {
   const phaseInfo = useConsultationPhase(
     currentSession?.chatStatus,
     currentSession?.appointmentTime ?? null,
-    currentSession?.closedAt ?? null,
     currentTimeMs
   );
   const phaseUIConfig = useMemo(() => getPhaseUIConfig(t), [t]);
@@ -1210,18 +1139,6 @@ export default function ChatPage() {
     currentSession?.patientAvatarUrl,
     selectedSession?.patientAvatarUrl
   );
-  const meetingAccessState = getMeetingAccessState(
-    currentSession?.appointmentTime ?? null,
-    currentTimeMs,
-    t
-  );
-  const isMeetingClosedBySessionState =
-    currentSession?.status === SessionStatus.Completed ||
-    currentSession?.status === SessionStatus.Cancelled ||
-    currentSession?.chatStatus === ChatStatus.Archived;
-  const canJoinMeeting =
-    meetingAccessState.canJoin && !isMeetingClosedBySessionState;
-
   if (sessionsLoading) {
     return (
       <PatientLayout>
@@ -1485,60 +1402,9 @@ export default function ChatPage() {
                       </span>
                     </div>
                   </div>
-                </div>
-
-                <div className="flex shrink-0 items-center gap-2">
-                  <div className="flex flex-col items-start gap-1 sm:items-end">
-                    {currentSession.meetingLink ? (
-                      canJoinMeeting ? (
-                        <a
-                          href={currentSession.meetingLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-600 md:rounded-2xl md:px-4 md:py-2.5 md:text-sm"
-                        >
-                          <Video className="h-4 w-4" />
-                          <span className="hidden sm:inline">
-                            {t('PatientChat.meeting.joinMeeting')}
-                          </span>
-                          <span className="sm:hidden">
-                            {t('PatientChat.meeting.join')}
-                          </span>
-                        </a>
-                      ) : (
-                        <button
-                          disabled
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 md:rounded-2xl md:px-4 md:py-2.5 md:text-sm"
-                        >
-                          <Video className="h-4 w-4" />
-                          {isMeetingClosedBySessionState
-                            ? t('PatientChat.meeting.ended')
-                            : meetingAccessState.buttonLabel}
-                        </button>
-                      )
-                    ) : (
-                      <button
-                        disabled
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 md:rounded-2xl md:px-4 md:py-2.5 md:text-sm"
-                      >
-                        <Video className="h-4 w-4" />
-                        {t('PatientChat.meeting.linkPending')}
-                      </button>
-                    )}
-                    {currentSession.meetingLink && (
-                      <p className="hidden text-xs font-medium text-slate-500 md:block dark:text-gray-400">
-                        {isMeetingClosedBySessionState
-                          ? t('PatientChat.meeting.consultationCompleted')
-                          : meetingAccessState.helperText}
-                      </p>
-                    )}
-                  </div>
-
                   <button
-                    onClick={() =>
-                      setIsSessionOverviewOpen((previous) => !previous)
-                    }
-                    aria-label={
+                    onClick={() => setIsSessionOverviewOpen((v) => !v)}
+                    title={
                       isSessionOverviewOpen
                         ? t('PatientChat.overview.hide')
                         : t('PatientChat.overview.show')

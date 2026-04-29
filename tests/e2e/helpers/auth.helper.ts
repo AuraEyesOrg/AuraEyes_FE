@@ -13,7 +13,6 @@ type StoredAuthPayload = {
     fullName: string;
     roles: string[];
     contractStatus?: string | null;
-    isVerified?: boolean | null;
   };
 };
 
@@ -43,10 +42,6 @@ export async function injectAuthState(
       auth.user.roles.includes('Ophthalmologist')
         ? (auth.user.contractStatus ?? 'Active')
         : auth.user.contractStatus,
-    isVerified:
-      auth.user.roles.includes('Ophthalmologist')
-        ? (auth.user.isVerified ?? true)
-        : auth.user.isVerified,
   };
 
   await page.evaluate((payload: StoredAuthPayload) => {

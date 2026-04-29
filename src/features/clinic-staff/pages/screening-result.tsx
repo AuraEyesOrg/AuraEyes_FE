@@ -1808,9 +1808,6 @@ export default function ClinicStaffScreeningResultPage() {
                       {availableDoctors.map((doctor) => (
                         <option key={doctor.id} value={doctor.id}>
                           {doctor.fullName}
-                          {doctor.yearsOfExperience
-                            ? ` · ${doctor.yearsOfExperience} years`
-                            : ''}
                         </option>
                       ))}
                     </select>

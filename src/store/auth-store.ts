@@ -17,8 +17,6 @@ export interface AuthUser {
   emailConfirmed: boolean;
   employmentType?: 'FullTime' | 'PartTime' | null;
   twoFactorEnabled: boolean;
-  isVerified?: boolean | null;
-  verificationStatus?: string | null;
   contractStatus?: string | null;
   permissions?: string[];
   subRoles?: string[];
@@ -59,8 +57,6 @@ const isSameAuthUser = (a: AuthUser, b: AuthUser): boolean => {
     a.emailConfirmed === b.emailConfirmed &&
     a.employmentType === b.employmentType &&
     a.twoFactorEnabled === b.twoFactorEnabled &&
-    a.isVerified === b.isVerified &&
-    a.verificationStatus === b.verificationStatus &&
     a.contractStatus === b.contractStatus &&
     areStringArraysEqual(a.roles, b.roles) &&
     areStringArraysEqual(a.permissions ?? [], b.permissions ?? []) &&

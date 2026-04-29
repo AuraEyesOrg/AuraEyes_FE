@@ -921,9 +921,7 @@ export default function DoctorsPage() {
                     <p className="text-sm text-(--text-primary) flex items-start gap-3">
                       <MapPin className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
                       <span className="leading-snug text-(--text-muted)">
-                        {t('PatientDoctors.card.experience', {
-                          years: doctor.yearsOfExperience,
-                        })}
+                        {doctor.bio || ''}
                       </span>
                     </p>
                     <p className="text-sm text-(--text-primary) flex items-start gap-3">
@@ -1054,9 +1052,7 @@ export default function DoctorsPage() {
                   )}
                   <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                     <CheckCircle className="w-3 h-3" />
-                    {t('PatientDoctors.modal.verifiedExperience', {
-                      years: selectedDoctor.yearsOfExperience,
-                    })}
+                    Ophthalmologist
                   </span>
                 </div>
                 <button
@@ -1287,8 +1283,6 @@ export default function DoctorsPage() {
               userFullName: selectedDoctor.userFullName,
               userEmail: selectedDoctor.userEmail,
               userAvatarUrl: selectedDoctor.userAvatarUrl,
-              yearsOfExperience: selectedDoctor.yearsOfExperience,
-              isVerified: selectedDoctor.isVerified,
               bio: selectedDoctor.bio,
             }}
             viewMode={consultMode === 'now' ? 'today' : 'week'}

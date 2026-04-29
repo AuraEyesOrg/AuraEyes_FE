@@ -24,7 +24,6 @@ export interface BuyOrgQuotaRequest {
 
 export interface BuyOrgQuotaResponse {
   totalAiQuota: number;
-  usedAiQuota: number;
   remainingQuota: number;
   walletBalance: number;
   amountDeducted: number;

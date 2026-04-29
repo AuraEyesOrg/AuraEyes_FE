@@ -1,6 +1,5 @@
 export interface QuotaBalance {
   totalAiQuota: number;
-  usedAiQuota: number;
   remainingQuota: number;
   quotaSource: 'Free' | 'Purchased' | 'Contract' | 'None';
   unitPrice: number | null;
@@ -12,7 +11,6 @@ export interface BuyQuotaRequest {
 
 export interface BuyQuotaResponse {
   totalAiQuota: number;
-  usedAiQuota: number;
   remainingQuota: number;
   walletBalance: number;
   amountDeducted: number;
