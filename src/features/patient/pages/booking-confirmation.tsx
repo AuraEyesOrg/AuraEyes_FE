@@ -11,7 +11,6 @@ import {
   CheckCircle,
   AlertCircle,
   ArrowLeft,
-  Timer,
   Eye,
   Brain,
   X,
@@ -25,7 +24,7 @@ import {
 } from '../hooks/use-booking';
 import useAuthStore from '@/store/auth-store';
 import { mapOnlineConsultationErrorMessage } from '@/lib/api-error';
-import { formatSlotTime, formatDate, formatCountdown } from '@/lib/date-utils';
+import { formatSlotTime, formatDate } from '@/lib/date-utils';
 import { toast } from 'react-toastify';
 import {
   loadScreeningConsultationContext,
@@ -161,12 +160,10 @@ export default function BookingConfirmationPage(
     };
   }, [consultationContext?.images, previewAnomalies]);
 
-  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const timeoutReleaseTriggeredRef = useRef(false);
   const shownErrorToastsRef = useRef(new Set<string>());
 
   const {
@@ -196,23 +193,8 @@ export default function BookingConfirmationPage(
     else navigate('/patient/appointments');
   }, [onSuccess, navigate]);
 
-  const releaseOnTimeoutAndNavigate = useCallback(async () => {
-    if (timeoutReleaseTriggeredRef.current) return;
-    timeoutReleaseTriggeredRef.current = true;
-
-    if (slotId && patientId) {
-      try {
-        await releaseMutation.mutateAsync({ slotId, request: { patientId } });
-      } catch {
-        // best-effort; still redirect to unblock user
-      }
-    }
-    exitFlow();
-  }, [slotId, patientId, releaseMutation, exitFlow]);
-
   useEffect(() => {
     if (!slotId) return;
-    timeoutReleaseTriggeredRef.current = false;
     sessionStorage.setItem(
       'patient-booking-confirm-context',
       JSON.stringify({ slotId, returnTo: returnToPath })
@@ -246,25 +228,6 @@ export default function BookingConfirmationPage(
       toastId: `booking-confirm-error-${displayErrorMessage}`,
     });
   }, [displayErrorMessage]);
-
-  useEffect(() => {
-    if (!slot?.reservationExpireAt) return;
-
-    const tick = () => {
-      const diff = Math.max(
-        0,
-        Math.floor(
-          (new Date(slot.reservationExpireAt!).getTime() - Date.now()) / 1000
-        )
-      );
-      setRemainingSeconds(diff);
-      if (diff <= 0) void releaseOnTimeoutAndNavigate();
-    };
-
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-  }, [slot?.reservationExpireAt, releaseOnTimeoutAndNavigate]);
 
   const handleConfirm = useCallback(async () => {
     if (!slotId || !patientId || confirmMutation.isPending) return;
@@ -333,13 +296,6 @@ export default function BookingConfirmationPage(
   const innerClass = isEmbedded
     ? 'bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col mx-4 p-8 mt-auto mb-auto'
     : 'p-6 max-w-2xl mx-auto';
-
-  const urgencyClass =
-    remainingSeconds !== null && remainingSeconds <= 60
-      ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-      : remainingSeconds !== null && remainingSeconds <= 120
-        ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
-        : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800';
 
   // ============ RENDER STATES ============
 
@@ -481,16 +437,6 @@ export default function BookingConfirmationPage(
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Confirm Your Booking
           </h1>
-          {remainingSeconds !== null && (
-            <div
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border ${urgencyClass}`}
-            >
-              <Timer className="w-4 h-4" />
-              <span className="font-medium">
-                Complete within {formatCountdown(remainingSeconds)}
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Appointment Details */}
@@ -674,11 +620,7 @@ export default function BookingConfirmationPage(
           </button>
           <button
             onClick={handleConfirm}
-            disabled={
-              confirmMutation.isPending ||
-              releaseMutation.isPending ||
-              (remainingSeconds !== null && remainingSeconds <= 0)
-            }
+            disabled={confirmMutation.isPending || releaseMutation.isPending}
             className="flex-1 px-6 py-4 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {confirmMutation.isPending ? (

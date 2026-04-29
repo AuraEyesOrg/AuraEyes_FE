@@ -5,7 +5,6 @@
  */
 
 import { Link, useLocation } from 'react-router-dom';
-import { BadgeCheck } from 'lucide-react';
 import type { Ophthalmologist } from '../../types';
 import { InitialsAvatar } from './InitialsAvatar';
 import {
@@ -52,9 +51,6 @@ export function ProfessionalCardMini({ professional }: Props) {
           <span className="font-bold text-[15px] text-text-main truncate">
             {professional.fullName}
           </span>
-          {professional.isVerified && (
-            <BadgeCheck className="w-[18px] h-[18px] text-brand-primary flex-shrink-0 fill-brand-primary/20" />
-          )}
         </Link>
         <p className="text-[13px] text-text-muted truncate">
           {displaySpecialty}

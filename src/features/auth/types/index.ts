@@ -75,8 +75,6 @@ export interface UserInfoResponse {
   employmentType?: 'FullTime' | 'PartTime' | null;
   twoFactorEnabled: boolean;
   mustUpdateProfile?: boolean | null;
-  isVerified?: boolean | null;
-  verificationStatus?: string | null;
   contractStatus?: string | null;
   permissions?: string[];
 }

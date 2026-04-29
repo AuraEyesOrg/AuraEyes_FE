@@ -29,11 +29,9 @@ export const mockOphthalmologists: Ophthalmologist[] = [
     avatarUrl:
       'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face',
     role: 'ophthalmologist',
-    isVerified: true,
     createdAt: '2024-01-15',
     specialty: ['Retinal Diseases', 'Diabetic Retinopathy', 'AI Screening'],
     bio: 'Trưởng khoa Võng mạc - Bệnh viện Mắt Trung ương. 15 năm kinh nghiệm trong chẩn đoán và điều trị bệnh lý võng mạc. Nghiên cứu ứng dụng AI trong sàng lọc bệnh mắt do tiểu đường.',
-    yearsOfExperience: 15,
     organisationId: '1',
     organisationName: 'Bệnh viện Mắt Trung ương',
     certificates: [
@@ -78,11 +76,9 @@ export const mockOphthalmologists: Ophthalmologist[] = [
     avatarUrl:
       'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face',
     role: 'ophthalmologist',
-    isVerified: true,
     createdAt: '2023-06-20',
     specialty: ['Glaucoma', 'Optic Nerve Imaging', 'OCT Analysis'],
     bio: 'Chuyên gia Glaucoma và phân tích hình ảnh thần kinh thị giác. Ứng dụng OCT trong theo dõi tiến triển bệnh Glaucoma và đánh giá lớp sợi thần kinh võng mạc.',
-    yearsOfExperience: 12,
     organisationId: '2',
     organisationName: 'Phòng khám Mắt Sài Gòn',
     certificates: [
@@ -118,7 +114,6 @@ export const mockOphthalmologists: Ophthalmologist[] = [
     avatarUrl:
       'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face',
     role: 'ophthalmologist',
-    isVerified: true,
     createdAt: '2022-11-05',
     specialty: [
       'Retinopathy of Prematurity',
@@ -126,7 +121,6 @@ export const mockOphthalmologists: Ophthalmologist[] = [
       'Telemedicine',
     ],
     bio: 'Nghiên cứu sinh tiến sĩ tại ĐH Y Hà Nội. Chuyên sâu về bệnh võng mạc trẻ sinh non (ROP) và ứng dụng Telemedicine trong sàng lọc ROP tại tuyến cơ sở.',
-    yearsOfExperience: 8,
     organisationName: 'Đại học Y Hà Nội',
     certificates: [
       {
@@ -152,11 +146,9 @@ export const mockOphthalmologists: Ophthalmologist[] = [
     avatarUrl:
       'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&h=150&fit=crop&crop=face',
     role: 'ophthalmologist',
-    isVerified: true,
     createdAt: '2023-03-12',
     specialty: ['AI Medical Imaging', 'Deep Learning', 'Retinal Analysis'],
     bio: 'Co-founder & Medical Director - Aura AI Screening. Tiến sĩ Y học chuyên ngành Hình ảnh y khoa. Phát triển thuật toán AI phát hiện 6 bệnh lý võng mạc phổ biến.',
-    yearsOfExperience: 10,
     organisationId: '3',
     organisationName: 'Aura AI Medical',
     certificates: [
@@ -192,11 +184,9 @@ export const mockOphthalmologists: Ophthalmologist[] = [
     avatarUrl:
       'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=150&h=150&fit=crop&crop=face',
     role: 'ophthalmologist',
-    isVerified: false,
     createdAt: '2024-06-01',
     specialty: ['Primary Eye Care', 'DR Screening', 'Community Ophthalmology'],
     bio: 'Bác sĩ nhãn khoa tuyến huyện. Triển khai chương trình sàng lọc võng mạc đái tháo đường cho 5,000+ bệnh nhân vùng nông thôn sử dụng Aura AI.',
-    yearsOfExperience: 6,
     organisationId: '4',
     organisationName: 'Bệnh viện Đa khoa huyện Bình Chánh',
     certificates: [],

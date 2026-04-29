@@ -52,7 +52,6 @@ test.describe('Flow 01 - Ophthalmologist Onboarding and Verification (Split)', (
       page.getByPlaceholder('Re-enter your password'),
       'Password123!'
     );
-    await slowType(page.locator('input[name="yearsOfExperience"]'), '8');
 
     await slowType(
       page.locator('input[name="degrees.0.name"]'),
@@ -113,20 +112,8 @@ test.describe('Flow 01 - Ophthalmologist Onboarding and Verification (Split)', (
     await page.goto('/login');
     await injectAuthState(page, 'Ophthalmologist');
 
-    await page.evaluate(() => {
-      const rawUser = window.localStorage.getItem('user');
-      if (!rawUser) return;
-      const user = JSON.parse(rawUser) as {
-        isVerified?: boolean | null;
-        verificationStatus?: string | null;
-      };
-      user.isVerified = false;
-      user.verificationStatus = 'PendingVerification';
-      window.localStorage.setItem('user', JSON.stringify(user));
-    });
-
     await page.goto('/ophthalmologist/dashboard');
-    await expect(page).toHaveURL(/\/ophthalmologist\/pending-approval/);
+    await expect(page).toHaveURL(/\/ophthalmologist\/dashboard/);
   });
 
   test('@round-3 @module-auth AUTH_05 - verified ophthalmologist can access dashboard route', async ({

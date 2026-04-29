@@ -76,15 +76,9 @@ interface RawConsultationSessionDto {
   chatStatusName?: string;
   price: number;
   appointmentTime: string | null;
-  meetingLink: string | null;
   lastActivityAt: string;
-  closedAt: string | null;
-  closedBy: string | null;
-  closingReason: string | null;
   createdAt: string;
   updatedAt: string | null;
-  isRetinalImagesShared?: boolean;
-  isAIResultShared?: boolean;
   caseSnapshot?: RawConsultationCaseSnapshotDto | null;
   messages?: RawChatMessageDto[];
 }
@@ -119,12 +113,8 @@ interface RawConsultationSessionListDto {
   chatStatusName?: string;
   price: number;
   appointmentTime: string | null;
-  meetingLink?: string | null;
   lastActivityAt: string;
   createdAt: string;
-  closedAt: string | null;
-  isRetinalImagesShared?: boolean;
-  isAIResultShared?: boolean;
   caseSnapshot?: RawConsultationCaseSnapshotDto | null;
   latestMessagePreview?: string | null;
 }
@@ -235,15 +225,9 @@ const mapConsultationSession = (
     chatStatusName: session.chatStatusName ?? CHAT_STATUS_LABELS[chatStatus],
     price: session.price,
     appointmentTime: session.appointmentTime,
-    meetingLink: session.meetingLink,
     lastActivityAt: session.lastActivityAt,
-    closedAt: session.closedAt,
-    closedBy: session.closedBy,
-    closingReason: session.closingReason,
     createdAt: session.createdAt,
     updatedAt: session.updatedAt,
-    isRetinalImagesShared: Boolean(session.isRetinalImagesShared),
-    isAIResultShared: Boolean(session.isAIResultShared),
     caseSnapshot: mapCaseSnapshot(session.caseSnapshot),
     messages: (session.messages ?? []).map(mapMessage),
   };
@@ -286,12 +270,8 @@ const mapConsultationSessionListItem = (
     chatStatusName: session.chatStatusName ?? CHAT_STATUS_LABELS[chatStatus],
     price: session.price,
     appointmentTime: session.appointmentTime,
-    meetingLink: session.meetingLink ?? null,
     lastActivityAt: session.lastActivityAt,
     createdAt: session.createdAt,
-    closedAt: session.closedAt ?? null,
-    isRetinalImagesShared: Boolean(session.isRetinalImagesShared),
-    isAIResultShared: Boolean(session.isAIResultShared),
     caseSnapshot: mapCaseSnapshot(session.caseSnapshot),
     latestMessagePreview: session.latestMessagePreview ?? null,
   };

@@ -28,27 +28,13 @@ import type { PagedResult } from '@/features/patient/types';
 
 type BackendScheduleTemplateDto = {
   id: string;
-  orgId?: string | null;
-  ophthalId?: string | null;
   dayOfWeek?: string | number;
   startTime: string;
   endTime: string;
   slotDuration: number;
   maxCapacity: number;
   cost?: number | null;
-  source?: string | null;
   createdAt: string;
-};
-
-const normalizeScheduleTemplateSource = (
-  source: string | null | undefined
-): 'Doctor' | 'SystemGenerated' => {
-  if (!source) {
-    return 'Doctor';
-  }
-
-  const normalized = source.replace(/[_\s-]/g, '').toLowerCase();
-  return normalized === 'systemgenerated' ? 'SystemGenerated' : 'Doctor';
 };
 
 const dayOfWeekToNumber = (value: string | number | undefined): number => {
@@ -76,8 +62,6 @@ const normalizeScheduleTemplate = (
   template: BackendScheduleTemplateDto
 ): ScheduleTemplateDto => ({
   id: template.id,
-  ophthalmologistId: template.ophthalId ?? '',
-  organisationId: template.ophthalId ? null : (template.orgId ?? null),
   dayOfWeek: dayOfWeekToNumber(template.dayOfWeek),
   startTime: template.startTime,
   endTime: template.endTime,
@@ -87,7 +71,6 @@ const normalizeScheduleTemplate = (
   cost: template.cost ?? 0,
   maxCapacity: template.maxCapacity,
   isActive: true,
-  source: normalizeScheduleTemplateSource(template.source),
   createdAt: template.createdAt,
 });
 
@@ -246,8 +229,6 @@ export const createScheduleTemplate = async (
   request: CreateScheduleTemplateRequest
 ): Promise<ScheduleTemplateDto> => {
   const payload = {
-    orgId: request.ophthalId ? null : (request.organisationId ?? null),
-    ophthalId: request.ophthalId,
     dayOfWeek: request.dayOfWeek,
     startTime: request.startTime,
     endTime: request.endTime,
