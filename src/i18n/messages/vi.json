@@ -3699,7 +3699,7 @@
       },
       "header": {
         "subtitle": "Đăng ký nhanh bệnh nhân mới",
-        "title": "Tạo bệnh nhân walk-in"
+        "title": "Tạo bệnh nhân vãng lai"
       },
       "scan": {
         "action": "Quét mã QR VNeID / CCCD",
@@ -3710,7 +3710,7 @@
       "toast": {
         "accountCreatedEmailSent": "Đã tạo tài khoản và gửi thông tin đăng nhập qua email.",
         "accountCreatedTempPassword": "Đã tạo tài khoản. Email đăng nhập: {{loginEmail}} | Mật khẩu tạm: {{temporaryPassword}}",
-        "createSuccess": "Tạo bệnh nhân walk-in thành công!",
+        "createSuccess": "Tạo bệnh nhân vãng lai thành công!",
         "invalidQr": "Mã QR không hợp lệ hoặc không đúng định dạng CCCD/VNeID.",
         "qrExtractSuccess": "Trích xuất hồ sơ công dân thành công!"
       }
@@ -6340,7 +6340,7 @@
       },
       "header": {
         "subtitle": "Đăng ký nhanh bệnh nhân mới",
-        "title": "Tạo bệnh nhân walk-in"
+        "title": "Tạo bệnh nhân vãng lai"
       },
       "scan": {
         "action": "Quét mã QR VNeID / CCCD",
@@ -6351,7 +6351,7 @@
       "toast": {
         "accountCreatedEmailSent": "Đã tạo tài khoản và gửi thông tin đăng nhập qua email.",
         "accountCreatedTempPassword": "Đã tạo tài khoản. Email đăng nhập: {{loginEmail}} | Mật khẩu tạm: {{temporaryPassword}}",
-        "createSuccess": "Tạo bệnh nhân walk-in thành công!",
+        "createSuccess": "Tạo bệnh nhân vãng lai thành công!",
         "invalidQr": "Mã QR không hợp lệ hoặc không đúng định dạng CCCD/VNeID.",
         "qrExtractSuccess": "Trích xuất hồ sơ công dân thành công!"
       }
