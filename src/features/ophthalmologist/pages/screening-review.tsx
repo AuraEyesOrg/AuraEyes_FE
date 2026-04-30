@@ -643,21 +643,19 @@ export default function ScreeningReviewPage() {
         setSelectedImageId(first?.id ?? null);
       } catch (e) {
         if (cancelled) return;
-        if (isAxiosError(e) && e.response?.status === 404) {
-          setLoadError(
-            t(
-              'Ophthalmologist.screeningReview.notFound',
-              'Screening not found or you do not have access.'
-            )
-          );
-        } else {
-          setLoadError(
-            t(
-              'Ophthalmologist.screeningReview.loadFailed',
-              'Could not load screening. Please try again.'
-            )
-          );
-        }
+        const errorMessage =
+          isAxiosError(e) && e.response?.data?.message
+            ? e.response.data.message
+            : isAxiosError(e) && e.response?.status === 404
+              ? t(
+                  'Ophthalmologist.screeningReview.notFound',
+                  'Screening not found or you do not have access.'
+                )
+              : t(
+                  'Ophthalmologist.screeningReview.loadFailed',
+                  'Could not load screening. Please try again.'
+                );
+        setLoadError(errorMessage);
         setDetail(null);
       } finally {
         if (!cancelled) setLoading(false);
@@ -1764,20 +1762,25 @@ export default function ScreeningReviewPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  {detail.medicalRecordId && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        navigate(`/medical-records/${detail.medicalRecordId}`, {
-                          state: { screeningId: detail.screeningId },
-                        })
-                      }
-                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                    >
-                      <FileText className="w-4 h-4" />
-                      Mở Bệnh án (EMR)
-                    </button>
-                  )}
+                  {detail.medicalRecordId &&
+                    detail.medicalRecordId !==
+                      '00000000-0000-0000-0000-000000000000' && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(
+                            `/medical-records/${detail.medicalRecordId}`,
+                            {
+                              state: { screeningId: detail.screeningId },
+                            }
+                          )
+                        }
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <FileText className="w-4 h-4" />
+                        Mở Bệnh án (EMR)
+                      </button>
+                    )}
                   <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded-full text-xs font-medium">
                     {t('Ophthalmologist.screeningReview.aiModel', 'AI Model')}:{' '}
                     {detail.modelVersion?.trim()
@@ -2942,33 +2945,30 @@ export default function ScreeningReviewPage() {
                           'Generate Report'
                         )}
                       </button>
-                      <button
-                        onClick={() => {
-                          const formData = {
-                            fullName: detail?.patientFullName || '',
-                            age: '', // Age is not in detail, maybe I can find it elsewhere or leave blank
-                            maYT:
-                              detail?.screeningId
-                                .substring(0, 8)
-                                .toUpperCase() || '',
-                            admissionReason:
-                              detail?.latestResult?.summary || '',
-                            finalDiagnosisMain:
-                              detail?.latestResult?.findings || '',
-                            // Add other fields if needed
-                          };
-                          navigate('/medical-records/new', {
-                            state: { formData },
-                          });
-                        }}
-                        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm shadow-indigo-600/25 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md hover:shadow-indigo-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        <FileText className="w-4 h-4" />
-                        {t(
-                          'Ophthalmologist.screeningReview.createMedicalRecord',
-                          'Điền bệnh án'
+                      {detail.medicalRecordId &&
+                        detail.medicalRecordId !==
+                          '00000000-0000-0000-0000-000000000000' && (
+                          <button
+                            onClick={() => {
+                              navigate(
+                                `/medical-records/${detail.medicalRecordId}`,
+                                {
+                                  state: {
+                                    initialTab: 'clinical',
+                                    screeningId: detail.screeningId,
+                                  },
+                                }
+                              );
+                            }}
+                            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm shadow-indigo-600/25 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md hover:shadow-indigo-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            <FileText className="w-4 h-4" />
+                            {t(
+                              'Ophthalmologist.screeningReview.createMedicalRecord',
+                              'Điền bệnh án'
+                            )}
+                          </button>
                         )}
-                      </button>
                     </div>
                   </div>
                 </div>

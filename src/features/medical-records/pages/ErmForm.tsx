@@ -6,7 +6,6 @@ import {
   Eye,
   User,
   Lock,
-  RotateCcw,
   ChevronRight,
   ShieldCheck,
   Stethoscope,
@@ -18,6 +17,8 @@ import {
   Sparkles,
   FileText,
   CheckCircle,
+  ArrowLeft,
+  X,
 } from 'lucide-react';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import { toast } from 'react-toastify';
@@ -32,7 +33,9 @@ import {
   useStartConsultation,
   useUpdateAdministrative,
 } from '../hooks/useMedicalRecords';
+import { usePatientProfile } from '@/features/patient/hooks/useProfile';
 import { clinicScreeningApi } from '@/features/clinic-staff/api/screening.api';
+import { getConsultationSession } from '@/features/consultation/api/consultation.api';
 import {
   masterDataApi,
   Province,
@@ -84,11 +87,37 @@ interface FullEmrFormData {
   admissionType: string;
   referralPlace: string;
   admissionReason: string;
+  directEntry: string;
+  dischargeDate: string;
+  totalTreatmentDays: string;
+
+  // Additional 23/BV-01 Management Fields
+  admissionCount: string; // Vào viện do bệnh này lần thứ mấy
+  department: string; // Vào khoa
+  transferHospital: string; // Chuyển viện: 1. Tuyến trên 2. Tuyến dưới 3.CK
+  transferTo: string; // Chuyển đến
+  dischargeType: string; // 1. Ra viện 2. Xin về 3. Bỏ về 4. Đưa về
+  transferDiagnosis: string; // Nơi chuyển đến (chẩn đoán)
+  kkbDiagnosis: string; // KKB, Cấp cứu (chẩn đoán)
+  departmentDiagnosis: string; // Khi vào khoa điều trị (chẩn đoán)
+  complications: string; // Tai biến, Biến chứng
+  complicationType: string; // 1. Do phẫu thuật 2. Do gây mê 3. Do nhiễm khuẩn 4. Khác
+  preOpDiagnosis: string;
+  postOpDiagnosis: string;
+  postOpDays: string;
+  opCount: string;
+  treatmentResult: string; // 1. Khỏi 2. Đỡ, giảm... 5. Tử vong
+  deathTime: string;
+  deathDate: string;
+  deathReason: string;
+  deathPeriod: string; // 1. Trong 24 giờ...
 
   // Section III: Clinical
   medicalHistory: string;
   personalHistory: string;
   familyHistory: string;
+  diseaseProcess: string;
+  companionDisease: string;
   rightEyeVisionNoGlass: string;
   leftEyeVisionNoGlass: string;
   rightEyeVisionWithGlass: string;
@@ -340,6 +369,7 @@ export default function ErmForm() {
   const [screeningId, setScreeningId] = useState<string | null>(null);
   const [showAiResult, setShowAiResult] = useState(false);
   const [activeStep, setActiveStep] = useState<'admin' | 'clinical'>('admin');
+  const [hasAutoSwitched, setHasAutoSwitched] = useState(false);
 
   // Custom Hooks
   const { data: record, isLoading: isLoadingRecord } = useMedicalRecord(
@@ -355,69 +385,215 @@ export default function ErmForm() {
   const isStaff = user?.roles.includes('ClinicStaff');
   const isFinalizer = user?.permissions?.includes('medical-records:finalize');
 
-  const { register, handleSubmit, setValue, reset, control } =
+  const isReadOnlyAdmin = recordStatus === MedicalRecordStatus.Finalized;
+  const isReadOnlyClinical = recordStatus === MedicalRecordStatus.Finalized;
+
+  useEffect(() => {
+    if (id === 'new' && isOphthalmologist) {
+      toast.error(
+        'Bác sĩ không có quyền tạo hồ sơ mới. Hồ sơ phải được tạo bởi nhân viên phòng khám.'
+      );
+      navigate('/dashboard');
+    }
+  }, [id, isOphthalmologist, navigate]);
+
+  // Fetch patient profile if needed
+  const patientIdFromRecord =
+    record?.patientId || location.state?.formData?.patientId;
+  const { data: patientProfile } = usePatientProfile(patientIdFromRecord);
+
+  const { register, handleSubmit, setValue, getValues, reset, control } =
     useForm<FullEmrFormData>({
       defaultValues: INITIAL_VALUES as FullEmrFormData,
     });
 
-  // Auto-transition to PendingClinical if opened by Doctor
+  // Pre-fill administrative data from patient profile if fields are empty
+  useEffect(() => {
+    if (patientProfile) {
+      console.log('Synchronizing patient profile info:', patientProfile);
+
+      const currentValues = control._formValues;
+
+      if (!currentValues.fullName)
+        setValue('fullName', patientProfile.fullName);
+      if (!currentValues.birthDate && patientProfile.dateOfBirth) {
+        const d = new Date(patientProfile.dateOfBirth);
+        if (!isNaN(d.getTime())) {
+          setValue('birthDate', d.toISOString().split('T')[0]);
+        }
+      }
+      if (!currentValues.gender && patientProfile.gender) {
+        setValue('gender', patientProfile.gender === 'female' ? 'Nữ' : 'Nam');
+      }
+      if (!currentValues.relativePhone && patientProfile.phone) {
+        setValue('relativePhone', patientProfile.phone);
+      }
+      if (!currentValues.address && patientProfile.address) {
+        setValue('address', patientProfile.address);
+      }
+      if (!currentValues.maYT && (patientProfile as any).medicalRecordNumber) {
+        setValue('maYT', (patientProfile as any).medicalRecordNumber);
+      }
+    }
+  }, [patientProfile, setValue, control]);
+
+  // Auto-calculate age from birthDate
+  const birthDateValue = useWatch({ control, name: 'birthDate' });
+  useEffect(() => {
+    if (birthDateValue) {
+      const birth = new Date(birthDateValue);
+      if (!isNaN(birth.getTime())) {
+        const today = new Date();
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+          age--;
+        }
+        if (age >= 0) {
+          setValue('age', age.toString());
+        }
+      }
+    }
+  }, [birthDateValue, setValue]);
+
+  // Auto-transition to PendingClinical if opened by Doctor (Run only once)
   useEffect(() => {
     if (
       id &&
+      id !== 'new' &&
       isOphthalmologist &&
-      recordStatus === MedicalRecordStatus.DraftAdmin
+      recordStatus === MedicalRecordStatus.DraftAdmin &&
+      !isStaff
     ) {
       startConsultationMutation.mutate(id);
     }
-    if (isOphthalmologist) setActiveStep('clinical');
-  }, [id, isOphthalmologist, recordStatus]);
 
-  // Auto-calculate age from birthDate
-  const birthDate = useWatch({ control, name: 'birthDate' });
-  useEffect(() => {
-    if (birthDate) {
-      const birth = new Date(birthDate);
-      const today = new Date();
-      let age = today.getFullYear() - birth.getFullYear();
-      const m = today.getMonth() - birth.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-        age--;
-      }
-      if (age >= 0) {
-        setValue('age', age.toString());
-      }
+    // Default to clinical tab for doctors only once
+    if (isOphthalmologist && !hasAutoSwitched && record) {
+      setActiveStep('clinical');
+      setHasAutoSwitched(true);
     }
-  }, [birthDate, setValue]);
+  }, [
+    id,
+    isOphthalmologist,
+    recordStatus,
+    startConsultationMutation,
+    hasAutoSwitched,
+    record,
+    isStaff,
+  ]);
+
+  useEffect(() => {
+    if (location.state?.initialTab) {
+      setActiveStep(location.state.initialTab as 'admin' | 'clinical');
+    }
+  }, [location.state]);
 
   useEffect(() => {
     if (record) {
       const adminData = JSON.parse(record.administrativeDataJson || '{}');
       const clinicalData = JSON.parse(record.clinicalDataJson || '{}');
 
+      // Helper to format date for input[type="date"]
+      const formatDateForInput = (d: any) => {
+        if (!d) return '';
+        const date = new Date(d);
+        if (isNaN(date.getTime())) return '';
+        return date.toISOString().split('T')[0];
+      };
+
+      // Format all date fields
+      const formattedAdmin = { ...adminData };
+      ['birthDate', 'admissionDate', 'dischargeDate', 'bhytExpiry'].forEach(
+        (key) => {
+          if (formattedAdmin[key])
+            formattedAdmin[key] = formatDateForInput(formattedAdmin[key]);
+        }
+      );
+
       reset({
-        ...adminData,
+        ...INITIAL_VALUES,
+        ...formattedAdmin,
         ...clinicalData,
         maYT: record.medicalRecordNumber,
         finalDiagnosisMain: record.finalDiagnosis,
         finalDiagnosisExtra: record.treatmentPlan,
       });
-      setRecordStatus(record.status as MedicalRecordStatus);
 
-      // Fetch AI Results
-      const screeningId =
-        clinicalData.screeningId || location.state?.screeningId;
-      if (screeningId) {
-        void clinicScreeningApi
-          .getSessionDetail(screeningId)
-          .then((res) => {
-            if (res.data) {
-              setScreeningId(res.data.screeningId);
-              if (res.data.latestResult) {
-                setAiResult(res.data.latestResult);
+      // Explicitly load geographic data and set values to ensure they aren't lost
+      const loadLocations = async () => {
+        if (adminData.provinceCode) {
+          try {
+            const districtsRes = await masterDataApi.getDistricts(
+              adminData.provinceCode
+            );
+            setDistricts(districtsRes);
+            // Re-set values after options are loaded to prevent RHF from clearing them
+            if (adminData.districtCode) {
+              setValue('districtCode', adminData.districtCode);
+              const wardsRes = await masterDataApi.getWards(
+                adminData.districtCode
+              );
+              setWards(wardsRes);
+              if (adminData.wardCode) {
+                setValue('wardCode', adminData.wardCode);
               }
             }
-          })
-          .catch(console.error);
+          } catch (err) {
+            console.error('Error loading locations:', err);
+          }
+        }
+      };
+
+      void loadLocations();
+
+      setRecordStatus(record.status as MedicalRecordStatus);
+
+      const fetchAiResult = async (sid: string) => {
+        try {
+          const res = await clinicScreeningApi.getSessionDetail(sid);
+          if (res.data) {
+            setScreeningId(res.data.screeningId);
+            if (res.data.latestResult) {
+              setAiResult(res.data.latestResult);
+            }
+          }
+        } catch (err: any) {
+          // If the screening ID was invalid (e.g. accidentally saved as medical record ID),
+          // fallback to getting the AiScreeningId from the Consultation Session.
+          if (err.response?.status === 404 && record.consultationSessionId) {
+            try {
+              const consultation = await getConsultationSession(
+                record.consultationSessionId
+              );
+              if (consultation.aiScreeningId) {
+                const realRes = await clinicScreeningApi.getSessionDetail(
+                  consultation.aiScreeningId
+                );
+                if (realRes.data) {
+                  setScreeningId(realRes.data.screeningId);
+                  if (realRes.data.latestResult) {
+                    setAiResult(realRes.data.latestResult);
+                  }
+                }
+              }
+            } catch (innerErr) {
+              console.error('Failed to fallback fetch screening ID', innerErr);
+            }
+          } else {
+            console.error('Failed to fetch AI Result:', err);
+          }
+        }
+      };
+
+      // Fetch AI Results
+      const screeningIdToLoad =
+        location.state?.screeningId || clinicalData.screeningId;
+      if (screeningIdToLoad) {
+        void fetchAiResult(screeningIdToLoad);
+      } else if (record.consultationSessionId) {
+        // No screening ID saved at all, try falling back immediately
+        void fetchAiResult('fallback-to-consultation');
       }
     } else if (location.state?.formData) {
       const incoming = location.state.formData;
@@ -440,10 +616,30 @@ export default function ErmForm() {
     }
   }, [record, location.state, reset, setValue]);
 
+  // Age calculation effect
+  const birthDate = useWatch({ control, name: 'birthDate' });
+  useEffect(() => {
+    if (birthDate) {
+      const birth = new Date(birthDate);
+      if (!isNaN(birth.getTime())) {
+        const today = new Date();
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+          age--;
+        }
+        if (age >= 0) {
+          setValue('age', age.toString());
+        }
+      }
+    }
+  }, [birthDate, setValue]);
+
   // Geographic Data Effects
   const provinceCode = useWatch({ control, name: 'provinceCode' });
   const districtCode = useWatch({ control, name: 'districtCode' });
 
+  // 1. Initial Load of Master Data (Provinces)
   useEffect(() => {
     masterDataApi
       .getProvinces()
@@ -451,22 +647,30 @@ export default function ErmForm() {
       .catch(console.error);
   }, []);
 
+  // 2. Fetch Districts when provinceCode changes OR on initial record load
   useEffect(() => {
     if (provinceCode) {
       masterDataApi
         .getDistricts(provinceCode)
-        .then((data: District[]) => setDistricts(data))
+        .then((data: District[]) => {
+          setDistricts(data);
+          // Optimization: If we just loaded the record, we don't want to reset districtCode
+          // The form reset handles the initial value.
+        })
         .catch(console.error);
     } else {
       setDistricts([]);
     }
   }, [provinceCode]);
 
+  // 3. Fetch Wards when districtCode changes OR on initial record load
   useEffect(() => {
     if (districtCode) {
       masterDataApi
         .getWards(districtCode)
-        .then((data: Ward[]) => setWards(data))
+        .then((data: Ward[]) => {
+          setWards(data);
+        })
         .catch(console.error);
     } else {
       setWards([]);
@@ -476,6 +680,24 @@ export default function ErmForm() {
   const formData = useWatch({ control });
   const rightEyeData = formData.rightEye;
   const leftEyeData = formData.leftEye;
+
+  const handleSetAllNormal = () => {
+    const newRightEye = { ...rightEyeData } as Record<string, DetailedEyeItem>;
+    const newLeftEye = { ...leftEyeData } as Record<string, DetailedEyeItem>;
+
+    SECTION_KEYS.forEach((key) => {
+      if (newRightEye[key]) {
+        newRightEye[key] = { ...newRightEye[key], normal: true };
+      }
+      if (newLeftEye[key]) {
+        newLeftEye[key] = { ...newLeftEye[key], normal: true };
+      }
+    });
+
+    setValue('rightEye', newRightEye);
+    setValue('leftEye', newLeftEye);
+    toast.info('Đã đặt tất cả trạng thái bình thường');
+  };
 
   const onSubmit = async (data: FullEmrFormData) => {
     const missingFields: string[] = [];
@@ -493,6 +715,16 @@ export default function ErmForm() {
       if (!data.medicalHistory) missingFields.push('Tiền sử bệnh');
       if (!data.finalDiagnosisMain) missingFields.push('Chẩn đoán chính');
       if (!data.doctorName) missingFields.push('Tên bác sĩ');
+
+      // Visual Acuity Validation
+      if (!data.rightEyeVisionNoGlass)
+        missingFields.push('Thị lực MP (Không kính)');
+      if (!data.leftEyeVisionNoGlass)
+        missingFields.push('Thị lực MT (Không kính)');
+      if (!data.rightEyeVisionWithGlass)
+        missingFields.push('Thị lực MP (Có kính)');
+      if (!data.leftEyeVisionWithGlass)
+        missingFields.push('Thị lực MT (Có kính)');
     }
 
     if (missingFields.length > 0) {
@@ -537,9 +769,27 @@ export default function ErmForm() {
           'admissionType',
           'referralPlace',
           'admissionReason',
+          'directEntry',
+          'dischargeDate',
+          'totalTreatmentDays',
+          'diseaseProcess',
+          'companionDisease',
+          'admissionCount',
+          'department',
+          'dischargeType',
+          'transferDiagnosis',
+          'kkbDiagnosis',
+          'departmentDiagnosis',
+          'complications',
+          'postOpDiagnosis',
+          'postOpDays',
+          'opCount',
+          'treatmentResult',
+          'doctorName',
         ];
+        const currentValues = getValues();
         const adminData = adminFields.reduce((acc, field) => {
-          acc[field] = (data as any)[field];
+          acc[field] = (currentValues as any)[field];
           return acc;
         }, {} as any);
 
@@ -574,10 +824,65 @@ export default function ErmForm() {
             ? JSON.parse(record.clinicalDataJson).screeningId
             : null);
 
+        const adminFields = [
+          'khoa',
+          'giuong',
+          'soLuuTru',
+          'maYT',
+          'fullName',
+          'birthDate',
+          'age',
+          'gender',
+          'job',
+          'ethnicity',
+          'nationality',
+          'address',
+          'workplace',
+          'objectType',
+          'bhytNumber',
+          'bhytExpiry',
+          'relativeName',
+          'relativePhone',
+          'district',
+          'province',
+          'ward',
+          'districtCode',
+          'provinceCode',
+          'wardCode',
+          'admissionDate',
+          'admissionTime',
+          'admissionType',
+          'referralPlace',
+          'admissionReason',
+          'directEntry',
+          'dischargeDate',
+          'totalTreatmentDays',
+          'diseaseProcess',
+          'companionDisease',
+          'admissionCount',
+          'department',
+          'dischargeType',
+          'transferDiagnosis',
+          'kkbDiagnosis',
+          'departmentDiagnosis',
+          'complications',
+          'postOpDiagnosis',
+          'postOpDays',
+          'opCount',
+          'treatmentResult',
+          'doctorName',
+        ];
+        const currentValues = getValues();
+        const adminData = adminFields.reduce((acc, field) => {
+          acc[field] = (currentValues as any)[field];
+          return acc;
+        }, {} as any);
+
         await updateDiagnosisMutation.mutateAsync({
           id,
           data: {
             clinicalDataJson: JSON.stringify(clinicalData),
+            administrativeDataJson: JSON.stringify(adminData),
             finalDiagnosis: data.finalDiagnosisMain,
             treatmentPlan: data.finalDiagnosisExtra,
           },
@@ -672,6 +977,13 @@ export default function ErmForm() {
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans pb-20 selection:bg-cyan-500/20">
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-5">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 bg-slate-50 text-slate-600 px-4 py-2 rounded-xl font-black text-[10px] hover:bg-slate-100 transition-all border border-slate-200"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> QUAY LẠI
+          </button>
+          <div className="h-4 w-px bg-slate-200" />
           <AuraLogo size="sm" />
           <div className="h-4 w-px bg-slate-200" />
           <div
@@ -700,6 +1012,16 @@ export default function ErmForm() {
             </button>
           )}
 
+          {isOphthalmologist && activeStep === 'clinical' && (
+            <button
+              onClick={handleSetAllNormal}
+              disabled={recordStatus === MedicalRecordStatus.Finalized}
+              className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl font-black text-[10px] hover:bg-emerald-100 transition-all border border-emerald-200"
+            >
+              <CheckCircle className="w-3.5 h-3.5" /> TẤT CẢ BÌNH THƯỜNG
+            </button>
+          )}
+
           <button
             onClick={() => navigate(`/medical-records/patient/${id}`)}
             className="flex items-center gap-2 bg-slate-100 text-slate-600 px-4 py-2 rounded-xl font-black text-[10px] hover:bg-slate-200 transition-all"
@@ -707,16 +1029,14 @@ export default function ErmForm() {
             <Eye className="w-3.5 h-3.5" /> XEM BẢN IN
           </button>
 
-          {isOphthalmologist &&
-            isFinalizer &&
-            recordStatus !== MedicalRecordStatus.Finalized && (
-              <button
-                onClick={handleFinalize}
-                className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-2 rounded-xl font-black text-[10px] hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-600/20 transition-all"
-              >
-                <Lock className="w-3.5 h-3.5" /> KHÓA HỒ SƠ
-              </button>
-            )}
+          {isFinalizer && recordStatus !== MedicalRecordStatus.Finalized && (
+            <button
+              onClick={handleFinalize}
+              className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-2 rounded-xl font-black text-[10px] hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-600/20 transition-all"
+            >
+              <Lock className="w-3.5 h-3.5" /> KHÓA HỒ SƠ
+            </button>
+          )}
 
           <button
             onClick={handleSubmit(onSubmit)}
@@ -729,7 +1049,66 @@ export default function ErmForm() {
         </div>
       </nav>
 
-      <main className="max-w-6xl mx-auto p-6 md:p-10">
+      {showAiResult && aiResult && (
+        <div className="fixed bottom-10 right-10 z-[60] w-96 bg-white rounded-[2rem] shadow-2xl border border-purple-100 overflow-hidden animate-in slide-in-from-bottom-5">
+          <div className="bg-purple-600 p-5 text-white flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5" />
+              <div className="flex flex-col">
+                <span className="font-black text-sm uppercase">
+                  Kết quả AI Screening
+                </span>
+                <span className="text-[9px] font-bold opacity-80 uppercase tracking-widest">
+                  CHỈ DÙNG THAM KHẢO
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowAiResult(false)}
+              className="p-1 hover:bg-white/20 rounded-lg"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+          </div>
+          <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+            <div className="p-4 bg-purple-50 rounded-2xl border border-purple-100">
+              <p className="text-sm font-bold text-purple-900 leading-relaxed italic">
+                "Lưu ý: Đây là kết quả phân tích tự động từ AI hỗ trợ bác sĩ,
+                không phải chẩn đoán cuối cùng."
+              </p>
+            </div>
+
+            {aiResult.summary && (
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-purple-400 uppercase">
+                  Tóm tắt bệnh lý
+                </p>
+                <p className="text-sm font-bold text-slate-800 leading-relaxed">
+                  {aiResult.summary}
+                </p>
+              </div>
+            )}
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-slate-400 uppercase">
+                Dấu hiệu phát hiện
+              </p>
+              <div className="text-xs text-slate-600 font-medium whitespace-pre-wrap leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
+                {aiResult.findings || 'Không có dữ liệu phân tích chi tiết.'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <main className="max-w-6xl mx-auto p-6 md:p-10 relative">
+        <button
+          onClick={() => navigate(-1)}
+          className="absolute left-6 top-10 md:left-10 flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-all shadow-sm group"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          Quay lại
+        </button>
+
         <div className="mb-10 text-center space-y-2">
           <h1 className="text-3xl font-black uppercase tracking-[0.2em] text-slate-900">
             Hồ sơ bệnh án
@@ -739,66 +1118,6 @@ export default function ErmForm() {
           </p>
           <div className="w-16 h-1 bg-cyan-500 mx-auto rounded-full mt-4" />
         </div>
-
-        {/* AI Result Float Panel */}
-        {showAiResult && aiResult && (
-          <div className="fixed bottom-10 right-10 z-[60] w-96 bg-white rounded-[2rem] shadow-2xl border border-purple-100 overflow-hidden animate-in slide-in-from-bottom-5">
-            <div className="bg-purple-600 p-5 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5" />
-                <div className="flex flex-col">
-                  <span className="font-black text-sm uppercase">
-                    Kết quả AI Screening
-                  </span>
-                  <span className="text-[9px] font-bold opacity-80 uppercase tracking-widest">
-                    CHỈ DÙNG THAM KHẢO
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowAiResult(false)}
-                className="p-1 hover:bg-white/20 rounded-lg"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
-              <div className="p-4 bg-purple-50 rounded-2xl border border-purple-100">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-black text-purple-600 uppercase tracking-wider">
-                    Phân tích từ AI
-                  </span>
-                  <div className="px-2 py-0.5 bg-purple-200 text-purple-700 rounded text-[9px] font-black uppercase">
-                    AI Reference
-                  </div>
-                </div>
-                <p className="text-sm font-bold text-purple-900 leading-relaxed italic">
-                  "Lưu ý: Đây là kết quả phân tích tự động từ AI hỗ trợ bác sĩ,
-                  không phải chẩn đoán cuối cùng."
-                </p>
-              </div>
-
-              {aiResult.summary && (
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-purple-400 uppercase">
-                    Tóm tắt bệnh lý
-                  </p>
-                  <p className="text-sm font-bold text-slate-800 leading-relaxed">
-                    {aiResult.summary}
-                  </p>
-                </div>
-              )}
-              <div className="space-y-2">
-                <p className="text-[10px] font-black text-slate-400 uppercase">
-                  Dấu hiệu phát hiện
-                </p>
-                <div className="text-xs text-slate-600 font-medium whitespace-pre-wrap leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  {aiResult.findings || 'Không có dữ liệu phân tích chi tiết.'}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className="bg-white rounded-[3rem] shadow-2xl shadow-slate-200/50 border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700">
           <div className="p-8 border-b border-slate-100 bg-slate-50/30 flex flex-wrap items-center gap-y-4 gap-x-8">
@@ -944,7 +1263,7 @@ export default function ErmForm() {
                       </label>
                       <input
                         {...register('fullName')}
-                        disabled={isOphthalmologist}
+                        disabled={isReadOnlyAdmin}
                         className="w-full bg-slate-50 border-2 border-transparent focus:border-cyan-500/20 focus:bg-white p-4 rounded-2xl outline-none font-black uppercase text-slate-800 transition-all"
                       />
                     </div>
@@ -955,7 +1274,7 @@ export default function ErmForm() {
                       <input
                         type="date"
                         {...register('birthDate')}
-                        disabled={isOphthalmologist}
+                        disabled={isReadOnlyAdmin}
                         className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold"
                       />
                     </div>
@@ -965,7 +1284,7 @@ export default function ErmForm() {
                       </label>
                       <input
                         {...register('age')}
-                        disabled={isOphthalmologist}
+                        disabled={isReadOnlyAdmin}
                         className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold text-center"
                       />
                     </div>
@@ -975,7 +1294,7 @@ export default function ErmForm() {
                       </label>
                       <select
                         {...register('gender')}
-                        disabled={isOphthalmologist}
+                        disabled={isReadOnlyAdmin}
                         className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold appearance-none"
                       >
                         <option value="Nam">Nam</option>
@@ -990,7 +1309,7 @@ export default function ErmForm() {
                         <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                         <input
                           {...register('job')}
-                          disabled={isOphthalmologist}
+                          disabled={isReadOnlyAdmin}
                           className="w-full bg-slate-50 pl-11 pr-4 py-4 rounded-2xl outline-none font-medium"
                         />
                       </div>
@@ -1004,7 +1323,7 @@ export default function ErmForm() {
                       </label>
                       <select
                         {...register('ethnicity')}
-                        disabled={isOphthalmologist}
+                        disabled={isReadOnlyAdmin}
                         className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium appearance-none"
                       >
                         <option value="">Chọn dân tộc</option>
@@ -1021,7 +1340,7 @@ export default function ErmForm() {
                       </label>
                       <select
                         {...register('nationality')}
-                        disabled={isOphthalmologist}
+                        disabled={isReadOnlyAdmin}
                         className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium appearance-none"
                       >
                         <option value="">Chọn quốc tịch</option>
@@ -1038,7 +1357,7 @@ export default function ErmForm() {
                       </label>
                       <input
                         {...register('workplace')}
-                        disabled={isOphthalmologist}
+                        disabled={isReadOnlyAdmin}
                         className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium"
                       />
                     </div>
@@ -1052,7 +1371,17 @@ export default function ErmForm() {
                       <select
                         {...register('provinceCode', { valueAsNumber: true })}
                         onChange={(e) => {
-                          const code = parseInt(e.target.value);
+                          const val = e.target.value;
+                          if (!val) {
+                            setValue('provinceCode', undefined);
+                            setValue('province', '');
+                            setValue('districtCode', undefined);
+                            setValue('district', '');
+                            setValue('wardCode', undefined);
+                            setValue('ward', '');
+                            return;
+                          }
+                          const code = parseInt(val);
                           const name =
                             provinces.find((p) => p.code === code)?.name || '';
                           setValue('provinceCode', code);
@@ -1062,7 +1391,7 @@ export default function ErmForm() {
                           setValue('wardCode', undefined);
                           setValue('ward', '');
                         }}
-                        disabled={isOphthalmologist}
+                        disabled={isReadOnlyAdmin}
                         className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium appearance-none"
                       >
                         <option value="">Chọn Tỉnh/Thành phố</option>
@@ -1080,7 +1409,15 @@ export default function ErmForm() {
                       <select
                         {...register('districtCode', { valueAsNumber: true })}
                         onChange={(e) => {
-                          const code = parseInt(e.target.value);
+                          const val = e.target.value;
+                          if (!val) {
+                            setValue('districtCode', undefined);
+                            setValue('district', '');
+                            setValue('wardCode', undefined);
+                            setValue('ward', '');
+                            return;
+                          }
+                          const code = parseInt(val);
                           const name =
                             districts.find((d) => d.code === code)?.name || '';
                           setValue('districtCode', code);
@@ -1088,7 +1425,7 @@ export default function ErmForm() {
                           setValue('wardCode', undefined);
                           setValue('ward', '');
                         }}
-                        disabled={isOphthalmologist || !provinceCode}
+                        disabled={isReadOnlyAdmin || !provinceCode}
                         className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium appearance-none"
                       >
                         <option value="">Chọn Quận/Huyện</option>
@@ -1106,13 +1443,19 @@ export default function ErmForm() {
                       <select
                         {...register('wardCode', { valueAsNumber: true })}
                         onChange={(e) => {
-                          const code = parseInt(e.target.value);
+                          const val = e.target.value;
+                          if (!val) {
+                            setValue('wardCode', undefined);
+                            setValue('ward', '');
+                            return;
+                          }
+                          const code = parseInt(val);
                           const name =
                             wards.find((w) => w.code === code)?.name || '';
                           setValue('wardCode', code);
                           setValue('ward', name);
                         }}
-                        disabled={isOphthalmologist || !districtCode}
+                        disabled={isReadOnlyAdmin || !districtCode}
                         className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium appearance-none"
                       >
                         <option value="">Chọn Phường/Xã</option>
@@ -1133,7 +1476,7 @@ export default function ErmForm() {
                       <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                       <input
                         {...register('address')}
-                        disabled={isOphthalmologist}
+                        disabled={isReadOnlyAdmin}
                         placeholder="Ví dụ: 123 Đường ABC..."
                         className="w-full bg-slate-50 pl-11 pr-4 py-4 rounded-2xl outline-none font-medium"
                       />
@@ -1150,7 +1493,7 @@ export default function ErmForm() {
                           <button
                             key={obj}
                             type="button"
-                            disabled={isOphthalmologist}
+                            disabled={isReadOnlyAdmin}
                             onClick={() => setValue('objectType', obj as any)}
                             className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${
                               formData.objectType === obj
@@ -1169,7 +1512,7 @@ export default function ErmForm() {
                       </label>
                       <input
                         {...register('bhytNumber')}
-                        disabled={isOphthalmologist}
+                        disabled={isReadOnlyAdmin}
                         className="w-full bg-white p-3 rounded-xl outline-none font-bold border border-slate-200"
                       />
                     </div>
@@ -1180,7 +1523,7 @@ export default function ErmForm() {
                       <input
                         type="date"
                         {...register('bhytExpiry')}
-                        disabled={isOphthalmologist}
+                        disabled={isReadOnlyAdmin}
                         className="w-full bg-white p-3 rounded-xl outline-none font-bold border border-slate-200"
                       />
                     </div>
@@ -1195,7 +1538,7 @@ export default function ErmForm() {
                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                         <input
                           {...register('relativeName')}
-                          disabled={isOphthalmologist}
+                          disabled={isReadOnlyAdmin}
                           className="w-full bg-slate-50 pl-11 pr-4 py-4 rounded-2xl outline-none font-bold"
                         />
                       </div>
@@ -1208,7 +1551,7 @@ export default function ErmForm() {
                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                         <input
                           {...register('relativePhone')}
-                          disabled={isOphthalmologist}
+                          disabled={isReadOnlyAdmin}
                           className="w-full bg-slate-50 pl-11 pr-4 py-4 rounded-2xl outline-none font-bold"
                         />
                       </div>
@@ -1232,7 +1575,7 @@ export default function ErmForm() {
                       <input
                         type="date"
                         {...register('admissionDate')}
-                        disabled={isOphthalmologist}
+                        disabled={isReadOnlyAdmin}
                         className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold"
                       />
                     </div>
@@ -1243,18 +1586,98 @@ export default function ErmForm() {
                       <input
                         type="time"
                         {...register('admissionTime')}
-                        disabled={isOphthalmologist}
+                        disabled={isReadOnlyAdmin}
                         className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold"
                       />
                     </div>
-                    <div className="md:col-span-2 space-y-2">
+                    <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                        Nơi giới thiệu
+                        Vào viện lần thứ mấy
+                      </label>
+                      <input
+                        {...register('admissionCount')}
+                        disabled={isReadOnlyAdmin}
+                        className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold"
+                        placeholder="1, 2..."
+                      />
+                    </div>
+                    <div className="md:col-span-1 space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                        13. Trực tiếp vào
+                      </label>
+                      <select
+                        {...register('directEntry')}
+                        disabled={isReadOnlyAdmin}
+                        className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold appearance-none"
+                      >
+                        <option value="">Chọn hình thức</option>
+                        <option value="Cấp cứu">Cấp cứu</option>
+                        <option value="KKB">KKB</option>
+                        <option value="Khoa điều trị">Khoa điều trị</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                        14. Nơi giới thiệu
                       </label>
                       <input
                         {...register('referralPlace')}
-                        disabled={isOphthalmologist}
+                        disabled={isReadOnlyAdmin}
                         className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                        15. Vào khoa
+                      </label>
+                      <input
+                        {...register('department')}
+                        disabled={isReadOnlyAdmin}
+                        className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold"
+                        placeholder="Tên khoa..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                        18. Ngày ra viện (dự kiến)
+                      </label>
+                      <input
+                        type="date"
+                        {...register('dischargeDate')}
+                        disabled={isReadOnlyAdmin}
+                        className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                        Hình thức ra viện
+                      </label>
+                      <select
+                        {...register('dischargeType')}
+                        disabled={isReadOnlyAdmin}
+                        className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold appearance-none"
+                      >
+                        <option value="">Chọn hình thức</option>
+                        <option value="Ra viện">Ra viện</option>
+                        <option value="Xin về">Xin về</option>
+                        <option value="Bỏ về">Bỏ về</option>
+                        <option value="Đưa về">Đưa về</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                        19. Tổng số ngày điều trị
+                      </label>
+                      <input
+                        {...register('totalTreatmentDays')}
+                        disabled={isReadOnlyAdmin}
+                        className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold"
                       />
                     </div>
                   </div>
@@ -1265,10 +1688,148 @@ export default function ErmForm() {
                     </label>
                     <textarea
                       {...register('admissionReason')}
-                      disabled={isOphthalmologist}
-                      className="w-full h-32 bg-slate-50 p-6 rounded-[2rem] outline-none text-sm font-medium resize-none focus:bg-white transition-all shadow-inner"
+                      disabled={isReadOnlyAdmin}
+                      className="w-full h-24 bg-slate-50 p-6 rounded-[2rem] outline-none text-sm font-medium resize-none focus:bg-white transition-all shadow-inner"
                       placeholder="Mô tả lý do khám..."
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                      1. Quá trình bệnh lý
+                    </label>
+                    <textarea
+                      {...register('diseaseProcess')}
+                      disabled={isReadOnlyAdmin}
+                      className="w-full h-32 bg-slate-50 p-6 rounded-[2rem] outline-none text-sm font-medium resize-none focus:bg-white transition-all shadow-inner"
+                      placeholder="Mô tả diễn biến bệnh..."
+                    />
+                  </div>
+
+                  <div className="space-y-6 pt-6 border-t border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <Stethoscope className="w-4 h-4 text-cyan-600" />
+                      <h2 className="text-xs font-black uppercase tracking-widest text-slate-900">
+                        III. Chẩn đoán & Tình trạng
+                      </h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                          20. Nơi chuyển đến
+                        </label>
+                        <input
+                          {...register('transferDiagnosis')}
+                          disabled={isReadOnlyAdmin}
+                          className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium"
+                          placeholder="Chẩn đoán nơi chuyển đến..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                          21. KKB, Cấp cứu
+                        </label>
+                        <input
+                          {...register('kkbDiagnosis')}
+                          disabled={isReadOnlyAdmin}
+                          className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium"
+                          placeholder="Chẩn đoán tại KKB/Cấp cứu..."
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                          22. Khi vào khoa ĐT
+                        </label>
+                        <input
+                          {...register('departmentDiagnosis')}
+                          disabled={isReadOnlyAdmin}
+                          className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium"
+                          placeholder="Chẩn đoán khi vào khoa điều trị..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                          Tai biến / Biến chứng
+                        </label>
+                        <input
+                          {...register('complications')}
+                          disabled={isReadOnlyAdmin}
+                          className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium"
+                          placeholder="Các tai biến, biến chứng nếu có..."
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                          Chẩn đoán sau phẫu thuật
+                        </label>
+                        <input
+                          {...register('postOpDiagnosis')}
+                          disabled={isReadOnlyAdmin}
+                          className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium"
+                          placeholder="Chẩn đoán sau mổ..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                          Số ngày sau phẫu thuật
+                        </label>
+                        <input
+                          {...register('postOpDays')}
+                          disabled={isReadOnlyAdmin}
+                          className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium"
+                          placeholder="Số ngày..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                          Số lần phẫu thuật
+                        </label>
+                        <input
+                          {...register('opCount')}
+                          disabled={isReadOnlyAdmin}
+                          className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium"
+                          placeholder="Lần..."
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                          26. Kết quả điều trị
+                        </label>
+                        <select
+                          {...register('treatmentResult')}
+                          disabled={isReadOnlyAdmin}
+                          className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold appearance-none"
+                        >
+                          <option value="">Chọn kết quả</option>
+                          <option value="Khỏi">Khỏi</option>
+                          <option value="Đỡ, giảm">Đỡ, giảm</option>
+                          <option value="Không thay đổi">Không thay đổi</option>
+                          <option value="Nặng hơn">Nặng hơn</option>
+                          <option value="Tử vong">Tử vong</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
+                          Bệnh kèm theo
+                        </label>
+                        <input
+                          {...register('companionDisease')}
+                          disabled={isReadOnlyAdmin}
+                          className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium"
+                          placeholder="Các bệnh khác kèm theo..."
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1287,30 +1848,61 @@ export default function ErmForm() {
               </div>
             ) : (
               <div className="p-8 md:p-12 space-y-12 animate-in slide-in-from-right-4 duration-500">
+                {/* Removed AI & Quick Normal Header per user request */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="bg-slate-50 p-8 rounded-[3rem] border border-slate-100 relative overflow-hidden">
                     <div className="absolute top-0 right-0 px-6 py-2 bg-cyan-600 text-white font-black text-[10px] tracking-widest uppercase rounded-bl-3xl">
                       MẮT PHẢI
                     </div>
-                    <div className="grid grid-cols-2 gap-8 mt-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
-                          Thị lực không kính
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black text-slate-400 uppercase">
+                          Thị lực không kính{' '}
+                          <span className="text-rose-500">*</span>
                         </label>
                         <input
-                          {...register('rightEyeVisionNoGlass')}
+                          {...register('rightEyeVisionNoGlass', {
+                            required: true,
+                          })}
+                          disabled={isReadOnlyClinical}
                           placeholder="V"
-                          className="w-full bg-white p-4 rounded-2xl outline-none font-black text-2xl text-cyan-600 border border-transparent focus:border-cyan-500/20"
+                          className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-cyan-600 border border-slate-100 focus:border-cyan-500/20"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black text-slate-400 uppercase">
+                          Thị lực có kính{' '}
+                          <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          {...register('rightEyeVisionWithGlass', {
+                            required: true,
+                          })}
+                          disabled={isReadOnlyClinical}
+                          placeholder="V"
+                          className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-cyan-600 border border-slate-100 focus:border-cyan-500/20"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black text-slate-400 uppercase">
                           Nhãn áp
                         </label>
                         <input
                           {...register('rightEyePressure')}
+                          disabled={isReadOnlyClinical}
                           placeholder="mmHg"
-                          className="w-full bg-white p-4 rounded-2xl outline-none font-black text-2xl text-cyan-600 border border-transparent focus:border-cyan-500/20"
+                          className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-cyan-600 border border-slate-100 focus:border-cyan-500/20"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black text-slate-400 uppercase">
+                          Thị trường
+                        </label>
+                        <input
+                          {...register('rightEyeField')}
+                          disabled={isReadOnlyClinical}
+                          placeholder="..."
+                          className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-cyan-600 border border-slate-100 focus:border-cyan-500/20"
                         />
                       </div>
                     </div>
@@ -1320,25 +1912,55 @@ export default function ErmForm() {
                     <div className="absolute top-0 right-0 px-6 py-2 bg-rose-500 text-white font-black text-[10px] tracking-widest uppercase rounded-bl-3xl">
                       MẮT TRÁI
                     </div>
-                    <div className="grid grid-cols-2 gap-8 mt-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
-                          Thị lực không kính
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black text-slate-400 uppercase">
+                          Thị lực không kính{' '}
+                          <span className="text-rose-500">*</span>
                         </label>
                         <input
-                          {...register('leftEyeVisionNoGlass')}
+                          {...register('leftEyeVisionNoGlass', {
+                            required: true,
+                          })}
+                          disabled={isReadOnlyClinical}
                           placeholder="V"
-                          className="w-full bg-white p-4 rounded-2xl outline-none font-black text-2xl text-rose-500 border border-transparent focus:border-rose-500/20"
+                          className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-rose-500 border border-transparent focus:border-rose-500/20"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black text-slate-400 uppercase">
+                          Thị lực có kính{' '}
+                          <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          {...register('leftEyeVisionWithGlass', {
+                            required: true,
+                          })}
+                          disabled={isReadOnlyClinical}
+                          placeholder="V"
+                          className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-rose-500 border border-transparent focus:border-rose-500/20"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black text-slate-400 uppercase">
                           Nhãn áp
                         </label>
                         <input
                           {...register('leftEyePressure')}
+                          disabled={isReadOnlyClinical}
                           placeholder="mmHg"
-                          className="w-full bg-white p-4 rounded-2xl outline-none font-black text-2xl text-rose-500 border border-transparent focus:border-rose-500/20"
+                          className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-rose-500 border border-transparent focus:border-rose-500/20"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black text-slate-400 uppercase">
+                          Thị trường
+                        </label>
+                        <input
+                          {...register('leftEyeField')}
+                          disabled={isReadOnlyClinical}
+                          placeholder="..."
+                          className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-rose-500 border border-transparent focus:border-rose-500/20"
                         />
                       </div>
                     </div>
@@ -1355,11 +1977,13 @@ export default function ErmForm() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <textarea
                       {...register('medicalHistory')}
+                      disabled={isReadOnlyClinical}
                       className="w-full h-32 bg-slate-50 p-6 rounded-[2.5rem] outline-none text-sm font-medium resize-none border border-slate-100 focus:bg-white transition-all"
                       placeholder="Tiền sử bệnh..."
                     />
                     <textarea
                       {...register('familyHistory')}
+                      disabled={isReadOnlyClinical}
                       className="w-full h-32 bg-slate-50 p-6 rounded-[2.5rem] outline-none text-sm font-medium resize-none border border-slate-100 focus:bg-white transition-all"
                       placeholder="Tiền sử gia đình..."
                     />
@@ -1413,8 +2037,20 @@ export default function ErmForm() {
                       </label>
                       <input
                         {...register('finalDiagnosisMain')}
+                        disabled={isReadOnlyClinical}
                         className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none font-black text-xl text-cyan-400 focus:bg-white/10 transition-all"
                         placeholder="Chẩn đoán..."
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                        Bệnh kèm theo
+                      </label>
+                      <input
+                        {...register('companionDisease')}
+                        disabled={isReadOnlyClinical}
+                        className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none font-bold text-sm text-slate-200 focus:bg-white/10 transition-all"
+                        placeholder="Bệnh kèm theo (nếu có)..."
                       />
                     </div>
                     <div className="space-y-3">
@@ -1423,6 +2059,7 @@ export default function ErmForm() {
                       </label>
                       <textarea
                         {...register('finalDiagnosisExtra')}
+                        disabled={isReadOnlyClinical}
                         className="w-full h-32 bg-white/5 border border-white/10 p-5 rounded-2xl outline-none font-bold text-sm text-slate-200 focus:bg-white/10 transition-all resize-none"
                         placeholder="Lời dặn bác sĩ..."
                       />

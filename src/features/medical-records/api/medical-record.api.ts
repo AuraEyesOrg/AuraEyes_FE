@@ -37,6 +37,7 @@ export interface CreateMedicalRecordCommand {
 export interface UpdateMedicalRecordClinicalCommand {
   id: string;
   clinicalDataJson: string;
+  administrativeDataJson: string;
   finalDiagnosis: string;
   treatmentPlan: string;
 }

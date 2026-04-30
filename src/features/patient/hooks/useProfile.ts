@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getProfile,
+  getProfileById,
   updateProfile,
   uploadAvatar,
   changePassword,
@@ -43,6 +44,15 @@ export const useProfile = () => {
   }, [query.data, setUser]);
 
   return query;
+};
+
+export const usePatientProfile = (patientId?: string) => {
+  return useQuery<PatientProfile, Error>({
+    queryKey: ['patient-profile', patientId],
+    queryFn: () => getProfileById(patientId!),
+    enabled: !!patientId,
+    staleTime: 5 * 60 * 1000,
+  });
 };
 
 // ============ MUTATIONS ============
