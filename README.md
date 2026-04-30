@@ -67,7 +67,7 @@
 | `@n8n/chat`                 | n8n chatbot widget               |
 | `jspdf` + `jspdf-autotable` | PDF export                       |
 | `xlsx`                      | Excel export                     |
-| `html5-qrcode`              | QR Code scanner                  |
+| `zxing`                     | QR Code scanner                  |
 | `date-fns`                  | Date utilities                   |
 | `react-joyride`             | Guided onboarding tour           |
 

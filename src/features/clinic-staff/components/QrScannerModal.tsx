@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { X, QrCode, Zap, ZapOff, Camera, AlertCircle } from 'lucide-react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 interface QrScannerModalProps {
   onClose: () => void;
@@ -11,6 +12,7 @@ export default function QrScannerModal({
   onClose,
   onScan,
 }: QrScannerModalProps) {
+  const { t } = useSafeTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<{ stop: () => void } | null>(null);
   const hasScannedRef = useRef(false);
@@ -21,6 +23,21 @@ export default function QrScannerModal({
   >('initializing');
   const [errorMessage, setErrorMessage] = useState('');
   const [torchSupported, setTorchSupported] = useState(false);
+  const [scanSessionKey, setScanSessionKey] = useState(0);
+
+  const stopCamera = useCallback(() => {
+    controlsRef.current?.stop();
+    controlsRef.current = null;
+
+    if (videoRef.current?.srcObject instanceof MediaStream) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
+    }
+
+    setMediaStream(null);
+    setTorchOn(false);
+  }, []);
 
   const playBeep = useCallback(() => {
     try {
@@ -42,6 +59,9 @@ export default function QrScannerModal({
   useEffect(() => {
     if (!videoRef.current) return;
     hasScannedRef.current = false;
+    setErrorMessage('');
+    setTorchSupported(false);
+    setTorchOn(false);
 
     const reader = new BrowserMultiFormatReader();
 
@@ -69,7 +89,7 @@ export default function QrScannerModal({
             hasScannedRef.current = true;
             setStatus('success');
             playBeep();
-            controls.stop();
+            stopCamera();
             setTimeout(() => {
               onScan(result.getText());
             }, 300);
@@ -80,20 +100,37 @@ export default function QrScannerModal({
         setStatus('error');
         if (err.name === 'NotAllowedError') {
           setErrorMessage(
-            'Quyền truy cập camera bị từ chối. Vui lòng cho phép camera trong cài đặt trình duyệt.'
+            t(
+              'ClinicStaff.qrScannerModal.error.notAllowed',
+              'Camera access was denied. Please allow camera permission in your browser settings.'
+            )
           );
         } else if (err.name === 'NotFoundError') {
-          setErrorMessage('Không tìm thấy camera trên thiết bị này.');
+          setErrorMessage(
+            t(
+              'ClinicStaff.qrScannerModal.error.notFound',
+              'No camera was found on this device.'
+            )
+          );
         } else {
-          setErrorMessage('Không thể khởi động camera. Vui lòng thử lại.');
+          setErrorMessage(
+            t(
+              'ClinicStaff.qrScannerModal.error.initFailed',
+              'Unable to start camera. Please try again.'
+            )
+          );
         }
       });
 
     return () => {
-      controlsRef.current?.stop();
-      controlsRef.current = null;
+      stopCamera();
     };
-  }, [onScan, playBeep]);
+  }, [onScan, playBeep, scanSessionKey, stopCamera, t]);
+
+  const handleClose = () => {
+    stopCamera();
+    onClose();
+  };
 
   const toggleTorch = async () => {
     if (!mediaStream || !torchSupported) return;
@@ -109,25 +146,32 @@ export default function QrScannerModal({
     }
   };
 
+  const handleRetry = () => {
+    stopCamera();
+    hasScannedRef.current = false;
+    setStatus('initializing');
+    setErrorMessage('');
+    setScanSessionKey((prev) => prev + 1);
+  };
+
   return (
     <>
-      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md">
+      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/35 p-4 backdrop-blur-[2px]">
         <div
-          className="w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl"
+          className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_16px_34px_-20px_rgba(15,23,42,0.45)]"
           style={{
-            boxShadow:
-              '0 0 0 1px rgba(255,255,255,0.05), 0 25px 50px -12px rgba(0,0,0,0.8)',
+            boxShadow: '0 10px 35px -16px rgba(15,23,42,0.45)',
           }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4">
+          <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15 ring-1 ring-emerald-500/30">
-                <QrCode className="h-4 w-4 text-emerald-400" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50">
+                <QrCode className="h-4 w-4 text-emerald-600" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white leading-none">
-                  Scan QR Check-in
+                <h3 className="text-sm font-bold leading-none text-slate-900">
+                  {t('ClinicStaff.qrScannerModal.title', 'Scan QR Check-in')}
                 </h3>
                 <div className="mt-1 flex items-center gap-1.5">
                   <span
@@ -141,11 +185,27 @@ export default function QrScannerModal({
                             : 'bg-amber-400 animate-pulse'
                     }`}
                   />
-                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
-                    {status === 'initializing' && 'Đang khởi động...'}
-                    {status === 'scanning' && 'Sẵn sàng quét'}
-                    {status === 'success' && 'Đã nhận diện!'}
-                    {status === 'error' && 'Lỗi camera'}
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                    {status === 'initializing' &&
+                      t(
+                        'ClinicStaff.qrScannerModal.status.initializing',
+                        'Initializing...'
+                      )}
+                    {status === 'scanning' &&
+                      t(
+                        'ClinicStaff.qrScannerModal.status.scanning',
+                        'Ready to scan'
+                      )}
+                    {status === 'success' &&
+                      t(
+                        'ClinicStaff.qrScannerModal.status.success',
+                        'Detected!'
+                      )}
+                    {status === 'error' &&
+                      t(
+                        'ClinicStaff.qrScannerModal.status.error',
+                        'Camera error'
+                      )}
                   </span>
                 </div>
               </div>
@@ -156,11 +216,21 @@ export default function QrScannerModal({
                 <button
                   type="button"
                   onClick={toggleTorch}
-                  title={torchOn ? 'Tắt đèn flash' : 'Bật đèn flash'}
+                  title={
+                    torchOn
+                      ? t(
+                          'ClinicStaff.qrScannerModal.actions.flashOff',
+                          'Turn off flash'
+                        )
+                      : t(
+                          'ClinicStaff.qrScannerModal.actions.flashOn',
+                          'Turn on flash'
+                        )
+                  }
                   className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-all ${
                     torchOn
-                      ? 'border-amber-500/50 bg-amber-500/15 text-amber-400'
-                      : 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10'
+                      ? 'border-amber-300 bg-amber-50 text-amber-600'
+                      : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
                   }`}
                 >
                   {torchOn ? (
@@ -172,8 +242,8 @@ export default function QrScannerModal({
               )}
               <button
                 type="button"
-                onClick={onClose}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-400 transition hover:bg-white/10 hover:text-white"
+                onClick={handleClose}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -182,7 +252,7 @@ export default function QrScannerModal({
 
           {/* Camera viewport */}
           <div
-            className="relative mx-4 mb-4 overflow-hidden rounded-2xl bg-black"
+            className="relative mx-4 mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100"
             style={{ aspectRatio: '1/1' }}
           >
             {/* Video element */}
@@ -197,32 +267,35 @@ export default function QrScannerModal({
 
             {/* Loading state overlay */}
             {status === 'initializing' && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-white/95">
                 <div className="relative">
-                  <Camera className="h-12 w-12 text-slate-600" />
-                  <div className="absolute -right-1 -top-1 h-4 w-4 rounded-full border-2 border-slate-950 bg-amber-400 animate-pulse" />
+                  <Camera className="h-12 w-12 text-slate-400" />
+                  <div className="absolute -right-1 -top-1 h-4 w-4 rounded-full border-2 border-white bg-amber-400 animate-pulse" />
                 </div>
-                <p className="text-xs font-medium text-slate-500">
-                  Đang khởi động camera...
+                <p className="text-xs font-medium text-slate-600">
+                  {t(
+                    'ClinicStaff.qrScannerModal.loading',
+                    'Starting camera...'
+                  )}
                 </p>
               </div>
             )}
 
             {/* Error state overlay */}
             {status === 'error' && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950 p-6">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/10 ring-1 ring-rose-500/20">
-                  <AlertCircle className="h-8 w-8 text-rose-400" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-white/95 p-6">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 ring-1 ring-rose-200">
+                  <AlertCircle className="h-8 w-8 text-rose-500" />
                 </div>
-                <p className="text-center text-xs text-slate-400 leading-relaxed">
+                <p className="text-center text-xs leading-relaxed text-slate-600">
                   {errorMessage}
                 </p>
                 <button
                   type="button"
-                  onClick={() => window.location.reload()}
-                  className="rounded-xl bg-rose-500/10 px-4 py-2 text-xs font-bold text-rose-400 ring-1 ring-rose-500/20 transition hover:bg-rose-500/20"
+                  onClick={handleRetry}
+                  className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-100"
                 >
-                  Thử lại
+                  {t('ClinicStaff.qrScannerModal.actions.retry', 'Retry')}
                 </button>
               </div>
             )}
@@ -273,14 +346,14 @@ export default function QrScannerModal({
                   <rect
                     width="100"
                     height="100"
-                    fill="rgba(0,0,0,0.55)"
+                    fill="rgba(15,23,42,0.18)"
                     mask="url(#visor-mask)"
                   />
                 </svg>
 
                 {/* Visor border */}
                 <div
-                  className="absolute border border-white/20 rounded-xl"
+                  className="absolute rounded-xl border border-emerald-300/70"
                   style={{
                     left: '15%',
                     top: '15%',
@@ -331,8 +404,11 @@ export default function QrScannerModal({
                   className="absolute inset-x-0 flex justify-center"
                   style={{ top: 'calc(85% + 10px)' }}
                 >
-                  <span className="rounded-full bg-black/60 px-4 py-1.5 text-[11px] font-semibold text-white/70 backdrop-blur-sm ring-1 ring-white/10">
-                    Đặt mã QR vào khung để quét
+                  <span className="rounded-full bg-white/90 px-4 py-1.5 text-[11px] font-semibold text-slate-700 ring-1 ring-slate-200">
+                    {t(
+                      'ClinicStaff.qrScannerModal.hint',
+                      'Place QR code inside the frame'
+                    )}
                   </span>
                 </div>
               </div>
@@ -341,8 +417,11 @@ export default function QrScannerModal({
 
           {/* Footer */}
           <div className="px-5 pb-5 text-center">
-            <p className="text-[10px] font-medium text-slate-600 uppercase tracking-widest">
-              Hỗ trợ QR code AURA · Nhận diện tự động
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+              {t(
+                'ClinicStaff.qrScannerModal.footer',
+                'AURA QR support · Auto detection'
+              )}
             </p>
           </div>
         </div>

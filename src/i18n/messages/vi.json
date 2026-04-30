@@ -3688,6 +3688,8 @@
         "citizenId": "CCCD",
         "citizenIdPlaceholder": "vd. 001099000000",
         "dateOfBirth": "Ngày sinh *",
+        "email": "Email",
+        "emailPlaceholder": "benhnhan@example.com (không bắt buộc)",
         "fullName": "Họ và tên *",
         "fullNamePlaceholder": "vd. Nguyễn Văn A",
         "gender": "Giới tính *",
@@ -3702,13 +3704,59 @@
       "scan": {
         "action": "Quét mã QR VNeID / CCCD",
         "cancel": "Hủy quét",
-        "hint": "Tự động điền thông tin bệnh nhân chính xác"
+        "hint": "Tự động điền thông tin bệnh nhân chính xác",
+        "opening": "Đang mở trình quét camera..."
       },
       "toast": {
+        "accountCreatedEmailSent": "Đã tạo tài khoản và gửi thông tin đăng nhập qua email.",
+        "accountCreatedTempPassword": "Đã tạo tài khoản. Email đăng nhập: {{loginEmail}} | Mật khẩu tạm: {{temporaryPassword}}",
         "createSuccess": "Tạo bệnh nhân walk-in thành công!",
         "invalidQr": "Mã QR không hợp lệ hoặc không đúng định dạng CCCD/VNeID.",
         "qrExtractSuccess": "Trích xuất hồ sơ công dân thành công!"
       }
+    },
+    "paymentConfirmationModal": {
+      "actions": {
+        "confirmCash": "Xác nhận thu tiền mặt",
+        "goToPayment": "Chuyển đến trang thanh toán"
+      },
+      "header": {
+        "order": "Đơn hàng: {{orderId}}",
+        "title": "Xác nhận thanh toán"
+      },
+      "methods": {
+        "cash": "Tiền mặt",
+        "label": "Phương thức thanh toán",
+        "payosQr": "PayOS QR"
+      },
+      "summary": {
+        "depositPaid": "Đã cọc (Online)",
+        "patient": "Bệnh nhân",
+        "remaining": "Cần thanh toán nốt",
+        "totalFee": "Tổng phí dịch vụ"
+      }
+    },
+    "qrScannerModal": {
+      "actions": {
+        "flashOff": "Tắt đèn flash",
+        "flashOn": "Bật đèn flash",
+        "retry": "Thử lại"
+      },
+      "error": {
+        "initFailed": "Không thể khởi động camera. Vui lòng thử lại.",
+        "notAllowed": "Quyền truy cập camera bị từ chối. Vui lòng cho phép camera trong cài đặt trình duyệt.",
+        "notFound": "Không tìm thấy camera trên thiết bị này."
+      },
+      "footer": "Hỗ trợ QR code AURA · Nhận diện tự động",
+      "hint": "Đặt mã QR vào khung để quét",
+      "loading": "Đang khởi động camera...",
+      "status": {
+        "error": "Lỗi camera",
+        "initializing": "Đang khởi động...",
+        "scanning": "Sẵn sàng quét",
+        "success": "Đã nhận diện!"
+      },
+      "title": "Quét QR check-in"
     },
     "calendar": {
       "actions": {
@@ -6270,6 +6318,86 @@
       "yearsAbbr": "tuổi",
       "idLabel": "ID BN",
       "close": "Đóng"
+    },
+    "walkInPatientModal": {
+      "actions": {
+        "createPatient": "Tạo bệnh nhân"
+      },
+      "form": {
+        "address": "Địa chỉ",
+        "addressPlaceholder": "Số nhà, phường/xã, quận/huyện, tỉnh/thành phố",
+        "citizenId": "CCCD",
+        "citizenIdPlaceholder": "vd. 001099000000",
+        "dateOfBirth": "Ngày sinh *",
+        "email": "Email",
+        "emailPlaceholder": "benhnhan@example.com (không bắt buộc)",
+        "fullName": "Họ và tên *",
+        "fullNamePlaceholder": "vd. Nguyễn Văn A",
+        "gender": "Giới tính *",
+        "genderOther": "Khác",
+        "phoneNumber": "Số điện thoại",
+        "phonePlaceholder": "0901 234 567"
+      },
+      "header": {
+        "subtitle": "Đăng ký nhanh bệnh nhân mới",
+        "title": "Tạo bệnh nhân walk-in"
+      },
+      "scan": {
+        "action": "Quét mã QR VNeID / CCCD",
+        "cancel": "Hủy quét",
+        "hint": "Tự động điền thông tin bệnh nhân chính xác",
+        "opening": "Đang mở trình quét camera..."
+      },
+      "toast": {
+        "accountCreatedEmailSent": "Đã tạo tài khoản và gửi thông tin đăng nhập qua email.",
+        "accountCreatedTempPassword": "Đã tạo tài khoản. Email đăng nhập: {{loginEmail}} | Mật khẩu tạm: {{temporaryPassword}}",
+        "createSuccess": "Tạo bệnh nhân walk-in thành công!",
+        "invalidQr": "Mã QR không hợp lệ hoặc không đúng định dạng CCCD/VNeID.",
+        "qrExtractSuccess": "Trích xuất hồ sơ công dân thành công!"
+      }
+    },
+    "paymentConfirmationModal": {
+      "actions": {
+        "confirmCash": "Xác nhận thu tiền mặt",
+        "goToPayment": "Chuyển đến trang thanh toán"
+      },
+      "header": {
+        "order": "Đơn hàng: {{orderId}}",
+        "title": "Xác nhận thanh toán"
+      },
+      "methods": {
+        "cash": "Tiền mặt",
+        "label": "Phương thức thanh toán",
+        "payosQr": "PayOS QR"
+      },
+      "summary": {
+        "depositPaid": "Đã cọc (Online)",
+        "patient": "Bệnh nhân",
+        "remaining": "Cần thanh toán nốt",
+        "totalFee": "Tổng phí dịch vụ"
+      }
+    },
+    "qrScannerModal": {
+      "actions": {
+        "flashOff": "Tắt đèn flash",
+        "flashOn": "Bật đèn flash",
+        "retry": "Thử lại"
+      },
+      "error": {
+        "initFailed": "Không thể khởi động camera. Vui lòng thử lại.",
+        "notAllowed": "Quyền truy cập camera bị từ chối. Vui lòng cho phép camera trong cài đặt trình duyệt.",
+        "notFound": "Không tìm thấy camera trên thiết bị này."
+      },
+      "footer": "Hỗ trợ QR code AURA · Nhận diện tự động",
+      "hint": "Đặt mã QR vào khung để quét",
+      "loading": "Đang khởi động camera...",
+      "status": {
+        "error": "Lỗi camera",
+        "initializing": "Đang khởi động...",
+        "scanning": "Sẵn sàng quét",
+        "success": "Đã nhận diện!"
+      },
+      "title": "Quét QR check-in"
     }
   }
 }

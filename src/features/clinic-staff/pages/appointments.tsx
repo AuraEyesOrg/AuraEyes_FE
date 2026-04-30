@@ -206,7 +206,6 @@ export default function ClinicStaffAppointmentsPage() {
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [selectedDate, setSelectedDate] = useState(todayKey);
 
-  // ── QR scanner state (simplified — no more html5-qrcode) ──────────────────
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
   const [scanTargetAppointmentId, setScanTargetAppointmentId] = useState<
     string | null
@@ -495,7 +494,6 @@ export default function ClinicStaffAppointmentsPage() {
     }
   };
 
-  // ── NEW: QR scan result handler (replaces the old useEffect with html5-qrcode) ──
   const handleQrScanResult = async (decodedText: string) => {
     setIsQrScannerOpen(false);
 
