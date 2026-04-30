@@ -80,12 +80,13 @@ export default function FocusModeLayout({
             <div className="flex items-center gap-4">
               <button
                 onClick={handleExit}
-                className="p-2 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95 shadow-sm"
+                title={t('Common.actions.exit', 'Exit')}
               >
                 <X className="w-5 h-5" />
               </button>
               {title && (
-                <h1 className="text-lg font-bold text-[var(--text-primary)]">
+                <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
                   {title}
                 </h1>
               )}

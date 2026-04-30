@@ -471,23 +471,38 @@ export default function BookingConfirmationPage(
         {/* Back Button */}
         <button
           onClick={handleCancel}
-          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6"
+          className="group flex items-center gap-2 text-slate-500 hover:text-brand transition-colors mb-8"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Cancel and go back
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 group-hover:border-brand/30 group-hover:bg-brand/5 transition-all">
+            <ArrowLeft className="w-5 h-5" />
+          </div>
+          <span className="text-sm font-bold uppercase tracking-tight">
+            Cancel and go back
+          </span>
         </button>
 
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Confirm Your Booking
-          </h1>
+        <div className="mb-10 space-y-4">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              Confirm Your Booking
+            </h1>
+            <p className="text-sm font-medium text-slate-500">
+              Please review your appointment details and complete the booking.
+            </p>
+          </div>
+
           {remainingSeconds !== null && (
             <div
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border ${urgencyClass}`}
+              className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl border shadow-sm transition-colors ${urgencyClass}`}
             >
-              <Timer className="w-4 h-4" />
-              <span className="font-medium">
-                Complete within {formatCountdown(remainingSeconds)}
+              <div className="relative">
+                <Timer className="w-4 h-4" />
+                {remainingSeconds <= 60 && (
+                  <span className="absolute inset-0 animate-ping rounded-full bg-current opacity-20" />
+                )}
+              </div>
+              <span className="text-xs font-black uppercase tracking-widest">
+                Expires in {formatCountdown(remainingSeconds)}
               </span>
             </div>
           )}

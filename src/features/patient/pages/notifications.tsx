@@ -1,6 +1,14 @@
-import { useState } from 'react';
-import { Bell, Search, Filter, CheckCheck, Eye, EyeOff } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  Bell,
+  Search,
+  Filter,
+  CheckCheck,
+  Eye,
+  EyeOff,
+  PlusCircle,
+} from 'lucide-react';
+import { resolvePathWithLocale } from '@/i18n/middleware';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
 import useNotificationStore from '@/store/useNotificationStore';
 import useAuthStore from '@/store/auth-store';
@@ -17,6 +25,7 @@ import type { Notification } from '@/types/notification';
 import { NotificationIcon } from '@/components/ui/notification';
 import { formatRelativeTime } from '@/lib/date-utils';
 import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 
 type NotificationFilter = 'all' | 'unread' | NotificationType;
 
@@ -160,39 +169,37 @@ export default function NotificationsPage() {
     <PatientLayout>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <Bell className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                {t('PatientNotifications.page.title')}
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                {t('PatientNotifications.page.subtitle')}
-              </p>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              {t('PatientNotifications.page.title')}
+            </h1>
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  connectionStatus === 'connected'
+                    ? 'bg-emerald-400'
+                    : connectionStatus === 'connecting'
+                      ? 'bg-amber-400'
+                      : 'bg-slate-400'
+                }`}
+              />
+              <span>
+                {t('PatientNotifications.connection.label')}{' '}
+                {connectionStatus === 'connected'
+                  ? t('PatientNotifications.connection.active')
+                  : t('PatientNotifications.connection.inactive')}
+              </span>
             </div>
           </div>
 
-          {/* Connection Status */}
-          <div className="flex items-center gap-2 text-sm">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                connectionStatus === 'connected'
-                  ? 'bg-green-400'
-                  : connectionStatus === 'connecting'
-                    ? 'bg-yellow-400'
-                    : 'bg-gray-400'
-              }`}
-            />
-            <span className="text-gray-600 dark:text-gray-400">
-              {t('PatientNotifications.connection.label')}{' '}
-              {connectionStatus === 'connected'
-                ? t('PatientNotifications.connection.active')
-                : t('PatientNotifications.connection.inactive')}
-            </span>
-          </div>
+          <Link
+            to={resolvePathWithLocale('/patient/schedule')}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3 text-sm font-bold text-white transition-all hover:bg-brand/90 active:scale-95 shadow-sm"
+          >
+            <PlusCircle className="h-5 w-5" strokeWidth={2} />
+            <span>{t('PatientDashboard.quickActions.bookAppointment')}</span>
+          </Link>
         </div>
 
         {/* Controls */}

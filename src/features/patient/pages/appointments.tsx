@@ -202,8 +202,6 @@ const AppointmentsPage = () => {
     }
   };
 
-  const bothEmpty = !isLoadingClinic && clinicCounts.All === 0;
-
   const PageHeader = () => (
     <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="space-y-1">
@@ -395,41 +393,6 @@ const AppointmentsPage = () => {
         appointment={qrTarget}
         onClose={() => setQrTarget(null)}
       />
-
-      {bothEmpty && (
-        <div className="relative mt-16 overflow-hidden rounded-[3rem] bg-slate-50 dark:bg-slate-900/40 p-16 text-center border border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-100 dark:shadow-none">
-          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-brand/30 to-transparent" />
-
-          <div className="relative z-10 flex flex-col items-center">
-            <div className="mb-8 flex h-28 w-28 items-center justify-center rounded-[2.5rem] bg-white dark:bg-slate-800 shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700 transition-transform hover:scale-110">
-              <CalendarDays
-                className="h-12 w-12 text-brand"
-                strokeWidth={1.5}
-              />
-            </div>
-
-            <h3 className="mb-4 text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-              {t('PatientAppointments.empty.noAppointmentsTitle')}
-            </h3>
-
-            <p className="mx-auto mb-10 max-w-md text-lg font-medium leading-relaxed text-slate-500 dark:text-slate-400">
-              {filter === 'all'
-                ? t('PatientAppointments.empty.noAppointmentsAll')
-                : t('PatientAppointments.empty.noAppointmentsByFilter', {
-                    filter: getFilterLabel(filter),
-                  })}
-            </p>
-
-            <Link
-              to="/patient/schedule"
-              className="group flex items-center gap-3 rounded-2xl bg-brand px-10 py-4 text-sm font-black uppercase tracking-widest text-white transition-all hover:scale-105 hover:shadow-2xl hover:shadow-brand/30 active:scale-95 shadow-xl shadow-brand/20"
-            >
-              <PlusCircle className="h-6 w-6" />
-              {t('PatientAppointments.actions.bookFirstAppointment')}
-            </Link>
-          </div>
-        </div>
-      )}
 
       <FeedbackModal
         open={!!clinicFeedbackTarget}

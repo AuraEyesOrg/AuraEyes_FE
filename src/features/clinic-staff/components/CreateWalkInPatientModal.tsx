@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, UserPlus, Loader2, QrCode } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { mapWalkInPatientErrorMessage } from '@/lib/api-error';
-import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
   createClinicWalkInPatient,
   type CreateWalkInPatientRequest,
   type CreateWalkInPatientResponse,
 } from '../api/patients.api';
+import QrScannerModal from './QrScannerModal';
 
 interface CreateWalkInPatientModalProps {
   isOpen: boolean;
@@ -46,10 +46,22 @@ export default function CreateWalkInPatientModal({
         queryKey: ['clinic-staff', 'patients'],
       });
       if (data.emailSent) {
-        toast.success('Da tao tai khoan va da gui email thong tin dang nhap.');
+        toast.success(
+          t(
+            'ClinicStaff.walkInPatientModal.toast.accountCreatedEmailSent',
+            'Account created and login details were sent by email.'
+          )
+        );
       } else if (data.temporaryPassword) {
         toast.info(
-          `Da tao tai khoan. Email dang nhap: ${data.loginEmail} | Mat khau tam: ${data.temporaryPassword}`
+          t(
+            'ClinicStaff.walkInPatientModal.toast.accountCreatedTempPassword',
+            'Account created. Login email: {{loginEmail}} | Temporary password: {{temporaryPassword}}',
+            {
+              loginEmail: data.loginEmail ?? '-',
+              temporaryPassword: data.temporaryPassword ?? '-',
+            }
+          )
         );
       } else {
         toast.success(
@@ -82,75 +94,52 @@ export default function CreateWalkInPatientModal({
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    if (isScanning) {
-      const scanner = new Html5QrcodeScanner(
-        'clinic-staff-reader',
-        {
-          qrbox: { width: 250, height: 250 },
-          fps: 5,
-        },
-        false
+  const handleScanResult = useCallback(
+    (decodedText: string) => {
+      setIsScanning(false);
+      // VNeID format: CCCD|CMND|FullName|DOB(DDMMYYYY)|Gender|Address|Date of Issue
+      const parts = decodedText.split('|');
+      if (parts.length < 6) {
+        toast.error(
+          t(
+            'ClinicStaff.walkInPatientModal.toast.invalidQr',
+            'Invalid QR code or unsupported CCCD/VNeID format.'
+          )
+        );
+        return;
+      }
+
+      const cccd = parts[0]?.trim() ?? '';
+      const fullName = parts[2]?.trim() ?? '';
+      const dobRaw = parts[3]?.trim() ?? '';
+      let dob = '';
+      if (/^\d{8}$/.test(dobRaw)) {
+        const day = dobRaw.substring(0, 2);
+        const month = dobRaw.substring(2, 4);
+        const year = dobRaw.substring(4, 8);
+        dob = `${year}-${month}-${day}`;
+      }
+      const genderRaw = parts[4]?.toLowerCase() ?? '';
+      const gender = genderRaw.includes('nữ') ? 'Female' : 'Male';
+      const address = parts[5]?.trim() ?? '';
+
+      setFormData((prev) => ({
+        ...prev,
+        citizenId: cccd,
+        fullName,
+        dateOfBirth: dob,
+        gender,
+        address,
+      }));
+      toast.success(
+        t(
+          'ClinicStaff.walkInPatientModal.toast.qrExtractSuccess',
+          'Citizen profile extracted successfully!'
+        )
       );
-
-      scanner.render(
-        (result) => {
-          scanner.clear();
-          setIsScanning(false);
-          // VNeID format: CCCD|CMND|FullName|DOB(DDMMYYYY)|Gender|Address|Date of Issue
-          const parts = result.split('|');
-          if (parts.length >= 6) {
-            const cccd = parts[0];
-            const fullName = parts[2];
-            const dobRaw = parts[3];
-            let dob = '';
-            if (dobRaw.length === 8) {
-              const day = dobRaw.substring(0, 2);
-              const month = dobRaw.substring(2, 4);
-              const year = dobRaw.substring(4, 8);
-              dob = `${year}-${month}-${day}`;
-            }
-            const genderRaw = parts[4];
-            const gender = genderRaw.toLowerCase().includes('nữ')
-              ? 'Female'
-              : 'Male';
-            const address = parts[5]?.trim() ?? '';
-
-            setFormData((prev) => ({
-              ...prev,
-              citizenId: cccd,
-              fullName,
-              dateOfBirth: dob,
-              gender,
-              address,
-            }));
-            toast.success(
-              t(
-                'ClinicStaff.walkInPatientModal.toast.qrExtractSuccess',
-                'Citizen profile extracted successfully!'
-              )
-            );
-          } else {
-            toast.error(
-              t(
-                'ClinicStaff.walkInPatientModal.toast.invalidQr',
-                'Invalid QR code or unsupported CCCD/VNeID format.'
-              )
-            );
-          }
-        },
-        () => {
-          // ignore per-frame scan errors
-        }
-      );
-
-      return () => {
-        scanner
-          .clear()
-          .catch((e) => console.error('Failed to clear scanner', e));
-      };
-    }
-  }, [isScanning, t]);
+    },
+    [t]
+  );
 
   if (!isOpen) return null;
 
@@ -165,22 +154,22 @@ export default function CreateWalkInPatientModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-      <div className="bg-(--bg-primary) w-full max-w-md rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/30 p-4 backdrop-blur-[2px]">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-slate-200 bg-white shadow-[0_16px_34px_-20px_rgba(15,23,42,0.4)] animate-in fade-in zoom-in-95 duration-200 dark:border-slate-800 dark:bg-slate-900">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-(--border-primary) sticky top-0 bg-(--bg-primary) z-10">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-white/85 dark:border-slate-800 dark:bg-slate-900/95 dark:supports-[backdrop-filter]:bg-slate-900/85">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <UserPlus className="w-5 h-5 text-primary" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 dark:border-emerald-900/70 dark:bg-emerald-950/40">
+              <UserPlus className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-(--text-primary)">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                 {t(
                   'ClinicStaff.walkInPatientModal.header.title',
                   'Create Walk-in Patient'
                 )}
               </h2>
-              <p className="text-xs text-(--text-tertiary)">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {t(
                   'ClinicStaff.walkInPatientModal.header.subtitle',
                   'Quickly register a new patient for this clinic'
@@ -190,28 +179,28 @@ export default function CreateWalkInPatientModal({
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-(--bg-secondary) flex items-center justify-center text-(--text-tertiary) hover:text-(--text-primary) hover:bg-(--bg-tertiary) transition"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5 p-6">
           {/* QR scanner toggle */}
           {!isScanning ? (
             <button
               type="button"
               onClick={() => setIsScanning(true)}
-              className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-(--border-primary) text-(--text-secondary) hover:text-primary hover:border-primary hover:bg-primary/5 transition flex flex-col items-center justify-center gap-2"
+              className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-3 text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50/70 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300"
             >
-              <QrCode className="w-6 h-6" />
+              <QrCode className="h-6 w-6" />
               <span className="font-medium text-sm">
                 {t(
                   'ClinicStaff.walkInPatientModal.scan.action',
                   'Scan VNeID / CCCD QR Code'
                 )}
               </span>
-              <span className="text-xs text-(--text-tertiary)">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
                 {t(
                   'ClinicStaff.walkInPatientModal.scan.hint',
                   'Autofill patient details accurately'
@@ -219,12 +208,17 @@ export default function CreateWalkInPatientModal({
               </span>
             </button>
           ) : (
-            <div className="rounded-xl overflow-hidden border border-(--border-primary) bg-black">
-              <div id="clinic-staff-reader" className="w-full" />
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center dark:border-emerald-900/60 dark:bg-emerald-950/30">
+              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                {t(
+                  'ClinicStaff.walkInPatientModal.scan.opening',
+                  'Opening camera scanner...'
+                )}
+              </p>
               <button
                 type="button"
                 onClick={() => setIsScanning(false)}
-                className="w-full py-2 bg-(--bg-secondary) text-sm font-medium hover:bg-(--bg-tertiary)"
+                className="mt-2 text-xs font-medium text-slate-500 underline-offset-2 hover:underline dark:text-slate-400"
               >
                 {t(
                   'ClinicStaff.walkInPatientModal.scan.cancel',
@@ -235,8 +229,8 @@ export default function CreateWalkInPatientModal({
           )}
 
           {/* Citizen ID */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-(--text-secondary)">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {t(
                 'ClinicStaff.walkInPatientModal.form.citizenId',
                 'Citizen ID (CCCD)'
@@ -248,7 +242,7 @@ export default function CreateWalkInPatientModal({
               onChange={(e) =>
                 setFormData({ ...formData, citizenId: e.target.value })
               }
-              className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-600 dark:focus:ring-emerald-900/50"
               placeholder={t(
                 'ClinicStaff.walkInPatientModal.form.citizenIdPlaceholder',
                 'e.g. 001099000000'
@@ -256,9 +250,9 @@ export default function CreateWalkInPatientModal({
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-(--text-secondary)">
-              Email
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              {t('ClinicStaff.walkInPatientModal.form.email', 'Email')}
             </label>
             <input
               type="email"
@@ -266,14 +260,17 @@ export default function CreateWalkInPatientModal({
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
-              placeholder="benhnhan@example.com (khong bat buoc)"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-600 dark:focus:ring-emerald-900/50"
+              placeholder={t(
+                'ClinicStaff.walkInPatientModal.form.emailPlaceholder',
+                'patient@example.com (optional)'
+              )}
             />
           </div>
 
           {/* Full Name */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-(--text-secondary)">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {t('ClinicStaff.walkInPatientModal.form.fullName', 'Full Name *')}
             </label>
             <input
@@ -283,7 +280,7 @@ export default function CreateWalkInPatientModal({
               onChange={(e) =>
                 setFormData({ ...formData, fullName: e.target.value })
               }
-              className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-600 dark:focus:ring-emerald-900/50"
               placeholder={t(
                 'ClinicStaff.walkInPatientModal.form.fullNamePlaceholder',
                 'e.g. Nguyen Van A'
@@ -293,8 +290,8 @@ export default function CreateWalkInPatientModal({
 
           {/* DOB + Gender */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-(--text-secondary)">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {t(
                   'ClinicStaff.walkInPatientModal.form.dateOfBirth',
                   'Date of Birth *'
@@ -308,11 +305,11 @@ export default function CreateWalkInPatientModal({
                 onChange={(e) =>
                   setFormData({ ...formData, dateOfBirth: e.target.value })
                 }
-                className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-600 dark:focus:ring-emerald-900/50"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-(--text-secondary)">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {t('ClinicStaff.walkInPatientModal.form.gender', 'Gender *')}
               </label>
               <select
@@ -321,7 +318,7 @@ export default function CreateWalkInPatientModal({
                 onChange={(e) =>
                   setFormData({ ...formData, gender: e.target.value })
                 }
-                className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-600 dark:focus:ring-emerald-900/50"
               >
                 <option value="Male">
                   {t('ClinicStaff.common.gender.male', 'Male')}
@@ -340,8 +337,8 @@ export default function CreateWalkInPatientModal({
           </div>
 
           {/* Address */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-(--text-secondary)">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {t('ClinicStaff.walkInPatientModal.form.address', 'Address')}
             </label>
             <input
@@ -350,7 +347,7 @@ export default function CreateWalkInPatientModal({
               onChange={(e) =>
                 setFormData({ ...formData, address: e.target.value })
               }
-              className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-600 dark:focus:ring-emerald-900/50"
               placeholder={t(
                 'ClinicStaff.walkInPatientModal.form.addressPlaceholder',
                 'Street, ward, district, city'
@@ -359,8 +356,8 @@ export default function CreateWalkInPatientModal({
           </div>
 
           {/* Phone */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-(--text-secondary)">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {t(
                 'ClinicStaff.walkInPatientModal.form.phoneNumber',
                 'Phone Number'
@@ -372,7 +369,7 @@ export default function CreateWalkInPatientModal({
               onChange={(e) =>
                 setFormData({ ...formData, phoneNumber: e.target.value })
               }
-              className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-600 dark:focus:ring-emerald-900/50"
               placeholder={t(
                 'ClinicStaff.walkInPatientModal.form.phonePlaceholder',
                 '+84 xxx xxx xxx'
@@ -381,19 +378,19 @@ export default function CreateWalkInPatientModal({
           </div>
 
           {/* Actions */}
-          <div className="pt-4 flex justify-end gap-3 sticky bottom-0 bg-(--bg-primary)">
+          <div className="sticky bottom-0 -mx-6 flex justify-end gap-3 border-t border-slate-200 bg-white/95 px-6 pt-4 backdrop-blur supports-[backdrop-filter]:bg-white/90 dark:border-slate-800 dark:bg-slate-900/95 dark:supports-[backdrop-filter]:bg-slate-900/90">
             <button
               type="button"
               onClick={onClose}
               disabled={mutation.isPending}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-(--text-secondary) bg-(--bg-secondary) hover:bg-(--bg-tertiary)"
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-800 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100"
             >
               {t('ClinicStaff.common.cancel', 'Cancel')}
             </button>
             <button
               type="submit"
               disabled={mutation.isPending}
-              className="px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary/90 transition shadow-lg shadow-primary/20 flex items-center gap-2 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-600"
             >
               {mutation.isPending && (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -406,6 +403,12 @@ export default function CreateWalkInPatientModal({
           </div>
         </form>
       </div>
+      {isScanning && (
+        <QrScannerModal
+          onClose={() => setIsScanning(false)}
+          onScan={handleScanResult}
+        />
+      )}
     </div>
   );
 }
