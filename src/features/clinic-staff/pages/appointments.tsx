@@ -20,11 +20,11 @@ import {
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import { Html5QrcodeScanner } from 'html5-qrcode';
 import Spinner from '@/components/ui/spinner';
 import useAuthStore from '@/store/auth-store';
 import PaymentConfirmationModal from '../components/PaymentConfirmationModal';
 import CreateWalkInPatientModal from '../components/CreateWalkInPatientModal';
+import QrScannerModal from '../components/QrScannerModal'; // <-- NEW IMPORT
 import { getClinicPatients, type ClinicPatientDto } from '../api/patients.api';
 import { getCurrentClinicAppointments } from '@/features/organisation/api/organisation-clinic-booking.api';
 import {
@@ -52,7 +52,6 @@ import ClinicStaffLayout from '../components/ClinicStaffLayout';
 
 const DAYS_PER_WEEK = 7;
 const CLINIC_CHECKIN_QR_PREFIX = 'AURA-CLINIC-APPOINTMENT';
-const CLINIC_QR_READER_ID = 'clinic-staff-checkin-qr-reader';
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -136,7 +135,6 @@ function getInitials(value: string) {
   const parts = value.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return 'PT';
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-
   const first = parts[0][0] ?? '';
   const last = parts[parts.length - 1][0] ?? '';
   return `${first}${last}`.toUpperCase();
@@ -150,6 +148,7 @@ function getPatientInitials(appointment: {
   return getInitials(patientName || appointment.patientId);
 }
 
+// ─── QR payload parser (unchanged) ─────────────────────────────────────────
 function parseClinicCheckInQrPayload(rawValue: string): {
   appointmentId: string;
   organisationId?: string;
@@ -157,21 +156,16 @@ function parseClinicCheckInQrPayload(rawValue: string): {
 } | null {
   const value = rawValue.trim();
   if (!value) return null;
-  const parts = value.split('|').map((part) => part.trim());
+  const parts = value.split('|').map((p) => p.trim());
 
   if (parts[0] === CLINIC_CHECKIN_QR_PREFIX) {
     const appointmentId = parts[1] ?? '';
     let organisationId = '';
     let dateKey = '';
 
-    // Legacy payload:
-    // AURA-CLINIC-APPOINTMENT|appointmentId|patientId|date|start|end
     if (parts.length >= 6) {
       dateKey = parts[3] ?? '';
     }
-
-    // Extended payload:
-    // AURA-CLINIC-APPOINTMENT|appointmentId|patientId|organisationId|date|start|end
     if (parts.length >= 7) {
       organisationId = parts[3] ?? '';
       dateKey = parts[4] ?? '';
@@ -198,6 +192,8 @@ function isFutureDateKey(dateKey: string | undefined, todayKey: string) {
   return dateKey > todayKey;
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+
 export default function ClinicStaffAppointmentsPage() {
   const { t } = useSafeTranslation();
   const queryClient = useQueryClient();
@@ -209,12 +205,18 @@ export default function ClinicStaffAppointmentsPage() {
   const todayKey = toLocalDateKey(new Date());
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [selectedDate, setSelectedDate] = useState(todayKey);
+
+  // ── QR scanner state (simplified — no more html5-qrcode) ──────────────────
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
   const [scanTargetAppointmentId, setScanTargetAppointmentId] = useState<
     string | null
   >(null);
+
+  // ── Payment modal ──────────────────────────────────────────────────────────
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [appointmentToPay, setAppointmentToPay] = useState<any>(null);
+
+  // ── Walk-in modal ──────────────────────────────────────────────────────────
   const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
   const [isCreatePatientModalOpen, setIsCreatePatientModalOpen] =
     useState(false);
@@ -224,6 +226,7 @@ export default function ClinicStaffAppointmentsPage() {
   const [selectedWalkInSlotId, setSelectedWalkInSlotId] = useState('');
   const [walkInVisitReason, setWalkInVisitReason] = useState('');
 
+  // ── Week window ────────────────────────────────────────────────────────────
   const weekWindow = useMemo(() => {
     const weekStart = getStartOfWeekMonday(new Date());
     weekStart.setDate(weekStart.getDate() + currentWeekOffset * DAYS_PER_WEEK);
@@ -263,6 +266,7 @@ export default function ClinicStaffAppointmentsPage() {
   const appointments = selectedDayQuery?.data ?? [];
   const isLoading = selectedDayQuery?.isLoading ?? false;
   const appointmentsError = selectedDayQuery?.error;
+
   const recentPatientsQuery = useQuery({
     queryKey: ['clinic-patients', 'recent'],
     queryFn: getClinicPatients,
@@ -294,7 +298,6 @@ export default function ClinicStaffAppointmentsPage() {
     const search = walkInPatientSearch.trim().toLowerCase();
     const patients = recentPatientsQuery.data ?? [];
     if (!search) return patients;
-
     return patients.filter((patient) => {
       const haystack = [
         patient.name,
@@ -305,7 +308,6 @@ export default function ClinicStaffAppointmentsPage() {
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
-
       return haystack.includes(search);
     });
   }, [recentPatientsQuery.data, walkInPatientSearch]);
@@ -313,7 +315,7 @@ export default function ClinicStaffAppointmentsPage() {
   const selectedWalkInPatient = useMemo(
     () =>
       (recentPatientsQuery.data ?? []).find(
-        (patient) => patient.id === selectedWalkInPatientId
+        (p) => p.id === selectedWalkInPatientId
       ) ?? null,
     [recentPatientsQuery.data, selectedWalkInPatientId]
   );
@@ -321,15 +323,14 @@ export default function ClinicStaffAppointmentsPage() {
   const availableWalkInSlots = useMemo(
     () =>
       (availableSlotsQuery.data ?? []).filter(
-        (slot) => slot.status === 'Available' && slot.availableCapacity > 0
+        (s) => s.status === 'Available' && s.availableCapacity > 0
       ),
     [availableSlotsQuery.data]
   );
 
   const selectedWalkInSlot = useMemo(
     () =>
-      availableWalkInSlots.find((slot) => slot.id === selectedWalkInSlotId) ??
-      null,
+      availableWalkInSlots.find((s) => s.id === selectedWalkInSlotId) ?? null,
     [availableWalkInSlots, selectedWalkInSlotId]
   );
 
@@ -451,7 +452,6 @@ export default function ClinicStaffAppointmentsPage() {
     event: FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
-
     if (!selectedWalkInPatientId || !selectedWalkInSlotId) {
       toast.error(
         t(
@@ -461,7 +461,6 @@ export default function ClinicStaffAppointmentsPage() {
       );
       return;
     }
-
     try {
       const locale = i18nObj.language === 'en' ? '/en' : '/vi';
       const result = await createWalkInAppointmentMutation.mutateAsync({
@@ -496,146 +495,106 @@ export default function ClinicStaffAppointmentsPage() {
     }
   };
 
-  useEffect(() => {
-    if (!isQrScannerOpen) return;
-    let scanner: Html5QrcodeScanner | null = null;
-    let hasHandledScan = false;
+  // ── NEW: QR scan result handler (replaces the old useEffect with html5-qrcode) ──
+  const handleQrScanResult = async (decodedText: string) => {
+    setIsQrScannerOpen(false);
 
-    scanner = new Html5QrcodeScanner(
-      CLINIC_QR_READER_ID,
-      { qrbox: { width: 250, height: 250 }, fps: 5 },
-      false
-    );
+    const parsed = parseClinicCheckInQrPayload(decodedText);
+    if (!parsed) {
+      toast.error(
+        t(
+          'Organisation.calendar.toast.invalidQr',
+          'Invalid clinic check-in QR code.'
+        )
+      );
+      setScanTargetAppointmentId(null);
+      return;
+    }
 
-    scanner.render(
-      (decodedText) => {
-        if (hasHandledScan) return;
-        hasHandledScan = true;
+    if (
+      scanTargetAppointmentId &&
+      parsed.appointmentId.toLowerCase() !==
+        scanTargetAppointmentId.toLowerCase()
+    ) {
+      toast.error(
+        t(
+          'Organisation.calendar.toast.qrNotMatchAppointment',
+          'This QR code does not match the selected appointment.'
+        )
+      );
+      setScanTargetAppointmentId(null);
+      return;
+    }
 
-        void scanner
-          ?.clear()
-          .catch(() => undefined)
-          .finally(() => {
-            setIsQrScannerOpen(false);
-            setScanTargetAppointmentId(null);
+    if (
+      parsed.organisationId &&
+      organisationId &&
+      parsed.organisationId.toLowerCase() !== organisationId.toLowerCase()
+    ) {
+      toast.error(
+        t(
+          'Organisation.calendar.toast.qrNotBelongOrganisation',
+          'This QR code does not belong to your organisation.'
+        )
+      );
+      setScanTargetAppointmentId(null);
+      return;
+    }
 
-            const parsed = parseClinicCheckInQrPayload(decodedText);
-            if (!parsed) {
-              toast.error(
-                t(
-                  'Organisation.calendar.toast.invalidQr',
-                  'Invalid clinic check-in QR code.'
-                )
-              );
-              return;
-            }
+    if (parsed.dateKey) {
+      if (isFutureDateKey(parsed.dateKey, todayKey)) {
+        toast.error(
+          t(
+            'Organisation.calendar.toast.qrBeforeAppointmentDate',
+            'Cannot check in before the appointment date.'
+          )
+        );
+        setScanTargetAppointmentId(null);
+        return;
+      }
+      setSelectedDate(parsed.dateKey);
+      setCurrentWeekOffset(getWeekOffsetFromDateKey(parsed.dateKey));
+    }
 
-            if (
-              scanTargetAppointmentId &&
-              parsed.appointmentId.toLowerCase() !==
-                scanTargetAppointmentId.toLowerCase()
-            ) {
-              toast.error(
-                t(
-                  'Organisation.calendar.toast.qrNotMatchAppointment',
-                  'This QR code does not match the selected appointment.'
-                )
-              );
-              return;
-            }
+    const matchedAppointmentDateKey =
+      weekWindow.days.find((day, index) =>
+        (weekAppointmentQueries[index]?.data ?? []).some(
+          (appointment) =>
+            appointment.id.toLowerCase() ===
+            (scanTargetAppointmentId ?? parsed.appointmentId).toLowerCase()
+        )
+      )?.dateKey ?? null;
 
-            if (
-              parsed.organisationId &&
-              organisationId &&
-              parsed.organisationId.toLowerCase() !==
-                organisationId.toLowerCase()
-            ) {
-              toast.error(
-                t(
-                  'Organisation.calendar.toast.qrNotBelongOrganisation',
-                  'This QR code does not belong to your organisation.'
-                )
-              );
-              return;
-            }
+    const effectiveDateKey =
+      parsed.dateKey ?? matchedAppointmentDateKey ?? selectedDate;
 
-            if (parsed.dateKey) {
-              if (isFutureDateKey(parsed.dateKey, todayKey)) {
-                toast.error(
-                  t(
-                    'Organisation.calendar.toast.qrBeforeAppointmentDate',
-                    'Cannot check in before the appointment date.'
-                  )
-                );
-                return;
-              }
-              setSelectedDate(parsed.dateKey);
-              setCurrentWeekOffset(getWeekOffsetFromDateKey(parsed.dateKey));
-            }
+    if (isFutureDateKey(effectiveDateKey ?? undefined, todayKey)) {
+      toast.error(
+        t(
+          'Organisation.calendar.toast.qrBeforeAppointmentDate',
+          'Cannot check in before the appointment date.'
+        )
+      );
+      setScanTargetAppointmentId(null);
+      return;
+    }
 
-            const matchedAppointmentDateKey =
-              weekWindow.days.find((day, index) =>
-                (weekAppointmentQueries[index]?.data ?? []).some(
-                  (appointment) =>
-                    appointment.id.toLowerCase() ===
-                    (
-                      scanTargetAppointmentId ?? parsed.appointmentId
-                    ).toLowerCase()
-                )
-              )?.dateKey ?? null;
-
-            const effectiveDateKey =
-              parsed.dateKey ?? matchedAppointmentDateKey ?? selectedDate;
-
-            if (isFutureDateKey(effectiveDateKey ?? undefined, todayKey)) {
-              toast.error(
-                t(
-                  'Organisation.calendar.toast.qrBeforeAppointmentDate',
-                  'Cannot check in before the appointment date.'
-                )
-              );
-              return;
-            }
-
-            void (async () => {
-              try {
-                await checkInMutation.mutateAsync(
-                  scanTargetAppointmentId ?? parsed.appointmentId
-                );
-                toast.success(
-                  t(
-                    'Organisation.calendar.toast.qrCheckInSuccess',
-                    'Check-in successful via QR.'
-                  )
-                );
-              } catch (error) {
-                toast.error(mapClinicStaffErrorMessage(error));
-              }
-            })();
-          });
-      },
-      () => {}
-    );
-
-    return () => {
-      void scanner
-        ?.clear()
-        .catch(() => undefined)
-        .finally(() => {
-          scanner = null;
-        });
-    };
-  }, [
-    checkInMutation,
-    isQrScannerOpen,
-    organisationId,
-    scanTargetAppointmentId,
-    selectedDate,
-    t,
-    todayKey,
-    weekAppointmentQueries,
-    weekWindow.days,
-  ]);
+    try {
+      await checkInMutation.mutateAsync(
+        scanTargetAppointmentId ?? parsed.appointmentId
+      );
+      toast.success(
+        t(
+          'Organisation.calendar.toast.qrCheckInSuccess',
+          'Check-in successful via QR.'
+        )
+      );
+    } catch (error) {
+      toast.error(mapClinicStaffErrorMessage(error));
+    } finally {
+      setScanTargetAppointmentId(null);
+    }
+  };
 
   const getPrimaryAction = (appointment: (typeof appointments)[number]) => {
     if (appointment.status === 'CheckedIn') {
@@ -677,6 +636,7 @@ export default function ClinicStaffAppointmentsPage() {
   return (
     <ClinicStaffLayout>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
+        {/* ── Sidebar ───────────────────────────────────────────────────────── */}
         <aside className="flex flex-col gap-6">
           {/* Week Calendar Card */}
           <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -763,8 +723,8 @@ export default function ClinicStaffAppointmentsPage() {
               >
                 {t('Organisation.common.today', 'Today')}
               </button>
-              <div className="mt-3 relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <div className="relative mt-3">
+                <Calendar className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                 <input
                   type="date"
                   value={selectedDate}
@@ -833,8 +793,9 @@ export default function ClinicStaffAppointmentsPage() {
           </div>
         </aside>
 
+        {/* ── Main content ───────────────────────────────────────────────────── */}
         <main className="space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 px-2">
+          <div className="mb-6 flex flex-col justify-between gap-4 px-2 md:flex-row md:items-center">
             <div className="space-y-1">
               <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
                 {formatDate(selectedDate, 'long')}
@@ -860,18 +821,12 @@ export default function ClinicStaffAppointmentsPage() {
                 </p>
               </div>
             </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex -space-x-2">
-                {/* Visual flair: stack of avatars or something */}
-              </div>
-            </div>
           </div>
 
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20 rounded-[2.5rem] border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/50">
+            <div className="flex flex-col items-center justify-center rounded-[2.5rem] border border-slate-200 bg-white py-20 dark:border-slate-800 dark:bg-slate-900/50">
               <Spinner className="h-10 w-10 text-brand" />
-              <p className="mt-4 text-xs font-black uppercase tracking-widest text-slate-400 animate-pulse">
+              <p className="mt-4 animate-pulse text-xs font-black uppercase tracking-widest text-slate-400">
                 {t(
                   'Organisation.calendar.states.loadingAppointments',
                   'Syncing appointments...'
@@ -879,8 +834,8 @@ export default function ClinicStaffAppointmentsPage() {
               </p>
             </div>
           ) : appointments.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
-              <div className="h-20 w-20 rounded-full bg-slate-100 flex items-center justify-center dark:bg-slate-800 mb-6">
+            <div className="flex flex-col items-center justify-center rounded-[2.5rem] border-2 border-dashed border-slate-200 py-24 dark:border-slate-800">
+              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
                 <Calendar className="h-8 w-8 text-slate-300" />
               </div>
               <p className="text-lg font-bold text-slate-900 dark:text-white">
@@ -921,7 +876,7 @@ export default function ClinicStaffAppointmentsPage() {
                     key={appt.id}
                     className={[
                       'group relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-6 transition-all duration-300 hover:border-brand/40 hover:shadow-xl hover:shadow-brand/5 dark:border-slate-800 dark:bg-slate-900/80',
-                      'before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1.5',
+                      'before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1.5',
                       cardAccent[appt.status] ?? 'before:bg-slate-200',
                     ].join(' ')}
                   >
@@ -930,7 +885,7 @@ export default function ClinicStaffAppointmentsPage() {
                         {PIPELINE_STEPS.map((step, i) => (
                           <div
                             key={step}
-                            className="flex items-center gap-1 flex-1 max-w-[120px]"
+                            className="flex flex-1 items-center gap-1 max-w-[120px]"
                           >
                             <div
                               className={[
@@ -938,12 +893,12 @@ export default function ClinicStaffAppointmentsPage() {
                                 i < stepIdx
                                   ? 'bg-emerald-500 shadow-sm shadow-emerald-500/20'
                                   : i === stepIdx
-                                    ? 'bg-brand shadow-sm shadow-brand/20 animate-pulse'
+                                    ? 'animate-pulse bg-brand shadow-sm shadow-brand/20'
                                     : 'bg-slate-100 dark:bg-slate-800',
                               ].join(' ')}
                             />
                             {i === stepIdx && (
-                              <span className="text-[8px] font-black uppercase tracking-tighter text-brand absolute -top-4">
+                              <span className="absolute -top-4 text-[8px] font-black uppercase tracking-tighter text-brand">
                                 {getStatusDisplay(appt)}
                               </span>
                             )}
@@ -952,9 +907,9 @@ export default function ClinicStaffAppointmentsPage() {
                       </div>
                     )}
 
-                    <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
-                      <div className="flex items-center gap-5 min-w-0 flex-1">
-                        {/* Avatar Section */}
+                    <div className="flex flex-col items-start justify-between gap-6 lg:flex-row">
+                      <div className="flex min-w-0 flex-1 items-center gap-5">
+                        {/* Avatar */}
                         <div className="relative shrink-0">
                           <div
                             className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-[1.25rem] text-lg font-black shadow-inner transition-transform group-hover:scale-105 ${avatarColors[appt.status] ?? avatarColors.Pending}`}
@@ -965,14 +920,14 @@ export default function ClinicStaffAppointmentsPage() {
                                 src={patientAvatarUrl}
                                 alt={patientDisplayName}
                                 className="absolute inset-0 h-full w-full object-cover"
-                                onError={(event) => {
-                                  event.currentTarget.style.display = 'none';
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
                                 }}
                               />
                             )}
                           </div>
                           <div
-                            className={`absolute -bottom-1 -right-1 h-6 w-6 rounded-lg border-4 border-white dark:border-slate-900 flex items-center justify-center ${statusBadge[appt.status]}`}
+                            className={`absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-lg border-4 border-white dark:border-slate-900 ${statusBadge[appt.status]}`}
                           >
                             <Clock className="h-3 w-3" />
                           </div>
@@ -982,8 +937,8 @@ export default function ClinicStaffAppointmentsPage() {
                           <h3 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
                             {patientDisplayName}
                           </h3>
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                            <div className="flex items-center gap-2 bg-brand/5 text-brand px-3 py-1 rounded-full border border-brand/10">
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold uppercase tracking-widest text-slate-400">
+                            <div className="flex items-center gap-2 rounded-full border border-brand/10 bg-brand/5 px-3 py-1 text-brand">
                               <Clock className="h-3.5 w-3.5" />
                               {formatSlotTime(
                                 appt.startTime,
@@ -997,29 +952,29 @@ export default function ClinicStaffAppointmentsPage() {
                           </div>
 
                           {/* Consulting Doctor Badge */}
-                          <div className="mt-3 flex items-center gap-3 p-2.5 pr-5 rounded-2xl bg-slate-50/50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60 w-fit group/doc transition-all hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm">
+                          <div className="group/doc mt-3 flex w-fit items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-2.5 pr-5 transition-all hover:bg-white hover:shadow-sm dark:border-slate-800/60 dark:bg-slate-800/40 dark:hover:bg-slate-800">
                             <div className="relative shrink-0">
                               {appt.ophthalAvatarUrl ? (
                                 <img
                                   src={appt.ophthalAvatarUrl}
                                   alt={appt.ophthalFullName ?? ''}
-                                  className="w-10 h-10 rounded-xl object-cover border-2 border-white dark:border-slate-700 shadow-sm"
+                                  className="h-10 w-10 rounded-xl border-2 border-white object-cover shadow-sm dark:border-slate-700"
                                 />
                               ) : (
-                                <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-brand text-xs font-black border border-brand/20">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-brand/20 bg-brand/10 text-xs font-black text-brand">
                                   {getInitials(appt.ophthalFullName || 'DR')}
                                 </div>
                               )}
-                              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full shadow-sm" />
+                              <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 shadow-sm dark:border-slate-800" />
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
+                              <span className="mb-1 text-[9px] font-black uppercase leading-none tracking-widest text-slate-400">
                                 {t(
                                   'Organisation.calendar.doctor.consultingDoctor',
                                   'Consulting Doctor'
                                 )}
                               </span>
-                              <span className="text-sm font-black text-slate-800 dark:text-slate-100 group-hover/doc:text-brand transition-colors">
+                              <span className="text-sm font-black text-slate-800 transition-colors group-hover/doc:text-brand dark:text-slate-100">
                                 {appt.ophthalFullName ||
                                   t(
                                     'Organisation.calendar.doctor.defaultDoctor',
@@ -1031,7 +986,7 @@ export default function ClinicStaffAppointmentsPage() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end gap-3 shrink-0">
+                      <div className="flex shrink-0 flex-col items-end gap-3">
                         {(() => {
                           const isFullyPaid =
                             appt.orderStatus === 'FullyPaid' ||
@@ -1040,10 +995,9 @@ export default function ClinicStaffAppointmentsPage() {
                             appt.status === 'WaitingForPayment' && isFullyPaid
                               ? 'Completed'
                               : appt.status;
-
                           return (
                             <span
-                              className={`rounded-xl px-4 py-1.5 text-[10px] font-black tracking-[0.1em] uppercase shadow-sm ${statusBadge[effectiveStatus] ?? statusBadge.Pending}`}
+                              className={`rounded-xl px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] shadow-sm ${statusBadge[effectiveStatus] ?? statusBadge.Pending}`}
                             >
                               {getStatusDisplay(appt)}
                             </span>
@@ -1053,8 +1007,8 @@ export default function ClinicStaffAppointmentsPage() {
                         {appt.orderId && (
                           <div className="flex flex-wrap justify-end gap-2">
                             {appt.orderStatus === 'Pending' && (
-                              <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-amber-600 border border-amber-500/20">
-                                <Clock className="w-3.5 h-3.5" />
+                              <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-amber-600">
+                                <Clock className="h-3.5 w-3.5" />
                                 {t(
                                   'Organisation.calendar.states.billing.pending',
                                   'Pending Payment'
@@ -1062,8 +1016,8 @@ export default function ClinicStaffAppointmentsPage() {
                               </div>
                             )}
                             {appt.orderStatus === 'PartiallyPaid' && (
-                              <div className="flex items-center gap-2 rounded-xl bg-blue-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-blue-600 border border-blue-500/20">
-                                <CreditCard className="w-3.5 h-3.5" />
+                              <div className="flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-blue-600">
+                                <CreditCard className="h-3.5 w-3.5" />
                                 {t(
                                   'Organisation.calendar.states.billing.partiallyPaid',
                                   'Deposit Paid'
@@ -1071,8 +1025,8 @@ export default function ClinicStaffAppointmentsPage() {
                               </div>
                             )}
                             {appt.orderStatus === 'FullyPaid' && (
-                              <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-600 border border-emerald-500/20">
-                                <CheckCircle className="w-3.5 h-3.5" />
+                              <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-600">
+                                <CheckCircle className="h-3.5 w-3.5" />
                                 {t(
                                   'Organisation.calendar.states.billing.fullyPaid',
                                   'Fully Paid'
@@ -1080,8 +1034,8 @@ export default function ClinicStaffAppointmentsPage() {
                               </div>
                             )}
                             {appt.orderStatus === 'Cancelled' && (
-                              <div className="flex items-center gap-2 rounded-xl bg-rose-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-rose-600 border border-rose-500/20">
-                                <UserX className="w-3.5 h-3.5" />
+                              <div className="flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-rose-600">
+                                <UserX className="h-3.5 w-3.5" />
                                 {t(
                                   'Organisation.calendar.status.cancelled',
                                   'Cancelled'
@@ -1093,9 +1047,9 @@ export default function ClinicStaffAppointmentsPage() {
                       </div>
                     </div>
 
-                    {/* Bento Billing Box */}
+                    {/* Billing bento box */}
                     {(appt.totalAmount || appt.orderId) && (
-                      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 rounded-3xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
+                      <div className="mt-6 grid grid-cols-1 gap-4 rounded-3xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/50 md:grid-cols-3">
                         <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-slate-700">
                             <Receipt className="h-5 w-5 text-brand" />
@@ -1118,7 +1072,7 @@ export default function ClinicStaffAppointmentsPage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 border-l border-slate-200 dark:border-slate-700 md:pl-4">
+                        <div className="flex items-center gap-3 border-slate-200 dark:border-slate-700 md:border-l md:pl-4">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-slate-700">
                             <CheckCircle className="h-5 w-5 text-emerald-500" />
                           </div>
@@ -1138,7 +1092,7 @@ export default function ClinicStaffAppointmentsPage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 border-l border-slate-200 dark:border-slate-700 md:pl-4">
+                        <div className="flex items-center gap-3 border-slate-200 dark:border-slate-700 md:border-l md:pl-4">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-slate-700">
                             <Banknote
                               className={`h-5 w-5 ${appt.remainingAmount === 0 ? 'text-emerald-500' : 'text-rose-500'}`}
@@ -1157,7 +1111,7 @@ export default function ClinicStaffAppointmentsPage() {
                                   )}
                             </p>
                             <p
-                              className={`text-sm font-black ${appt.remainingAmount === 0 ? 'text-emerald-600' : 'text-rose-600 animate-pulse'}`}
+                              className={`text-sm font-black ${appt.remainingAmount === 0 ? 'text-emerald-600' : 'animate-pulse text-rose-600'}`}
                             >
                               {new Intl.NumberFormat(currentLocale, {
                                 style: 'currency',
@@ -1171,7 +1125,7 @@ export default function ClinicStaffAppointmentsPage() {
 
                     {appt.visitReason &&
                       appt.visitReason !== 'Regular eye checkup' && (
-                        <div className="mt-4 flex items-start gap-3 rounded-2xl bg-amber-500/5 p-4 border border-amber-500/10">
+                        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-500/10 bg-amber-500/5 p-4">
                           <div className="mt-0.5 rounded-lg bg-amber-500/10 p-1.5">
                             <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
                           </div>
@@ -1182,7 +1136,7 @@ export default function ClinicStaffAppointmentsPage() {
                                 'Visit Reason'
                               )}
                             </p>
-                            <p className="text-xs font-bold text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
+                            <p className="text-xs font-bold leading-relaxed text-amber-900/80 dark:text-amber-200/80">
                               {appt.visitReason === 'Regular eye checkup'
                                 ? t(
                                     'Organisation.calendar.reason.regular',
@@ -1232,14 +1186,17 @@ export default function ClinicStaffAppointmentsPage() {
                                 primaryAction.successMessage
                               )
                             }
-                            className={`inline-flex h-11 items-center gap-2 rounded-2xl px-6 text-xs font-black uppercase tracking-widest text-white transition-all hover:shadow-lg disabled:opacity-50 ${primaryAction.className.includes('bg-violet') ? 'bg-violet-600 hover:bg-violet-700 hover:shadow-violet-500/20' : 'bg-cyan-600 hover:bg-cyan-700 hover:shadow-cyan-500/20'}`}
+                            className={`inline-flex h-11 items-center gap-2 rounded-2xl px-6 text-xs font-black uppercase tracking-widest text-white transition-all hover:shadow-lg disabled:opacity-50 ${
+                              primaryAction.className.includes('bg-violet')
+                                ? 'bg-violet-600 hover:bg-violet-700 hover:shadow-violet-500/20'
+                                : 'bg-cyan-600 hover:bg-cyan-700 hover:shadow-cyan-500/20'
+                            }`}
                           >
                             <primaryAction.icon className="h-4 w-4" />
                             {primaryAction.label}
                           </button>
                         ) : null}
 
-                        {/* Payment Action for Staff */}
                         {appt.orderId &&
                           (appt.remainingAmount ?? 0) > 0 &&
                           [
@@ -1283,7 +1240,7 @@ export default function ClinicStaffAppointmentsPage() {
                                         'Payment status synced'
                                       )
                                     );
-                                  } catch (e) {
+                                  } catch {
                                     toast.error(
                                       t(
                                         'Organisation.calendar.toast.paymentSyncFailed',
@@ -1354,6 +1311,7 @@ export default function ClinicStaffAppointmentsPage() {
         </main>
       </div>
 
+      {/* ── Walk-in Modal ───────────────────────────────────────────────────── */}
       {isWalkInModalOpen && (
         <div className="fixed inset-0 z-90 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-(--border-color) bg-(--bg-primary) shadow-xl">
@@ -1420,9 +1378,7 @@ export default function ClinicStaffAppointmentsPage() {
                   <input
                     type="search"
                     value={walkInPatientSearch}
-                    onChange={(event) =>
-                      setWalkInPatientSearch(event.target.value)
-                    }
+                    onChange={(e) => setWalkInPatientSearch(e.target.value)}
                     placeholder={t(
                       'Organisation.calendar.walkInModal.patient.search',
                       'Search patient...'
@@ -1450,7 +1406,6 @@ export default function ClinicStaffAppointmentsPage() {
                       patientOptions.map((patient) => {
                         const isSelected =
                           selectedWalkInPatientId === patient.id;
-
                         return (
                           <button
                             key={patient.id}
@@ -1497,7 +1452,7 @@ export default function ClinicStaffAppointmentsPage() {
                     type="date"
                     min={todayKey}
                     value={walkInDate}
-                    onChange={(event) => setWalkInDate(event.target.value)}
+                    onChange={(e) => setWalkInDate(e.target.value)}
                     className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
                   />
                 </div>
@@ -1528,7 +1483,6 @@ export default function ClinicStaffAppointmentsPage() {
                     ) : (
                       availableWalkInSlots.map((slot) => {
                         const isSelected = selectedWalkInSlotId === slot.id;
-
                         return (
                           <button
                             key={slot.id}
@@ -1550,7 +1504,9 @@ export default function ClinicStaffAppointmentsPage() {
                                 {t(
                                   'Organisation.calendar.walkInModal.slot.remaining',
                                   '{{count}} seats left',
-                                  { count: slot.availableCapacity }
+                                  {
+                                    count: slot.availableCapacity,
+                                  }
                                 )}
                               </p>
                             </div>
@@ -1578,9 +1534,7 @@ export default function ClinicStaffAppointmentsPage() {
                   </label>
                   <textarea
                     value={walkInVisitReason}
-                    onChange={(event) =>
-                      setWalkInVisitReason(event.target.value)
-                    }
+                    onChange={(e) => setWalkInVisitReason(e.target.value)}
                     rows={3}
                     placeholder={t(
                       'Organisation.calendar.walkInModal.reason.placeholder',
@@ -1646,43 +1600,18 @@ export default function ClinicStaffAppointmentsPage() {
         }}
       />
 
+      {/* ── NEW QR Scanner Modal ────────────────────────────────────────────── */}
       {isQrScannerOpen && (
-        <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-(--border-color) bg-(--bg-primary) p-4 shadow-xl">
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-sm font-semibold text-(--text-primary)">
-                  {t(
-                    'Organisation.calendar.qrModal.title',
-                    'Scan QR for check-in'
-                  )}
-                </h3>
-                <p className="mt-1 text-xs text-(--text-muted)">
-                  {t(
-                    'Organisation.calendar.qrModal.subtitle',
-                    'Point the camera at the patient appointment QR code.'
-                  )}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsQrScannerOpen(false);
-                  setScanTargetAppointmentId(null);
-                }}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-(--border-color) text-(--text-secondary) transition hover:bg-(--bg-secondary)"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="overflow-hidden rounded-xl border border-(--border-color) bg-black">
-              <div id={CLINIC_QR_READER_ID} className="w-full" />
-            </div>
-          </div>
-        </div>
+        <QrScannerModal
+          onClose={() => {
+            setIsQrScannerOpen(false);
+            setScanTargetAppointmentId(null);
+          }}
+          onScan={handleQrScanResult}
+        />
       )}
-      {/* Payment Confirmation Modal */}
+
+      {/* ── Payment Confirmation Modal ──────────────────────────────────────── */}
       <PaymentConfirmationModal
         open={isPaymentModalOpen}
         onClose={() => {
@@ -1693,16 +1622,12 @@ export default function ClinicStaffAppointmentsPage() {
         isProcessing={payRemainingMutation.isPending}
         onConfirm={async (method) => {
           if (!appointmentToPay?.orderId) return;
-
           const localePrefix = i18nObj.language === 'en' ? '/en' : '/vi';
-          const callbackUrl = `${window.location.origin}${localePrefix}/payment/success`;
-          const cancelUrl = `${window.location.origin}${localePrefix}/payment/cancel`;
-
           return payRemainingMutation.mutateAsync({
             orderId: appointmentToPay.orderId,
             method,
-            returnUrl: callbackUrl,
-            cancelUrl: cancelUrl,
+            returnUrl: `${window.location.origin}${localePrefix}/payment/success`,
+            cancelUrl: `${window.location.origin}${localePrefix}/payment/cancel`,
           });
         }}
       />
