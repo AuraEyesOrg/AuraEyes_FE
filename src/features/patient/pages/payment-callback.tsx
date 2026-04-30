@@ -192,7 +192,6 @@ export default function PaymentCallbackPage() {
                   : t('PatientPaymentCallback.loading.description')}
               </p>
               <p className="text-xs text-(--text-muted) mt-2 flex items-center justify-center gap-1">
-                <RotateCw className="w-3 h-3 animate-spin" />
                 Vui lòng không đóng trang này
               </p>
             </>
@@ -274,23 +273,23 @@ export default function PaymentCallbackPage() {
               <div className="flex gap-3">
                 {isClinicBooking && appointmentId && (
                   <button
-                    onClick={() => handleFinish('appointments')}
-                    className="flex-1 py-3 bg-brand hover:brightness-110 text-white rounded-xl font-semibold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+                    onClick={() => handleFinish('dashboard')}
+                    className="flex-1 py-3 bg-(--bg-secondary) hover:bg-(--bg-tertiary) text-(--text-primary) border border-(--border-color) rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
                   >
-                    <Calendar className="w-4 h-4" />
+                    <ArrowLeft className="w-4 h-4" />
                     {useAuthStore.getState().user?.roles.includes('ClinicStaff')
-                      ? 'Quay lại Lịch hẹn'
-                      : 'Xem lịch hẹn'}
+                      ? 'Về Dashboard'
+                      : 'Lịch sử thanh toán'}
                   </button>
                 )}
                 <button
-                  onClick={() => handleFinish('dashboard')}
-                  className="flex-1 py-3 bg-(--bg-secondary) hover:bg-(--bg-tertiary) text-(--text-primary) border border-(--border-color) rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
+                  onClick={() => handleFinish('appointments')}
+                  className="flex-1 py-3 bg-brand hover:brightness-110 text-white rounded-xl font-semibold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <Calendar className="w-4 h-4" />
                   {useAuthStore.getState().user?.roles.includes('ClinicStaff')
-                    ? 'Về Dashboard'
-                    : 'Lịch sử thanh toán'}
+                    ? 'Quay lại Lịch hẹn'
+                    : 'Xem lịch hẹn'}
                 </button>
               </div>
             </>

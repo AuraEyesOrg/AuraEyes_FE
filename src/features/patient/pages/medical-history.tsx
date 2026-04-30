@@ -2,21 +2,23 @@ import React from 'react';
 import { usePatientMedicalRecords } from '@/features/medical-records/hooks/useMedicalRecords';
 import PatientLayout from '../components/PatientLayout';
 import useAuthStore from '@/store/auth-store';
+import { useTranslation } from 'react-i18next';
 import {
   FileText,
   Download,
   Calendar,
   Activity,
-  Clock,
   ChevronRight,
   ShieldCheck,
   Search,
   Eye,
+  PlusCircle,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { MedicalRecordDto } from '@/features/medical-records/api/medical-record.api';
 import { toast } from 'react-toastify';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 
 const HistoryCard = ({ record }: { record: MedicalRecordDto }) => {
   const navigate = useNavigate();
@@ -101,28 +103,39 @@ const HistoryCard = ({ record }: { record: MedicalRecordDto }) => {
 };
 
 export default function MedicalHistoryPage() {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const { user } = useAuthStore();
   const { data: records, isLoading } = usePatientMedicalRecords(user?.id || '');
+
+  const PageHeader = () => (
+    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-1">
+        <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+          Bệnh án Điện tử
+        </h1>
+        <p className="text-sm font-medium text-slate-500">
+          Theo dõi toàn bộ lịch sử khám bệnh, chẩn đoán và hướng dẫn điều trị
+          của bác sĩ chuyên khoa.
+        </p>
+      </div>
+
+      <Link
+        to={resolvePathWithLocale('/patient/schedule')}
+        className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3 text-sm font-bold text-white transition-all hover:bg-brand/90 active:scale-95 shadow-sm"
+      >
+        <PlusCircle className="h-5 w-5" strokeWidth={2} />
+        <span>{t('PatientAppointments.actions.bookNew')}</span>
+      </Link>
+    </div>
+  );
 
   return (
     <PatientLayout>
       <div className="max-w-5xl mx-auto space-y-10">
-        {/* HERO SECTION */}
-        <div className="relative overflow-hidden bg-slate-900 rounded-[3rem] p-10 text-white">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] rounded-full" />
-          <div className="relative z-10 space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-xs font-black uppercase tracking-widest text-primary">
-              <Clock className="w-4 h-4" /> Lịch sử sức khỏe
-            </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter">
-              Bệnh án <span className="text-primary">Điện tử</span>
-            </h1>
-            <p className="text-slate-400 max-w-xl font-medium">
-              Theo dõi toàn bộ lịch sử khám bệnh, chẩn đoán và hướng dẫn điều
-              trị của bác sĩ chuyên khoa tại AURA Digital Clinic.
-            </p>
-          </div>
-        </div>
+        <PageHeader />
 
         {/* SEARCH & STATS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

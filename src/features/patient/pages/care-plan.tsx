@@ -1,10 +1,17 @@
 import { useMemo } from 'react';
-import { CalendarClock, ClipboardList, AlertTriangle } from 'lucide-react';
+import {
+  CalendarClock,
+  ClipboardList,
+  AlertTriangle,
+  PlusCircle,
+} from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import useAuthStore from '@/store/auth-store';
 import { RoadmapTimeline, usePatientHealthRoadmap } from '@/features/care-plan';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 
 /**
  * Patient-facing read-only Healthcare Roadmap (doctor-authored care plan timeline).
@@ -24,6 +31,30 @@ export default function PatientCarePlanPage() {
     [roadmapQuery.data]
   );
 
+  const PageHeader = () => (
+    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-1">
+        <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+          {t('PatientCarePlan.page.title', 'Lộ trình Sức khỏe')}
+        </h1>
+        <p className="text-sm font-medium text-slate-500">
+          {t(
+            'PatientCarePlan.page.description',
+            'Theo dõi kế hoạch chăm sóc và các bước điều trị tiếp theo của bạn.'
+          )}
+        </p>
+      </div>
+
+      <Link
+        to={resolvePathWithLocale('/patient/schedule')}
+        className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3 text-sm font-bold text-white transition-all hover:bg-brand/90 active:scale-95 shadow-sm"
+      >
+        <PlusCircle className="h-5 w-5" strokeWidth={2} />
+        <span>{t('PatientAppointments.actions.bookNew')}</span>
+      </Link>
+    </div>
+  );
+
   const counts = useMemo(() => {
     const upcoming = steps.filter(
       (s) => s.effectiveStatus === 'Upcoming'
@@ -37,27 +68,7 @@ export default function PatientCarePlanPage() {
 
   return (
     <PatientLayout>
-      {/* Header */}
-      <div className="relative mb-8 overflow-hidden rounded-3xl bg-slate-900 px-8 py-10 shadow-xl">
-        <div className="absolute -right-16 -top-16 h-60 w-60 rounded-full bg-brand/30 blur-[80px]" />
-        <div className="relative">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="h-1 w-8 rounded-full bg-brand" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand/90">
-              {t('PatientCarePlan.badge', 'Care Plan')}
-            </p>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white">
-            {t('PatientCarePlan.page.title', 'My Healthcare Roadmap')}
-          </h1>
-          <p className="mt-2 text-sm text-slate-300 max-w-xl">
-            {t(
-              'PatientCarePlan.page.description',
-              "Your doctor's structured timeline of upcoming care steps. Items are sorted by date so you can plan ahead."
-            )}
-          </p>
-        </div>
-      </div>
+      <PageHeader />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-8">

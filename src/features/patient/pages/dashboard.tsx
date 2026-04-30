@@ -8,7 +8,9 @@ import {
   CheckCircle,
   History,
   AlertCircle,
+  PlusCircle,
 } from 'lucide-react';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import { useEffect, useMemo, useState } from 'react';
 import Spinner from '@/components/ui/spinner';
 import { Link } from 'react-router-dom';
@@ -274,27 +276,25 @@ export default function PatientDashboard() {
     <PatientLayout>
       <div className="max-w-[1200px] mx-auto flex flex-col gap-8">
         {/* Header Section */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex flex-col gap-2 w-full md:w-auto">
-            <h2 className="text-3xl font-extrabold text-(--text-primary) tracking-tight">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
               {getGreeting(t)}, {firstName}
-            </h2>
-            <p className="text-(--text-secondary) mt-1 flex items-center gap-2">
+            </h1>
+            <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               {currentDate} • {t('PatientDashboard.header.retinalOverview')}
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 w-full md:w-auto md:justify-end mt-4 md:mt-0">
-            <Link
-              to="/patient/schedule"
-              className="btn-primary flex items-center gap-2"
-            >
-              <Calendar className="w-4 h-4" />
-              {t('PatientDashboard.quickActions.bookAppointment')}
-            </Link>
-          </div>
-        </header>
+          <Link
+            to={resolvePathWithLocale('/patient/schedule')}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3 text-sm font-bold text-white transition-all hover:bg-brand/90 active:scale-95 shadow-sm"
+          >
+            <PlusCircle className="h-5 w-5" strokeWidth={2} />
+            <span>{t('PatientDashboard.quickActions.bookAppointment')}</span>
+          </Link>
+        </div>
 
         {/* Latest Analysis Result Section */}
         {hasHeroResult ? (

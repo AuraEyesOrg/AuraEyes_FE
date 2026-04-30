@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Banknote, CheckCircle2, QrCode, Receipt } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { formatCurrency } from '@/lib/helper';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 interface PaymentConfirmationModalProps {
   open: boolean;
@@ -18,6 +19,7 @@ export default function PaymentConfirmationModal({
   onConfirm,
   isProcessing,
 }: PaymentConfirmationModalProps) {
+  const { t } = useSafeTranslation();
   const [method, setMethod] = useState<'Cash' | 'PayOS'>('Cash');
 
   if (!open || !appointment) return null;
@@ -53,10 +55,17 @@ export default function PaymentConfirmationModal({
             </div>
             <div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                Xác nhận thanh toán
+                {t(
+                  'ClinicStaff.paymentConfirmationModal.header.title',
+                  'Confirm payment'
+                )}
               </h3>
               <p className="text-xs text-slate-500">
-                Đơn hàng: {appointment.orderId?.slice(0, 8)}
+                {t(
+                  'ClinicStaff.paymentConfirmationModal.header.order',
+                  'Order: {{orderId}}',
+                  { orderId: appointment.orderId?.slice(0, 8) ?? 'N/A' }
+                )}
               </p>
             </div>
           </div>
@@ -75,7 +84,10 @@ export default function PaymentConfirmationModal({
             <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-slate-500">
-                  Bệnh nhân
+                  {t(
+                    'ClinicStaff.paymentConfirmationModal.summary.patient',
+                    'Patient'
+                  )}
                 </span>
                 <span className="text-sm font-bold text-slate-900 dark:text-white">
                   {appointment.patientName}
@@ -83,7 +95,10 @@ export default function PaymentConfirmationModal({
               </div>
               <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-700">
                 <span className="text-sm font-medium text-slate-500">
-                  Tổng phí dịch vụ
+                  {t(
+                    'ClinicStaff.paymentConfirmationModal.summary.totalFee',
+                    'Total service fee'
+                  )}
                 </span>
                 <span className="text-sm font-bold text-slate-900 dark:text-white">
                   {formatCurrency(appointment.totalAmount)}
@@ -91,7 +106,10 @@ export default function PaymentConfirmationModal({
               </div>
               <div className="flex items-center justify-between mt-1">
                 <span className="text-sm font-medium text-slate-500">
-                  Đã cọc (Online)
+                  {t(
+                    'ClinicStaff.paymentConfirmationModal.summary.depositPaid',
+                    'Deposit paid (Online)'
+                  )}
                 </span>
                 <span className="text-sm font-bold text-emerald-600">
                   -{formatCurrency(appointment.depositAmount || 0)}
@@ -99,7 +117,10 @@ export default function PaymentConfirmationModal({
               </div>
               <div className="flex items-center justify-between mt-3 pt-3 border-t-2 border-dashed border-slate-200 dark:border-slate-700">
                 <span className="text-base font-bold text-slate-900 dark:text-white">
-                  Cần thanh toán nốt
+                  {t(
+                    'ClinicStaff.paymentConfirmationModal.summary.remaining',
+                    'Remaining amount'
+                  )}
                 </span>
                 <span className="text-xl font-black text-rose-600">
                   {formatCurrency(appointment.remainingAmount || 0)}
@@ -110,7 +131,10 @@ export default function PaymentConfirmationModal({
             {/* Method Selection */}
             <div className="space-y-3">
               <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                Phương thức thanh toán
+                {t(
+                  'ClinicStaff.paymentConfirmationModal.methods.label',
+                  'Payment method'
+                )}
               </label>
               <div className="grid grid-cols-2 gap-4">
                 <button
@@ -129,7 +153,10 @@ export default function PaymentConfirmationModal({
                   <span
                     className={`text-sm font-bold ${method === 'Cash' ? 'text-brand' : 'text-slate-600 dark:text-slate-400'}`}
                   >
-                    Tiền mặt
+                    {t(
+                      'ClinicStaff.paymentConfirmationModal.methods.cash',
+                      'Cash'
+                    )}
                   </span>
                 </button>
 
@@ -149,7 +176,10 @@ export default function PaymentConfirmationModal({
                   <span
                     className={`text-sm font-bold ${method === 'PayOS' ? 'text-brand' : 'text-slate-600 dark:text-slate-400'}`}
                   >
-                    PayOS QR
+                    {t(
+                      'ClinicStaff.paymentConfirmationModal.methods.payosQr',
+                      'PayOS QR'
+                    )}
                   </span>
                 </button>
               </div>
@@ -167,8 +197,14 @@ export default function PaymentConfirmationModal({
                 <CheckCircle2 className="h-5 w-5" />
               )}
               {method === 'Cash'
-                ? 'Xác nhận thu tiền mặt'
-                : 'Chuyển đến trang thanh toán'}
+                ? t(
+                    'ClinicStaff.paymentConfirmationModal.actions.confirmCash',
+                    'Confirm cash payment'
+                  )
+                : t(
+                    'ClinicStaff.paymentConfirmationModal.actions.goToPayment',
+                    'Go to payment page'
+                  )}
             </button>
           </div>
         </div>

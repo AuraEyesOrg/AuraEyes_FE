@@ -3665,6 +3665,8 @@
         "citizenId": "Citizen ID (CCCD)",
         "citizenIdPlaceholder": "e.g. 001099000000",
         "dateOfBirth": "Date of Birth *",
+        "email": "Email",
+        "emailPlaceholder": "patient@example.com (optional)",
         "fullName": "Full Name *",
         "fullNamePlaceholder": "e.g. John Doe",
         "gender": "Gender *",
@@ -3679,13 +3681,59 @@
       "scan": {
         "action": "Scan VNeID / CCCD QR Code",
         "cancel": "Cancel Scanning",
-        "hint": "Autofill patient details accurately"
+        "hint": "Autofill patient details accurately",
+        "opening": "Opening camera scanner..."
       },
       "toast": {
+        "accountCreatedEmailSent": "Account created and login details were sent by email.",
+        "accountCreatedTempPassword": "Account created. Login email: {{loginEmail}} | Temporary password: {{temporaryPassword}}",
         "createSuccess": "Walk-in patient created successfully!",
         "invalidQr": "Invalid QR code or unsupported CCCD/VNeID format.",
         "qrExtractSuccess": "Citizen profile extracted successfully!"
       }
+    },
+    "paymentConfirmationModal": {
+      "actions": {
+        "confirmCash": "Confirm cash payment",
+        "goToPayment": "Go to payment page"
+      },
+      "header": {
+        "order": "Order: {{orderId}}",
+        "title": "Confirm payment"
+      },
+      "methods": {
+        "cash": "Cash",
+        "label": "Payment method",
+        "payosQr": "PayOS QR"
+      },
+      "summary": {
+        "depositPaid": "Deposit paid (Online)",
+        "patient": "Patient",
+        "remaining": "Remaining amount",
+        "totalFee": "Total service fee"
+      }
+    },
+    "qrScannerModal": {
+      "actions": {
+        "flashOff": "Turn off flash",
+        "flashOn": "Turn on flash",
+        "retry": "Retry"
+      },
+      "error": {
+        "initFailed": "Unable to start camera. Please try again.",
+        "notAllowed": "Camera access was denied. Please allow camera permission in your browser settings.",
+        "notFound": "No camera was found on this device."
+      },
+      "footer": "AURA QR support · Auto detection",
+      "hint": "Place QR code inside the frame",
+      "loading": "Starting camera...",
+      "status": {
+        "error": "Camera error",
+        "initializing": "Initializing...",
+        "scanning": "Ready to scan",
+        "success": "Detected!"
+      },
+      "title": "Scan QR Check-in"
     },
     "calendar": {
       "actions": {
@@ -6246,6 +6294,86 @@
       "yearsAbbr": "yrs",
       "idLabel": "ID",
       "close": "Close"
+    },
+    "walkInPatientModal": {
+      "actions": {
+        "createPatient": "Create Patient"
+      },
+      "form": {
+        "address": "Address",
+        "addressPlaceholder": "Street, ward, district, city",
+        "citizenId": "Citizen ID (CCCD)",
+        "citizenIdPlaceholder": "e.g. 001099000000",
+        "dateOfBirth": "Date of Birth *",
+        "email": "Email",
+        "emailPlaceholder": "patient@example.com (optional)",
+        "fullName": "Full Name *",
+        "fullNamePlaceholder": "e.g. John Doe",
+        "gender": "Gender *",
+        "genderOther": "Other",
+        "phoneNumber": "Phone Number",
+        "phonePlaceholder": "+1 (555) 000-0000"
+      },
+      "header": {
+        "subtitle": "Quickly register a new patient",
+        "title": "Create Walk-in Patient"
+      },
+      "scan": {
+        "action": "Scan VNeID / CCCD QR Code",
+        "cancel": "Cancel Scanning",
+        "hint": "Autofill patient details accurately",
+        "opening": "Opening camera scanner..."
+      },
+      "toast": {
+        "accountCreatedEmailSent": "Account created and login details were sent by email.",
+        "accountCreatedTempPassword": "Account created. Login email: {{loginEmail}} | Temporary password: {{temporaryPassword}}",
+        "createSuccess": "Walk-in patient created successfully!",
+        "invalidQr": "Invalid QR code or unsupported CCCD/VNeID format.",
+        "qrExtractSuccess": "Citizen profile extracted successfully!"
+      }
+    },
+    "paymentConfirmationModal": {
+      "actions": {
+        "confirmCash": "Confirm cash payment",
+        "goToPayment": "Go to payment page"
+      },
+      "header": {
+        "order": "Order: {{orderId}}",
+        "title": "Confirm payment"
+      },
+      "methods": {
+        "cash": "Cash",
+        "label": "Payment method",
+        "payosQr": "PayOS QR"
+      },
+      "summary": {
+        "depositPaid": "Deposit paid (Online)",
+        "patient": "Patient",
+        "remaining": "Remaining amount",
+        "totalFee": "Total service fee"
+      }
+    },
+    "qrScannerModal": {
+      "actions": {
+        "flashOff": "Turn off flash",
+        "flashOn": "Turn on flash",
+        "retry": "Retry"
+      },
+      "error": {
+        "initFailed": "Unable to start camera. Please try again.",
+        "notAllowed": "Camera access was denied. Please allow camera permission in your browser settings.",
+        "notFound": "No camera was found on this device."
+      },
+      "footer": "AURA QR support · Auto detection",
+      "hint": "Place QR code inside the frame",
+      "loading": "Starting camera...",
+      "status": {
+        "error": "Camera error",
+        "initializing": "Initializing...",
+        "scanning": "Ready to scan",
+        "success": "Detected!"
+      },
+      "title": "Scan QR Check-in"
     }
   }
 }
