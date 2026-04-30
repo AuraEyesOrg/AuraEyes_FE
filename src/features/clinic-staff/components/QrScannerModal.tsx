@@ -36,9 +36,7 @@ export default function QrScannerModal({
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.2);
-    } catch {
-      // AudioContext not supported
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -75,10 +73,6 @@ export default function QrScannerModal({
             setTimeout(() => {
               onScan(result.getText());
             }, 300);
-          }
-
-          if (error) {
-            // Ignore NotFoundException - it just means no QR found in this frame
           }
         }
       )
