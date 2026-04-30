@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import {
@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import { AuraLogo } from '@/components/ui/aura-logo';
+import ConfirmModal from '@/components/ui/confirm-modal';
 import { toast } from 'react-toastify';
 import useAuthStore from '@/store/auth-store';
 import { useTranslation } from 'react-i18next';
@@ -41,6 +42,7 @@ import {
   Province,
   District,
   Ward,
+  Country,
 } from '../api/master-data.api';
 
 /**
@@ -189,23 +191,6 @@ const ETHNICITIES = [
   'Ơ Đu',
   'Hoa',
   'Ngái',
-].sort();
-
-const NATIONALITIES = [
-  'Việt Nam',
-  'Hoa Kỳ',
-  'Trung Quốc',
-  'Hàn Quốc',
-  'Nhật Bản',
-  'Anh',
-  'Pháp',
-  'Đức',
-  'Nga',
-  'Úc',
-  'Lào',
-  'Campuchia',
-  'Thái Lan',
-  'Singapore',
 ].sort();
 
 const SECTION_KEYS = [
@@ -365,11 +350,15 @@ export default function ErmForm() {
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [isLoadingGeo, setIsLoadingGeo] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
   const [screeningId, setScreeningId] = useState<string | null>(null);
   const [showAiResult, setShowAiResult] = useState(false);
   const [activeStep, setActiveStep] = useState<'admin' | 'clinical'>('admin');
   const [hasAutoSwitched, setHasAutoSwitched] = useState(false);
+  const [showFinalizeModal, setShowFinalizeModal] = useState(false);
+  const hasInitiatedConsultation = useRef(false);
 
   // Custom Hooks
   const { data: record, isLoading: isLoadingRecord } = useMedicalRecord(
@@ -385,8 +374,10 @@ export default function ErmForm() {
   const isStaff = user?.roles.includes('ClinicStaff');
   const isFinalizer = user?.permissions?.includes('medical-records:finalize');
 
-  const isReadOnlyAdmin = recordStatus === MedicalRecordStatus.Finalized;
-  const isReadOnlyClinical = recordStatus === MedicalRecordStatus.Finalized;
+  const isReadOnlyAdmin =
+    recordStatus === MedicalRecordStatus.Finalized || isOphthalmologist;
+  const isReadOnlyClinical =
+    recordStatus === MedicalRecordStatus.Finalized || !isOphthalmologist;
 
   useEffect(() => {
     if (id === 'new' && isOphthalmologist) {
@@ -402,10 +393,17 @@ export default function ErmForm() {
     record?.patientId || location.state?.formData?.patientId;
   const { data: patientProfile } = usePatientProfile(patientIdFromRecord);
 
-  const { register, handleSubmit, setValue, getValues, reset, control } =
-    useForm<FullEmrFormData>({
-      defaultValues: INITIAL_VALUES as FullEmrFormData,
-    });
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    getValues,
+    reset,
+    control,
+    formState: { isDirty, isSubmitting },
+  } = useForm<FullEmrFormData>({
+    defaultValues: INITIAL_VALUES as FullEmrFormData,
+  });
 
   // Pre-fill administrative data from patient profile if fields are empty
   useEffect(() => {
@@ -463,8 +461,12 @@ export default function ErmForm() {
       id !== 'new' &&
       isOphthalmologist &&
       recordStatus === MedicalRecordStatus.DraftAdmin &&
-      !isStaff
+      !isStaff &&
+      !startConsultationMutation.isPending &&
+      !startConsultationMutation.isSuccess &&
+      !hasInitiatedConsultation.current
     ) {
+      hasInitiatedConsultation.current = true;
       startConsultationMutation.mutate(id);
     }
 
@@ -477,7 +479,8 @@ export default function ErmForm() {
     id,
     isOphthalmologist,
     recordStatus,
-    startConsultationMutation,
+    startConsultationMutation.isPending,
+    startConsultationMutation.isSuccess,
     hasAutoSwitched,
     record,
     isStaff,
@@ -522,26 +525,33 @@ export default function ErmForm() {
 
       // Explicitly load geographic data and set values to ensure they aren't lost
       const loadLocations = async () => {
-        if (adminData.provinceCode) {
-          try {
-            const districtsRes = await masterDataApi.getDistricts(
-              adminData.provinceCode
+        if (!adminData.provinceCode) return;
+        setIsLoadingGeo(true);
+        try {
+          // Fetch districts
+          const districtsRes = await masterDataApi.getDistricts(
+            adminData.provinceCode
+          );
+          setDistricts(districtsRes);
+
+          // Re-set values after options are loaded to prevent RHF from clearing them
+          if (adminData.districtCode) {
+            setValue('districtCode', adminData.districtCode);
+
+            // Fetch wards
+            const wardsRes = await masterDataApi.getWards(
+              adminData.districtCode
             );
-            setDistricts(districtsRes);
-            // Re-set values after options are loaded to prevent RHF from clearing them
-            if (adminData.districtCode) {
-              setValue('districtCode', adminData.districtCode);
-              const wardsRes = await masterDataApi.getWards(
-                adminData.districtCode
-              );
-              setWards(wardsRes);
-              if (adminData.wardCode) {
-                setValue('wardCode', adminData.wardCode);
-              }
+            setWards(wardsRes);
+
+            if (adminData.wardCode) {
+              setValue('wardCode', adminData.wardCode);
             }
-          } catch (err) {
-            console.error('Error loading locations:', err);
           }
+        } catch (err) {
+          console.error('Error loading locations:', err);
+        } finally {
+          setIsLoadingGeo(false);
         }
       };
 
@@ -639,43 +649,65 @@ export default function ErmForm() {
   const provinceCode = useWatch({ control, name: 'provinceCode' });
   const districtCode = useWatch({ control, name: 'districtCode' });
 
-  // 1. Initial Load of Master Data (Provinces)
+  // 1. Initial Load of Master Data (Provinces & Countries)
   useEffect(() => {
-    masterDataApi
-      .getProvinces()
-      .then((data: Province[]) => setProvinces(data))
-      .catch(console.error);
+    const initMasterData = async () => {
+      if (provinces.length > 0 && countries.length > 0) return;
+      setIsLoadingGeo(true);
+      try {
+        const [pData, cData] = await Promise.all([
+          masterDataApi.getProvinces(),
+          masterDataApi.getCountries(),
+        ]);
+        setProvinces(pData);
+        setCountries(cData);
+      } catch (err) {
+        console.error('Failed to load initial master data:', err);
+      } finally {
+        setIsLoadingGeo(false);
+      }
+    };
+    void initMasterData();
   }, []);
 
-  // 2. Fetch Districts when provinceCode changes OR on initial record load
+  // 2. Fetch Districts when provinceCode changes
   useEffect(() => {
-    if (provinceCode) {
+    if (provinceCode && provinces.length > 0) {
       masterDataApi
         .getDistricts(provinceCode)
         .then((data: District[]) => {
           setDistricts(data);
-          // Optimization: If we just loaded the record, we don't want to reset districtCode
-          // The form reset handles the initial value.
+          // If we have a pending value from the record, ensure it stays
+          const currentDistrict = getValues('districtCode');
+          if (currentDistrict && data.some((d) => d.code === currentDistrict)) {
+            setValue('districtCode', currentDistrict);
+          }
         })
         .catch(console.error);
     } else {
       setDistricts([]);
+      setWards([]);
     }
-  }, [provinceCode]);
+  }, [provinceCode, provinces.length, setValue, getValues]);
 
-  // 3. Fetch Wards when districtCode changes OR on initial record load
+  // 3. Fetch Wards when districtCode changes
   useEffect(() => {
-    if (districtCode) {
+    if (districtCode && districts.length > 0) {
       masterDataApi
         .getWards(districtCode)
         .then((data: Ward[]) => {
           setWards(data);
+          // If we have a pending value from the record, ensure it stays
+          const currentWard = getValues('wardCode');
+          if (currentWard && data.some((w) => w.code === currentWard)) {
+            setValue('wardCode', currentWard);
+          }
         })
         .catch(console.error);
     } else {
       setWards([]);
     }
-  }, [districtCode]);
+  }, [districtCode, districts.length, setValue, getValues]);
 
   const formData = useWatch({ control });
   const rightEyeData = formData.rightEye;
@@ -824,56 +856,55 @@ export default function ErmForm() {
             ? JSON.parse(record.clinicalDataJson).screeningId
             : null);
 
-        const adminFields = [
-          'khoa',
-          'giuong',
-          'soLuuTru',
-          'maYT',
-          'fullName',
-          'birthDate',
-          'age',
-          'gender',
-          'job',
-          'ethnicity',
-          'nationality',
-          'address',
-          'workplace',
-          'objectType',
-          'bhytNumber',
-          'bhytExpiry',
-          'relativeName',
-          'relativePhone',
-          'district',
-          'province',
-          'ward',
-          'districtCode',
-          'provinceCode',
-          'wardCode',
-          'admissionDate',
-          'admissionTime',
-          'admissionType',
-          'referralPlace',
-          'admissionReason',
-          'directEntry',
-          'dischargeDate',
-          'totalTreatmentDays',
+        await updateDiagnosisMutation.mutateAsync({
+          id,
+          data: {
+            clinicalDataJson: JSON.stringify(clinicalData),
+            finalDiagnosis: data.finalDiagnosisMain,
+            treatmentPlan: data.finalDiagnosisExtra,
+          },
+        });
+      }
+      reset(data); // Clear dirty state
+      toast.success('Đã lưu hồ sơ');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleFinalize = () => {
+    if (!id) return;
+    setShowFinalizeModal(true);
+  };
+
+  const onFinalizeConfirm = async () => {
+    if (!id) return;
+    try {
+      if (isOphthalmologist) {
+        // If doctor, save latest clinical state first
+        const currentValues = getValues();
+        const clinicalFields = [
+          'medicalHistory',
+          'personalHistory',
+          'familyHistory',
           'diseaseProcess',
           'companionDisease',
-          'admissionCount',
-          'department',
-          'dischargeType',
-          'transferDiagnosis',
-          'kkbDiagnosis',
-          'departmentDiagnosis',
-          'complications',
-          'postOpDiagnosis',
-          'postOpDays',
-          'opCount',
-          'treatmentResult',
+          'rightEyeVisionNoGlass',
+          'leftEyeVisionNoGlass',
+          'rightEyeVisionWithGlass',
+          'leftEyeVisionWithGlass',
+          'rightEyePressure',
+          'leftEyePressure',
+          'rightEyeField',
+          'leftEyeField',
+          'rightEye',
+          'leftEye',
           'doctorName',
+          'finalDiagnosisMain',
+          'finalDiagnosisExtra',
         ];
-        const currentValues = getValues();
-        const adminData = adminFields.reduce((acc, field) => {
+
+        const clinicalData = clinicalFields.reduce((acc, field) => {
           acc[field] = (currentValues as any)[field];
           return acc;
         }, {} as any);
@@ -882,25 +913,27 @@ export default function ErmForm() {
           id,
           data: {
             clinicalDataJson: JSON.stringify(clinicalData),
-            administrativeDataJson: JSON.stringify(adminData),
-            finalDiagnosis: data.finalDiagnosisMain,
-            treatmentPlan: data.finalDiagnosisExtra,
+            finalDiagnosis: currentValues.finalDiagnosisMain,
+            treatmentPlan: currentValues.finalDiagnosisExtra,
           },
         });
       }
-      toast.success('Đã lưu hồ sơ');
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
-  const handleFinalize = async () => {
-    if (!id) return;
-    try {
+      // Finalize the record
       await finalizeMutation.mutateAsync(id);
-      toast.success('Đã khóa hồ sơ');
+
+      toast.success('Hồ sơ đã được khóa và gửi tới Thu ngân');
+
+      if (isOphthalmologist) {
+        navigate('/ophthalmologist/consultations');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
+      console.error(error);
       toast.error('Lỗi khi khóa hồ sơ');
+    } finally {
+      setShowFinalizeModal(false);
     }
   };
 
@@ -1029,22 +1062,34 @@ export default function ErmForm() {
             <Eye className="w-3.5 h-3.5" /> XEM BẢN IN
           </button>
 
-          {isFinalizer && recordStatus !== MedicalRecordStatus.Finalized && (
-            <button
-              onClick={handleFinalize}
-              className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-2 rounded-xl font-black text-[10px] hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-600/20 transition-all"
-            >
-              <Lock className="w-3.5 h-3.5" /> KHÓA HỒ SƠ
-            </button>
-          )}
+          {(isFinalizer || isOphthalmologist) &&
+            recordStatus !== MedicalRecordStatus.Finalized && (
+              <button
+                onClick={handleFinalize}
+                disabled={isSubmitting || finalizeMutation.isPending}
+                className={`flex items-center gap-2 px-6 py-2 rounded-xl font-black text-[10px] transition-all bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-600/20 disabled:opacity-50`}
+              >
+                <Lock className="w-3.5 h-3.5" /> KHÓA HỒ SƠ
+              </button>
+            )}
 
           <button
             onClick={handleSubmit(onSubmit)}
-            disabled={recordStatus === MedicalRecordStatus.Finalized}
-            className="flex items-center gap-2 bg-slate-900 text-white px-6 py-2 rounded-xl font-black text-[10px] hover:bg-black hover:shadow-lg hover:shadow-black/20 transition-all disabled:opacity-50"
+            disabled={
+              recordStatus === MedicalRecordStatus.Finalized ||
+              !isDirty ||
+              isSubmitting
+            }
+            className={`flex items-center gap-2 px-6 py-2 rounded-xl font-black text-[10px] transition-all ${
+              recordStatus === MedicalRecordStatus.Finalized ||
+              !isDirty ||
+              isSubmitting
+                ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                : 'bg-slate-900 text-white hover:bg-black hover:shadow-lg hover:shadow-black/20'
+            }`}
           >
             <Save className="w-3.5 h-3.5" />
-            {id ? 'CẬP NHẬT' : 'LƯU DỮ LIỆU'}
+            {isSubmitting ? 'ĐANG LƯU...' : id ? 'CẬP NHẬT' : 'LƯU DỮ LIỆU'}
           </button>
         </div>
       </nav>
@@ -1212,7 +1257,7 @@ export default function ErmForm() {
                     </label>
                     <input
                       {...register('khoa')}
-                      disabled={isOphthalmologist}
+                      disabled={isReadOnlyAdmin}
                       className="w-full bg-slate-50 p-3 rounded-xl outline-none font-bold text-sm"
                     />
                   </div>
@@ -1222,7 +1267,7 @@ export default function ErmForm() {
                     </label>
                     <input
                       {...register('giuong')}
-                      disabled={isOphthalmologist}
+                      disabled={isReadOnlyAdmin}
                       className="w-full bg-slate-50 p-3 rounded-xl outline-none font-bold text-sm"
                     />
                   </div>
@@ -1232,7 +1277,7 @@ export default function ErmForm() {
                     </label>
                     <input
                       {...register('soLuuTru')}
-                      disabled={isOphthalmologist}
+                      disabled={isReadOnlyAdmin}
                       className="w-full bg-slate-50 p-3 rounded-xl outline-none font-bold text-sm"
                     />
                   </div>
@@ -1343,10 +1388,14 @@ export default function ErmForm() {
                         disabled={isReadOnlyAdmin}
                         className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium appearance-none"
                       >
-                        <option value="">Chọn quốc tịch</option>
-                        {NATIONALITIES.map((n) => (
-                          <option key={n} value={n}>
-                            {n}
+                        <option value="">
+                          {countries.length === 0
+                            ? 'Đang tải quốc gia...'
+                            : 'Chọn quốc tịch'}
+                        </option>
+                        {countries.map((c) => (
+                          <option key={c.isoCode} value={c.name}>
+                            {c.name}
                           </option>
                         ))}
                       </select>
@@ -1368,103 +1417,142 @@ export default function ErmForm() {
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
                         Tỉnh / Thành phố
                       </label>
-                      <select
-                        {...register('provinceCode', { valueAsNumber: true })}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (!val) {
-                            setValue('provinceCode', undefined);
-                            setValue('province', '');
+                      <div className="relative">
+                        <select
+                          {...register('provinceCode', { valueAsNumber: true })}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (!val) {
+                              setValue('provinceCode', undefined);
+                              setValue('province', '');
+                              setValue('districtCode', undefined);
+                              setValue('district', '');
+                              setValue('wardCode', undefined);
+                              setValue('ward', '');
+                              return;
+                            }
+                            const code = parseInt(val);
+                            const name =
+                              provinces.find((p) => p.code === code)?.name ||
+                              '';
+                            setValue('provinceCode', code);
+                            setValue('province', name);
                             setValue('districtCode', undefined);
                             setValue('district', '');
                             setValue('wardCode', undefined);
                             setValue('ward', '');
-                            return;
-                          }
-                          const code = parseInt(val);
-                          const name =
-                            provinces.find((p) => p.code === code)?.name || '';
-                          setValue('provinceCode', code);
-                          setValue('province', name);
-                          setValue('districtCode', undefined);
-                          setValue('district', '');
-                          setValue('wardCode', undefined);
-                          setValue('ward', '');
-                        }}
-                        disabled={isReadOnlyAdmin}
-                        className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium appearance-none"
-                      >
-                        <option value="">Chọn Tỉnh/Thành phố</option>
-                        {provinces.map((p) => (
-                          <option key={p.code} value={p.code}>
-                            {p.name}
+                          }}
+                          disabled={isReadOnlyAdmin}
+                          className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium appearance-none"
+                        >
+                          <option value="">
+                            {isLoadingGeo && provinces.length === 0
+                              ? 'Đang tải tỉnh thành...'
+                              : 'Chọn Tỉnh/Thành phố'}
                           </option>
-                        ))}
-                      </select>
+                          {provinces.map((p) => (
+                            <option key={p.code} value={p.code}>
+                              {p.name}
+                            </option>
+                          ))}
+                        </select>
+                        {isLoadingGeo && provinces.length === 0 && (
+                          <div className="absolute right-10 top-1/2 -translate-y-1/2">
+                            <div className="w-3 h-3 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
                         Quận / Huyện
                       </label>
-                      <select
-                        {...register('districtCode', { valueAsNumber: true })}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (!val) {
-                            setValue('districtCode', undefined);
-                            setValue('district', '');
+                      <div className="relative">
+                        <select
+                          {...register('districtCode', { valueAsNumber: true })}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (!val) {
+                              setValue('districtCode', undefined);
+                              setValue('district', '');
+                              setValue('wardCode', undefined);
+                              setValue('ward', '');
+                              return;
+                            }
+                            const code = parseInt(val);
+                            const name =
+                              districts.find((d) => d.code === code)?.name ||
+                              '';
+                            setValue('districtCode', code);
+                            setValue('district', name);
                             setValue('wardCode', undefined);
                             setValue('ward', '');
-                            return;
-                          }
-                          const code = parseInt(val);
-                          const name =
-                            districts.find((d) => d.code === code)?.name || '';
-                          setValue('districtCode', code);
-                          setValue('district', name);
-                          setValue('wardCode', undefined);
-                          setValue('ward', '');
-                        }}
-                        disabled={isReadOnlyAdmin || !provinceCode}
-                        className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium appearance-none"
-                      >
-                        <option value="">Chọn Quận/Huyện</option>
-                        {districts.map((d) => (
-                          <option key={d.code} value={d.code}>
-                            {d.name}
+                          }}
+                          disabled={isReadOnlyAdmin || !provinceCode}
+                          className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium appearance-none"
+                        >
+                          <option value="">
+                            {isLoadingGeo &&
+                            districts.length === 0 &&
+                            provinceCode
+                              ? 'Đang tải quận huyện...'
+                              : 'Chọn Quận/Huyện'}
                           </option>
-                        ))}
-                      </select>
+                          {districts.map((d) => (
+                            <option key={d.code} value={d.code}>
+                              {d.name}
+                            </option>
+                          ))}
+                        </select>
+                        {isLoadingGeo &&
+                          districts.length === 0 &&
+                          provinceCode && (
+                            <div className="absolute right-10 top-1/2 -translate-y-1/2">
+                              <div className="w-3 h-3 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                            </div>
+                          )}
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
                         Phường / Xã
                       </label>
-                      <select
-                        {...register('wardCode', { valueAsNumber: true })}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (!val) {
-                            setValue('wardCode', undefined);
-                            setValue('ward', '');
-                            return;
-                          }
-                          const code = parseInt(val);
-                          const name =
-                            wards.find((w) => w.code === code)?.name || '';
-                          setValue('wardCode', code);
-                          setValue('ward', name);
-                        }}
-                        disabled={isReadOnlyAdmin || !districtCode}
-                        className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium appearance-none"
-                      >
-                        <option value="">Chọn Phường/Xã</option>
-                        {wards.map((w) => (
-                          <option key={w.code} value={w.code}>
-                            {w.name}
+                      <div className="relative">
+                        <select
+                          {...register('wardCode', { valueAsNumber: true })}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (!val) {
+                              setValue('wardCode', undefined);
+                              setValue('ward', '');
+                              return;
+                            }
+                            const code = parseInt(val);
+                            const name =
+                              wards.find((w) => w.code === code)?.name || '';
+                            setValue('wardCode', code);
+                            setValue('ward', name);
+                          }}
+                          disabled={isReadOnlyAdmin || !districtCode}
+                          className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium appearance-none"
+                        >
+                          <option value="">
+                            {isLoadingGeo && wards.length === 0 && districtCode
+                              ? 'Đang tải phường xã...'
+                              : 'Chọn Phường/Xã'}
                           </option>
-                        ))}
-                      </select>
+                          {wards.map((w) => (
+                            <option key={w.code} value={w.code}>
+                              {w.name}
+                            </option>
+                          ))}
+                        </select>
+                        {isLoadingGeo && wards.length === 0 && districtCode && (
+                          <div className="absolute right-10 top-1/2 -translate-y-1/2">
+                            <div className="w-3 h-3 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -1838,10 +1926,16 @@ export default function ErmForm() {
                     <div className="flex justify-end pt-10">
                       <button
                         type="submit"
+                        disabled={!isDirty || isSubmitting}
                         onClick={handleSubmit(onSubmit)}
-                        className="bg-cyan-600 text-white px-10 py-4 rounded-2xl font-black text-xs hover:bg-cyan-700 transition-all shadow-xl shadow-cyan-600/20 uppercase tracking-widest flex items-center gap-2"
+                        className={`px-10 py-4 rounded-2xl font-black text-xs transition-all shadow-xl uppercase tracking-widest flex items-center gap-2 ${
+                          !isDirty || isSubmitting
+                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                            : 'bg-cyan-600 text-white hover:bg-cyan-700 shadow-cyan-600/20'
+                        }`}
                       >
-                        <Save className="w-4 h-4" /> Lưu hành chính
+                        <Save className="w-4 h-4" />{' '}
+                        {isSubmitting ? 'Đang lưu...' : 'Lưu hành chính'}
                       </button>
                     </div>
                   )}
@@ -2077,13 +2171,35 @@ export default function ErmForm() {
                         placeholder="Họ tên bác sĩ"
                       />
                     </div>
-                    <div className="flex items-end justify-end">
+                    <div className="flex items-end justify-end gap-4">
+                      {(isFinalizer || isOphthalmologist) &&
+                        recordStatus !== MedicalRecordStatus.Finalized && (
+                          <button
+                            type="button"
+                            onClick={handleFinalize}
+                            disabled={
+                              isSubmitting || finalizeMutation.isPending
+                            }
+                            className={`px-10 py-4 rounded-2xl font-black text-xs transition-all shadow-xl uppercase tracking-widest flex items-center gap-2 ${
+                              isSubmitting || finalizeMutation.isPending
+                                ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
+                                : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-600/20'
+                            }`}
+                          >
+                            <Lock className="w-4 h-4" /> Khóa hồ sơ
+                          </button>
+                        )}
                       <button
                         type="submit"
+                        disabled={!isDirty || isSubmitting}
                         onClick={handleSubmit(onSubmit)}
-                        className="bg-cyan-500 text-white px-12 py-4 rounded-2xl font-black text-xs hover:bg-cyan-400 transition-all shadow-xl shadow-cyan-500/20 uppercase tracking-widest group"
+                        className={`px-12 py-4 rounded-2xl font-black text-xs transition-all shadow-xl uppercase tracking-widest group flex items-center gap-2 ${
+                          !isDirty || isSubmitting
+                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
+                            : 'bg-cyan-500 text-white hover:bg-cyan-400 shadow-cyan-500/20'
+                        }`}
                       >
-                        LƯU CHẨN ĐOÁN{' '}
+                        {isSubmitting ? 'ĐANG LƯU...' : 'LƯU CHẨN ĐOÁN'}{' '}
                         <ChevronRight className="inline w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                       </button>
                     </div>
@@ -2094,6 +2210,20 @@ export default function ErmForm() {
           </div>
         </div>
       </main>
+
+      <ConfirmModal
+        open={showFinalizeModal}
+        title="Khóa hồ sơ bệnh án"
+        message="Khóa hồ sơ sẽ chuyển bệnh nhân sang quầy Thu ngân và không thể chỉnh sửa thêm. Bạn có chắc chắn muốn thực hiện?"
+        confirmLabel="Khóa hồ sơ"
+        cancelLabel="Hủy"
+        isLoading={
+          finalizeMutation.isPending || updateDiagnosisMutation.isPending
+        }
+        tone="danger"
+        onConfirm={onFinalizeConfirm}
+        onCancel={() => setShowFinalizeModal(false)}
+      />
     </div>
   );
 }
