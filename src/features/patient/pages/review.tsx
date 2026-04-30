@@ -469,14 +469,27 @@ export default function ReviewPage() {
     >
       <div className="flex-1 overflow-y-auto bg-[var(--bg-primary)]">
         <div className="w-full max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="flex flex-col gap-1">
               <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight text-(--text-primary)">
                 {t('PatientReview.page.title')}
               </h1>
-              <p className="text-(--text-secondary) text-lg">
+              <p className="text-(--text-secondary) font-medium text-lg">
                 {t('PatientReview.page.subtitle')}
               </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/patient/doctors')}
+                className="inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-3 font-bold text-white shadow-sm transition-all hover:bg-brand/90 hover:shadow-md active:scale-95"
+              >
+                <CalendarCheck className="w-5 h-5" />
+                {t(
+                  'PatientDashboard.actions.bookNewAppointment',
+                  'Book Appointment'
+                )}
+              </button>
             </div>
           </div>
 
