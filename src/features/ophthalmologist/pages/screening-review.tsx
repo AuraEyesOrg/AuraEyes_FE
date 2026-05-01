@@ -22,8 +22,16 @@ import {
   PlusSquare,
   Trash2,
   Undo2,
+  Users,
+  Lock,
+  Check,
+  Send,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
+import { collaborationApi } from '@/features/professional-network/api/collaboration.api';
+import { medicalRecordApi } from '@/features/medical-records/api/medical-record.api';
+import { type InternalChatCandidateUser } from '@/features/professional-network/api/internal-chat.api';
+import ConfirmModal from '@/components/ui/confirm-modal';
 import {
   getOphthalmologistScreeningDetail,
   type OphthalmologistScreeningDetailDto,
@@ -41,6 +49,7 @@ import i18n from '@/i18n/i18n';
 import Spinner from '@/components/ui/spinner';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import UserAvatar from '@/components/ui/UserAvatar';
 // import { mergeBoxesIntoRawJson } from '@/features/organisation/utils/screening-result.util';
 import type { DetectionBox } from '@/features/organisation/types/screening-result.types';
 import type { RxItem } from '../types/drug.type';
@@ -367,6 +376,18 @@ export default function ScreeningReviewPage() {
   const [shareCandidateAssetId, setShareCandidateAssetId] = useState<
     string | null
   >(null);
+
+  // Consilium states
+  const [showConsiliumModal, setShowConsiliumModal] = useState(false);
+  const [candidateDoctors, setCandidateDoctors] = useState<
+    InternalChatCandidateUser[]
+  >([]);
+  const [selectedDoctors, setSelectedDoctors] = useState<string[]>([]);
+  const [consiliumReason, setConsiliumReason] = useState('');
+  const [requestingConsilium, setRequestingConsilium] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [showLockConfirm, setShowLockConfirm] = useState(false);
+
   const riskLevelConfig = useMemo(() => getRiskLevelConfig(t), [t]);
 
   // ─── Heatmap toolkit draggable state ────────────────────────────────────
@@ -1146,6 +1167,98 @@ export default function ScreeningReviewPage() {
     }
   };
 
+  const handleRequestConsilium = async () => {
+    if (!screeningId || selectedDoctors.length === 0) return;
+    setRequestingConsilium(true);
+    try {
+      const patientName = detail?.patientFullName || 'Unknown Patient';
+      const groupId = await collaborationApi.createClinicalGroup({
+        name: `Hội chẩn: ${patientName}`,
+        consultationSessionId: reportableSessionId || undefined,
+        invitedDoctorIds: selectedDoctors,
+        reason: consiliumReason,
+      });
+
+      ophthalToast.success(
+        t(
+          'Ophthalmologist.screeningReview.toast.consiliumRequested',
+          'Yêu cầu hội chẩn đã được gửi!'
+        )
+      );
+      setShowConsiliumModal(false);
+
+      // Navigate to chat
+      navigate(`/professional-network/collaboration?groupId=${groupId}`);
+    } catch (e) {
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.screeningReview.toast.consiliumFailed',
+          'Lỗi khi yêu cầu hội chẩn.'
+        )
+      );
+    } finally {
+      setRequestingConsilium(false);
+    }
+  };
+
+  const handleFinalizeMedicalRecord = async () => {
+    if (!detail?.medicalRecordId) return;
+    setIsFinalizing(true);
+    try {
+      // 1. Update clinical data first (to ensure latest diagnosis is saved)
+      await medicalRecordApi.updateClinical(detail.medicalRecordId, {
+        clinicalDataJson: JSON.stringify({
+          findings: sidebarFindings.map((f) => ({
+            id: f.id,
+            name: f.name,
+            severity: f.severity,
+          })),
+          eye_images: detail.images.map((img) => img.id),
+        }),
+        finalDiagnosis: diagnosisCode,
+        treatmentPlan: treatmentPlan,
+      });
+
+      // 2. Call finalize API
+      await medicalRecordApi.finalize(detail.medicalRecordId);
+
+      ophthalToast.success(
+        t(
+          'Ophthalmologist.screeningReview.toast.finalizeSuccess',
+          'Hồ sơ đã được khóa và gửi tới thu ngân thành công!'
+        )
+      );
+      setIsDiagnosisLocked(true);
+      setShowLockConfirm(false);
+    } catch (error) {
+      console.error('Finalize error:', error);
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.screeningReview.toast.finalizeFailed',
+          'Lỗi khi khóa hồ sơ. Vui lòng thử lại.'
+        )
+      );
+    } finally {
+      setIsFinalizing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showConsiliumModal) {
+      void (async () => {
+        try {
+          // Chỉ hiển thị bác sĩ "On-call" hoặc Available
+          const users = await collaborationApi.getAvailableDoctors();
+          // Filter out current user if backend doesn't
+          const doctors = users.filter((u) => u.id !== user?.id);
+          setCandidateDoctors(doctors);
+        } catch (e) {
+          console.error('Failed to load candidate doctors', e);
+        }
+      })();
+    }
+  }, [showConsiliumModal, user?.id]);
+
   const aiFindingsNarrative = useMemo(() => {
     if (sidebarFindings.length === 0) return '';
     const locale = resolveFindingLocale();
@@ -1779,6 +1892,32 @@ export default function ScreeningReviewPage() {
                       >
                         <FileText className="w-4 h-4" />
                         Mở Bệnh án (EMR)
+                      </button>
+                    )}
+
+                  <button
+                    type="button"
+                    onClick={() => setShowConsiliumModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <Users className="w-4 h-4" />
+                    {t(
+                      'Ophthalmologist.screeningReview.requestConsilium',
+                      '🤝 Yêu cầu Hội chẩn'
+                    )}
+                  </button>
+
+                  {detail.medicalRecordId &&
+                    detail.medicalRecordId !==
+                      '00000000-0000-0000-0000-000000000000' && (
+                      <button
+                        type="button"
+                        onClick={() => setShowLockConfirm(true)}
+                        disabled={isFinalizedDiagnosis || isFinalizing}
+                        className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:bg-slate-400 text-white rounded-xl text-sm font-bold shadow-lg shadow-rose-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <Lock className="w-4 h-4" />
+                        {isFinalizing ? 'Đang khóa...' : 'Khóa hồ sơ'}
                       </button>
                     )}
                   <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded-full text-xs font-medium">
@@ -3508,6 +3647,147 @@ export default function ScreeningReviewPage() {
           </div>
         </div>
       )}
+
+      {/* Consilium Modal */}
+      {showConsiliumModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-2xl bg-white dark:bg-[#0a1f44] rounded-3xl shadow-2xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden">
+            <div className="p-6 border-b border-gray-200 dark:border-[#1e3a5f] flex items-center justify-between bg-amber-50/50 dark:bg-amber-900/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    {t(
+                      'Ophthalmologist.screeningReview.consiliumModal.title',
+                      'Yêu cầu Hội chẩn lâm sàng'
+                    )}
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Mời đồng nghiệp hỗ trợ chẩn đoán ca bệnh khẩn cấp
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowConsiliumModal(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-full transition-colors"
+              >
+                <X className="w-6 h-6 text-gray-400" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                  Chọn bác sĩ đang trực (Available)
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
+                  {candidateDoctors.length === 0 ? (
+                    <div className="col-span-2 py-8 text-center text-gray-500">
+                      Không tìm thấy bác sĩ nào đang sẵn sàng.
+                    </div>
+                  ) : (
+                    candidateDoctors.map((doc) => (
+                      <button
+                        key={doc.id}
+                        onClick={() => {
+                          if (selectedDoctors.includes(doc.id)) {
+                            setSelectedDoctors(
+                              selectedDoctors.filter((id) => id !== doc.id)
+                            );
+                          } else {
+                            if (selectedDoctors.length < 3) {
+                              setSelectedDoctors([...selectedDoctors, doc.id]);
+                            } else {
+                              ophthalToast.info(
+                                'Tối đa mời 3 bác sĩ hội chẩn.'
+                              );
+                            }
+                          }
+                        }}
+                        className={`flex items-center gap-3 p-3 rounded-2xl border transition-all text-left ${
+                          selectedDoctors.includes(doc.id)
+                            ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 shadow-md'
+                            : 'border-gray-200 dark:border-[#1e3a5f] hover:border-amber-300'
+                        }`}
+                      >
+                        <div className="relative">
+                          <UserAvatar
+                            fullName={doc.fullName}
+                            size="md"
+                            className="shrink-0"
+                          />
+                          <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-[#0a1f44] rounded-full" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-gray-900 dark:text-white truncate">
+                            {doc.fullName}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {doc.roles.join(', ')}
+                          </p>
+                        </div>
+                        {selectedDoctors.includes(doc.id) && (
+                          <div className="ml-auto">
+                            <Check className="w-5 h-5 text-amber-600" />
+                          </div>
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                  Lý do hội chẩn
+                </label>
+                <textarea
+                  value={consiliumReason}
+                  onChange={(e) => setConsiliumReason(e.target.value)}
+                  placeholder="Nhập lý do cần hỗ trợ (ví dụ: Hình ảnh đáy mắt không rõ ràng, nghi ngờ glôcôm...)"
+                  className="w-full h-24 px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/30 border border-gray-200 dark:border-[#1e3a5f] rounded-2xl text-sm focus:ring-2 focus:ring-amber-500/50 outline-none transition-all resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 dark:border-[#1e3a5f] flex justify-end gap-3 bg-gray-50/50 dark:bg-slate-900/30">
+              <button
+                onClick={() => setShowConsiliumModal(false)}
+                className="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={() => void handleRequestConsilium()}
+                disabled={requestingConsilium || selectedDoctors.length === 0}
+                className="px-8 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-400 text-white rounded-xl text-sm font-bold shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2"
+              >
+                {requestingConsilium ? (
+                  <Spinner size={16} />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+                Gửi yêu cầu khẩn cấp
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Finalize Confirmation */}
+      <ConfirmModal
+        open={showLockConfirm}
+        title="Khóa hồ sơ bệnh án?"
+        message="Hành động này sẽ khóa vĩnh viễn hồ sơ bệnh án này. Bạn sẽ không thể chỉnh sửa chẩn đoán hoặc đơn thuốc sau khi khóa. Hồ sơ sẽ được gửi tới Thu ngân để hoàn tất thanh toán."
+        confirmLabel="Tôi đồng ý, Khóa ngay"
+        cancelLabel="Hủy"
+        tone="danger"
+        isLoading={isFinalizing}
+        onConfirm={() => void handleFinalizeMedicalRecord()}
+        onCancel={() => setShowLockConfirm(false)}
+      />
     </div>
   );
 }

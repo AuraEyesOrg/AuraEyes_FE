@@ -922,8 +922,6 @@ export default function ErmForm() {
       // Finalize the record
       await finalizeMutation.mutateAsync(id);
 
-      toast.success('Hồ sơ đã được khóa và gửi tới Thu ngân');
-
       if (isOphthalmologist) {
         navigate('/ophthalmologist/consultations');
       } else {
@@ -931,7 +929,6 @@ export default function ErmForm() {
       }
     } catch (error) {
       console.error(error);
-      toast.error('Lỗi khi khóa hồ sơ');
     } finally {
       setShowFinalizeModal(false);
     }
