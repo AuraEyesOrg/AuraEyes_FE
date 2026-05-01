@@ -22,6 +22,7 @@ import {
   type InternalGroupChat,
   type InternalGroupMessage,
 } from '../api/internal-chat.api';
+import { collaborationApi } from '../api/collaboration.api';
 import useAuthStore from '@/store/auth-store';
 import {
   joinInternalChatGroup,
@@ -34,6 +35,7 @@ import UserAvatar from '@/components/ui/UserAvatar';
 import Spinner from '@/components/ui/spinner';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/confirm-modal';
+import ConsiliumTimer from '../components/ConsiliumTimer';
 
 type GroupUiSettings = {
   displayName?: string;
@@ -98,6 +100,17 @@ export default function CollaborationPage() {
   const [isManageMembersOpen, setIsManageMembersOpen] = useState(false);
   const [isMediaPanelOpen, setIsMediaPanelOpen] = useState(false);
   const [isGroupMenuOpen, setIsGroupMenuOpen] = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
+
+  const selectedGroup = useMemo(
+    () => groups.find((g) => g.id === selectedGroupId) ?? null,
+    [groups, selectedGroupId]
+  );
+
+  const isReadOnly = useMemo(() => {
+    if (!selectedGroup || selectedGroup.type !== 'ClinicalCase') return false;
+    return selectedGroup.consiliumStatus === 'Concluded' || isExpired;
+  }, [selectedGroup, isExpired]);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupType, setNewGroupType] = useState<'General' | 'ClinicalCase'>(
@@ -306,6 +319,46 @@ export default function CollaborationPage() {
   const sendComposedMessage = async (content: string) => {
     if (!selectedGroupId || !content.trim()) return;
     await internalChatApi.sendMessage(selectedGroupId, content.trim());
+  };
+
+  const handleConcludeConsilium = async () => {
+    if (!selectedGroupId || !selectedGroup) return;
+
+    openConfirm({
+      title: t(
+        'ProfessionalNetwork.collaboration.consilium.concludeTitle',
+        'Kết thúc Hội chẩn'
+      ),
+      message: t(
+        'ProfessionalNetwork.collaboration.consilium.concludeMessage',
+        'Bạn có chắc chắn muốn kết thúc buổi hội chẩn này? Nhóm chat sẽ chuyển sang chế độ chỉ đọc để lưu trữ hồ sơ pháp lý.'
+      ),
+      confirmLabel: t(
+        'ProfessionalNetwork.collaboration.consilium.concludeConfirm',
+        'Kết thúc'
+      ),
+      tone: 'danger',
+      onConfirm: async () => {
+        try {
+          await collaborationApi.concludeConsilium(selectedGroupId);
+          toast.success(
+            t(
+              'ProfessionalNetwork.collaboration.consilium.concludeSuccess',
+              'Hội chẩn đã kết thúc.'
+            )
+          );
+          void loadGroups();
+        } catch (error) {
+          console.error('Failed to conclude consilium', error);
+          toast.error(
+            t(
+              'ProfessionalNetwork.collaboration.consilium.concludeError',
+              'Không thể kết thúc hội chẩn.'
+            )
+          );
+        }
+      },
+    });
   };
 
   const handleSendMessage = async () => {
@@ -670,7 +723,6 @@ export default function CollaborationPage() {
     }
   };
 
-  const selectedGroup = groups.find((g) => g.id === selectedGroupId);
   const selectedGroupName = selectedGroup?.name || '';
   const selectedGroupMembers = selectedGroup?.memberIds || [];
 
@@ -861,11 +913,48 @@ export default function CollaborationPage() {
                     {selectedGroup?.type === 'ClinicalCase'
                       ? 'Clinical Case'
                       : 'General'}
+                    {selectedGroup?.type === 'ClinicalCase' && (
+                      <>
+                        <span className="mx-1.5">•</span>
+                        <span
+                          className={`font-bold ${selectedGroup.consiliumStatus === 'Concluded' ? 'text-rose-500' : 'text-amber-500'}`}
+                        >
+                          {selectedGroup.consiliumStatus === 'Concluded'
+                            ? 'Concluded'
+                            : 'Ongoing'}
+                        </span>
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 relative">
+                {selectedGroup?.type === 'ClinicalCase' && (
+                  <div className="flex items-center gap-3">
+                    <ConsiliumTimer
+                      createdAt={selectedGroup.createdAt}
+                      isConcluded={
+                        selectedGroup.consiliumStatus === 'Concluded'
+                      }
+                      onExpire={() => setIsExpired(true)}
+                    />
+                    {selectedGroup.creatorId === user?.id &&
+                      selectedGroup.consiliumStatus === 'Ongoing' &&
+                      !isExpired && (
+                        <button
+                          onClick={handleConcludeConsilium}
+                          className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition-all border border-rose-200"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          {t(
+                            'ProfessionalNetwork.collaboration.consilium.endButton',
+                            'Kết thúc Hội chẩn'
+                          )}
+                        </button>
+                      )}
+                  </div>
+                )}
                 <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mr-2">
                   <button
                     onClick={() => setActiveTab('chat')}
@@ -1076,6 +1165,18 @@ export default function CollaborationPage() {
                   )}
                 </div>
 
+                {/* Banner for Concluded Consilium */}
+                {selectedGroup?.type === 'ClinicalCase' &&
+                  selectedGroup.consiliumStatus === 'Concluded' && (
+                    <div className="px-4 py-3 bg-rose-50 dark:bg-rose-900/20 border-t border-rose-100 dark:border-rose-900/30 flex items-center justify-center gap-2 text-rose-600 dark:text-rose-400 text-sm font-medium">
+                      <X className="w-4 h-4" />
+                      {t(
+                        'ProfessionalNetwork.collaboration.consilium.readOnly',
+                        'Buổi hội chẩn này đã kết thúc. Nhóm hiện đang ở chế độ chỉ đọc.'
+                      )}
+                    </div>
+                  )}
+
                 {/* Chat Input */}
                 <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
                   <div className="flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-2">
@@ -1103,17 +1204,25 @@ export default function CollaborationPage() {
                       onKeyDown={(e) =>
                         e.key === 'Enter' && void handleSendMessage()
                       }
-                      placeholder={t(
-                        'ProfessionalNetwork.collaboration.typeMessage',
-                        'Type a message...'
-                      )}
+                      disabled={!selectedGroupId || isReadOnly}
+                      placeholder={
+                        isReadOnly
+                          ? t(
+                              'ProfessionalNetwork.collaboration.consilium.inputDisabled',
+                              'Hội chẩn đã kết thúc...'
+                            )
+                          : t(
+                              'ProfessionalNetwork.collaboration.typeMessage',
+                              'Type a message...'
+                            )
+                      }
                       className="flex-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0 text-sm dark:text-white placeholder:text-slate-500"
                     />
                     <button
                       onClick={() => void handleSendMessage()}
-                      disabled={!newMessage.trim()}
+                      disabled={!newMessage.trim() || isReadOnly}
                       className={`p-2.5 rounded-xl transition-colors ${
-                        newMessage.trim()
+                        newMessage.trim() && !isReadOnly
                           ? 'bg-primary text-white'
                           : 'text-slate-400 dark:text-slate-500'
                       }`}
@@ -1309,7 +1418,6 @@ export default function CollaborationPage() {
                   className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
                 >
                   <option value="General">General</option>
-                  <option value="ClinicalCase">ClinicalCase</option>
                 </select>
               </div>
 

@@ -36,6 +36,9 @@ export enum NotificationType {
 
   /** Internal platform alert for operational/admin actions */
   SystemAlert = 9,
+
+  /** Urgent consilium invitation for doctors */
+  ConsiliumInvitation = 10,
 }
 
 export type NotificationTypeValue = NotificationType | string | number;
@@ -51,6 +54,7 @@ const NOTIFICATION_TYPE_NAME_MAP: Record<string, NotificationType> = {
   walletdepositsuccess: NotificationType.WalletDepositSuccess,
   walletpaymentprocessed: NotificationType.WalletPaymentProcessed,
   systemalert: NotificationType.SystemAlert,
+  consiliuminvitation: NotificationType.ConsiliumInvitation,
 };
 
 function isKnownNotificationType(value: number): value is NotificationType {
@@ -243,6 +247,8 @@ export function getNotificationIcon(type: NotificationTypeValue): string {
       return 'wallet';
     case NotificationType.SystemAlert:
       return 'bell';
+    case NotificationType.ConsiliumInvitation:
+      return 'users';
     default:
       return 'bell';
   }

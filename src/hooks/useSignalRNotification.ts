@@ -9,8 +9,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import useNotificationStore from '@/store/useNotificationStore';
 import useAuthStore from '@/store/auth-store';
-import { SignalRNotification } from '@/types/notification';
-import { getNotificationRoute } from '@/types/notification';
+import {
+  SignalRNotification,
+  NotificationType,
+  parseNotificationType,
+  getNotificationRoute,
+} from '@/types/notification';
 import { router } from '@/lib/router';
 
 /**
@@ -147,6 +151,16 @@ export function useSignalRNotification(): {
         void queryClient.invalidateQueries({
           queryKey: ['clinic-staff-orders'],
         });
+      }
+
+      // Automatic redirection for patients when record is finalized
+      const type = parseNotificationType(notification.type);
+      if (
+        type === NotificationType.ConsultationResultProvided &&
+        userRolesRef.current.includes('Patient')
+      ) {
+        console.log('[SignalR] Record finalized, redirecting patient to chat');
+        router.navigate('/patient/chat');
       }
 
       // Show toast notification with navigation action

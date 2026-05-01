@@ -110,6 +110,7 @@ export const clinicScreeningApi = {
         patientName?: string;
         patientEmail?: string;
         isWalkIn: boolean;
+        medicalRecordId?: string;
         modelVersion: string;
         createdAt: string;
         processedAt?: string;
