@@ -11,6 +11,7 @@ import type { User } from '../types/system-admin.types';
 import { toast } from 'react-toastify';
 import CreateStaffModal from '../components/CreateStaffModal';
 import { ophthalmologistApi } from '../api/ophthalmologist.api';
+import { leavePoliciesApi } from '../api/leave-policies.api';
 import { formatCurrency, vndCurrencyOptions } from '@/lib/helper';
 
 const roleLabelMeta: Record<string, { key: string; fallback: string }> = {
@@ -64,6 +65,15 @@ export default function StaffManagementPage() {
   const [subRolesValue, setSubRolesValue] = useState<string[]>([]);
   const [isUpdatingSubRoles, setIsUpdatingSubRoles] = useState(false);
 
+  // Leave policy state
+  const [availableLeaveDays, setAvailableLeaveDays] = useState<number | null>(
+    null
+  );
+  const [leavePolicies, setLeavePolicies] = useState<any[]>([]);
+  const [selectedPolicyId, setSelectedPolicyId] = useState<string>('');
+  const [isApplyingPolicy, setIsApplyingPolicy] = useState(false);
+  const [isLoadingDoctorDetail, setIsLoadingDoctorDetail] = useState(false);
+
   const roleFilterOptions: Array<{ value: string; label: string }> = [
     {
       value: 'all',
@@ -115,6 +125,38 @@ export default function StaffManagementPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    if (
+      selectedUser?.role === 'Ophthalmologist' &&
+      (selectedUser.ophthalmologistId || selectedUser.id)
+    ) {
+      const fetchDetails = async () => {
+        setIsLoadingDoctorDetail(true);
+        try {
+          const ophthalmologistId =
+            selectedUser.ophthalmologistId || selectedUser.id;
+          const docDetail =
+            await ophthalmologistApi.getOphthalmologistDetail(
+              ophthalmologistId
+            );
+          setAvailableLeaveDays(docDetail.availableLeaveDays ?? 0);
+
+          const policiesRes = await leavePoliciesApi.getPaged(1, 100);
+          setLeavePolicies(policiesRes.items || []);
+        } catch (error) {
+          console.error('Failed to fetch doctor detail or policies', error);
+        } finally {
+          setIsLoadingDoctorDetail(false);
+        }
+      };
+      fetchDetails();
+    } else {
+      setAvailableLeaveDays(null);
+      setLeavePolicies([]);
+      setSelectedPolicyId('');
+    }
+  }, [selectedUser]);
 
   const totalStaff = users.length;
   const activeStaff = users.filter((u) => {
@@ -232,6 +274,27 @@ export default function StaffManagementPage() {
       }
       return current;
     });
+  };
+
+  const handleApplyPolicy = async () => {
+    const ophthalmologistId =
+      selectedUser?.ophthalmologistId || selectedUser?.id;
+    if (!ophthalmologistId || !selectedPolicyId) return;
+
+    try {
+      setIsApplyingPolicy(true);
+      await leavePoliciesApi.apply(selectedPolicyId, ophthalmologistId);
+      toast.success('Leave policy applied successfully');
+
+      const docDetail =
+        await ophthalmologistApi.getOphthalmologistDetail(ophthalmologistId);
+      setAvailableLeaveDays(docDetail.availableLeaveDays ?? 0);
+      setSelectedPolicyId('');
+    } catch (error) {
+      toast.error('Failed to apply leave policy');
+    } finally {
+      setIsApplyingPolicy(false);
+    }
   };
 
   const userColumns: TableColumn<StaffUser>[] = [
@@ -589,6 +652,66 @@ export default function StaffManagementPage() {
                       </p>
                     </div>
                   )}
+                </div>
+              )}
+              {selectedUser.role === 'Ophthalmologist' && (
+                <div className="md:col-span-2 p-4 rounded-xl bg-orange-500/5 border border-orange-500/20 mt-2">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                        Leave Fund Management
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Current available leave days:{' '}
+                        {isLoadingDoctorDetail ? (
+                          '...'
+                        ) : (
+                          <span className="font-bold text-slate-900 dark:text-white">
+                            {availableLeaveDays !== null
+                              ? availableLeaveDays
+                              : 'N/A'}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-stretch gap-3">
+                    <div className="flex-1">
+                      <select
+                        value={selectedPolicyId}
+                        onChange={(e) => setSelectedPolicyId(e.target.value)}
+                        disabled={
+                          isLoadingDoctorDetail || leavePolicies.length === 0
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50"
+                      >
+                        <option value="">-- Select Policy to Apply --</option>
+                        {leavePolicies.map((policy) => (
+                          <option key={policy.id} value={policy.id}>
+                            {policy.name} (+{policy.additionalDays} days)
+                          </option>
+                        ))}
+                      </select>
+                      {leavePolicies.length === 0 && !isLoadingDoctorDetail && (
+                        <p className="text-[10px] text-orange-500 mt-1">
+                          No active policies found. Configure them in Leave
+                          Policies.
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={handleApplyPolicy}
+                      disabled={
+                        !selectedPolicyId ||
+                        isApplyingPolicy ||
+                        isLoadingDoctorDetail
+                      }
+                      className="px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 dark:bg-orange-900/30 dark:hover:bg-orange-900/50 dark:text-orange-400 text-sm font-bold rounded-lg transition-colors whitespace-nowrap disabled:opacity-50"
+                    >
+                      {isApplyingPolicy ? 'Applying...' : 'Apply Policy'}
+                    </button>
+                  </div>
                 </div>
               )}
               {selectedUser.role === 'ClinicStaff' && (

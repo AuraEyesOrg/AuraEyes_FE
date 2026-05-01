@@ -145,6 +145,7 @@ import {
   Globe,
   KeyRound,
   Settings,
+  ShieldCheck,
   Users,
   Wallet,
 } from 'lucide-react';
@@ -179,6 +180,13 @@ export const sidebarNavItems: SidebarNavItem[] = [
     path: '/system-admin/leave-requests',
     icon: CalendarX,
     requiredPermission: Permissions.SchedulesManage,
+  },
+  {
+    id: 'leave-policies',
+    label: 'Leave Policies',
+    path: '/system-admin/leave-policies',
+    icon: ShieldCheck,
+    requiredPermission: Permissions.SettingsRead,
   },
   {
     id: 'patients',
