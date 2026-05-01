@@ -37,7 +37,7 @@ const DOW_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 const isExpiredClinicSlot = (slot: { date: string; startTime: string }) => {
   const startAt = parseSlotDateTimeUtc(slot.date, slot.startTime).getTime();
-  if (Number.isNaN(startAt)) return false;
+  if (Number.isNaN(startAt)) return true; // hide broken slots
   return startAt < Date.now();
 };
 
