@@ -42,30 +42,27 @@ const HomePage = () => {
   const { setTourBlocked } = useGuestTour();
   const [showRecruitment, setShowRecruitment] = useState(false);
 
+  const hasShownThisVisit = useRef(false);
+
   useLayoutEffect(() => {
-    const hasSeenPopup = sessionStorage.getItem('hasSeenRecruitmentPopup');
+    // Block the tour immediately to wait for popup
+    setTourBlocked(true);
 
-    if (!hasSeenPopup) {
-      // Block the tour immediately
-      setTourBlocked(true);
-
-      const timer = setTimeout(() => {
+    const timer = setTimeout(() => {
+      if (!hasShownThisVisit.current) {
         setShowRecruitment(true);
-      }, 1000);
+        hasShownThisVisit.current = true;
+      }
+    }, 1000);
 
-      return () => {
-        clearTimeout(timer);
-        setTourBlocked(false);
-      };
-    } else {
-      // If popup already seen, ensure tour is not blocked
+    return () => {
+      clearTimeout(timer);
       setTourBlocked(false);
-    }
+    };
   }, [setTourBlocked]);
 
   const handleClosePopup = () => {
     setShowRecruitment(false);
-    sessionStorage.setItem('hasSeenRecruitmentPopup', 'true');
     // Unblock the tour after closing the popup
     setTourBlocked(false);
   };
@@ -1216,16 +1213,12 @@ const HomePage = () => {
 
       <AnimatePresence>
         {showRecruitment && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden">
-            {/* --- NỀN KÍNH MỜ TRÀN MÀN HÌNH --- */}
-            <div className="absolute inset-0 bg-white/70 backdrop-blur-2xl" />
-
-            {/* CSS Animation */}
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm">
             <style>{`
               @keyframes blob {
                 0% { transform: translate(0px, 0px) scale(1); }
-                33% { transform: translate(40px, -60px) scale(1.1); }
-                66% { transform: translate(-30px, 30px) scale(0.9); }
+                33% { transform: translate(30px, -40px) scale(1.1); }
+                66% { transform: translate(-20px, 20px) scale(0.9); }
                 100% { transform: translate(0px, 0px) scale(1); }
               }
               @keyframes morph {
@@ -1239,43 +1232,36 @@ const HomePage = () => {
               .animation-delay-4000 { animation-delay: 4s; }
             `}</style>
 
-            {/* --- BLOBS BAY LƠ LỬNG TRÊN TOÀN MÀN HÌNH --- */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-[var(--color-brand-primary)] rounded-full mix-blend-multiply blur-[120px] opacity-30 animate-blob" />
-              <div className="absolute top-[20%] right-[-10%] w-[40vw] h-[40vw] bg-[#0EA5A5] rounded-full mix-blend-multiply blur-[120px] opacity-20 animate-blob animation-delay-2000" />
-              <div className="absolute bottom-[-20%] left-[20%] w-[50vw] h-[50vw] bg-blue-300 rounded-full mix-blend-multiply blur-[120px] opacity-30 animate-blob animation-delay-4000" />
+              <div className="absolute top-[10%] left-[20%] w-[30vw] h-[30vw] bg-[var(--color-brand-primary)] rounded-full mix-blend-multiply blur-[100px] opacity-40 animate-blob" />
+              <div className="absolute bottom-[20%] right-[20%] w-[30vw] h-[30vw] bg-[#0EA5A5] rounded-full mix-blend-multiply blur-[100px] opacity-30 animate-blob animation-delay-2000" />
             </div>
 
-            {/* Nút Đóng */}
-            <button
-              onClick={handleClosePopup}
-              className="absolute top-6 right-6 lg:top-8 lg:right-8 z-50 p-3 rounded-full bg-white/60 backdrop-blur-md hover:bg-white hover:scale-110 transition-all text-gray-500 hover:text-gray-900 hover:rotate-90 duration-300 shadow-sm border border-gray-200"
-              aria-label="Close full screen"
-            >
-              <X size={24} strokeWidth={2} />
-            </button>
-
-            {/* --- NỘI DUNG CHÍNH --- */}
             <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -40 }}
-              transition={{ type: 'spring', bounce: 0.2, duration: 0.8 }}
-              className="relative z-10 w-full max-w-[1100px] px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-10 lg:gap-16"
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', bounce: 0.25, duration: 0.7 }}
+              className="relative z-10 w-full max-w-[1000px] bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border border-white p-8 md:p-10 lg:p-12 flex flex-col md:flex-row items-center gap-8 lg:gap-14"
             >
-              {/* --- CỘT HÌNH ẢNH (Bên trái) --- */}
-              <div className="w-full md:w-5/12 flex justify-center md:justify-end">
-                {/* Khung cắt hình cong cong thu nhỏ lại */}
-                <div className="relative w-[260px] h-[320px] sm:w-[300px] sm:h-[380px] lg:w-[360px] lg:h-[460px] animate-morph overflow-hidden shadow-xl border-[6px] border-white bg-slate-100">
+              <button
+                onClick={handleClosePopup}
+                className="absolute top-5 right-5 md:top-6 md:right-6 z-50 p-2.5 rounded-full bg-gray-100/80 hover:bg-gray-200 hover:scale-110 transition-all text-gray-500 hover:text-gray-900 hover:rotate-90 duration-300 shadow-sm border border-white"
+                aria-label="Close"
+              >
+                <X size={22} strokeWidth={2.5} />
+              </button>
+
+              <div className="w-full md:w-5/12 flex justify-center mt-6 md:mt-0">
+                <div className="relative w-[240px] h-[300px] lg:w-[320px] lg:h-[400px] animate-morph overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)] border-[6px] border-white bg-slate-100 flex-shrink-0">
                   <img
                     src="/doctor.png"
                     alt="Aura Medical Network"
                     className="absolute inset-0 w-full h-full object-cover object-top"
                   />
-                  {/* Tag góc dưới */}
                   <div className="absolute bottom-5 left-0 right-0 flex justify-center z-10">
                     <div className="flex items-center gap-1.5 text-[var(--color-brand-primary)] bg-white/95 backdrop-blur-md px-4 py-2 rounded-full w-fit shadow-md border border-gray-100">
-                      <Sparkles size={16} className="text-yellow-500" />
+                      <Sparkles size={14} className="text-yellow-500" />
                       <span className="text-xs font-black tracking-widest uppercase">
                         Aura Digital
                       </span>
@@ -1284,61 +1270,58 @@ const HomePage = () => {
                 </div>
               </div>
 
-              {/* --- CỘT TEXT (Bên phải) --- */}
               <div className="w-full md:w-7/12 flex flex-col items-center md:items-start text-center md:text-left">
-                <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-gray-200 px-4 py-2 rounded-full mb-6 shadow-sm">
+                <div className="inline-flex items-center gap-2 bg-gray-50 border border-gray-200 px-3.5 py-1.5 rounded-full mb-5 shadow-sm">
                   <div className="text-[var(--color-brand-primary)]">
                     <Briefcase size={16} strokeWidth={2.5} />
                   </div>
-                  <span className="uppercase tracking-widest text-[11px] font-bold text-[var(--color-brand-dark)]">
+                  <span className="uppercase tracking-widest text-[10px] font-bold text-gray-600">
                     Thư mời hợp tác chuyên môn
                   </span>
                 </div>
 
-                {/* Chữ nhỏ gọn lại */}
-                <h2 className="text-3xl lg:text-5xl font-black text-gray-900 leading-tight mb-4 tracking-tight">
+                <h2 className="text-3xl lg:text-4xl font-black text-gray-900 leading-tight mb-4 tracking-tight">
                   {t(
                     'GuestHome.recruitmentPopup.title',
                     'Gia nhập đội ngũ Chuyên gia'
                   )}
                 </h2>
 
-                <p className="text-gray-600 text-base lg:text-lg mb-8 leading-relaxed max-w-xl">
+                <p className="text-gray-600 text-sm lg:text-base mb-8 leading-relaxed max-w-md">
                   {t(
                     'GuestHome.recruitmentPopup.description',
                     'Chúng tôi đang tìm kiếm các bác sĩ tài năng để cùng kiến tạo tương lai y tế số. Trở thành một phần của Aura ngay hôm nay!'
                   )}
                 </p>
 
-                {/* Các bullet point gọn gàng hơn */}
-                <div className="space-y-4 mb-10 w-full max-w-xl text-left">
-                  <div className="flex items-center gap-3 bg-white/60 p-3 lg:p-4 rounded-xl backdrop-blur-sm border border-gray-200 shadow-sm">
+                <div className="space-y-3.5 mb-8 w-full max-w-md text-left">
+                  <div className="flex items-center gap-3 bg-gray-50/80 p-3 lg:p-4 rounded-xl border border-gray-100 shadow-sm">
                     <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-primary)] shrink-0" />
-                    <span className="text-gray-700 text-sm lg:text-base">
+                    <span className="text-gray-700 text-sm">
                       Nâng cao hiệu suất với{' '}
                       <strong>AI phân tích võng mạc</strong> độ chính xác lâm
                       sàng.
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 bg-white/60 p-3 lg:p-4 rounded-xl backdrop-blur-sm border border-gray-200 shadow-sm">
+                  <div className="flex items-center gap-3 bg-gray-50/80 p-3 lg:p-4 rounded-xl border border-gray-100 shadow-sm">
                     <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-primary)] shrink-0" />
-                    <span className="text-gray-700 text-sm lg:text-base">
+                    <span className="text-gray-700 text-sm">
                       Tiếp cận nguồn bệnh nhân toàn cầu qua nền tảng khám từ xa.
                     </span>
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-xl justify-center md:justify-start">
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center md:justify-start">
                   <button
                     onClick={() => {
                       handleClosePopup();
                       navigate(resolvePathWithLocale('/contact'));
                     }}
-                    className="w-full sm:w-auto bg-[var(--color-brand-dark)] text-white font-bold text-base py-3.5 px-8 rounded-xl shadow-lg shadow-slate-900/20 hover:-translate-y-1 hover:shadow-slate-900/30 active:translate-y-0 transition-all flex items-center justify-center gap-2 group"
+                    className="w-full sm:w-auto bg-[var(--color-brand-dark)] text-white font-bold text-sm py-3.5 px-8 rounded-xl shadow-lg shadow-slate-900/20 hover:-translate-y-1 hover:shadow-slate-900/30 active:translate-y-0 transition-all flex items-center justify-center gap-2 group"
                   >
                     {t('GuestHome.recruitmentPopup.cta', 'Ứng tuyển ngay')}
                     <ChevronRight
-                      size={20}
+                      size={18}
                       strokeWidth={3}
                       className="group-hover:translate-x-1.5 transition-transform"
                     />
@@ -1346,7 +1329,7 @@ const HomePage = () => {
 
                   <button
                     onClick={handleClosePopup}
-                    className="w-full sm:w-auto text-gray-500 font-bold text-base py-3.5 px-6 rounded-xl hover:text-gray-900 hover:bg-gray-100/80 transition-colors"
+                    className="w-full sm:w-auto text-gray-500 font-bold text-sm py-3.5 px-6 rounded-xl hover:text-gray-900 hover:bg-gray-100 transition-colors"
                   >
                     {t('GuestHome.recruitmentPopup.close', 'Để sau')}
                   </button>
