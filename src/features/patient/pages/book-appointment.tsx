@@ -371,7 +371,15 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
   const reserveMutation = useReserveSlot();
   const releaseMutation = useReleaseReservation();
 
-  const slots = useMemo(() => slotsData?.items ?? [], [slotsData?.items]);
+  const advanceBookingMs = (advanceBookingHours ?? 0) * 60 * 60 * 1000;
+
+  const slots = useMemo(
+    () =>
+      (slotsData?.items ?? []).filter(
+        (slot) => !isExpiredAppointmentSlot(slot, advanceBookingMs)
+      ),
+    [slotsData?.items, advanceBookingMs]
+  );
 
   const slotsByDate = useMemo(() => {
     const grouped: Record<string, AppointmentSlotListDto[]> = {};

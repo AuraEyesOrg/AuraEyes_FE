@@ -129,7 +129,6 @@ export interface AppointmentSlotListDto {
   ophthalFullName?: string;
   ophthalAvatarUrl?: string;
   cost: number | null;
-  reservationExpireAt?: string | null;
   createdAt: string;
 }
 
@@ -148,7 +147,6 @@ export interface AppointmentSlotDto {
   ophthalFullName?: string;
   ophthalAvatarUrl?: string;
   cost: number | null;
-  reservationExpireAt?: string | null;
   createdAt: string;
   updatedAt: string | null;
 }
@@ -212,19 +210,14 @@ export interface GenerateSlotsRequest {
 
 export interface AllowedPriceRangeDto {
   ophthalmologistId: string;
-  yearsOfExperience: number;
   minPrice: number;
   maxPrice: number;
 }
 
 // ============ SCHEDULE TEMPLATE TYPES ============
 
-export type ScheduleTemplateSource = 'Doctor' | 'SystemGenerated';
-
 export interface ScheduleTemplateDto {
   id: string;
-  ophthalmologistId?: string;
-  organisationId?: string | null;
   dayOfWeek: number | string; // BE might return string like "Friday"
   startTime: string;
   endTime: string;
@@ -234,14 +227,11 @@ export interface ScheduleTemplateDto {
   maxCapacity: number;
   cost?: number;
   isActive: boolean;
-  source?: ScheduleTemplateSource;
   createdAt: string;
   updatedAt?: string;
 }
 
 export interface CreateScheduleTemplateRequest {
-  ophthalId?: string;
-  organisationId?: string;
   dayOfWeek: number; // 0=Sunday, 1=Monday, etc.
   startTime: string;
   endTime: string;

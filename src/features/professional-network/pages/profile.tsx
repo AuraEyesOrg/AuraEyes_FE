@@ -14,7 +14,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   BadgeCheck,
-  Calendar,
   Users,
   FileText,
   Award,
@@ -264,12 +263,10 @@ function ProfilePage() {
               <h1 className="text-2xl font-bold text-text-main">
                 {profile.fullName}
               </h1>
-              {profile.isVerified && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-brand-soft text-brand-primary text-xs font-medium rounded-full">
-                  <BadgeCheck className="w-3 h-3" />
-                  {t('ProfessionalNetwork.profile.verified', 'Verified')}
-                </span>
-              )}
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-brand-soft text-brand-primary text-xs font-medium rounded-full">
+                <BadgeCheck className="w-3 h-3" />
+                {t('ProfessionalNetwork.profile.verified', 'Verified')}
+              </span>
             </div>
 
             {/* Specialties — hidden: not available in UserProfileDto */}
@@ -349,18 +346,7 @@ function ProfilePage() {
         )}
 
         {/* Meta Info */}
-        <div className="flex flex-wrap items-center gap-4 mt-3 text-[13px] text-text-muted">
-          {profile.yearsOfExperience > 0 && (
-            <span className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
-              {t(
-                'ProfessionalNetwork.profile.stats.yearsExperience',
-                '{{years}} years experience',
-                { years: profile.yearsOfExperience }
-              )}
-            </span>
-          )}
-        </div>
+        <div className="flex flex-wrap items-center gap-4 mt-3 text-[13px] text-text-muted"></div>
 
         {/* Stats */}
         <div className="flex items-center gap-6 mt-4 text-[15px]">
@@ -561,24 +547,21 @@ function ProfilePage() {
                     </p>
                   )}
                 </div>
-                {profile.yearsOfExperience > 0 && (
-                  <div>
-                    <h3 className="font-bold text-[15px] text-text-main mb-2">
-                      {t(
-                        'ProfessionalNetwork.profile.about.experienceTitle',
-                        'Experience'
-                      )}
-                    </h3>
-                    <div className="flex items-center gap-2 text-[15px] text-text-main">
-                      <Award className="w-4 h-4 text-brand-primary" />
-                      {t(
-                        'ProfessionalNetwork.profile.about.experienceValue',
-                        '{{years}} years of experience',
-                        { years: profile.yearsOfExperience }
-                      )}
-                    </div>
+                <div>
+                  <h3 className="font-bold text-[15px] text-text-main mb-2">
+                    {t(
+                      'ProfessionalNetwork.profile.about.experienceTitle',
+                      'Experience'
+                    )}
+                  </h3>
+                  <div className="flex items-center gap-2 text-[15px] text-text-main">
+                    <Award className="w-4 h-4 text-brand-primary" />
+                    {t(
+                      'ProfessionalNetwork.profile.about.experienceValue',
+                      'Ophthalmologist'
+                    )}
                   </div>
-                )}
+                </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-(--bg-secondary)">

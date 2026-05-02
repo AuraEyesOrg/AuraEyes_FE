@@ -52,7 +52,6 @@ interface Organisation {
   status: 'active' | 'inactive' | 'suspended';
   contractStatus: ContractStatus;
   usersCount: number;
-  purchasedAiQuota: number;
   monthlyQuotaLimit: number;
   monthlyQuotaUsed: number;
   monthlyQuotaRemaining: number;
@@ -103,7 +102,6 @@ const mapToUiOrg = (item: ApiOrganisation): Organisation => ({
   status: item.isActive ? 'active' : 'inactive',
   contractStatus: item.isActive ? 'active' : 'expired',
   usersCount: item.usersCount ?? 0,
-  purchasedAiQuota: item.purchasedAiQuota ?? 0,
   monthlyQuotaLimit: item.monthlyQuotaLimit ?? 0,
   monthlyQuotaUsed: item.monthlyQuotaUsed ?? 0,
   monthlyQuotaRemaining: item.monthlyQuotaRemaining ?? 0,
@@ -200,10 +198,6 @@ export default function OrganisationsPage() {
 
   // Calculate stats
   const activeOrgs = organisations.filter((o) => o.status === 'active').length;
-  const totalPurchasedQuota = organisations.reduce(
-    (sum, o) => sum + o.purchasedAiQuota,
-    0
-  );
   const inactiveOrgs = organisations.filter(
     (o) => o.status !== 'active'
   ).length;
@@ -464,22 +458,6 @@ export default function OrganisationsPage() {
     },
     {
       header: t(
-        'SystemAdmin.organisations.table.organisations.columns.purchasedQuota',
-        'Purchased Quota'
-      ),
-      accessor: 'purchasedAiQuota',
-      render: (value) => (
-        <span className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
-          {(value as number).toLocaleString()}{' '}
-          {t(
-            'SystemAdmin.organisations.table.organisations.values.credits',
-            'credits'
-          )}
-        </span>
-      ),
-    },
-    {
-      header: t(
         'SystemAdmin.organisations.table.organisations.columns.monthlyQuota',
         'Monthly Quota'
       ),
@@ -647,22 +625,6 @@ export default function OrganisationsPage() {
           {t(
             'SystemAdmin.organisations.table.billing.values.screenings',
             'screenings'
-          )}
-        </span>
-      ),
-    },
-    {
-      header: t(
-        'SystemAdmin.organisations.table.billing.columns.purchasedQuota',
-        'Purchased Quota'
-      ),
-      accessor: 'purchasedAiQuota',
-      render: (value) => (
-        <span className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
-          {(value as number).toLocaleString()}{' '}
-          {t(
-            'SystemAdmin.organisations.table.billing.values.credits',
-            'credits'
           )}
         </span>
       ),
@@ -1007,19 +969,6 @@ export default function OrganisationsPage() {
                   }
                 )}
                 variant="success"
-              />
-              <StatsCard
-                title={t(
-                  'SystemAdmin.organisations.stats.purchasedQuota',
-                  'Purchased Quota'
-                )}
-                value={totalPurchasedQuota.toLocaleString()}
-                icon={CreditCard}
-                description={t(
-                  'SystemAdmin.organisations.stats.purchasedQuotaDescription',
-                  'Credits purchased by organisations'
-                )}
-                variant="warning"
               />
               <StatsCard
                 title={t(

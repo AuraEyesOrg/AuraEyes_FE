@@ -99,12 +99,6 @@ type PhaseUIEntry = {
   description: string;
 };
 
-type MeetingAccessState = {
-  canJoin: boolean;
-  buttonLabel: string;
-  helperText: string;
-};
-
 type TranslateFn = (key: string, fallback: string) => string;
 
 const getPhaseUIConfig = (
@@ -148,8 +142,6 @@ const getPhaseUIConfig = (
   },
 });
 
-const PREJOIN_OPEN_MINUTES = 10;
-const MEETING_ACTIVE_MINUTES = 30;
 const COUNTDOWN_VISIBILITY_MINUTES = 60;
 const MESSAGE_CHARACTER_LIMIT = 1000;
 const SPARKLINE_WINDOW_DAYS = 7;
@@ -320,88 +312,6 @@ const getSessionPreviewText = (
     'Ophthalmologist.consultations.chat.previewUnavailable',
     'No messages yet'
   );
-};
-
-const getMeetingAccessState = (
-  appointmentTime: string | null,
-  nowMs: number,
-  t: (key: string, fallback: string) => string
-): MeetingAccessState => {
-  if (!appointmentTime) {
-    return {
-      canJoin: false,
-      buttonLabel: t(
-        'Ophthalmologist.consultations.chat.joinLocked',
-        'Join Locked'
-      ),
-      helperText: t(
-        'Ophthalmologist.consultations.chat.schedulePending',
-        'Schedule pending'
-      ),
-    };
-  }
-
-  const appointmentMs = new Date(appointmentTime).getTime();
-  if (Number.isNaN(appointmentMs)) {
-    return {
-      canJoin: false,
-      buttonLabel: t(
-        'Ophthalmologist.consultations.chat.joinLocked',
-        'Join Locked'
-      ),
-      helperText: t(
-        'Ophthalmologist.consultations.chat.invalidSchedule',
-        'Schedule is unavailable'
-      ),
-    };
-  }
-
-  const minutesUntilStart = Math.ceil((appointmentMs - nowMs) / 60000);
-  const unlockMs = appointmentMs - PREJOIN_OPEN_MINUTES * 60000;
-  const secondsUntilUnlock = Math.ceil((unlockMs - nowMs) / 1000);
-
-  if (minutesUntilStart > PREJOIN_OPEN_MINUTES) {
-    return {
-      canJoin: false,
-      buttonLabel: t(
-        'Ophthalmologist.consultations.chat.joinLocked',
-        'Join Locked'
-      ),
-      helperText: `${t(
-        'Ophthalmologist.consultations.chat.joinAvailableAfter',
-        'Join available after'
-      )} ${formatCountdown(secondsUntilUnlock)}`,
-    };
-  }
-
-  if (minutesUntilStart >= -MEETING_ACTIVE_MINUTES) {
-    return {
-      canJoin: true,
-      buttonLabel: t(
-        'Ophthalmologist.consultations.chat.joinMeeting',
-        'Join Meeting'
-      ),
-      helperText: `${t(
-        'Ophthalmologist.consultations.chat.canJoinBeforePrefix',
-        'Can join before'
-      )} ${PREJOIN_OPEN_MINUTES} ${t(
-        'Ophthalmologist.consultations.chat.minutes',
-        'minutes'
-      )}`,
-    };
-  }
-
-  return {
-    canJoin: false,
-    buttonLabel: t(
-      'Ophthalmologist.consultations.chat.meetingEnded',
-      'Meeting Ended'
-    ),
-    helperText: t(
-      'Ophthalmologist.consultations.chat.meetingWindowClosed',
-      'Appointment has passed the meeting window'
-    ),
-  };
 };
 
 const hasGeneratedCaseReport = (
@@ -612,7 +522,6 @@ interface ConsultationsChatViewProps {
     typeName: string;
     statusName: string;
     chatStatusName: string;
-    meetingLink?: string | null;
   }[];
   sessionsLoading: boolean;
 }
@@ -1535,15 +1444,6 @@ export default function ConsultationsChatView({
     user?.avatarUrl,
     selectedSession?.ophthalmologistAvatarUrl
   );
-  const meetingAccessState = getMeetingAccessState(
-    currentSession?.appointmentTime ?? null,
-    currentTimeMs,
-    t
-  );
-  const isMeetingClosedBySessionState = phase === 'COMPLETED';
-  const canJoinMeeting =
-    meetingAccessState.canJoin && !isMeetingClosedBySessionState;
-
   if (sessionsLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-180px)]">
@@ -1845,66 +1745,17 @@ export default function ConsultationsChatView({
                       </button>
                     )}
 
-                    {currentSession.meetingLink ? (
-                      canJoinMeeting ? (
-                        <a
-                          href={currentSession.meetingLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-600 md:rounded-2xl md:px-4 md:py-2.5 md:text-sm"
-                        >
-                          <Video className="h-4 w-4" />
-                          <span className="hidden sm:inline">
-                            {t(
-                              'Ophthalmologist.consultations.chat.joinMeeting',
-                              'Join Meeting'
-                            )}
-                          </span>
-                          <span className="sm:hidden">
-                            {t(
-                              'Ophthalmologist.consultations.chat.join',
-                              'Join'
-                            )}
-                          </span>
-                        </a>
-                      ) : (
-                        <button
-                          disabled
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 md:rounded-2xl md:px-4 md:py-2.5 md:text-sm"
-                        >
-                          <Video className="h-4 w-4" />
-                          {isMeetingClosedBySessionState
-                            ? t(
-                                'Ophthalmologist.consultations.chat.meetingEnded',
-                                'Meeting Ended'
-                              )
-                            : meetingAccessState.buttonLabel}
-                        </button>
-                      )
-                    ) : (
-                      <button
-                        disabled
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 md:rounded-2xl md:px-4 md:py-2.5 md:text-sm"
-                      >
-                        <Video className="h-4 w-4" />
-                        {t(
-                          'Ophthalmologist.consultations.chat.linkPending',
-                          'Link Pending'
-                        )}
-                      </button>
-                    )}
+                    <button
+                      disabled
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 md:rounded-2xl md:px-4 md:py-2.5 md:text-sm"
+                    >
+                      <Video className="h-4 w-4" />
+                      {t(
+                        'Ophthalmologist.consultations.chat.linkPending',
+                        'Link Pending'
+                      )}
+                    </button>
                   </div>
-
-                  {currentSession.meetingLink && (
-                    <p className="hidden text-xs font-medium text-slate-500 md:block dark:text-gray-400">
-                      {isMeetingClosedBySessionState
-                        ? t(
-                            'Ophthalmologist.consultations.chat.meetingWindowClosed',
-                            'Appointment has passed the meeting window'
-                          )
-                        : meetingAccessState.helperText}
-                    </p>
-                  )}
                 </div>
 
                 <button

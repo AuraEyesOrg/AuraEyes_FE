@@ -70,7 +70,11 @@ export function formatSlotTimeShort(hhmm: string): string {
  *   align with what users see in the calendar.
  */
 export function parseSlotDateTimeUtc(date: string, startTime: string): Date {
-  return new Date(`${date}T${startTime}`);
+  // Backend persists slot times in Vietnam local clock (UTC+7).
+  // Explicitly append the offset so the Date constructor interprets
+  // the string as Vietnam time, then converts to UTC internally.
+  const normalizedTime = startTime.length === 5 ? `${startTime}:00` : startTime;
+  return new Date(`${date}T${normalizedTime}+07:00`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

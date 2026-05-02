@@ -89,11 +89,22 @@ export default function OrganisationSchedulePage() {
     (_, i) => i
   );
 
-  // 3. Slot Grouping
-  const groupedSlots = useMemo(() => {
-    if (!schedule?.aggregatedSlots) return { morning: [], afternoon: [] };
+  // 3. Filter expired slots client-side (belt-and-suspenders)
+  const upcomingAggregatedSlots = useMemo(() => {
+    if (!schedule?.aggregatedSlots) return [];
+    const dateKey = format(selectedDate, 'yyyy-MM-dd');
+    return schedule.aggregatedSlots.filter((slot) => {
+      const normalizedTime =
+        slot.startTime.length === 5 ? `${slot.startTime}:00` : slot.startTime;
+      const startAt = new Date(`${dateKey}T${normalizedTime}+07:00`).getTime();
+      if (Number.isNaN(startAt)) return false; // hide broken
+      return startAt >= Date.now();
+    });
+  }, [schedule, selectedDate]);
 
-    return schedule.aggregatedSlots.reduce(
+  // 4. Slot Grouping
+  const groupedSlots = useMemo(() => {
+    return upcomingAggregatedSlots.reduce(
       (
         acc: { morning: AggregatedSlotDto[]; afternoon: AggregatedSlotDto[] },
         slot
@@ -105,7 +116,7 @@ export default function OrganisationSchedulePage() {
       },
       { morning: [], afternoon: [] }
     );
-  }, [schedule]);
+  }, [upcomingAggregatedSlots]);
 
   const handleBook = () => {
     if (!selectedDoctorSlot) {
@@ -273,9 +284,9 @@ export default function OrganisationSchedulePage() {
               <h2 className="text-xl font-black text-slate-900 dark:text-white">
                 {format(selectedDate, 'MMM d, yyyy')}
               </h2>
-              {schedule?.aggregatedSlots && (
+              {upcomingAggregatedSlots.length > 0 && (
                 <span className="text-xs font-bold text-slate-400">
-                  {schedule.aggregatedSlots.length} time frame(s)
+                  {upcomingAggregatedSlots.length} time frame(s)
                 </span>
               )}
             </div>
@@ -286,8 +297,7 @@ export default function OrganisationSchedulePage() {
                   <Spinner size={32} />
                   <p className="mt-4 text-sm italic">Searching for slots...</p>
                 </div>
-              ) : schedule?.aggregatedSlots &&
-                schedule.aggregatedSlots.length > 0 ? (
+              ) : upcomingAggregatedSlots.length > 0 ? (
                 <div className="space-y-10">
                   {groupedSlots.morning.length > 0 && (
                     <section className="space-y-4">

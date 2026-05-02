@@ -34,7 +34,6 @@ export interface OrganisationExportFilters {
 
 export interface OphthalmologistExportFilters {
   searchTerm?: string;
-  verificationStatus?: string;
 }
 
 export interface AuditExportFilters {
@@ -143,9 +142,6 @@ export const exportApi = {
             pageNumber,
             pageSize,
             ...(filters.searchTerm && { searchTerm: filters.searchTerm }),
-            ...(filters.verificationStatus && {
-              verificationStatus: filters.verificationStatus,
-            }),
           },
         });
 

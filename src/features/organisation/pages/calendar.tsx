@@ -15,7 +15,9 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import Spinner from '@/components/ui/spinner';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
+import LatePatientModal from '../components/LatePatientModal';
 import { getOrganisationAppointments } from '../api/organisation-clinic-booking.api';
+import { checkLateArrival } from '../api/late-patient.api';
 import {
   organisationClinicBookingKeys,
   useCheckInClinicAppointment,
@@ -177,6 +179,10 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(todayKey);
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
   const [scanTargetAppointmentId, setScanTargetAppointmentId] = useState<
+    string | null
+  >(null);
+  const [isLateModalOpen, setIsLateModalOpen] = useState(false);
+  const [lateModalAppointmentId, setLateModalAppointmentId] = useState<
     string | null
   >(null);
 
@@ -388,9 +394,18 @@ export default function CalendarPage() {
 
             void (async () => {
               try {
-                await checkInMutation.mutateAsync(
-                  scanTargetAppointmentId ?? parsed.appointmentId
-                );
+                const appointmentId =
+                  scanTargetAppointmentId ?? parsed.appointmentId;
+
+                // Check if patient is late before check-in
+                const lateCheck = await checkLateArrival(appointmentId);
+                if (lateCheck.isLate) {
+                  setLateModalAppointmentId(appointmentId);
+                  setIsLateModalOpen(true);
+                  return;
+                }
+
+                await checkInMutation.mutateAsync(appointmentId);
                 toast.success(
                   t(
                     'Organisation.calendar.toast.qrCheckInSuccess',
@@ -884,6 +899,19 @@ export default function CalendarPage() {
           </div>
         </div>
       )}
+
+      <LatePatientModal
+        isOpen={isLateModalOpen}
+        appointmentId={lateModalAppointmentId ?? ''}
+        onClose={() => {
+          setIsLateModalOpen(false);
+          setLateModalAppointmentId(null);
+        }}
+        onSuccess={() => {
+          setIsLateModalOpen(false);
+          setLateModalAppointmentId(null);
+        }}
+      />
     </div>
   );
 }

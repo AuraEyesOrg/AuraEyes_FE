@@ -12,8 +12,6 @@ export interface OphthalmologistProfileData {
   userAddress?: string | null;
   bio?: string | null;
   employmentType?: string | null;
-  yearsOfExperience: number;
-  isVerified: boolean;
   createdAt: string;
   degrees: Array<{
     id: string;
@@ -38,7 +36,6 @@ export interface UpdateOphthalmologistProfileData {
   phone?: string;
   address?: string;
   bio?: string;
-  yearsOfExperience: number;
 }
 
 const ENDPOINTS = {

@@ -112,7 +112,6 @@ interface OphthalmologistMeApiResponse {
   success: boolean;
   data?: {
     employmentType?: string | null;
-    yearsOfExperience?: number;
   };
 }
 
@@ -157,10 +156,6 @@ export default function SlotManagementPage() {
           employmentType: normalizeEmploymentType(
             response.data?.data?.employmentType
           ),
-          yearsOfExperience:
-            typeof response.data?.data?.yearsOfExperience === 'number'
-              ? response.data.data.yearsOfExperience
-              : null,
         };
       },
       enabled: !!doctorId,
@@ -171,7 +166,6 @@ export default function SlotManagementPage() {
 
   const employmentType =
     doctorProfileSummary?.employmentType ?? authEmploymentType ?? null;
-  const yearsOfExperience = doctorProfileSummary?.yearsOfExperience ?? null;
   const isFullTimeDoctor = employmentType === 'FullTime';
   const isPartTimeDoctor = employmentType === 'PartTime';
   const employmentNoticeToastRef = useRef<EmploymentType | null>(null);
@@ -267,15 +261,8 @@ export default function SlotManagementPage() {
     useScheduleTemplates(doctorId);
 
   const visibleTemplates = useMemo(() => {
-    const templateList = templates ?? [];
-    if (!isPartTimeDoctor) {
-      return templateList;
-    }
-
-    return templateList.filter(
-      (template) => template.source !== 'SystemGenerated'
-    );
-  }, [isPartTimeDoctor, templates]);
+    return templates ?? [];
+  }, [templates]);
 
   const generateMutation = useGenerateSlots();
   const blockMutation = useBlockSlot();
@@ -602,7 +589,6 @@ export default function SlotManagementPage() {
 
     createTemplateMutation.mutate(
       {
-        ophthalId: doctorId,
         dayOfWeek: templateDayOfWeek,
         startTime: `${templateStartTime}:00`,
         endTime: `${templateEndTime}:00`,
@@ -1205,27 +1191,16 @@ export default function SlotManagementPage() {
                   )}
             </h3>
 
-            {isPartTimeDoctor &&
-              (yearsOfExperience !== null || allowedPriceRange) && (
-                <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-200">
-                  {yearsOfExperience !== null && (
-                    <p>
-                      {t(
-                        'Ophthalmologist.slotManagement.pricing.experienceLabel',
-                        `Your experience: ${yearsOfExperience} years.`
-                      )}
-                    </p>
+            {isPartTimeDoctor && allowedPriceRange && (
+              <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-200">
+                <p>
+                  {t(
+                    'Ophthalmologist.slotManagement.pricing.allowedRangeLabel',
+                    `Allowed price range: ${allowedPriceRange.minPrice.toLocaleString('vi-VN')} - ${allowedPriceRange.maxPrice.toLocaleString('vi-VN')} VND.`
                   )}
-                  {allowedPriceRange && (
-                    <p className={yearsOfExperience !== null ? 'mt-1' : ''}>
-                      {t(
-                        'Ophthalmologist.slotManagement.pricing.allowedRangeLabel',
-                        `Allowed price range: ${allowedPriceRange.minPrice.toLocaleString('vi-VN')} - ${allowedPriceRange.maxPrice.toLocaleString('vi-VN')} VND.`
-                      )}
-                    </p>
-                  )}
-                </div>
-              )}
+                </p>
+              </div>
+            )}
 
             <div className="space-y-4">
               <div>

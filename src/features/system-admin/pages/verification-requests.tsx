@@ -97,25 +97,7 @@ const getCredentialCounts = (doctor: OphthalmologistListItem) => {
   return { licenseCount, degreeCount };
 };
 
-const getVerificationRequestType = (
-  verificationStatus: OphthalmologistListItem['verificationStatus'],
-  t: TranslateFn
-) => {
-  if (verificationStatus === 'PendingUpdate') {
-    return {
-      label: t(
-        'SystemAdmin.verificationRequests.requestType.credentialUpdate.label',
-        'Credential Update Review'
-      ),
-      hint: t(
-        'SystemAdmin.verificationRequests.requestType.credentialUpdate.hint',
-        'Doctor submitted updated credentials after prior approval.'
-      ),
-      className:
-        'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800',
-    };
-  }
-
+const getVerificationRequestType = (t: TranslateFn) => {
   return {
     label: t(
       'SystemAdmin.verificationRequests.requestType.onboarding.label',
@@ -191,11 +173,7 @@ function ApproveModal({
               </p>
               <p className="text-sm text-slate-500">{doctor.email}</p>
               <p className="text-xs text-slate-400 mt-0.5">
-                {t(
-                  'SystemAdmin.verificationRequests.common.experienceYears',
-                  '{{count}} years of experience',
-                  { count: doctor.yearsOfExperience }
-                )}
+                {doctor.organisationName || doctor.email}
               </p>
             </div>
           </div>
@@ -682,8 +660,7 @@ export default function VerificationRequestsPage() {
       ophthalmologistApi.getOphthalmologists(
         pageNumber,
         10,
-        searchQuery || undefined,
-        'PendingVerification,PendingUpdate'
+        searchQuery || undefined
       ),
     placeholderData: (prev) => prev,
   });
@@ -721,8 +698,8 @@ export default function VerificationRequestsPage() {
   });
 
   const rejectMutation = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      ophthalmologistApi.verifyOphthalmologist(id, false, reason),
+    mutationFn: ({ id }: { id: string }) =>
+      ophthalmologistApi.verifyOphthalmologist(id, false),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       setRejectingDoctor(null);
@@ -751,9 +728,9 @@ export default function VerificationRequestsPage() {
     approveMutation.mutate(approvingDoctor.id);
   };
 
-  const handleRejectConfirm = (reason: string) => {
+  const handleRejectConfirm = () => {
     if (!rejectingDoctor) return;
-    rejectMutation.mutate({ id: rejectingDoctor.id, reason });
+    rejectMutation.mutate({ id: rejectingDoctor.id });
   };
 
   return (
@@ -920,11 +897,7 @@ export default function VerificationRequestsPage() {
                               </p>
                               <div className="flex items-center gap-1.5 mt-0.5">
                                 <span className="text-xs text-slate-400">
-                                  {t(
-                                    'SystemAdmin.verificationRequests.common.shortExperienceYears',
-                                    '{{count}} yrs exp',
-                                    { count: doctor.yearsOfExperience }
-                                  )}
+                                  {doctor.email}
                                 </span>
                                 {doctor.organisationName && (
                                   <>
@@ -942,10 +915,7 @@ export default function VerificationRequestsPage() {
                         {/* Request type */}
                         <td className="px-5 py-4">
                           {(() => {
-                            const requestType = getVerificationRequestType(
-                              doctor.verificationStatus,
-                              t
-                            );
+                            const requestType = getVerificationRequestType(t);
 
                             return (
                               <div className="space-y-1.5">

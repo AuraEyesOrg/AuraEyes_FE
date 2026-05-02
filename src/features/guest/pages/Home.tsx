@@ -1,9 +1,23 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useQuery } from '@tanstack/react-query';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  X,
+  Briefcase,
+  ChevronRight,
+  Sparkles,
+  CheckCircle2,
+} from 'lucide-react';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import i18n, { resources } from '@/i18n/i18n';
 import {
@@ -18,12 +32,40 @@ import SourceVerificationTag from '../components/SourceVerificationTag';
 import GuestTrustedBy from '../components/GuestTrustedBy';
 import { prefersReducedMotion } from '../utils/motion';
 import { SeoMeta } from '@/hooks/useSeoMeta';
+import { useGuestTour } from '../tour';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const HomePage = () => {
   const { t: i18nT } = useTranslation();
   const navigate = useNavigate();
+  const { setTourBlocked } = useGuestTour();
+  const [showRecruitment, setShowRecruitment] = useState(false);
+
+  const hasShownThisVisit = useRef(false);
+
+  useLayoutEffect(() => {
+    // Block the tour immediately to wait for popup
+    setTourBlocked(true);
+
+    const timer = setTimeout(() => {
+      if (!hasShownThisVisit.current) {
+        setShowRecruitment(true);
+        hasShownThisVisit.current = true;
+      }
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer);
+      setTourBlocked(false);
+    };
+  }, [setTourBlocked]);
+
+  const handleClosePopup = () => {
+    setShowRecruitment(false);
+    // Unblock the tour after closing the popup
+    setTourBlocked(false);
+  };
 
   const resolveResourceValue = (locale: 'vi' | 'en', key: string) => {
     return key.split('.').reduce<unknown>((accumulator, segment) => {
@@ -489,30 +531,21 @@ const HomePage = () => {
   const homeStructuredData = [
     {
       '@context': 'https://schema.org',
+      '@type': 'MedicalOrganization',
+      name: 'AURA Digital Hospital',
+      url: 'https://web.auraeyes.site',
+      description: t('GuestHome.description'),
+      medicalSpecialty: ['Ophthalmology', 'Digital Health'],
+    },
+    {
+      '@context': 'https://schema.org',
       '@type': 'WebSite',
       name: 'AURA',
       url: 'https://web.auraeyes.site',
-      description: 'AI-powered retinal vascular health screening platform.',
       potentialAction: {
         '@type': 'SearchAction',
         target: 'https://web.auraeyes.site/search?q={search_term_string}',
         'query-input': 'required name=search_term_string',
-      },
-    },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'MedicalWebPage',
-      name: 'AURA — AI Retinal Health Screening',
-      url: homeCanonical,
-      description:
-        'Detect retinal diseases early with clinical-grade AI precision. Book screenings with verified ophthalmologists.',
-      about: {
-        '@type': 'MedicalCondition',
-        name: 'Retinal Vascular Disease',
-      },
-      audience: {
-        '@type': 'MedicalAudience',
-        audienceType: 'Patient',
       },
     },
   ];
@@ -524,8 +557,8 @@ const HomePage = () => {
     >
       {/* SEO Metadata */}
       <SeoMeta
-        title="AI Retinal Vascular Health Screening"
-        description="Detect retinal diseases early with clinical-grade AI precision. Automated diagnostics with 99.2% accuracy. Connect with verified ophthalmologists and book your free screening."
+        title={t('GuestHome.title', 'Bệnh viện Kỹ thuật số Aura')}
+        description={t('GuestHome.description')}
         canonical={homeCanonical}
         locale={currentLocale}
         structuredData={homeStructuredData}
@@ -1177,6 +1210,135 @@ const HomePage = () => {
       </main>
 
       <Footer />
+
+      <AnimatePresence>
+        {showRecruitment && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm">
+            <style>{`
+              @keyframes blob {
+                0% { transform: translate(0px, 0px) scale(1); }
+                33% { transform: translate(30px, -40px) scale(1.1); }
+                66% { transform: translate(-20px, 20px) scale(0.9); }
+                100% { transform: translate(0px, 0px) scale(1); }
+              }
+              @keyframes morph {
+                0% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+                50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+                100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+              }
+              .animate-blob { animation: blob 8s infinite; }
+              .animate-morph { animation: morph 8s ease-in-out infinite; }
+              .animation-delay-2000 { animation-delay: 2s; }
+              .animation-delay-4000 { animation-delay: 4s; }
+            `}</style>
+
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-[10%] left-[20%] w-[30vw] h-[30vw] bg-[var(--color-brand-primary)] rounded-full mix-blend-multiply blur-[100px] opacity-40 animate-blob" />
+              <div className="absolute bottom-[20%] right-[20%] w-[30vw] h-[30vw] bg-[#0EA5A5] rounded-full mix-blend-multiply blur-[100px] opacity-30 animate-blob animation-delay-2000" />
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', bounce: 0.25, duration: 0.7 }}
+              className="relative z-10 w-full max-w-[1000px] bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border border-white p-8 md:p-10 lg:p-12 flex flex-col md:flex-row items-center gap-8 lg:gap-14"
+            >
+              <button
+                onClick={handleClosePopup}
+                className="absolute top-5 right-5 md:top-6 md:right-6 z-50 p-2.5 rounded-full bg-gray-100/80 hover:bg-gray-200 hover:scale-110 transition-all text-gray-500 hover:text-gray-900 hover:rotate-90 duration-300 shadow-sm border border-white"
+                aria-label="Close"
+              >
+                <X size={22} strokeWidth={2.5} />
+              </button>
+
+              <div className="w-full md:w-5/12 flex justify-center mt-6 md:mt-0">
+                <div className="relative w-[240px] h-[300px] lg:w-[320px] lg:h-[400px] animate-morph overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)] border-[6px] border-white bg-slate-100 flex-shrink-0">
+                  <img
+                    src="/doctor.png"
+                    alt="Aura Medical Network"
+                    className="absolute inset-0 w-full h-full object-cover object-top"
+                  />
+                  <div className="absolute bottom-5 left-0 right-0 flex justify-center z-10">
+                    <div className="flex items-center gap-1.5 text-[var(--color-brand-primary)] bg-white/95 backdrop-blur-md px-4 py-2 rounded-full w-fit shadow-md border border-gray-100">
+                      <Sparkles size={14} className="text-yellow-500" />
+                      <span className="text-xs font-black tracking-widest uppercase">
+                        Aura Digital
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full md:w-7/12 flex flex-col items-center md:items-start text-center md:text-left">
+                <div className="inline-flex items-center gap-2 bg-gray-50 border border-gray-200 px-3.5 py-1.5 rounded-full mb-5 shadow-sm">
+                  <div className="text-[var(--color-brand-primary)]">
+                    <Briefcase size={16} strokeWidth={2.5} />
+                  </div>
+                  <span className="uppercase tracking-widest text-[10px] font-bold text-gray-600">
+                    Thư mời hợp tác chuyên môn
+                  </span>
+                </div>
+
+                <h2 className="text-3xl lg:text-4xl font-black text-gray-900 leading-tight mb-4 tracking-tight">
+                  {t(
+                    'GuestHome.recruitmentPopup.title',
+                    'Gia nhập đội ngũ Chuyên gia'
+                  )}
+                </h2>
+
+                <p className="text-gray-600 text-sm lg:text-base mb-8 leading-relaxed max-w-md">
+                  {t(
+                    'GuestHome.recruitmentPopup.description',
+                    'Chúng tôi đang tìm kiếm các bác sĩ tài năng để cùng kiến tạo tương lai y tế số. Trở thành một phần của Aura ngay hôm nay!'
+                  )}
+                </p>
+
+                <div className="space-y-3.5 mb-8 w-full max-w-md text-left">
+                  <div className="flex items-center gap-3 bg-gray-50/80 p-3 lg:p-4 rounded-xl border border-gray-100 shadow-sm">
+                    <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-primary)] shrink-0" />
+                    <span className="text-gray-700 text-sm">
+                      Nâng cao hiệu suất với{' '}
+                      <strong>AI phân tích võng mạc</strong> độ chính xác lâm
+                      sàng.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-gray-50/80 p-3 lg:p-4 rounded-xl border border-gray-100 shadow-sm">
+                    <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-primary)] shrink-0" />
+                    <span className="text-gray-700 text-sm">
+                      Tiếp cận nguồn bệnh nhân toàn cầu qua nền tảng khám từ xa.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center md:justify-start">
+                  <button
+                    onClick={() => {
+                      handleClosePopup();
+                      navigate(resolvePathWithLocale('/contact'));
+                    }}
+                    className="w-full sm:w-auto bg-[var(--color-brand-dark)] text-white font-bold text-sm py-3.5 px-8 rounded-xl shadow-lg shadow-slate-900/20 hover:-translate-y-1 hover:shadow-slate-900/30 active:translate-y-0 transition-all flex items-center justify-center gap-2 group"
+                  >
+                    {t('GuestHome.recruitmentPopup.cta', 'Ứng tuyển ngay')}
+                    <ChevronRight
+                      size={18}
+                      strokeWidth={3}
+                      className="group-hover:translate-x-1.5 transition-transform"
+                    />
+                  </button>
+
+                  <button
+                    onClick={handleClosePopup}
+                    className="w-full sm:w-auto text-gray-500 font-bold text-sm py-3.5 px-6 rounded-xl hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  >
+                    {t('GuestHome.recruitmentPopup.close', 'Để sau')}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

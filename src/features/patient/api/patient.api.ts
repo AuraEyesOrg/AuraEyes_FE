@@ -210,8 +210,6 @@ export interface OphthalmologistSearchItem {
   userEmail?: string | null;
   userAvatarUrl?: string | null;
   bio?: string | null;
-  yearsOfExperience: number;
-  isVerified: boolean;
   certificateCount: number;
   createdAt: string;
   licenseUrl?: string | null;
@@ -248,8 +246,6 @@ export interface OphthalmologistDetailItem {
   userFullName?: string | null;
   userEmail?: string | null;
   bio?: string | null;
-  yearsOfExperience: number;
-  isVerified: boolean;
   createdAt: string;
   updatedAt?: string | null;
   licenseUrl?: string | null;
