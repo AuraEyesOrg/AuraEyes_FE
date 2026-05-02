@@ -289,9 +289,7 @@ const SystemAdminWithdrawalRequests = lazy(
 const SystemAdminLeaveRequests = lazy(
   () => import('@/features/system-admin/pages/leave-requests')
 );
-const SystemAdminLeavePolicies = lazy(
-  () => import('@/features/system-admin/pages/leave-policies')
-);
+
 const SystemAdminEmploymentTypeChangeRequests = lazy(
   () => import('@/features/system-admin/pages/employment-type-change-requests')
 );
@@ -1306,15 +1304,7 @@ const Router = () => (
             />
           }
         />
-        <Route
-          path="/:locale/system-admin/leave-policies"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['SystemAdmin']}
-              element={<SystemAdminLeavePolicies />}
-            />
-          }
-        />
+
         <Route
           path="/:locale/system-admin/employment-type-change-requests"
           element={
