@@ -48,6 +48,7 @@ export interface OphthalmologistListItem {
   createdAt: string;
   ratingAverage?: number;
   ratingCount?: number;
+  availableLeaveDays: number;
 }
 
 export interface FeedbackRatingSummary {
@@ -160,6 +161,16 @@ export const ophthalmologistApi = {
       },
     });
     return unwrapApiData<PagedResult<OphthalmologistListItem>>(response.data);
+  },
+
+  /**
+   * Fetch ophthalmologist detail by ID
+   */
+  async getOphthalmologistDetail(id: string) {
+    const response = await api.get<ApiResponse<OphthalmologistListItem>>(
+      API_ENDPOINTS.SYSTEM_ADMIN.OPHTHALMOLOGISTS.DETAIL(id)
+    );
+    return unwrapApiData<OphthalmologistListItem>(response.data);
   },
 
   /**

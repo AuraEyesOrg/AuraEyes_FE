@@ -71,6 +71,7 @@ export const API_ENDPOINTS = {
     // Ophthalmologist Management
     OPHTHALMOLOGISTS: {
       LIST: '/system-admin/ophthalmologists',
+      DETAIL: (id: string) => `/system-admin/ophthalmologists/${id}`,
       VERIFY: (id: string) => `/system-admin/ophthalmologists/${id}/verify`,
       UPDATE_PROFILE: (id: string) => `/ophthalmologists/${id}`,
       DELETE: (id: string) => `/system-admin/ophthalmologists/${id}`,
@@ -186,6 +187,16 @@ export const API_ENDPOINTS = {
     // Cashflow Ledger
     CASHFLOW: {
       TRANSACTIONS: '/system-admin/cashflow/transactions',
+    },
+
+    // Leave Policy Management
+    LEAVE_POLICIES: {
+      LIST: '/system-admin/leave-policies',
+      CREATE: '/system-admin/leave-policies',
+      UPDATE: (id: string) => `/system-admin/leave-policies/${id}`,
+      DELETE: (id: string) => `/system-admin/leave-policies/${id}`,
+      APPLY: (policyId: string, doctorId: string) =>
+        `/system-admin/leave-policies/${policyId}/apply/${doctorId}`,
     },
   },
 

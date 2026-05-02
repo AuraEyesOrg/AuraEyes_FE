@@ -20,6 +20,7 @@ import {
 import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
+import LeavePoliciesSection from '../components/LeavePoliciesSection';
 import {
   useSystemSettings,
   useUpdateSystemSettings,
@@ -63,6 +64,14 @@ const settingSections: SettingSection[] = [
     descriptionKey: 'SystemAdmin.settings.sections.data.description',
     descriptionFallback: 'Backup, export, and data retention',
     icon: <Database className="w-5 h-5" />,
+  },
+  {
+    id: 'leave-policies',
+    titleKey: 'SystemAdmin.leavePolicies.title',
+    titleFallback: 'Leave Policies',
+    descriptionKey: 'SystemAdmin.leavePolicies.description',
+    descriptionFallback: 'Configure doctor leave rules',
+    icon: <Shield className="w-5 h-5" />,
   },
 ];
 
@@ -831,6 +840,8 @@ export default function SettingsPage() {
         return renderSecuritySettings();
       case 'data':
         return renderDataSettings();
+      case 'leave-policies':
+        return <LeavePoliciesSection />;
       default:
         return renderGeneralSettings();
     }

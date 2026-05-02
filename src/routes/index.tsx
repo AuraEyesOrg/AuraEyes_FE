@@ -85,7 +85,6 @@ const AppointmentsPage = lazy(
 const ProfilePage = lazy(() => import('@/features/patient/pages/profile'));
 const SettingsPage = lazy(() => import('@/features/patient/pages/settings'));
 const ClinicsPage = lazy(() => import('@/features/patient/pages/clinics'));
-const DoctorsPage = lazy(() => import('@/features/patient/pages/doctors'));
 const OrganisationSchedulePage = lazy(
   () => import('@/features/patient/pages/organisation-schedule')
 );
@@ -290,6 +289,7 @@ const SystemAdminWithdrawalRequests = lazy(
 const SystemAdminLeaveRequests = lazy(
   () => import('@/features/system-admin/pages/leave-requests')
 );
+
 const SystemAdminEmploymentTypeChangeRequests = lazy(
   () => import('@/features/system-admin/pages/employment-type-change-requests')
 );
@@ -818,15 +818,6 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/patient/doctors"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Patient']}
-              element={<DoctorsPage />}
-            />
-          }
-        />
-        <Route
           path="/:locale/patient/care-plan"
           element={
             <LocalizedPrivateRoute
@@ -1313,6 +1304,7 @@ const Router = () => (
             />
           }
         />
+
         <Route
           path="/:locale/system-admin/employment-type-change-requests"
           element={
@@ -1615,14 +1607,6 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['Patient']}>
               <ClinicsPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/patient/doctors"
-          element={
-            <PrivateRoute allowedRoles={['Patient']}>
-              <DoctorsPage />
             </PrivateRoute>
           }
         />
