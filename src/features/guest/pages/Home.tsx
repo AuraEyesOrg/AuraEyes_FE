@@ -11,7 +11,13 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Briefcase, ChevronRight, Sparkles } from 'lucide-react';
+import {
+  X,
+  Briefcase,
+  ChevronRight,
+  Sparkles,
+  CheckCircle2,
+} from 'lucide-react';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import i18n, { resources } from '@/i18n/i18n';
 import {
@@ -45,7 +51,7 @@ const HomePage = () => {
 
       const timer = setTimeout(() => {
         setShowRecruitment(true);
-      }, 3000);
+      }, 1000);
 
       return () => {
         clearTimeout(timer);
@@ -1210,85 +1216,141 @@ const HomePage = () => {
 
       <AnimatePresence>
         {showRecruitment && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative bg-white rounded-3xl shadow-2xl overflow-hidden max-w-4xl w-full flex flex-col md:flex-row border border-[var(--color-medical-border)]"
-            >
-              {/* Close Button */}
-              <button
-                onClick={handleClosePopup}
-                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/5 hover:bg-black/10 transition-colors text-gray-500 hover:text-black"
-                aria-label="Close"
-              >
-                <X size={20} />
-              </button>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden">
+            {/* --- NỀN KÍNH MỜ TRÀN MÀN HÌNH --- */}
+            <div className="absolute inset-0 bg-white/70 backdrop-blur-2xl" />
 
-              {/* Image Section */}
-              <div className="md:w-1/2 relative bg-[var(--color-brand-primary)] overflow-hidden min-h-[300px]">
-                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-brand-primary)] to-transparent opacity-60 z-[1]" />
-                <img
-                  src="/doctor.png"
-                  alt="Recruitment"
-                  className="w-full h-full object-cover object-center relative z-0"
-                />
-                <div className="absolute bottom-6 left-6 right-6 z-[2]">
-                  <div className="flex items-center gap-2 text-white/90 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full w-fit border border-white/20 mb-3">
-                    <Sparkles size={14} className="text-yellow-300" />
-                    <span className="text-xs font-bold uppercase tracking-wider">
-                      Hệ thống Y tế Aura
-                    </span>
+            {/* CSS Animation */}
+            <style>{`
+              @keyframes blob {
+                0% { transform: translate(0px, 0px) scale(1); }
+                33% { transform: translate(40px, -60px) scale(1.1); }
+                66% { transform: translate(-30px, 30px) scale(0.9); }
+                100% { transform: translate(0px, 0px) scale(1); }
+              }
+              @keyframes morph {
+                0% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+                50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+                100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+              }
+              .animate-blob { animation: blob 8s infinite; }
+              .animate-morph { animation: morph 8s ease-in-out infinite; }
+              .animation-delay-2000 { animation-delay: 2s; }
+              .animation-delay-4000 { animation-delay: 4s; }
+            `}</style>
+
+            {/* --- BLOBS BAY LƠ LỬNG TRÊN TOÀN MÀN HÌNH --- */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-[var(--color-brand-primary)] rounded-full mix-blend-multiply blur-[120px] opacity-30 animate-blob" />
+              <div className="absolute top-[20%] right-[-10%] w-[40vw] h-[40vw] bg-[#0EA5A5] rounded-full mix-blend-multiply blur-[120px] opacity-20 animate-blob animation-delay-2000" />
+              <div className="absolute bottom-[-20%] left-[20%] w-[50vw] h-[50vw] bg-blue-300 rounded-full mix-blend-multiply blur-[120px] opacity-30 animate-blob animation-delay-4000" />
+            </div>
+
+            {/* Nút Đóng */}
+            <button
+              onClick={handleClosePopup}
+              className="absolute top-6 right-6 lg:top-8 lg:right-8 z-50 p-3 rounded-full bg-white/60 backdrop-blur-md hover:bg-white hover:scale-110 transition-all text-gray-500 hover:text-gray-900 hover:rotate-90 duration-300 shadow-sm border border-gray-200"
+              aria-label="Close full screen"
+            >
+              <X size={24} strokeWidth={2} />
+            </button>
+
+            {/* --- NỘI DUNG CHÍNH --- */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -40 }}
+              transition={{ type: 'spring', bounce: 0.2, duration: 0.8 }}
+              className="relative z-10 w-full max-w-[1100px] px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-10 lg:gap-16"
+            >
+              {/* --- CỘT HÌNH ẢNH (Bên trái) --- */}
+              <div className="w-full md:w-5/12 flex justify-center md:justify-end">
+                {/* Khung cắt hình cong cong thu nhỏ lại */}
+                <div className="relative w-[260px] h-[320px] sm:w-[300px] sm:h-[380px] lg:w-[360px] lg:h-[460px] animate-morph overflow-hidden shadow-xl border-[6px] border-white bg-slate-100">
+                  <img
+                    src="/doctor.png"
+                    alt="Aura Medical Network"
+                    className="absolute inset-0 w-full h-full object-cover object-top"
+                  />
+                  {/* Tag góc dưới */}
+                  <div className="absolute bottom-5 left-0 right-0 flex justify-center z-10">
+                    <div className="flex items-center gap-1.5 text-[var(--color-brand-primary)] bg-white/95 backdrop-blur-md px-4 py-2 rounded-full w-fit shadow-md border border-gray-100">
+                      <Sparkles size={16} className="text-yellow-500" />
+                      <span className="text-xs font-black tracking-widest uppercase">
+                        Aura Digital
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Content Section */}
-              <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
-                <div className="flex items-center gap-3 text-[var(--color-brand-primary)] font-bold mb-4">
-                  <div className="p-2 bg-[var(--color-brand-primary)]/10 rounded-xl">
-                    <Briefcase size={24} />
+              {/* --- CỘT TEXT (Bên phải) --- */}
+              <div className="w-full md:w-7/12 flex flex-col items-center md:items-start text-center md:text-left">
+                <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-gray-200 px-4 py-2 rounded-full mb-6 shadow-sm">
+                  <div className="text-[var(--color-brand-primary)]">
+                    <Briefcase size={16} strokeWidth={2.5} />
                   </div>
-                  <span className="uppercase tracking-widest text-xs">
-                    Cơ hội nghề nghiệp
+                  <span className="uppercase tracking-widest text-[11px] font-bold text-[var(--color-brand-dark)]">
+                    Thư mời hợp tác chuyên môn
                   </span>
                 </div>
 
-                <h2 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight mb-4">
-                  {t('GuestHome.recruitmentPopup.title')}
+                {/* Chữ nhỏ gọn lại */}
+                <h2 className="text-3xl lg:text-5xl font-black text-gray-900 leading-tight mb-4 tracking-tight">
+                  {t(
+                    'GuestHome.recruitmentPopup.title',
+                    'Gia nhập đội ngũ Chuyên gia'
+                  )}
                 </h2>
 
-                <p className="text-gray-600 text-lg leading-relaxed mb-8">
-                  {t('GuestHome.recruitmentPopup.description')}
+                <p className="text-gray-600 text-base lg:text-lg mb-8 leading-relaxed max-w-xl">
+                  {t(
+                    'GuestHome.recruitmentPopup.description',
+                    'Chúng tôi đang tìm kiếm các bác sĩ tài năng để cùng kiến tạo tương lai y tế số. Trở thành một phần của Aura ngay hôm nay!'
+                  )}
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4">
+                {/* Các bullet point gọn gàng hơn */}
+                <div className="space-y-4 mb-10 w-full max-w-xl text-left">
+                  <div className="flex items-center gap-3 bg-white/60 p-3 lg:p-4 rounded-xl backdrop-blur-sm border border-gray-200 shadow-sm">
+                    <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-primary)] shrink-0" />
+                    <span className="text-gray-700 text-sm lg:text-base">
+                      Nâng cao hiệu suất với{' '}
+                      <strong>AI phân tích võng mạc</strong> độ chính xác lâm
+                      sàng.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-white/60 p-3 lg:p-4 rounded-xl backdrop-blur-sm border border-gray-200 shadow-sm">
+                    <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-primary)] shrink-0" />
+                    <span className="text-gray-700 text-sm lg:text-base">
+                      Tiếp cận nguồn bệnh nhân toàn cầu qua nền tảng khám từ xa.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-xl justify-center md:justify-start">
                   <button
                     onClick={() => {
                       handleClosePopup();
                       navigate(resolvePathWithLocale('/contact'));
                     }}
-                    className="flex-1 bg-[var(--color-brand-primary)] text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-[var(--color-brand-primary)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
+                    className="w-full sm:w-auto bg-[var(--color-brand-dark)] text-white font-bold text-base py-3.5 px-8 rounded-xl shadow-lg shadow-slate-900/20 hover:-translate-y-1 hover:shadow-slate-900/30 active:translate-y-0 transition-all flex items-center justify-center gap-2 group"
                   >
-                    {t('GuestHome.recruitmentPopup.cta')}
+                    {t('GuestHome.recruitmentPopup.cta', 'Ứng tuyển ngay')}
                     <ChevronRight
-                      size={18}
-                      className="group-hover:translate-x-1 transition-transform"
+                      size={20}
+                      strokeWidth={3}
+                      className="group-hover:translate-x-1.5 transition-transform"
                     />
                   </button>
+
                   <button
                     onClick={handleClosePopup}
-                    className="flex-1 bg-gray-100 text-gray-600 font-bold py-4 px-6 rounded-2xl hover:bg-gray-200 transition-colors"
+                    className="w-full sm:w-auto text-gray-500 font-bold text-base py-3.5 px-6 rounded-xl hover:text-gray-900 hover:bg-gray-100/80 transition-colors"
                   >
-                    {t('GuestHome.recruitmentPopup.close')}
+                    {t('GuestHome.recruitmentPopup.close', 'Để sau')}
                   </button>
                 </div>
-
-                <p className="mt-8 text-xs text-gray-400 italic">
-                  * Ưu tiên các bác sĩ có kinh nghiệm về nhãn khoa và ứng dụng
-                  công nghệ AI trong y tế.
-                </p>
               </div>
             </motion.div>
           </div>
