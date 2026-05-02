@@ -21,8 +21,6 @@ export interface OrganisationContractDetailDto {
   aiQuotaLimit: number;
   monthlyQuotaLimit: number;
   platformCommissionRate: number;
-  commissionRate?: number | null;
-  actualMonthlySalary?: number | null;
   signedDate?: string;
   scannedDocumentUrl?: string;
   signedContent?: string;

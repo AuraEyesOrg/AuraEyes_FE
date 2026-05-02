@@ -4,7 +4,7 @@
  */
 
 import { Link, useLocation } from 'react-router-dom';
-import { BadgeCheck, Users, FileText, Star } from 'lucide-react';
+import { Users, FileText, Star } from 'lucide-react';
 import type { Ophthalmologist } from '../../types';
 import { InitialsAvatar } from './InitialsAvatar';
 import {
@@ -62,9 +62,6 @@ export function ProfessionalCard({ professional }: Props) {
                 >
                   {professional.fullName}
                 </Link>
-                {professional.isVerified && (
-                  <BadgeCheck className="w-[18px] h-[18px] text-brand-primary shrink-0" />
-                )}
               </div>
               <p className="text-[15px] text-text-muted truncate">
                 {displayPrimarySpecialty}
@@ -97,12 +94,8 @@ export function ProfessionalCard({ professional }: Props) {
                 {professional.postCount}
               </span>
             )}
-            {professional.rating !== undefined && (
-              <span className="flex items-center gap-1">
-                <Star className="w-4 h-4 text-yellow-500" />
-                {professional.rating}
-              </span>
-            )}
+            <Star className="w-4 h-4 text-yellow-500" />
+            {professional.rating}
           </div>
 
           {/* Bio */}

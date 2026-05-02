@@ -55,15 +55,9 @@ export interface ConsultationSessionDto {
   chatStatusName: string;
   price: number;
   appointmentTime: string | null;
-  meetingLink: string | null;
   lastActivityAt: string;
-  closedAt: string | null;
-  closedBy: string | null;
-  closingReason: string | null;
   createdAt: string;
   updatedAt: string | null;
-  isRetinalImagesShared: boolean;
-  isAIResultShared: boolean;
   caseSnapshot: ConsultationCaseSnapshotDto | null;
   messages: ChatMessageDto[];
 }
@@ -100,14 +94,10 @@ export interface ConsultationSessionListDto {
   chatStatusName: string;
   price: number;
   appointmentTime: string | null;
-  meetingLink?: string | null;
   lastActivityAt: string;
   createdAt: string;
-  closedAt: string | null;
 
-  // Consent flags + lightweight AI snapshot (for list displays).
-  isRetinalImagesShared?: boolean;
-  isAIResultShared?: boolean;
+  // Lightweight AI snapshot (for list displays).
   caseSnapshot?: ConsultationCaseSnapshotDto | null;
 
   /** Truncated text of the most recent chat message (from BE list endpoint). */

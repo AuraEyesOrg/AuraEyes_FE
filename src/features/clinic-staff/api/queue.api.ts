@@ -50,7 +50,6 @@ export interface SendToDoctorResponse {
 export interface AvailableDoctor {
   id: string;
   fullName: string;
-  yearsOfExperience: number;
   avatarUrl?: string;
 }
 
@@ -108,7 +107,6 @@ interface AvailableDoctorApiItem {
   id: string;
   fullName?: string | null;
   userFullName?: string | null;
-  yearsOfExperience?: number | null;
   avatarUrl?: string | null;
   userAvatarUrl?: string | null;
 }
@@ -130,7 +128,6 @@ const normalizeAvailableDoctor = (
     doctor.fullName?.trim() ||
     doctor.userFullName?.trim() ||
     `Doctor #${index + 1}`,
-  yearsOfExperience: doctor.yearsOfExperience ?? 0,
   avatarUrl: doctor.avatarUrl ?? doctor.userAvatarUrl ?? undefined,
 });
 

@@ -165,43 +165,23 @@ function ContractDetailDialog({
     : 'vi-VN';
   const notAvailableLabel = t('SystemAdmin.common.notAvailable', 'N/A');
 
-  const [commissionRate, setCommissionRate] = useState<string>('');
-  const [actualMonthlySalary, setActualMonthlySalary] = useState<string>('');
   const [confirmedMonthlyQuotaLimit, setConfirmedMonthlyQuotaLimit] =
     useState<string>('');
 
   useEffect(() => {
     if (!contract) return;
 
-    const commissionSeed =
-      contract.commissionRate ?? contract.platformCommissionRate ?? 0;
-    setCommissionRate(String(commissionSeed));
-    setActualMonthlySalary(String(contract.actualMonthlySalary ?? ''));
     setConfirmedMonthlyQuotaLimit(String(contract.monthlyQuotaLimit ?? ''));
   }, [contract]);
 
-  const commissionRateValue = Number(commissionRate);
-  const actualMonthlySalaryValue = Number(actualMonthlySalary);
   const confirmedMonthlyQuotaValue = Number(confirmedMonthlyQuotaLimit);
   const isOrganisationContract =
     contract?.contractType === 'MedicalOrganizationContract';
-  const canVerifyWithDeal =
-    Number.isFinite(commissionRateValue) &&
-    Number.isFinite(actualMonthlySalaryValue) &&
-    commissionRate.trim().length > 0 &&
-    actualMonthlySalary.trim().length > 0 &&
-    commissionRateValue >= 0 &&
-    commissionRateValue <= 100 &&
-    actualMonthlySalaryValue >= 0;
   const canVerifyWithMonthlyQuota =
     Number.isFinite(confirmedMonthlyQuotaValue) &&
     confirmedMonthlyQuotaLimit.trim().length > 0 &&
     confirmedMonthlyQuotaValue > 0;
-  const canVerify = isOrganisationContract
-    ? canVerifyWithMonthlyQuota
-    : canVerifyWithDeal;
-  const commissionDisplayValue =
-    contract?.commissionRate ?? contract?.platformCommissionRate;
+  const canVerify = isOrganisationContract ? canVerifyWithMonthlyQuota : true;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -314,38 +294,6 @@ function ContractDetailDialog({
                   )}
                   value={String(contract.monthlyQuotaLimit ?? 0)}
                 />
-                <InfoRow
-                  label={t(
-                    'SystemAdmin.contracts.detailDialog.fields.commission',
-                    'Commission'
-                  )}
-                  value={
-                    commissionDisplayValue != null
-                      ? `${commissionDisplayValue}%`
-                      : notAvailableLabel
-                  }
-                />
-                {!isOrganisationContract && (
-                  <InfoRow
-                    label={t(
-                      'SystemAdmin.contracts.detailDialog.fields.actualMonthlySalary',
-                      'Actual monthly salary'
-                    )}
-                    value={
-                      contract.actualMonthlySalary != null
-                        ? `${contract.actualMonthlySalary.toLocaleString(
-                            dateLocale
-                          )} ${t(
-                            'SystemAdmin.contracts.detailDialog.currency.vnd',
-                            'VND'
-                          )}`
-                        : t(
-                            'SystemAdmin.contracts.detailDialog.notFinalized',
-                            'Not finalized yet'
-                          )
-                    }
-                  />
-                )}
               </div>
 
               {contract.status === 'PendingSignature' &&
@@ -382,39 +330,7 @@ function ContractDetailDialog({
                         </label>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <label className="text-sm text-slate-600 dark:text-slate-300">
-                          {t(
-                            'SystemAdmin.contracts.detailDialog.fields.commissionRatePercent',
-                            'Commission rate (%)'
-                          )}
-                          <input
-                            type="number"
-                            min={0}
-                            max={100}
-                            step={0.01}
-                            value={commissionRate}
-                            onChange={(e) => setCommissionRate(e.target.value)}
-                            className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
-                          />
-                        </label>
-                        <label className="text-sm text-slate-600 dark:text-slate-300">
-                          {t(
-                            'SystemAdmin.contracts.detailDialog.fields.actualMonthlySalaryVnd',
-                            'Actual monthly salary (VND)'
-                          )}
-                          <input
-                            type="number"
-                            min={0}
-                            step={1}
-                            value={actualMonthlySalary}
-                            onChange={(e) =>
-                              setActualMonthlySalary(e.target.value)
-                            }
-                            className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
-                          />
-                        </label>
-                      </div>
+                      <></>
                     )}
                     {!canVerify && (
                       <p className="text-xs text-red-500">
@@ -550,18 +466,6 @@ function ContractDetailDialog({
               <button
                 onClick={() =>
                   onVerify(contractId, {
-                    commissionRate: isOrganisationContract
-                      ? (contract.commissionRate ??
-                        contract.platformCommissionRate ??
-                        0)
-                      : Number.isFinite(commissionRateValue)
-                        ? commissionRateValue
-                        : 0,
-                    actualMonthlySalary: isOrganisationContract
-                      ? 0
-                      : Number.isFinite(actualMonthlySalaryValue)
-                        ? actualMonthlySalaryValue
-                        : 0,
                     confirmedMonthlyQuotaLimit: isOrganisationContract
                       ? confirmedMonthlyQuotaValue
                       : undefined,

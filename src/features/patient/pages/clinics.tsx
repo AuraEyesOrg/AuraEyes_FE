@@ -28,19 +28,18 @@ import {
 import { useWallet } from '../hooks/use-wallet';
 import useAuthStore from '@/store/auth-store';
 import { mapClinicPatientErrorMessage } from '@/lib/api-error';
-import {
-  formatSlotTime,
-  formatDate,
-  toLocalDateKey,
-  parseSlotDateTimeUtc,
-} from '@/lib/date-utils';
+import { formatSlotTime, formatDate, toLocalDateKey } from '@/lib/date-utils';
 import { toast } from 'react-toastify';
 
 const DOW_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 const isExpiredClinicSlot = (slot: { date: string; startTime: string }) => {
-  const startAt = parseSlotDateTimeUtc(slot.date, slot.startTime).getTime();
-  if (Number.isNaN(startAt)) return false;
+  // Backend stores slot times in Vietnam local clock (UTC+7).
+  // Parse explicitly with +07:00 so the comparison is correct in any browser TZ.
+  const normalizedTime =
+    slot.startTime.length === 5 ? `${slot.startTime}:00` : slot.startTime;
+  const startAt = new Date(`${slot.date}T${normalizedTime}+07:00`).getTime();
+  if (Number.isNaN(startAt)) return true; // hide broken slots
   return startAt < Date.now();
 };
 

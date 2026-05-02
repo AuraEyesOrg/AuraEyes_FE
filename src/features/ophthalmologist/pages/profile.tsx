@@ -9,7 +9,6 @@ import {
   MapPin,
   Phone,
   Save,
-  Stethoscope,
   User,
   X,
 } from 'lucide-react';
@@ -45,12 +44,6 @@ const profileSchema = yup.object({
     .optional()
     .default('')
     .max(1000, 'Validation.MaxLength.Bio'),
-  yearsOfExperience: yup
-    .number()
-    .typeError('Must be a number')
-    .min(0, 'Must be 0 or more')
-    .max(80, 'Must be 80 or less')
-    .required('Validation.Required'),
 });
 
 type ProfileFormData = yup.InferType<typeof profileSchema>;
@@ -82,7 +75,6 @@ export default function OphthalmologistProfilePage() {
       phone: '',
       address: '',
       bio: '',
-      yearsOfExperience: 0,
     },
   });
 
@@ -94,7 +86,6 @@ export default function OphthalmologistProfilePage() {
       phone: profileData.userPhoneNumber ?? '',
       address: profileData.userAddress ?? '',
       bio: profileData.bio ?? '',
-      yearsOfExperience: profileData.yearsOfExperience ?? 0,
     });
   }, [profileData, reset]);
 
@@ -112,7 +103,6 @@ export default function OphthalmologistProfilePage() {
         phone: formData.phone || undefined,
         address: formData.address || undefined,
         bio: formData.bio || undefined,
-        yearsOfExperience: formData.yearsOfExperience,
       },
       {
         onSuccess: () => {
@@ -246,22 +236,12 @@ export default function OphthalmologistProfilePage() {
                   </p>
 
                   <span className="mt-3 rounded-full border border-brand/30 bg-brand-soft px-3 py-1 text-xs font-semibold text-brand">
-                    {profileData.isVerified
-                      ? 'Verified Practitioner'
-                      : 'Ophthalmologist'}
+                    Ophthalmologist
                   </span>
 
                   <hr className="my-6 w-full border-[var(--border-color)]" />
 
                   <div className="w-full space-y-3 text-left">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-[var(--text-secondary)]">
-                        Experience
-                      </span>
-                      <span className="font-medium text-[var(--text-primary)]">
-                        {profileData.yearsOfExperience} yrs
-                      </span>
-                    </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-[var(--text-secondary)]">
                         Employment
@@ -310,8 +290,6 @@ export default function OphthalmologistProfilePage() {
                             phone: profileData.userPhoneNumber ?? '',
                             address: profileData.userAddress ?? '',
                             bio: profileData.bio ?? '',
-                            yearsOfExperience:
-                              profileData.yearsOfExperience ?? 0,
                           });
                         }}
                         className="px-3 py-2 text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
@@ -370,25 +348,6 @@ export default function OphthalmologistProfilePage() {
                       />
                     }
                     value={profileData.userPhoneNumber || '—'}
-                  />
-
-                  <ProfileField
-                    label="Years of Experience"
-                    icon={<Stethoscope className="h-4 w-4" />}
-                    isEditing={isEditing}
-                    error={errors.yearsOfExperience?.message}
-                    input={
-                      <input
-                        {...register('yearsOfExperience', {
-                          valueAsNumber: true,
-                        })}
-                        className={fieldInputClass}
-                        type="number"
-                        min={0}
-                        max={80}
-                      />
-                    }
-                    value={`${profileData.yearsOfExperience} years`}
                   />
 
                   <div className="md:col-span-2">

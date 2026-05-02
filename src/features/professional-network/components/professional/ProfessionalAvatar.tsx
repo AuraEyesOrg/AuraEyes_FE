@@ -4,7 +4,6 @@
  */
 
 import { Link, useLocation } from 'react-router-dom';
-import { BadgeCheck } from 'lucide-react';
 import type { Ophthalmologist } from '../../types';
 import { InitialsAvatar } from './InitialsAvatar';
 import { formatRequestDate } from '@/lib/date-utils';
@@ -52,9 +51,6 @@ export function ProfessionalAvatar({
           >
             {author.fullName}
           </Link>
-          {author.isVerified && (
-            <BadgeCheck className="w-4 h-4 text-brand-primary" />
-          )}
         </div>
         <div className="flex items-center gap-2 text-sm text-text-muted">
           <span>{displaySpecialty}</span>

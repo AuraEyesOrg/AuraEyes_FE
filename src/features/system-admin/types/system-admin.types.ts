@@ -232,7 +232,6 @@ export interface Organisation {
   taxCode?: string;
   orgType: string;
   deviceCount: number;
-  purchasedAiQuota?: number;
   monthlyQuotaLimit?: number;
   monthlyQuotaUsed?: number;
   monthlyQuotaRemaining?: number;
@@ -616,8 +615,6 @@ export interface ContractDto {
   aiQuotaLimit: number;
   monthlyQuotaLimit: number;
   platformCommissionRate: number;
-  commissionRate?: number | null;
-  actualMonthlySalary?: number | null;
   signedDate?: string;
   scannedDocumentUrl?: string;
   createdAt: string;
@@ -644,8 +641,6 @@ export interface UpdateContractPayload {
 }
 
 export interface SignContractPayload {
-  commissionRate: number;
-  actualMonthlySalary: number;
   confirmedMonthlyQuotaLimit?: number;
   signedContent?: string;
   scannedDocumentUrl?: string;

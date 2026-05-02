@@ -25,23 +25,11 @@ export interface OphthalmologistListItem {
   email: string;
   phone?: string;
   bio?: string;
-  yearsOfExperience: number;
   employmentType: 'FullTime' | 'PartTime';
-  workingHoursPerWeek?: number;
-  expectedMonthlySalary?: number;
-  commissionRate?: number;
-  actualMonthlySalary?: number;
-  verificationStatus:
-    | 'PendingVerification'
-    | 'PendingUpdate'
-    | 'Approved'
-    | 'Rejected';
-  isVerified: boolean;
   licenseUrl?: string;
   degreeUrl?: string;
   licenses?: OphthalmologistCredentialItem[];
   degrees?: OphthalmologistCredentialItem[];
-  rejectionReason?: string;
   organisationName?: string;
   consultationFee: number;
   isActive: boolean;
@@ -60,7 +48,6 @@ export interface FeedbackRatingSummary {
 
 export interface UpdateOphthalmologistEmploymentPayload {
   id: string;
-  yearsOfExperience: number;
   bio?: string;
   employmentType: 'FullTime' | 'PartTime';
   consultationFee?: number;
@@ -147,8 +134,7 @@ export const ophthalmologistApi = {
   async getOphthalmologists(
     pageNumber = 1,
     pageSize = 10,
-    searchTerm?: string,
-    verificationStatus?: string
+    searchTerm?: string
   ) {
     const response = await api.get<
       ApiResponse<PagedResult<OphthalmologistListItem>>
@@ -157,7 +143,6 @@ export const ophthalmologistApi = {
         pageNumber,
         pageSize,
         searchTerm: searchTerm || undefined,
-        verificationStatus: verificationStatus || undefined,
       },
     });
     return unwrapApiData<PagedResult<OphthalmologistListItem>>(response.data);
@@ -176,14 +161,10 @@ export const ophthalmologistApi = {
   /**
    * Approve or reject ophthalmologist verification
    */
-  async verifyOphthalmologist(
-    id: string,
-    approve: boolean,
-    rejectionReason?: string
-  ) {
+  async verifyOphthalmologist(id: string, approve: boolean) {
     const response = await api.post<ApiResponse<string>>(
       API_ENDPOINTS.SYSTEM_ADMIN.OPHTHALMOLOGISTS.VERIFY(id),
-      { approve, rejectionReason }
+      { approve }
     );
     return response.data;
   },

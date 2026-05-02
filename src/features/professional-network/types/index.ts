@@ -11,7 +11,6 @@ export interface User {
   email: string;
   avatarUrl: string;
   role: 'ophthalmologist' | 'organisation' | 'patient';
-  isVerified: boolean;
   createdAt: string;
 }
 
@@ -19,7 +18,6 @@ export interface Ophthalmologist extends User {
   role: 'ophthalmologist';
   specialty: string[];
   bio: string;
-  yearsOfExperience: number;
   organisationId?: string;
   organisationName?: string;
   certificates: Certificate[];
@@ -150,8 +148,6 @@ export interface UserProfileDto {
   avatarUrl?: string;
   bio?: string;
   postCount: number;
-  yearsOfExperience: number;
-  isVerified: boolean;
   certificates: UserProfileCertificate[];
 }
 

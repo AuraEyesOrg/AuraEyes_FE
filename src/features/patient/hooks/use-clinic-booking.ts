@@ -66,7 +66,8 @@ export const useOrganisationAvailableSlots = (date?: string, enabled = true) =>
     queryKey: clinicBookingKeys.availableSlots(date),
     queryFn: () => getOrganisationAvailableSlots(date),
     enabled: enabled,
-    staleTime: 15_000,
+    staleTime: 0,
+    gcTime: 0,
   });
 
 export const usePatientClinicAppointments = (
