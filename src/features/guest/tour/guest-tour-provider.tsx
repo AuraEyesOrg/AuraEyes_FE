@@ -24,6 +24,7 @@ const GUEST_TOUR_STORAGE_KEY = 'aura_guest_tour_seen_v1';
 
 interface GuestTourContextValue {
   startTourFromHelp: () => void;
+  setTourBlocked: (blocked: boolean) => void;
 }
 
 const GuestTourContext = createContext<GuestTourContextValue | null>(null);
@@ -44,6 +45,7 @@ export const GuestTourProvider = ({ children }: GuestTourProviderProps) => {
   const [stepIndex, setStepIndex] = useState(0);
   const [manualStartPending, setManualStartPending] = useState(false);
   const [joyrideDisabled, setJoyrideDisabled] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   const steps = useMemo(
     () =>
@@ -91,11 +93,18 @@ export const GuestTourProvider = ({ children }: GuestTourProviderProps) => {
   }, []);
 
   useEffect(() => {
-    if (!isGuestHome || manualStartPending || hasSeenTour()) return;
+    if (!isGuestHome || manualStartPending || hasSeenTour() || isBlocked)
+      return;
 
-    setStepIndex(0);
-    setRun(true);
-  }, [hasSeenTour, isGuestHome, manualStartPending]);
+    // Small delay to allow child components to set blocking state
+    const timer = setTimeout(() => {
+      if (isBlocked) return;
+      setStepIndex(0);
+      setRun(true);
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [hasSeenTour, isGuestHome, manualStartPending, isBlocked]);
 
   useEffect(() => {
     if (!isGuestHome || !manualStartPending) return;
@@ -163,7 +172,9 @@ export const GuestTourProvider = ({ children }: GuestTourProviderProps) => {
   }, []);
 
   return (
-    <GuestTourContext.Provider value={{ startTourFromHelp }}>
+    <GuestTourContext.Provider
+      value={{ startTourFromHelp, setTourBlocked: setIsBlocked }}
+    >
       {children}
       {!joyrideDisabled && (
         <ErrorBoundary fallback={null} onError={handleJoyrideError}>
@@ -230,6 +241,7 @@ export const useGuestTour = (): GuestTourContextValue => {
   if (!context) {
     return {
       startTourFromHelp: () => {},
+      setTourBlocked: () => {},
     };
   }
 

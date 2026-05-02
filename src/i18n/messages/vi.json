@@ -357,11 +357,11 @@
     },
     "login": {
       "leftPanel": {
-        "titleLine": "Nền tảng chăm sóc mắt",
+        "titleLine": "Bệnh viện Kỹ thuật số",
         "titleHighlight": "ứng dụng AI.",
-        "description": "Truy cập an toàn cho bệnh nhân, bác sĩ nhãn khoa và tổ chức y tế với công cụ sàng lọc võng mạc thế hệ mới, độ chính xác lâm sàng 99.2%.",
-        "hipaa": "Tuân thủ HIPAA",
-        "encryption": "Mã hóa đầu cuối",
+        "description": "Trải nghiệm y tế số hiện đại cho bệnh nhân và bác sĩ với công nghệ chẩn đoán AI tiên tiến, độ chính xác lâm sàng 99.2%.",
+        "hipaa": "Tiêu chuẩn Y tế số",
+        "encryption": "Bảo mật đa tầng",
         "systemStatus": "Trạng thái hệ thống:",
         "online": "Đang hoạt động"
       },
@@ -1559,11 +1559,17 @@
     "ophthalmology": "Nhãn khoa"
   },
   "GuestHome": {
-    "badge": "Nền tảng sàng lọc võng mạc ứng dụng AI",
-    "title": "Phát hiện sớm bệnh lý võng mạc với độ chính xác lâm sàng",
-    "description": "Aura Eyes hỗ trợ cơ sở y tế sàng lọc nhanh, chuẩn hóa dữ liệu và kết nối bệnh nhân với bác sĩ chuyên khoa.",
-    "primaryCta": "Đặt lịch khám",
-    "secondaryCta": "Tìm bác sĩ"
+    "badge": "Hệ thống Bệnh viện Kỹ thuật số Aura",
+    "title": "Chăm sóc sức khỏe thông minh với độ chính xác lâm sàng",
+    "description": "Aura Digital Hospital cung cấp giải pháp y tế số toàn diện, kết hợp sức mạnh của AI và đội ngũ chuyên gia hàng đầu để bảo vệ sức khỏe của bạn.",
+    "primaryCta": "Đặt lịch ngay",
+    "secondaryCta": "Tìm bác sĩ",
+    "recruitmentPopup": {
+      "title": "Gia nhập đội ngũ Chuyên gia",
+      "description": "Chúng tôi đang tìm kiếm các bác sĩ tài năng để cùng kiến tạo tương lai y tế số. Trở thành một phần của Aura ngay hôm nay!",
+      "cta": "Ứng tuyển ngay",
+      "close": "Để sau"
+    }
   },
   "GuestMaintenance": {
     "badge": "Bảo trì hệ thống",
@@ -2047,76 +2053,76 @@
   },
   "Home": {
     "hero": {
-      "badge": "Sáng kiến mã nguồn mở",
-      "titlePrefix": "Phổ cập chăm sóc võng mạc bằng",
-      "titleHighlight": "AI có đạo đức",
-      "description": "AURA mang đến sàng lọc nhanh, không xâm lấn cho bất thường mạch máu và nguy cơ sức khỏe toàn thân. Mã nguồn mở, dễ tiếp cận và độ chính xác lâm sàng.",
-      "primaryCta": "Xem cách hoạt động",
-      "secondaryCta": "Đọc nghiên cứu",
-      "socialProof": "Được 500+ nhà nghiên cứu toàn cầu sử dụng",
-      "analysisResult": "Kết quả phân tích",
-      "lowRisk": "Nguy cơ thấp",
-      "confidenceScore": "Điểm tin cậy"
+      "badge": "Hệ thống Bệnh viện Kỹ thuật số",
+      "titlePrefix": "Nâng tầm chăm sóc sức khỏe bằng",
+      "titleHighlight": "Y tế số thông minh",
+      "description": "Aura mang đến giải pháp khám bệnh và tư vấn từ xa hiện đại, tích hợp AI chẩn đoán sớm các bất thường sức khỏe. Chuyên nghiệp, bảo mật và tận tâm.",
+      "primaryCta": "Khám phá ngay",
+      "secondaryCta": "Đọc về chúng tôi",
+      "socialProof": "Được hàng ngàn bệnh nhân tin tưởng mỗi ngày",
+      "analysisResult": "Kết quả chẩn đoán",
+      "lowRisk": "Bình thường",
+      "confidenceScore": "Độ chính xác"
     },
     "features": {
-      "title": "Công nghệ sàng lọc tiên tiến",
-      "description": "Nền tảng ứng dụng học sâu hiện đại để đánh giá sức khỏe võng mạc nhanh chóng, đáng tin cậy cho cả môi trường lâm sàng và cộng đồng.",
+      "title": "Dịch vụ Y tế Công nghệ cao",
+      "description": "Chúng tôi ứng dụng những công nghệ tiên tiến nhất để mang lại trải nghiệm khám chữa bệnh tối ưu, chính xác và thuận tiện cho bạn.",
       "cards": {
         "aiPrecision": {
-          "title": "Độ chính xác AI",
-          "description": "Mô hình học sâu tối tân được huấn luyện trên dữ liệu đa khu vực để đảm bảo độ chính xác cao cho nhiều nhóm dân số."
+          "title": "Chẩn đoán AI chính xác",
+          "description": "Hệ thống AI hỗ trợ bác sĩ phát hiện sớm các dấu hiệu bệnh lý với độ chính xác cao, giúp tối ưu hóa phác đồ điều trị."
         },
         "globalAccess": {
-          "title": "Khả năng tiếp cận toàn cầu",
-          "description": "Kiến trúc gọn nhẹ tối ưu cho môi trường băng thông thấp, giúp mở rộng công bằng y tế tại khu vực thiếu nguồn lực."
+          "title": "Kết nối Bác sĩ 24/7",
+          "description": "Tiếp cận đội ngũ chuyên gia hàng đầu từ mọi nơi, mọi lúc thông qua nền tảng tư vấn trực tuyến hiện đại."
         },
         "privacyFirst": {
-          "title": "Quyền riêng tư ưu tiên",
-          "description": "Kiến trúc tuân thủ HIPAA, ưu tiên xử lý cục bộ và sử dụng dữ liệu huấn luyện đã ẩn danh, có nguồn gốc đạo đức."
+          "title": "Bảo mật Dữ liệu Y tế",
+          "description": "Thông tin sức khỏe của bạn được bảo vệ tuyệt đối theo các tiêu chuẩn an ninh y tế quốc tế khắt khe nhất."
         }
       }
     },
     "workflow": {
-      "badge": "Quy trình",
-      "title": "Từ ảnh chụp đến kết luận chỉ trong vài giây",
+      "badge": "Quy trình khám bệnh",
+      "title": "Trải nghiệm y tế không chạm, nhanh chóng",
       "steps": {
         "upload": {
-          "title": "1. Tải ảnh võng mạc",
-          "description": "Tải lên an toàn ảnh đáy mắt từ camera võng mạc tiêu chuẩn hoặc thiết bị gắn điện thoại."
+          "title": "1. Đặt lịch & Thăm khám",
+          "description": "Dễ dàng đặt lịch hẹn trực tuyến và thực hiện thăm khám với sự hỗ trợ của các thiết bị y tế thông minh."
         },
         "analysis": {
-          "title": "2. AI xử lý phân tích",
-          "description": "Thuật toán độc quyền phân tích hình học mạch máu, góc phân nhánh và độ ngoằn ngoèo theo thời gian thực."
+          "title": "2. Phân tích & Chẩn đoán",
+          "description": "Dữ liệu y tế của bạn được AI phân tích tức thì, hỗ trợ bác sĩ đưa ra chẩn đoán chính xác nhất."
         },
         "report": {
-          "title": "3. Nhận báo cáo nguy cơ",
-          "description": "Nhận báo cáo chi tiết có thể tải xuống, chỉ ra các dấu hiệu tiềm năng của bệnh võng mạc do đái tháo đường hoặc bệnh tim mạch."
+          "title": "3. Kết quả & Điều trị",
+          "description": "Nhận kết quả chi tiết, đơn thuốc điện tử và tư vấn trực tiếp từ bác sĩ chuyên khoa ngay trên ứng dụng."
         }
       }
     },
     "mission": {
-      "title": "Sứ mệnh của chúng tôi: Tiếp cận và đạo đức",
-      "description": "Chúng tôi là tổ chức phi lợi nhuận cam kết đưa công cụ phát hiện sớm đến với mọi người, không phụ thuộc vị trí địa lý hay điều kiện kinh tế.",
+      "title": "Sứ mệnh: Y tế cho mọi người",
+      "description": "Chúng tôi nỗ lực phổ cập dịch vụ y tế chất lượng cao thông qua công nghệ số, xóa bỏ rào cản địa lý và kinh tế trong chăm sóc sức khỏe.",
       "primaryCta": "Tìm hiểu sứ mệnh",
       "secondaryCta": "Hợp tác cùng chúng tôi",
       "info": {
-        "nonProfitTitle": "Mô hình phi lợi nhuận",
-        "nonProfitDescription": "Doanh thu được tái đầu tư cho nghiên cứu",
-        "openSourceTitle": "Mã nguồn mở",
-        "openSourceDescription": "Mã nguồn sẵn sàng cho phản biện chuyên môn"
+        "nonProfitTitle": "Bệnh viện Kỹ thuật số",
+        "nonProfitDescription": "Hiện đại hóa quy trình chăm sóc",
+        "openSourceTitle": "Công nghệ AI",
+        "openSourceDescription": "Chẩn đoán chính xác, hỗ trợ tận tâm"
       }
     },
     "stats": {
-      "scansAnalyzed": "Ca đã phân tích",
-      "accuracyRate": "Tỷ lệ chính xác",
-      "countriesReached": "Quốc gia đã triển khai",
-      "nonProfit": "Phi lợi nhuận"
+      "scansAnalyzed": "Ca đã điều trị",
+      "accuracyRate": "Tỷ lệ hài lòng",
+      "countriesReached": "Mạng lưới cơ sở",
+      "nonProfit": "Y tế số"
     },
     "liveStats": {
-      "ophthalmologists": "Bác sĩ đã xác minh",
-      "organisations": "Tổ chức đối tác",
-      "screenings": "Tổng số ca tầm soát",
-      "feedbacks": "Đánh giá hệ thống"
+      "ophthalmologists": "Bác sĩ chuyên khoa",
+      "organisations": "Cơ sở liên kết",
+      "screenings": "Lượt khám hệ thống",
+      "feedbacks": "Đánh giá tích cực"
     }
   },
   "EthicsPrivacy": {

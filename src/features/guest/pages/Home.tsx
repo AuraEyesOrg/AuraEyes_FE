@@ -1,9 +1,17 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useQuery } from '@tanstack/react-query';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Briefcase, ChevronRight, Sparkles } from 'lucide-react';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import i18n, { resources } from '@/i18n/i18n';
 import {
@@ -18,12 +26,43 @@ import SourceVerificationTag from '../components/SourceVerificationTag';
 import GuestTrustedBy from '../components/GuestTrustedBy';
 import { prefersReducedMotion } from '../utils/motion';
 import { SeoMeta } from '@/hooks/useSeoMeta';
+import { useGuestTour } from '../tour';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const HomePage = () => {
   const { t: i18nT } = useTranslation();
   const navigate = useNavigate();
+  const { setTourBlocked } = useGuestTour();
+  const [showRecruitment, setShowRecruitment] = useState(false);
+
+  useLayoutEffect(() => {
+    const hasSeenPopup = sessionStorage.getItem('hasSeenRecruitmentPopup');
+
+    if (!hasSeenPopup) {
+      // Block the tour immediately
+      setTourBlocked(true);
+
+      const timer = setTimeout(() => {
+        setShowRecruitment(true);
+      }, 3000);
+
+      return () => {
+        clearTimeout(timer);
+        setTourBlocked(false);
+      };
+    } else {
+      // If popup already seen, ensure tour is not blocked
+      setTourBlocked(false);
+    }
+  }, [setTourBlocked]);
+
+  const handleClosePopup = () => {
+    setShowRecruitment(false);
+    sessionStorage.setItem('hasSeenRecruitmentPopup', 'true');
+    // Unblock the tour after closing the popup
+    setTourBlocked(false);
+  };
 
   const resolveResourceValue = (locale: 'vi' | 'en', key: string) => {
     return key.split('.').reduce<unknown>((accumulator, segment) => {
@@ -489,30 +528,21 @@ const HomePage = () => {
   const homeStructuredData = [
     {
       '@context': 'https://schema.org',
+      '@type': 'MedicalOrganization',
+      name: 'AURA Digital Hospital',
+      url: 'https://web.auraeyes.site',
+      description: t('GuestHome.description'),
+      medicalSpecialty: ['Ophthalmology', 'Digital Health'],
+    },
+    {
+      '@context': 'https://schema.org',
       '@type': 'WebSite',
       name: 'AURA',
       url: 'https://web.auraeyes.site',
-      description: 'AI-powered retinal vascular health screening platform.',
       potentialAction: {
         '@type': 'SearchAction',
         target: 'https://web.auraeyes.site/search?q={search_term_string}',
         'query-input': 'required name=search_term_string',
-      },
-    },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'MedicalWebPage',
-      name: 'AURA — AI Retinal Health Screening',
-      url: homeCanonical,
-      description:
-        'Detect retinal diseases early with clinical-grade AI precision. Book screenings with verified ophthalmologists.',
-      about: {
-        '@type': 'MedicalCondition',
-        name: 'Retinal Vascular Disease',
-      },
-      audience: {
-        '@type': 'MedicalAudience',
-        audienceType: 'Patient',
       },
     },
   ];
@@ -524,8 +554,8 @@ const HomePage = () => {
     >
       {/* SEO Metadata */}
       <SeoMeta
-        title="AI Retinal Vascular Health Screening"
-        description="Detect retinal diseases early with clinical-grade AI precision. Automated diagnostics with 99.2% accuracy. Connect with verified ophthalmologists and book your free screening."
+        title={t('GuestHome.title', 'Bệnh viện Kỹ thuật số Aura')}
+        description={t('GuestHome.description')}
         canonical={homeCanonical}
         locale={currentLocale}
         structuredData={homeStructuredData}
@@ -1177,6 +1207,93 @@ const HomePage = () => {
       </main>
 
       <Footer />
+
+      <AnimatePresence>
+        {showRecruitment && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative bg-white rounded-3xl shadow-2xl overflow-hidden max-w-4xl w-full flex flex-col md:flex-row border border-[var(--color-medical-border)]"
+            >
+              {/* Close Button */}
+              <button
+                onClick={handleClosePopup}
+                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/5 hover:bg-black/10 transition-colors text-gray-500 hover:text-black"
+                aria-label="Close"
+              >
+                <X size={20} />
+              </button>
+
+              {/* Image Section */}
+              <div className="md:w-1/2 relative bg-[var(--color-brand-primary)] overflow-hidden min-h-[300px]">
+                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-brand-primary)] to-transparent opacity-60 z-[1]" />
+                <img
+                  src="/doctor.png"
+                  alt="Recruitment"
+                  className="w-full h-full object-cover object-center relative z-0"
+                />
+                <div className="absolute bottom-6 left-6 right-6 z-[2]">
+                  <div className="flex items-center gap-2 text-white/90 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full w-fit border border-white/20 mb-3">
+                    <Sparkles size={14} className="text-yellow-300" />
+                    <span className="text-xs font-bold uppercase tracking-wider">
+                      Hệ thống Y tế Aura
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content Section */}
+              <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
+                <div className="flex items-center gap-3 text-[var(--color-brand-primary)] font-bold mb-4">
+                  <div className="p-2 bg-[var(--color-brand-primary)]/10 rounded-xl">
+                    <Briefcase size={24} />
+                  </div>
+                  <span className="uppercase tracking-widest text-xs">
+                    Cơ hội nghề nghiệp
+                  </span>
+                </div>
+
+                <h2 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight mb-4">
+                  {t('GuestHome.recruitmentPopup.title')}
+                </h2>
+
+                <p className="text-gray-600 text-lg leading-relaxed mb-8">
+                  {t('GuestHome.recruitmentPopup.description')}
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button
+                    onClick={() => {
+                      handleClosePopup();
+                      navigate(resolvePathWithLocale('/contact'));
+                    }}
+                    className="flex-1 bg-[var(--color-brand-primary)] text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-[var(--color-brand-primary)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
+                  >
+                    {t('GuestHome.recruitmentPopup.cta')}
+                    <ChevronRight
+                      size={18}
+                      className="group-hover:translate-x-1 transition-transform"
+                    />
+                  </button>
+                  <button
+                    onClick={handleClosePopup}
+                    className="flex-1 bg-gray-100 text-gray-600 font-bold py-4 px-6 rounded-2xl hover:bg-gray-200 transition-colors"
+                  >
+                    {t('GuestHome.recruitmentPopup.close')}
+                  </button>
+                </div>
+
+                <p className="mt-8 text-xs text-gray-400 italic">
+                  * Ưu tiên các bác sĩ có kinh nghiệm về nhãn khoa và ứng dụng
+                  công nghệ AI trong y tế.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
