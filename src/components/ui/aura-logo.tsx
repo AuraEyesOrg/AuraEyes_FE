@@ -45,7 +45,7 @@ const sizeMap = {
 // variant 'dark'  = logo dùng trên nền trắng → giữ nguyên màu gốc
 const logoFilter: Record<'light' | 'dark', string> = {
   light: 'brightness(2)',
-  dark: 'none',
+  dark: 'brightness(0.8) contrast(1.2)', // Slightly darker and more contrast for light mode
 };
 
 export function AuraLogo({
