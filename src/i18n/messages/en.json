@@ -2048,76 +2048,76 @@
   },
   "Home": {
     "hero": {
-      "badge": "Open Source Initiative",
-      "titlePrefix": "Democratizing Retinal Health with",
-      "titleHighlight": "Ethical AI",
-      "description": "AURA provides instant, non-invasive screening for vascular abnormalities and systemic health risks. Open-source, accessible, and clinically accurate.",
-      "primaryCta": "See How It Works",
-      "secondaryCta": "Read the Research",
-      "socialProof": "Used by 500+ researchers globally",
-      "analysisResult": "Analysis Result",
-      "lowRisk": "Low Risk",
-      "confidenceScore": "Confidence Score"
+      "badge": "Digital Hospital System",
+      "titlePrefix": "Elevating Healthcare with",
+      "titleHighlight": "Smart Digital Medicine",
+      "description": "Aura offers modern remote consultation solutions, integrating AI for early detection of health abnormalities. Professional, secure, and dedicated.",
+      "primaryCta": "Explore Now",
+      "secondaryCta": "About Us",
+      "socialProof": "Trusted by thousands of patients daily",
+      "analysisResult": "Diagnostic Result",
+      "lowRisk": "Normal",
+      "confidenceScore": "Accuracy"
     },
     "features": {
-      "title": "Advanced Screening Technology",
-      "description": "Our platform leverages cutting-edge deep learning to provide rapid, reliable assessments of retinal health, designed for both clinical and field settings.",
+      "title": "High-Tech Medical Services",
+      "description": "We apply cutting-edge technologies to provide an optimal, accurate, and convenient medical experience for you.",
       "cards": {
         "aiPrecision": {
-          "title": "AI Precision",
-          "description": "State-of-the-art deep learning models trained on diverse global datasets for high accuracy across different demographics."
+          "title": "Accurate AI Diagnosis",
+          "description": "AI systems support doctors in early detection of medical signs with high precision, optimizing treatment plans."
         },
         "globalAccess": {
-          "title": "Global Access",
-          "description": "Lightweight architecture optimized for low-bandwidth environments, ensuring healthcare equity in underserved regions."
+          "title": "24/7 Doctor Connection",
+          "description": "Access leading experts from anywhere, anytime through our modern online consultation platform."
         },
         "privacyFirst": {
-          "title": "Privacy First",
-          "description": "HIPAA compliant architecture processing data locally where possible, with ethically sourced and anonymized training data."
+          "title": "Medical Data Security",
+          "description": "Your health information is absolutely protected according to the strictest international medical security standards."
         }
       }
     },
     "workflow": {
-      "badge": "Workflow",
-      "title": "From Scan to Insight in Seconds",
+      "badge": "Medical Workflow",
+      "title": "Contactless, Rapid Medical Experience",
       "steps": {
         "upload": {
-          "title": "1. Upload Retinal Scan",
-          "description": "Securely upload fundus photography from any standard retinal camera or smartphone adapter."
+          "title": "1. Booking & Visit",
+          "description": "Easily book appointments online and perform consultations with the support of smart medical devices."
         },
         "analysis": {
-          "title": "2. AI Analysis Processing",
-          "description": "Our proprietary algorithms analyze vascular geometry, branching angles, and tortuosity instantly."
+          "title": "2. Analysis & Diagnosis",
+          "description": "Your medical data is analyzed instantly by AI, assisting doctors in providing the most accurate diagnosis."
         },
         "report": {
-          "title": "3. Receive Risk Report",
-          "description": "Get a comprehensive, downloadable report identifying potential markers for diabetic retinopathy or CVD."
+          "title": "3. Results & Treatment",
+          "description": "Receive detailed results, e-prescriptions, and direct consultation from specialists right in the app."
         }
       }
     },
     "mission": {
-      "title": "Our Mission: Accessibility & Ethics",
-      "description": "We are a non-profit organization dedicated to making early detection tools available to everyone, regardless of location or economic status.",
-      "primaryCta": "Learn About Our Mission",
+      "title": "Mission: Healthcare for Everyone",
+      "description": "We strive to popularize high-quality medical services through digital technology, removing geographical and economic barriers in healthcare.",
+      "primaryCta": "Learn Our Mission",
       "secondaryCta": "Partner With Us",
       "info": {
-        "nonProfitTitle": "Non-Profit Model",
-        "nonProfitDescription": "Revenue reinvested in research",
-        "openSourceTitle": "Open Source",
-        "openSourceDescription": "Code available for peer review"
+        "nonProfitTitle": "Digital Hospital",
+        "nonProfitDescription": "Modernizing care workflows",
+        "openSourceTitle": "AI Technology",
+        "openSourceDescription": "Accurate diagnosis, dedicated support"
       }
     },
     "stats": {
-      "scansAnalyzed": "Scans Analyzed",
-      "accuracyRate": "Accuracy Rate",
-      "countriesReached": "Countries Reached",
-      "nonProfit": "Non-Profit"
+      "scansAnalyzed": "Cases Treated",
+      "accuracyRate": "Satisfaction Rate",
+      "countriesReached": "Facility Network",
+      "nonProfit": "Digital Health"
     },
     "liveStats": {
-      "ophthalmologists": "Verified ophthalmologists",
-      "organisations": "Partner organisations",
-      "screenings": "Total screening cases",
-      "feedbacks": "System feedback & ratings"
+      "ophthalmologists": "Specialists",
+      "organisations": "Linked Facilities",
+      "screenings": "Total Visits",
+      "feedbacks": "Positive Feedback"
     }
   },
   "EthicsPrivacy": {
