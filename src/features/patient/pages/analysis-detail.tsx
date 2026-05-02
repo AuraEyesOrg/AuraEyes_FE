@@ -272,16 +272,24 @@ export default function AnalysisDetailPage() {
     <div className="flex min-h-screen w-full flex-col bg-[#f0f2f5]">
       <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/95 backdrop-blur-sm">
         <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/patient/screening/review')}
-              className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-95"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <h1 className="text-lg font-bold text-slate-900">
-              {t('PatientAnalysisDetail.page.title', 'Analysis Details')}
-            </h1>
+            <div>
+              <h1 className="text-2xl font-black tracking-tight text-slate-900">
+                {t('PatientAnalysisDetail.page.title', 'Analysis Details')}
+              </h1>
+              <p className="text-xs font-medium text-slate-500">
+                {t(
+                  'PatientAnalysisDetail.page.subtitle',
+                  'Deep-dive AI retinal analysis results'
+                )}
+              </p>
+            </div>
           </div>
         </div>
       </header>

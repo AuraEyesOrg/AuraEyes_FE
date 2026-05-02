@@ -9,6 +9,7 @@ import { useSignalRNotification } from './hooks/useSignalRNotification';
 import { useSignalRChat } from './hooks/useSignalRChat';
 import { I18nProvider } from '@/i18n/I18nProvider';
 import { isSupportedLocale } from '@/i18n/locales';
+import { ConsiliumInvitationOverlay } from '@/features/professional-network/components/ConsiliumInvitationOverlay';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
 
@@ -20,7 +21,12 @@ function SignalRProvider({ children }: { children: ReactNode }) {
   useSignalRNotification();
   useSignalRChat();
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <ConsiliumInvitationOverlay />
+    </>
+  );
 }
 
 function GoogleI18nProvider({ children }: { children: ReactNode }) {

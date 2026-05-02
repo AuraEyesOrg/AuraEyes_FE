@@ -163,6 +163,13 @@ export const getProfile = async (): Promise<PatientProfile> => {
   return normalizePatientProfile(response.data.data!);
 };
 
+export const getProfileById = async (id: string): Promise<PatientProfile> => {
+  const response = await api.get<ApiResponse<PatientProfile>>(
+    `/clinic/patients/${id}`
+  );
+  return normalizePatientProfile(response.data.data!);
+};
+
 export const updateProfile = async (
   data: ProfileUpdateData
 ): Promise<PatientProfile> => {

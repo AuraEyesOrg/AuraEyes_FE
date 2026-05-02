@@ -1,27 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
-import {
-  Search,
-  Star,
-  Clock,
-  MapPin,
-  Calendar,
-  X,
-  ArrowLeft,
-  FileText,
-  CheckCircle,
-  MessageSquare,
-  Award,
-  ExternalLink,
-  Sparkles,
-  Stethoscope,
-  Banknote,
-  Wallet,
-  AlertTriangle,
-  ChevronRight,
-} from 'lucide-react';
-import DoctorLottie from '../components/DoctorLottie';
 
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -32,13 +10,8 @@ import {
   type OphthalmologistDetailItem,
 } from '../api/patient.api';
 import { listOphthalmologistFeedback } from '../api/feedback.api';
-import Spinner from '@/components/ui/spinner';
-import BookAppointmentPage from './book-appointment';
-import BookingConfirmationPage from './booking-confirmation';
 import { useAppointmentSlots } from '../hooks/use-booking';
 import { ScheduleStatus, SlotType } from '@/types/schedule';
-import N8nChatWidget, { openN8nChat } from '../components/N8nChatWidget';
-import Footer from '@/features/guest/components/Footer';
 import {
   loadScreeningConsultationContext,
   saveScreeningConsultationContext,
@@ -46,8 +19,6 @@ import {
 } from '../types/consultation-context';
 import type { Anomaly, RetinalImage } from '../types/type';
 import { useWallet } from '../hooks/use-wallet';
-import { formatCurrency } from '@/lib/helper';
-import { resolvePathWithLocale } from '@/i18n/middleware';
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);

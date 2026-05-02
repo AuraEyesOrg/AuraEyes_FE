@@ -93,6 +93,7 @@ function DoctorSelect({
   onChange: (val: string) => void;
   placeholder?: string;
 }) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const selectedDoctor = doctors.find((d) => d.id === value);
   const selectedDoctorName =
@@ -155,6 +156,15 @@ function DoctorSelect({
                   >
                     <div className="flex flex-col">
                       <span className="font-medium">{doctorName}</span>
+                      {doctor.yearsOfExperience > 0 && (
+                        <span className="text-[10px] opacity-70">
+                          {t(
+                            'ClinicStaff.queue.doctor.yearsExp',
+                            '{{count}} years exp',
+                            { count: doctor.yearsOfExperience }
+                          )}
+                        </span>
+                      )}
                     </div>
                     {value === doctor.id && <Check className="h-4 w-4" />}
                   </button>
@@ -259,6 +269,18 @@ export default function ClinicStaffQueuePage() {
   };
 
   const handleCreateScreening = (item: ClinicQueueItem) => {
+    // Validation: Require basic info (Age, Gender, MRN, Admission Reason)
+    // Since MRN and Admission Reason are in the Medical Record, we at least require medicalRecordId to exist.
+    if (!item.medicalRecordId || !item.isAdminCompleted) {
+      toast.error(
+        t(
+          'ClinicStaff.queue.toast.missingBasicInfo',
+          'Vui lòng hoàn thiện thông tin hành chính (Tuổi/GT, Mã Y tế, Lý do khám) trong Hồ sơ bệnh án trước khi tạo Screening.'
+        )
+      );
+      return;
+    }
+
     navigate(
       resolvePathWithLocale(
         `/clinic-staff/screenings/new?patientId=${item.patientId}`
@@ -436,7 +458,10 @@ export default function ClinicStaffQueuePage() {
                         {stats[state]}
                       </p>
                       <p className="text-xs text-(--text-muted)">
-                        {config.label}
+                        {t(
+                          `ClinicStaff.queue.states.${state.charAt(0).toLowerCase() + state.slice(1)}`,
+                          config.label
+                        )}
                       </p>
                     </div>
                   </div>
@@ -473,7 +498,11 @@ export default function ClinicStaffQueuePage() {
                       : 'bg-(--bg-secondary) text-(--text-secondary) hover:bg-(--bg-tertiary)'
                   }`}
                 >
-                  {config.label} ({stats[state]})
+                  {t(
+                    `ClinicStaff.queue.states.${state.charAt(0).toLowerCase() + state.slice(1)}`,
+                    config.label
+                  )}{' '}
+                  ({stats[state]})
                 </button>
               );
             }
@@ -553,7 +582,10 @@ export default function ClinicStaffQueuePage() {
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${config.bgColor} ${config.color}`}
                           >
                             <Icon className="w-3 h-3" />
-                            {config.label}
+                            {t(
+                              `ClinicStaff.queue.states.${item.flowState.charAt(0).toLowerCase() + item.flowState.slice(1)}`,
+                              config.label
+                            )}
                           </span>
                         </td>
                         <td className="px-6 py-4">
@@ -561,8 +593,14 @@ export default function ClinicStaffQueuePage() {
                             <div>
                               <div className="text-sm text-(--text-secondary)">
                                 {item.screeningStatus === 'completed'
-                                  ? 'Completed'
-                                  : 'Pending'}
+                                  ? t(
+                                      'ClinicStaff.queue.screening.completed',
+                                      'Completed'
+                                    )
+                                  : t(
+                                      'ClinicStaff.queue.screening.pending',
+                                      'Pending'
+                                    )}
                               </div>
                               {item.screeningRiskLevel && (
                                 <span

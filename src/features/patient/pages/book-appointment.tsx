@@ -527,31 +527,40 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
           }
         >
           {/* Header Section */}
-          <div className="relative p-6 border-b border-gray-100 flex flex-col items-center justify-center text-center bg-white dark:bg-gray-900 border-t-4 border-t-cyan-600">
+          <div className="relative p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center bg-white dark:bg-slate-900">
             {isEmbedded && (
               <button
                 onClick={props.onClose}
-                className="absolute left-6 top-6 flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                className="absolute left-8 top-8 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95 shadow-sm"
+                title={t('PatientBookAppointment.actions.back')}
               >
-                <ArrowLeft className="w-4 h-4" />
-                {t('PatientBookAppointment.actions.back')}
+                <ArrowLeft className="w-5 h-5" />
               </button>
             )}
-            <h1 className="text-xl font-bold tracking-widest text-gray-800 dark:text-gray-100 uppercase mb-4">
-              Aura
-            </h1>
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
-              {doctorInfo?.userFullName ??
-                t('PatientBookAppointment.labels.ophthalmologist')}
-            </h2>
-            <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
-              {t('PatientBookAppointment.labels.ophthalmologist')}
-            </p>
-            <div className="mt-3 inline-flex bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
-              {t('PatientBookAppointment.labels.bookingFor')}{' '}
-              {props.viewMode === 'today'
-                ? t('PatientBookAppointment.labels.videoConsultation')
-                : t('PatientBookAppointment.labels.inClinicOrVideo')}
+
+            <div className="space-y-1 mb-4">
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-brand/60">
+                Aura Eyes
+              </span>
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                {doctorInfo?.userFullName ??
+                  t('PatientBookAppointment.labels.ophthalmologist')}
+              </h2>
+              <p className="text-sm font-medium text-slate-500">
+                {t('PatientBookAppointment.labels.ophthalmologist')}
+              </p>
+            </div>
+
+            <div className="inline-flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-inner">
+              <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                {t('PatientBookAppointment.labels.bookingFor')}{' '}
+                <span className="text-brand">
+                  {props.viewMode === 'today'
+                    ? t('PatientBookAppointment.labels.videoConsultation')
+                    : t('PatientBookAppointment.labels.inClinicOrVideo')}
+                </span>
+              </span>
             </div>
           </div>
 

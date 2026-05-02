@@ -368,10 +368,16 @@ export default function ClinicStaffScreeningNewPage() {
                       <Info className="w-4 h-4 text-brand mt-0.5 shrink-0" />
                       <div>
                         <p className="text-sm font-bold text-brand">
-                          Supported Formats
+                          {t(
+                            'ClinicStaff.screeningNew.quality.supportedFormats',
+                            'Supported Formats'
+                          )}
                         </p>
                         <p className="text-xs text-brand/70">
-                          JPG, PNG, TIFF, BMP
+                          {t(
+                            'ClinicStaff.screeningNew.quality.supportedFormatsList',
+                            'JPG, PNG, TIFF, BMP'
+                          )}
                         </p>
                       </div>
                     </div>
@@ -541,7 +547,10 @@ export default function ClinicStaffScreeningNewPage() {
                   )}
                 </h2>
                 <p className="text-sm text-(--text-secondary) mt-2">
-                  {`Ready to analyse ${readyImages.length} scan(s). This will consume 1 AI screening credit.`}
+                  {i18nT('ClinicStaff.screeningNew.launch.readyCount', {
+                    count: readyImages.length,
+                    defaultValue: `Ready to analyse ${readyImages.length} scan(s). This will consume 1 AI screening credit.`,
+                  })}
                 </p>
               </div>
               <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40">
@@ -561,27 +570,62 @@ export default function ClinicStaffScreeningNewPage() {
                   </p>
                 </div>
               </div>
-              <div className="border border-(--border-primary) rounded-xl bg-(--bg-primary) p-4">
-                <h3 className="text-sm font-semibold text-(--text-primary) mb-3">
-                  {t(
-                    'ClinicStaff.screeningNew.launch.scansIncluded',
-                    'Scans included'
-                  )}
-                </h3>
-                <div className="flex gap-3 flex-wrap">
-                  {readyImages.map((img) => (
-                    <div
-                      key={img.id}
-                      className="w-20 h-20 rounded-lg overflow-hidden border border-(--border-primary) bg-(--bg-secondary)"
-                    >
-                      <img
-                        src={img.preview}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
+              <div className="space-y-4">
+                {readyImages.filter((img) => img.status === 'ready').length >
+                  0 && (
+                  <div>
+                    <h3 className="text-xs font-medium text-green-600 dark:text-green-400 mb-2 uppercase tracking-wider">
+                      {t(
+                        'ClinicStaff.screeningNew.launch.scansIncluded',
+                        'Optimal Scans'
+                      )}
+                    </h3>
+                    <div className="flex gap-3 flex-wrap">
+                      {readyImages
+                        .filter((img) => img.status === 'ready')
+                        .map((img) => (
+                          <div
+                            key={img.id}
+                            className="w-20 h-20 rounded-lg overflow-hidden border border-green-200 dark:border-green-900/30 bg-green-50/50"
+                          >
+                            <img
+                              src={img.preview}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
+
+                {readyImages.filter((img) => img.status === 'warning').length >
+                  0 && (
+                  <div>
+                    <h3 className="text-xs font-medium text-amber-600 dark:text-amber-400 mb-2 uppercase tracking-wider">
+                      {t(
+                        'ClinicStaff.screeningNew.launch.scansWarning',
+                        'Scans with Warnings'
+                      )}
+                    </h3>
+                    <div className="flex gap-3 flex-wrap">
+                      {readyImages
+                        .filter((img) => img.status === 'warning')
+                        .map((img) => (
+                          <div
+                            key={img.id}
+                            className="w-20 h-20 rounded-lg overflow-hidden border border-amber-200 dark:border-amber-900/30 bg-amber-50/50"
+                          >
+                            <img
+                              src={img.preview}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -1,17 +1,32 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Users, Search, Eye, X, Lock, Unlock, Shield } from 'lucide-react';
-import Sidebar from '../components/Sidebar';
-import PageHeader from '../components/PageHeader';
-import StatsCard from '../components/StatsCard';
-import DataTable, { type TableColumn } from '../components/DataTable';
-import StatusBadge from '../components/StatusBadge';
-import { userApi } from '../api';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
-import type { User } from '../types/system-admin.types';
-import { toast } from 'react-toastify';
-import CreateStaffModal from '../components/CreateStaffModal';
-import { ophthalmologistApi } from '../api/ophthalmologist.api';
 import { formatCurrency, vndCurrencyOptions } from '@/lib/helper';
+import {
+  Activity,
+  Eye,
+  Gift,
+  Lock,
+  Mail,
+  Pencil,
+  Search,
+  ShieldCheck,
+  Stethoscope,
+  Unlock,
+  User,
+  Users,
+  X,
+} from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
+import { userApi } from '../api';
+import { leavePoliciesApi } from '../api/leave-policies.api';
+import { ophthalmologistApi } from '../api/ophthalmologist.api';
+import CreateStaffModal from '../components/CreateStaffModal';
+import DataTable, { type TableColumn } from '../components/DataTable';
+import PageHeader from '../components/PageHeader';
+import Sidebar from '../components/Sidebar';
+import StatsCard from '../components/StatsCard';
+import StatusBadge from '../components/StatusBadge';
+import type { User as BaseUser } from '../types/system-admin.types';
 
 const roleLabelMeta: Record<string, { key: string; fallback: string }> = {
   Ophthalmologist: {
@@ -31,7 +46,7 @@ const roleColors: Record<string, string> = {
     'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
 };
 
-type StaffUser = User & {
+type StaffUser = BaseUser & {
   phoneNumber?: string | null;
   isActive?: boolean;
   emailConfirmed?: boolean;
@@ -46,6 +61,7 @@ type StaffUser = User & {
   ophthalmologistId?: string;
   subRoles?: string[];
   clinicStaffId?: string;
+  availableLeaveDays?: number;
 };
 
 export default function StaffManagementPage() {
@@ -57,14 +73,25 @@ export default function StaffManagementPage() {
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<StaffUser | null>(null);
+
+  // Doctor specific states
   const [editingFee, setEditingFee] = useState(false);
   const [feeValue, setFeeValue] = useState<number>(0);
   const [isUpdatingFee, setIsUpdatingFee] = useState(false);
+  const [availableLeaveDays, setAvailableLeaveDays] = useState<number | null>(
+    null
+  );
+  const [leavePolicies, setLeavePolicies] = useState<any[]>([]);
+  const [selectedPolicyId, setSelectedPolicyId] = useState<string>('');
+  const [isApplyingPolicy, setIsApplyingPolicy] = useState(false);
+  const [isLoadingDoctorDetail, setIsLoadingDoctorDetail] = useState(false);
+
+  // Clinic Staff specific states
   const [editingSubRoles, setEditingSubRoles] = useState(false);
   const [subRolesValue, setSubRolesValue] = useState<string[]>([]);
   const [isUpdatingSubRoles, setIsUpdatingSubRoles] = useState(false);
 
-  const roleFilterOptions: Array<{ value: string; label: string }> = [
+  const roleFilterOptions = [
     {
       value: 'all',
       label: t('SystemAdmin.users.filters.options.allRoles', 'All Roles'),
@@ -97,9 +124,7 @@ export default function StaffManagementPage() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const usersData = await userApi.getUsers(1, 100); // Get a larger batch for now
-
-      // Only keep staff roles (ClinicStaff, Ophthalmologist)
+      const usersData = await userApi.getUsers(1, 1000);
       const staffUsers = (usersData?.items || []).filter(
         (u: StaffUser) =>
           u.role === 'ClinicStaff' || u.role === 'Ophthalmologist'
@@ -107,6 +132,7 @@ export default function StaffManagementPage() {
       setUsers(staffUsers);
     } catch (error) {
       console.error('Failed to load staff data', error);
+      toast.error('Failed to load staff data');
     } finally {
       setLoading(false);
     }
@@ -116,51 +142,53 @@ export default function StaffManagementPage() {
     loadData();
   }, [loadData]);
 
-  const totalStaff = users.length;
-  const activeStaff = users.filter((u) => {
-    const status = (u.status || '').toLowerCase();
-    return status === 'active' || status === 'online';
-  }).length;
-  const pendingStaff = users.filter(
-    (u) => u.status === 'Pending' || (u as any).mustUpdateProfile
-  ).length;
+  useEffect(() => {
+    if (selectedUser?.role === 'Ophthalmologist') {
+      const fetchDetails = async () => {
+        setIsLoadingDoctorDetail(true);
+        try {
+          const ophthalmologistId =
+            selectedUser.ophthalmologistId || selectedUser.id;
+          const docDetail =
+            await ophthalmologistApi.getOphthalmologistDetail(
+              ophthalmologistId
+            );
+          setAvailableLeaveDays(docDetail.availableLeaveDays ?? 0);
 
-  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
-  const toSearchable = (value: unknown) => String(value ?? '').toLowerCase();
-
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      normalizedSearchQuery.length === 0 ||
-      toSearchable(user.name).includes(normalizedSearchQuery) ||
-      toSearchable(user.email).includes(normalizedSearchQuery) ||
-      toSearchable(user.id).includes(normalizedSearchQuery);
-
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-
-    return matchesSearch && matchesRole;
-  });
+          const policiesRes = await leavePoliciesApi.getPaged(1, 100);
+          setLeavePolicies(policiesRes.items || []);
+        } catch (error) {
+          console.error('Failed to fetch doctor detail', error);
+        } finally {
+          setIsLoadingDoctorDetail(false);
+        }
+      };
+      fetchDetails();
+    }
+  }, [selectedUser]);
 
   const handleToggleLock = async (userId: string, currentStatus: string) => {
     try {
       if (isLockedStatus(currentStatus)) {
         await userApi.unlockUser(userId);
-        toast.success('Account unlocked.');
+        toast.success('Account unlocked successfully.');
       } else {
         await userApi.lockUser(userId);
-        toast.success('Account locked.');
+        toast.success('Account locked successfully.');
       }
       await loadData();
-      setSelectedUser((prev) =>
-        prev && prev.id === userId
-          ? {
-              ...prev,
-              status: isLockedStatus(currentStatus) ? 'Active' : 'Suspended',
-              isActive: isLockedStatus(currentStatus),
-            }
-          : prev
-      );
+      if (selectedUser && selectedUser.id === userId) {
+        setSelectedUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: isLockedStatus(currentStatus) ? 'Active' : 'Locked',
+              }
+            : null
+        );
+      }
     } catch {
-      toast.error('Failed to update status.');
+      toast.error('Failed to update account status.');
     }
   };
 
@@ -168,31 +196,20 @@ export default function StaffManagementPage() {
     if (!selectedUser) return;
     try {
       setIsUpdatingFee(true);
-      // We use the onboard/update API pattern.
-      // Actually, we can use the same updateEmploymentType but we need the other required fields.
-      // Since this is a shortcut, we might need a specific "UpdateFee" endpoint in the future.
-      // For now, I'll use the existing updateEmploymentType with current values.
-
-      // But wait, staff-management doesn't have all doctor details.
-      // I'll call updateConsultationFee directly if I can.
-      // Let's check if there's a simpler endpoint.
-      // Actually, I'll just use the one I updated earlier.
-
       await ophthalmologistApi.updateEmploymentType({
         id: selectedUser.ophthalmologistId || selectedUser.id,
         bio: (selectedUser as any).bio || '',
         employmentType: (selectedUser as any).employmentType || 'FullTime',
         consultationFee: feeValue,
       });
-
-      toast.success('Consultation fee updated successfully.');
+      toast.success('Consultation fee updated.');
       setEditingFee(false);
       await loadData();
       setSelectedUser((prev) =>
         prev ? { ...prev, consultationFee: feeValue } : null
       );
-    } catch (error) {
-      toast.error('Failed to update consultation fee.');
+    } catch {
+      toast.error('Failed to update fee.');
     } finally {
       setIsUpdatingFee(false);
     }
@@ -206,121 +223,114 @@ export default function StaffManagementPage() {
         subRoles: subRolesValue,
         phone: selectedUser.phoneNumber || undefined,
       });
-
-      toast.success('Functional roles updated successfully.');
+      toast.success('Functional roles updated.');
       setEditingSubRoles(false);
       await loadData();
       setSelectedUser((prev) =>
         prev ? { ...prev, subRoles: subRolesValue } : null
       );
-    } catch (error) {
-      toast.error('Failed to update functional roles.');
+    } catch {
+      toast.error('Failed to update roles.');
     } finally {
       setIsUpdatingSubRoles(false);
     }
   };
 
-  const toggleSubRoleValue = (sub: string) => {
-    setSubRolesValue((prev) => {
-      const current = [...prev];
-      const index = current.indexOf(sub);
-      if (index > -1) {
-        if (current.length > 1) current.splice(index, 1);
-      } else {
-        current.push(sub);
-      }
-      return current;
-    });
+  const handleApplyPolicy = async () => {
+    const ophthalmologistId =
+      selectedUser?.ophthalmologistId || selectedUser?.id;
+    if (!ophthalmologistId || !selectedPolicyId) return;
+    try {
+      setIsApplyingPolicy(true);
+      await leavePoliciesApi.apply(selectedPolicyId, ophthalmologistId);
+      toast.success('Policy applied: Leave fund increased.');
+      const docDetail =
+        await ophthalmologistApi.getOphthalmologistDetail(ophthalmologistId);
+      setAvailableLeaveDays(docDetail.availableLeaveDays ?? 0);
+      setSelectedPolicyId('');
+    } catch {
+      toast.error('Failed to apply policy.');
+    } finally {
+      setIsApplyingPolicy(false);
+    }
   };
+
+  const renderStatusBadge = (status?: string) => {
+    const s = (status || 'Active').toLowerCase();
+    let variant: 'success' | 'warning' | 'error' | 'info' | 'processing' =
+      'info';
+
+    if (s === 'active' || s === 'online') variant = 'success';
+    else if (s === 'locked' || s === 'suspended' || s === 'inactive')
+      variant = 'error';
+    else if (s === 'pending') variant = 'warning';
+
+    return <StatusBadge status={variant} label={status || 'Active'} />;
+  };
+
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      !searchQuery ||
+      user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   const userColumns: TableColumn<StaffUser>[] = [
     {
-      header: 'Staff',
+      header: 'Staff Member',
       accessor: 'name',
-      render: (_, row) => {
-        const displayName = (row.name || '').trim() || row.email || 'Unknown';
-        const avatarInitials = displayName.substring(0, 2).toUpperCase();
-
-        return (
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-primary to-teal-600 flex items-center justify-center text-white font-bold text-sm">
-              {avatarInitials || 'S'}
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-bold text-slate-900 dark:text-white">
-                {displayName}
-              </span>
-              <span className="text-xs text-slate-500">
-                {row.email || notAvailableLabel}
-              </span>
-            </div>
+      render: (_, row) => (
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black shadow-sm">
+            {row.name?.charAt(0) || 'S'}
           </div>
-        );
-      },
+          <div className="flex flex-col">
+            <span className="text-sm font-bold text-slate-900 dark:text-white">
+              {row.name}
+            </span>
+            <span className="text-xs text-slate-500">{row.email}</span>
+          </div>
+        </div>
+      ),
     },
     {
       header: 'Role',
       accessor: 'role',
-      render: (value) => (
+      render: (val) => (
         <span
-          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${roleColors[value as string] || 'bg-slate-100 text-slate-800'}`}
+          className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${roleColors[val as string]}`}
         >
-          {getRoleLabel(value as string)}
+          {getRoleLabel(val as string)}
         </span>
       ),
     },
     {
       header: 'Status',
       accessor: 'status',
-      render: (value, row) => {
-        const isPending = (row as any).mustUpdateProfile;
-        if (isPending) {
-          return <StatusBadge status="warning" label="Pending Profile" />;
-        }
-
-        const statusMap: Record<string, 'success' | 'warning' | 'error'> = {
-          active: 'success',
-          Active: 'success',
-          Online: 'success',
-          suspended: 'error',
-          Suspended: 'error',
-          inactive: 'warning',
-          Inactive: 'warning',
-          locked: 'error',
-          Locked: 'error',
-        };
-        return (
-          <StatusBadge
-            status={statusMap[value as string] || 'info'}
-            label={value as string}
-          />
-        );
-      },
+      render: (val) => renderStatusBadge(val as string),
     },
     {
       header: 'Actions',
       accessor: () => null,
       render: (_, row) => (
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleToggleLock(row.id, row.status)}
-            className="text-slate-500 hover:text-primary transition-colors p-1"
-            title={
-              isLockedStatus(row.status) ? 'Unlock account' : 'Lock account'
-            }
-          >
-            {isLockedStatus(row.status) ? (
-              <Unlock className="w-4 h-4" />
-            ) : (
-              <Lock className="w-4 h-4" />
-            )}
-          </button>
+        <div className="flex items-center gap-1">
           <button
             onClick={() => setSelectedUser(row)}
-            className="text-slate-500 hover:text-primary transition-colors p-1"
-            title="View Detail"
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-all"
           >
-            <Eye className="w-5 h-5" />
+            <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleToggleLock(row.id, row.status)}
+            className={`p-2 rounded-xl transition-all ${isLockedStatus(row.status) ? 'text-rose-500 hover:bg-rose-50' : 'text-slate-400 hover:bg-slate-100'}`}
+          >
+            {isLockedStatus(row.status) ? (
+              <Lock className="w-4 h-4" />
+            ) : (
+              <Unlock className="w-4 h-4" />
+            )}
           </button>
         </div>
       ),
@@ -330,97 +340,76 @@ export default function StaffManagementPage() {
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
       <Sidebar />
-
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="Internal Staff Management"
-          description="Manage clinic staff, assign roles, and handle onboarding"
-          showLogo={true}
+          title="Staff Management"
+          description="Control access and professional settings for your clinic team"
           actions={
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="flex items-center px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20"
-              >
-                {t('SystemAdmin.staff.actions.addNew', 'Add New Staff')}
-              </button>
-            </div>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="px-6 py-2.5 bg-primary text-slate-900 font-black rounded-2xl shadow-lg shadow-primary/20 hover:opacity-90 transition-all text-sm uppercase tracking-widest"
+            >
+              Add Staff
+            </button>
           }
         />
 
-        <main className="flex-1 overflow-y-auto">
-          <div className="px-6 md:px-10 py-6 max-w-[1600px] mx-auto w-full space-y-6">
+        <main className="flex-1 overflow-y-auto p-6 lg:p-10 scrollbar-none">
+          <div className="max-w-7xl mx-auto space-y-8">
+            {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <StatsCard
                 title="Total Staff"
-                value={totalStaff}
+                value={users.length}
                 icon={Users}
-                description="Total active and pending staff"
                 variant="primary"
               />
               <StatsCard
-                title="Active Staff"
-                value={activeStaff}
-                icon={Shield}
-                description="Staff with completed profiles"
+                title="Doctors"
+                value={users.filter((u) => u.role === 'Ophthalmologist').length}
+                icon={Stethoscope}
                 variant="success"
               />
               <StatsCard
-                title="Pending Profiles"
-                value={pendingStaff}
-                icon={Users}
-                description="Awaiting first login completion"
-                variant="warning"
+                title="Locked"
+                value={users.filter((u) => isLockedStatus(u.status)).length}
+                icon={Lock}
+                variant="danger"
               />
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="relative flex-1 min-w-[280px] max-w-lg">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            {/* Filters */}
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="relative w-full md:max-w-md group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                 <input
                   type="text"
+                  placeholder="Search staff..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by name or email..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+                  className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-medium outline-none focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
                 />
               </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Role:
-                  </span>
-                  <div className="flex flex-wrap items-center gap-1">
-                    {roleFilterOptions.map((option) => {
-                      const isActive = roleFilter === option.value;
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => setRoleFilter(option.value)}
-                          className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors ${
-                            isActive
-                              ? 'bg-primary/15 text-primary'
-                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/60'
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+              <div className="flex bg-white dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                {roleFilterOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setRoleFilter(opt.value)}
+                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${roleFilter === opt.value ? 'bg-primary text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-              <DataTable<StaffUser>
+            {/* Table */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] shadow-sm overflow-hidden">
+              <DataTable
                 columns={userColumns}
                 data={filteredUsers}
-                keyExtractor={(row) => row.id}
                 isLoading={loading}
-                emptyMessage="No staff found"
+                keyExtractor={(r) => r.id}
               />
             </div>
           </div>
@@ -433,275 +422,316 @@ export default function StaffManagementPage() {
         onSuccess={loadData}
       />
 
+      {/* Detail Modal */}
       {selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-2xl rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                Staff Detail
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                  <User className="w-5 h-5 text-slate-900" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    Staff Details
+                  </h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Management Overview
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => setSelectedUser(null)}
-                className="p-1 text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
 
-            <div className="px-5 py-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-slate-500">User ID</p>
-                <p className="font-medium break-all">{selectedUser.id}</p>
-              </div>
-              <div>
-                <p className="text-slate-500">Full Name</p>
-                <p className="font-medium">
-                  {selectedUser.fullName ||
-                    selectedUser.name ||
-                    notAvailableLabel}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500">Email</p>
-                <p className="font-medium">
-                  {selectedUser.email || notAvailableLabel}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500">Phone Number</p>
-                <p className="font-medium">
-                  {selectedUser.phoneNumber || notAvailableLabel}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500">Primary Role</p>
-                <p className="font-medium">{getRoleLabel(selectedUser.role)}</p>
-              </div>
-              <div>
-                <p className="text-slate-500">All Roles</p>
-                <p className="font-medium">
-                  {(selectedUser.roles || [selectedUser.role]).join(', ')}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500">Status</p>
-                <p className="font-medium">
-                  {selectedUser.status || notAvailableLabel}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500">Active</p>
-                <p className="font-medium">
-                  {selectedUser.isActive ? 'Yes' : 'No'}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500">Email Confirmed</p>
-                <p className="font-medium">
-                  {selectedUser.emailConfirmed ? 'Yes' : 'No'}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500">Created At</p>
-                <p className="font-medium">
-                  {formatDateTime(selectedUser.createdAt)}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500">Last Login</p>
-                <p className="font-medium">
-                  {formatDateTime(
-                    selectedUser.lastLoginAt || selectedUser.lastLogin
-                  )}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500">Profile Completion Required</p>
-                <p className="font-medium">
-                  {selectedUser.mustUpdateProfile ? 'Yes' : 'No'}
-                </p>
-              </div>
-              {selectedUser.role === 'Ophthalmologist' && (
-                <div className="md:col-span-2 p-4 rounded-xl bg-primary/5 border border-primary/20 mt-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-semibold text-primary">
-                      Consultation Fee
-                    </p>
-                    {!editingFee ? (
-                      <button
-                        onClick={() => {
-                          setFeeValue(selectedUser.consultationFee || 0);
-                          setEditingFee(true);
-                        }}
-                        className="text-xs font-bold text-primary hover:underline"
-                      >
-                        Edit Fee
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={handleUpdateFee}
-                          disabled={isUpdatingFee}
-                          className="text-xs font-bold text-emerald-600 hover:underline disabled:opacity-50"
-                        >
-                          {isUpdatingFee ? 'Saving...' : 'Save'}
-                        </button>
-                        <button
-                          onClick={() => setEditingFee(false)}
-                          className="text-xs font-bold text-slate-500 hover:underline"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {!editingFee ? (
-                    <p className="text-lg font-bold text-slate-900 dark:text-white">
-                      {selectedUser.consultationFee
-                        ? formatCurrency(
-                            selectedUser.consultationFee,
-                            vndCurrencyOptions
-                          )
-                        : 'Not set'}
-                    </p>
-                  ) : (
-                    <div className="space-y-2 mt-1">
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
-                          ₫
-                        </span>
-                        <input
-                          type="number"
-                          value={feeValue}
-                          onChange={(e) => setFeeValue(Number(e.target.value))}
-                          className="w-full pl-8 pr-4 py-2 rounded-lg border border-primary/30 bg-white dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
-                          placeholder="e.g. 500000"
-                          autoFocus
-                        />
-                      </div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center px-1">
-                        <span>Preview:</span>
-                        <span className="text-primary">
-                          {formatCurrency(feeValue || 0, vndCurrencyOptions)}
-                        </span>
-                      </p>
-                    </div>
-                  )}
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto px-8 py-8 space-y-10 scrollbar-thin">
+              {/* Profile Card */}
+              <div className="p-6 rounded-[2rem] bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 flex items-center gap-6">
+                <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center text-primary text-2xl font-black">
+                  {selectedUser.name?.charAt(0)}
                 </div>
-              )}
-              {selectedUser.role === 'ClinicStaff' && (
-                <div className="md:col-span-2 p-4 rounded-xl bg-blue-500/5 border border-blue-500/20 mt-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                      Functional Roles (Sub-roles)
-                    </p>
-                    {!editingSubRoles ? (
-                      <button
-                        onClick={() => {
-                          setSubRolesValue(selectedUser.subRoles || []);
-                          setEditingSubRoles(true);
-                        }}
-                        className="text-xs font-bold text-blue-600 hover:underline"
-                      >
-                        Edit Roles
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <h4 className="text-xl font-black text-slate-900 dark:text-white">
+                    {selectedUser.name}
+                  </h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${roleColors[selectedUser.role]}`}
+                    >
+                      {selectedUser.role}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400">
+                      ID: {selectedUser.id.slice(0, 8)}...
+                    </span>
+                  </div>
+                </div>
+                {renderStatusBadge(selectedUser.status)}
+              </div>
+
+              {/* Sections Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Contact Info */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 px-1">
+                    <Mail className="w-4 h-4 text-primary" />
+                    <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                      Contact Info
+                    </h5>
+                  </div>
+                  <div className="space-y-4 p-6 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">
+                        Email
+                      </span>
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
+                        {selectedUser.email}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">
+                        Phone
+                      </span>
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                        {selectedUser.phoneNumber || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Security Status */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 px-1">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                    <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                      Security
+                    </h5>
+                  </div>
+                  <div className="space-y-4 p-6 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">
+                        Last Activity
+                      </span>
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                        {formatDateTime(selectedUser.lastLoginAt)}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() =>
+                        handleToggleLock(selectedUser.id, selectedUser.status)
+                      }
+                      className={`w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isLockedStatus(selectedUser.status) ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-rose-50 text-rose-600 hover:bg-rose-100'}`}
+                    >
+                      {isLockedStatus(selectedUser.status)
+                        ? 'Unlock Account'
+                        : 'Lock Account'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Professional (Doctors) */}
+              {selectedUser.role === 'Ophthalmologist' && (
+                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                  <div className="flex items-center gap-2 px-1">
+                    <Stethoscope className="w-4 h-4 text-primary" />
+                    <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                      Professional Settings
+                    </h5>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Fee */}
+                    <div className="p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          Consultation Fee
+                        </span>
                         <button
-                          onClick={handleUpdateSubRoles}
-                          disabled={isUpdatingSubRoles}
-                          className="text-xs font-bold text-emerald-600 hover:underline disabled:opacity-50"
+                          onClick={() => {
+                            setEditingFee(true);
+                            setFeeValue(selectedUser.consultationFee || 0);
+                          }}
+                          className="p-1.5 rounded-lg hover:bg-slate-100 text-primary"
                         >
-                          {isUpdatingSubRoles ? 'Saving...' : 'Save'}
-                        </button>
-                        <button
-                          onClick={() => setEditingSubRoles(false)}
-                          className="text-xs font-bold text-slate-500 hover:underline"
-                        >
-                          Cancel
+                          <Pencil className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                    )}
-                  </div>
-
-                  {!editingSubRoles ? (
-                    <div className="flex flex-wrap gap-2">
-                      {(selectedUser.subRoles || []).length > 0 ? (
-                        (selectedUser.subRoles || []).map((sub) => (
-                          <span
-                            key={sub}
-                            className="px-2.5 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold border border-blue-200 dark:border-blue-800"
-                          >
-                            {sub}
-                          </span>
-                        ))
+                      {editingFee ? (
+                        <div className="space-y-3">
+                          <input
+                            type="number"
+                            value={feeValue}
+                            onChange={(e) =>
+                              setFeeValue(Number(e.target.value))
+                            }
+                            className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 rounded-xl font-bold outline-none focus:ring-4 focus:ring-primary/10"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setEditingFee(false)}
+                              className="flex-1 py-2 text-[10px] font-bold text-slate-400"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleUpdateFee}
+                              className="flex-1 py-2 bg-primary rounded-xl text-[10px] font-black uppercase"
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </div>
                       ) : (
-                        <span className="text-sm text-slate-400 italic">
-                          No sub-roles assigned
-                        </span>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white">
+                          {formatCurrency(
+                            selectedUser.consultationFee || 0,
+                            vndCurrencyOptions
+                          )}
+                        </p>
                       )}
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-3 gap-2 mt-2">
-                      {['Receptionist', 'Coordinator', 'Cashier'].map((sub) => (
-                        <button
-                          key={sub}
-                          type="button"
-                          onClick={() => toggleSubRoleValue(sub)}
-                          className={`px-3 py-2 rounded-lg text-xs font-bold border-2 transition-all ${
-                            subRolesValue.includes(sub)
-                              ? 'border-blue-500 bg-blue-500/10 text-blue-600 shadow-sm shadow-blue-500/10'
-                              : 'border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-200 dark:hover:border-slate-700'
-                          }`}
+                    {/* Leave Fund */}
+                    <div className="p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          Leave Fund
+                        </span>
+                        <Gift className="w-4 h-4 text-emerald-500" />
+                      </div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-black text-emerald-600">
+                          {availableLeaveDays ?? '...'}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">
+                          Days
+                        </span>
+                      </div>
+                      <div className="pt-2">
+                        <select
+                          value={selectedPolicyId}
+                          onChange={(e) => setSelectedPolicyId(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 rounded-xl text-[10px] font-bold outline-none"
                         >
-                          {sub}
-                        </button>
+                          <option value="">Apply Policy...</option>
+                          {leavePolicies.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name} (+{p.additionalDays})
+                            </option>
+                          ))}
+                        </select>
+                        {selectedPolicyId && (
+                          <button
+                            onClick={handleApplyPolicy}
+                            disabled={isApplyingPolicy}
+                            className="w-full mt-2 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
+                          >
+                            {isApplyingPolicy ? 'Applying...' : 'Apply'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Functional Roles (Clinic Staff) */}
+              {selectedUser.role === 'ClinicStaff' && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 px-1">
+                    <Activity className="w-4 h-4 text-primary" />
+                    <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                      Functional Roles
+                    </h5>
+                  </div>
+                  <div className="p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">
+                        Sub-roles
+                      </span>
+                      <button
+                        onClick={() => {
+                          setEditingSubRoles(true);
+                          setSubRolesValue(selectedUser.subRoles || []);
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-slate-100 text-primary"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(selectedUser.subRoles || []).map((r) => (
+                        <span
+                          key={r}
+                          className="px-3 py-1 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 rounded-full text-[10px] font-black uppercase tracking-wider"
+                        >
+                          {r}
+                        </span>
                       ))}
                     </div>
-                  )}
-                </div>
-              )}
-              {selectedUser.role === 'Ophthalmologist' && (
-                <div>
-                  <p className="text-slate-500">Role Summary</p>
-                  <p className="font-medium">
-                    Clinical ophthalmologist account
-                  </p>
-                </div>
-              )}
-              {selectedUser.role === 'ClinicStaff' && (
-                <div>
-                  <p className="text-slate-500">Role Summary</p>
-                  <p className="font-medium">
-                    Internal clinic operations staff
-                  </p>
+                    {editingSubRoles && (
+                      <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200">
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            'Registration',
+                            'Screening',
+                            'Payment',
+                            'ConsultationSupport',
+                          ].map((role) => (
+                            <label
+                              key={role}
+                              className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 cursor-pointer hover:bg-white transition-all"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={subRolesValue.includes(role)}
+                                onChange={(e) =>
+                                  e.target.checked
+                                    ? setSubRolesValue([...subRolesValue, role])
+                                    : setSubRolesValue(
+                                        subRolesValue.filter((r) => r !== role)
+                                      )
+                                }
+                                className="w-4 h-4 rounded text-primary focus:ring-primary"
+                              />
+                              <span className="text-[10px] font-bold text-slate-600">
+                                {role}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                        <div className="flex gap-2 mt-4">
+                          <button
+                            onClick={() => setEditingSubRoles(false)}
+                            className="flex-1 py-2 text-[10px] font-bold text-slate-400"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleUpdateSubRoles}
+                            className="flex-1 py-2 bg-primary rounded-xl text-[10px] font-black uppercase"
+                          >
+                            Update
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
 
-            <div className="px-5 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-3">
+            {/* Modal Footer */}
+            <div className="px-8 py-6 bg-slate-50 dark:bg-slate-950/50 border-t border-slate-100 dark:border-slate-800 flex justify-end">
               <button
-                type="button"
                 onClick={() => setSelectedUser(null)}
-                className="px-4 py-2 text-sm font-semibold rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                className="px-8 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all"
               >
-                Close
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  handleToggleLock(selectedUser.id, selectedUser.status || '')
-                }
-                className={`px-4 py-2 text-sm font-semibold rounded-lg text-white ${
-                  isLockedStatus(selectedUser.status)
-                    ? 'bg-emerald-600 hover:bg-emerald-700'
-                    : 'bg-rose-600 hover:bg-rose-700'
-                }`}
-              >
-                {isLockedStatus(selectedUser.status)
-                  ? 'Unlock Account'
-                  : 'Lock Account'}
+                Close Profile
               </button>
             </div>
           </div>

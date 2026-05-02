@@ -9,7 +9,9 @@ import {
   Sun,
   Globe,
   Check,
+  PlusCircle,
 } from 'lucide-react';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import PatientLayout from '../components/PatientLayout';
 import { useTheme } from '@/contexts/ThemeContext';
 import {
@@ -109,13 +111,23 @@ export default function SettingsPage() {
     <PatientLayout>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
-            {t('PatientSettings.page.title')}
-          </h1>
-          <p className="text-[var(--text-secondary)]">
-            {t('PatientSettings.page.subtitle')}
-          </p>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              {t('PatientSettings.page.title')}
+            </h1>
+            <p className="text-sm font-medium text-slate-500">
+              {t('PatientSettings.page.subtitle')}
+            </p>
+          </div>
+
+          <Link
+            to={resolvePathWithLocale('/patient/schedule')}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3 text-sm font-bold text-white transition-all hover:bg-brand/90 active:scale-95 shadow-sm"
+          >
+            <PlusCircle className="h-5 w-5" strokeWidth={2} />
+            <span>{t('PatientDashboard.quickActions.bookAppointment')}</span>
+          </Link>
         </div>
 
         {/* Settings Sections */}

@@ -23,6 +23,7 @@ import {
   Circle,
   Pencil,
   Trash2,
+  ShieldCheck,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
@@ -40,6 +41,7 @@ import { extractApiErrorMessage } from '@/lib/api-error';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/confirm-modal';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { leavePoliciesApi, type LeavePolicy } from '../api/leave-policies.api';
 
 interface Ophthalmologist extends OphthalmologistListItem {
   // UI mapped fields
@@ -157,6 +159,13 @@ export default function OphthalmologistsPage() {
   const [selectedConsultationFee, setSelectedConsultationFee] =
     useState<number>(0);
 
+  // Leave Policy state
+  const [leavePolicies, setLeavePolicies] = useState<LeavePolicy[]>([]);
+  const [applyingPolicyDoctor, setApplyingPolicyDoctor] =
+    useState<Ophthalmologist | null>(null);
+  const [selectedPolicyId, setSelectedPolicyId] = useState<string>('');
+  const [applyingPolicy, setApplyingPolicy] = useState(false);
+
   // Load data from real API
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -205,6 +214,22 @@ export default function OphthalmologistsPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Load Leave Policies
+  useEffect(() => {
+    leavePoliciesApi
+      .getPaged(1, 100)
+      .then((r) => setLeavePolicies(r.items))
+      .catch((e) => console.error('Failed to load leave policies', e));
+  }, []);
+
+  // Load total pending count for tab badge (independent of current page filter)
+  useEffect(() => {
+    ophthalmologistApi
+      .getOphthalmologists(1, 1, undefined, 'PendingVerification,PendingUpdate')
+      .then((r) => setPendingTotalCount(r.totalCount))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!selectedDoctor) return;
@@ -358,6 +383,87 @@ export default function OphthalmologistsPage() {
     } finally {
       setDeletingDoctorId(null);
       setDeleteTargetDoctor(null);
+    }
+  };
+
+  const handleRejectClick = (doctor: Ophthalmologist) => {
+    setRejectingDoctor(doctor);
+    setRejectReason('');
+    setRejectError('');
+  };
+
+  const handleRejectCancel = () => {
+    if (rejectSubmitting) return;
+    setRejectingDoctor(null);
+    setRejectReason('');
+    setRejectError('');
+  };
+
+  const handleRejectSubmit = async () => {
+    if (!rejectingDoctor) return;
+    if (!rejectReason.trim()) {
+      setRejectError(
+        t(
+          'SystemAdmin.ophthalmologists.rejectModal.validation.reasonRequired',
+          'Please enter a rejection reason.'
+        )
+      );
+      return;
+    }
+    setRejectSubmitting(true);
+    setRejectError('');
+    try {
+      await ophthalmologistApi.verifyOphthalmologist(
+        rejectingDoctor.id,
+        false,
+        rejectReason.trim()
+      );
+      setRejectingDoctor(null);
+      setPendingTotalCount((c) => Math.max(0, c - 1));
+      loadData();
+    } catch (error) {
+      setRejectError(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.ophthalmologists.toasts.rejectError',
+            'Rejection failed. Please try again.'
+          )
+        )
+      );
+    } finally {
+      setRejectSubmitting(false);
+    }
+  };
+
+  const handleApplyPolicySubmit = async () => {
+    if (!applyingPolicyDoctor || !selectedPolicyId) return;
+
+    setApplyingPolicy(true);
+    try {
+      await leavePoliciesApi.apply(selectedPolicyId, applyingPolicyDoctor.id);
+      toast.success(
+        t(
+          'SystemAdmin.ophthalmologists.toasts.applyPolicySuccess',
+          'Leave policy applied successfully.'
+        )
+      );
+      setApplyingPolicyDoctor(null);
+      setSelectedPolicyId('');
+      loadData();
+    } catch (error) {
+      console.error('Failed to apply policy:', error);
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.ophthalmologists.toasts.applyPolicyError',
+            'Failed to apply policy. Please try again.'
+          )
+        )
+      );
+    } finally {
+      setApplyingPolicy(false);
     }
   };
 
@@ -600,6 +706,20 @@ export default function OphthalmologistsPage() {
                   {t(
                     'SystemAdmin.ophthalmologists.table.actions.update',
                     'Update'
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setApplyingPolicyDoctor(row);
+                    setSelectedPolicyId('');
+                    setActionMenuDoctorId(null);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  {t(
+                    'SystemAdmin.ophthalmologists.table.actions.applyPolicy',
+                    'Apply Leave Policy'
                   )}
                 </button>
                 <button
@@ -1306,6 +1426,107 @@ export default function OphthalmologistsPage() {
         onCancel={() => setDeleteTargetDoctor(null)}
         onConfirm={handleDeleteDoctor}
       />
+
+      {/* Apply Leave Policy Modal */}
+      {applyingPolicyDoctor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-primary" />
+                {t(
+                  'SystemAdmin.ophthalmologists.applyPolicyModal.title',
+                  'Apply Leave Policy'
+                )}
+              </h3>
+              <button
+                onClick={() => setApplyingPolicyDoctor(null)}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                  {applyingPolicyDoctor.name
+                    .split(' ')
+                    .map((n) => n[0])
+                    .join('')
+                    .slice(0, 2)}
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                    {applyingPolicyDoctor.name}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {t(
+                      'SystemAdmin.ophthalmologists.applyPolicyModal.currentLeave',
+                      'Current leave fund: {{count}} days',
+                      { count: applyingPolicyDoctor.availableLeaveDays }
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  {t(
+                    'SystemAdmin.ophthalmologists.applyPolicyModal.selectPolicy',
+                    'Select Compensation Policy'
+                  )}
+                </label>
+                <select
+                  value={selectedPolicyId}
+                  onChange={(e) => setSelectedPolicyId(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium focus:ring-2 focus:ring-primary outline-none transition-all"
+                >
+                  <option value="">
+                    {t(
+                      'SystemAdmin.ophthalmologists.applyPolicyModal.placeholder',
+                      '-- Choose a policy --'
+                    )}
+                  </option>
+                  {leavePolicies.map((policy) => (
+                    <option key={policy.id} value={policy.id}>
+                      {policy.name} (+{policy.additionalDays} days)
+                    </option>
+                  ))}
+                </select>
+                {selectedPolicyId && (
+                  <p className="text-xs text-slate-500 px-1 mt-1">
+                    {leavePolicies.find((p) => p.id === selectedPolicyId)
+                      ?.description ||
+                      t(
+                        'SystemAdmin.ophthalmologists.applyPolicyModal.noDescription',
+                        'No description available'
+                      )}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setApplyingPolicyDoctor(null)}
+                className="px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+              >
+                {t('SystemAdmin.common.cancel', 'Cancel')}
+              </button>
+              <button
+                onClick={handleApplyPolicySubmit}
+                disabled={applyingPolicy || !selectedPolicyId}
+                className="px-6 py-2 rounded-xl text-sm font-bold text-white bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {applyingPolicy
+                  ? t('SystemAdmin.common.applying', 'Applying...')
+                  : t('SystemAdmin.common.apply', 'Apply')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

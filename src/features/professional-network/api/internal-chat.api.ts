@@ -4,6 +4,7 @@ export interface InternalGroupChat {
   id: string;
   name: string;
   type?: 'General' | 'ClinicalCase';
+  consiliumStatus?: 'Ongoing' | 'Concluded';
   consultationSessionId?: string | null;
   meetingLink?: string | null;
   calendarEventId?: string | null;
@@ -12,6 +13,7 @@ export interface InternalGroupChat {
   lastMessageAt?: string;
   createdAt: string;
   memberIds?: string[];
+  creatorId: string;
 }
 
 export interface InternalGroupMessage {
@@ -158,5 +160,14 @@ export const internalChatApi = {
       createdAt: item.createdAt,
       lastLoginAt: item.lastLoginAt ?? null,
     }));
+  },
+  /**
+   * Conclude a clinical consilium session
+   */
+  async concludeConsilium(groupId: string): Promise<boolean> {
+    const response = await api.post(
+      `/internal-chat/groups/${groupId}/conclude-consilium`
+    );
+    return response.data.data;
   },
 };

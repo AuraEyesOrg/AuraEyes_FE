@@ -45,8 +45,22 @@ type ActionMenuPosition = { top: number; left: number };
 export default function ClinicStaffPatientsPage() {
   const navigate = useNavigate();
   const { t: i18nT } = useTranslation();
-  const t = (key: string, defaultValue?: string) =>
-    i18nT(key as never, { defaultValue } as never) as unknown as string;
+  const t = (
+    key: string,
+    defaultValueOrOptions?: string | any,
+    options?: any
+  ) => {
+    if (typeof defaultValueOrOptions === 'object') {
+      return i18nT(
+        key as never,
+        defaultValueOrOptions as never
+      ) as unknown as string;
+    }
+    return i18nT(
+      key as never,
+      { defaultValue: defaultValueOrOptions, ...options } as never
+    ) as unknown as string;
+  };
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
@@ -279,11 +293,17 @@ export default function ClinicStaffPatientsPage() {
 
         {/* Results summary */}
         <p className="text-sm text-(--text-tertiary) mb-3 px-1">
-          {filteredPatients.length}{' '}
-          {filteredPatients.length !== 1
-            ? t('ClinicStaff.patients.summary.patients', 'patients')
-            : t('ClinicStaff.patients.summary.patient', 'patient')}{' '}
-          {t('ClinicStaff.patients.summary.found', 'found')}
+          {t(
+            'ClinicStaff.patients.summary.countFound',
+            '{{count}} {{unit}} found',
+            {
+              count: filteredPatients.length,
+              unit:
+                filteredPatients.length !== 1
+                  ? t('ClinicStaff.patients.summary.patients', 'patients')
+                  : t('ClinicStaff.patients.summary.patient', 'patient'),
+            }
+          )}
         </p>
 
         {/* Patient Table */}
@@ -389,7 +409,10 @@ export default function ClinicStaffPatientsPage() {
                         <span
                           className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getRiskBadge(patient.priority)}`}
                         >
-                          {patient.priority || 'low'}
+                          {t(
+                            `ClinicStaff.patients.risk.${patient.priority || 'low'}`,
+                            patient.priority || 'low'
+                          )}
                         </span>
                       </td>
 

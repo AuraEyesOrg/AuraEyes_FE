@@ -17,8 +17,11 @@ import {
   Share2,
   ChevronRight,
   X,
+  PlusCircle,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import { formatShortDate } from '@/lib/date-utils';
 import { screeningApi } from '../api/screening.api';
 import { downloadReportPdf, getReport } from '../api/patient.api';
@@ -322,23 +325,34 @@ export default function ScreeningPage() {
   const completedScans = scans.filter((s) => s.status === 'completed').length;
   const processingScans = scans.filter((s) => s.status === 'processing').length;
 
+  const PageHeader = () => (
+    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-1">
+        <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+          {t('PatientScreening.page.title', 'My Scans')}
+        </h1>
+        <p className="text-sm font-medium text-slate-500">
+          {t(
+            'PatientScreening.page.subtitle',
+            'View and manage your retinal screening history'
+          )}
+        </p>
+      </div>
+
+      <Link
+        to={resolvePathWithLocale('/patient/schedule')}
+        className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3 text-sm font-bold text-white transition-all hover:bg-brand/90 active:scale-95 shadow-sm"
+      >
+        <PlusCircle className="h-5 w-5" strokeWidth={2} />
+        <span>{t('PatientAppointments.actions.bookNew')}</span>
+      </Link>
+    </div>
+  );
+
   return (
     <PatientLayout>
       <div className="flex flex-col h-full">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-(--text-primary) mb-1">
-              {t('PatientScreening.page.title', 'My Scans')}
-            </h1>
-            <p className="text-(--text-secondary) text-sm">
-              {t(
-                'PatientScreening.page.subtitle',
-                'View and manage your retinal screening history'
-              )}
-            </p>
-          </div>
-        </div>
+        <PageHeader />
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

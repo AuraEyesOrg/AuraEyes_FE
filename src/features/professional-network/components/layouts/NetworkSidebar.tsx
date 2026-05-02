@@ -26,6 +26,7 @@ import {
 } from '@/i18n/locales';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import UserAvatar from '@/components/ui/UserAvatar';
+import { AuraLogo } from '@/components/ui/aura-logo';
 
 const BRAND_NAME = 'AURA';
 
@@ -152,19 +153,10 @@ export function NetworkSidebar() {
       <div className="p-6 flex flex-col h-full">
         {/* Logo - AURA Network */}
         <div className="flex items-center gap-3 mb-10 px-2">
-          <img
-            src="/logo.png"
-            alt={BRAND_NAME}
-            className="w-10 h-10 rounded-xl object-contain"
+          <AuraLogo
+            size="md"
+            subtitle={t('ProfessionalNetwork.common.network', 'Network')}
           />
-          <div>
-            <h1 className="text-(--text-primary) text-lg font-bold leading-none tracking-tight">
-              {BRAND_NAME}
-            </h1>
-            <p className="text-gray-400 text-xs font-medium tracking-wide uppercase">
-              {t('ProfessionalNetwork.common.network', 'Network')}
-            </p>
-          </div>
         </div>
 
         {/* Back to Dashboard */}

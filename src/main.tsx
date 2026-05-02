@@ -3,9 +3,11 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import { DevCacheGuard } from './components/ui/dev-cache-guard';
 import { installToastDeduplication } from './lib/toast-dedupe';
+import { initMonitoring } from './lib/monitoring';
 import './index.css';
 
 installToastDeduplication();
+initMonitoring();
 
 const container = document.getElementById('root') as HTMLElement;
 const root = createRoot(container);

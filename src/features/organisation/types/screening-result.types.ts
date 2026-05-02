@@ -26,6 +26,7 @@ export interface OrgScreeningSessionDetail {
   rawJsonOutput?: string;
   images: OrgScreeningImage[];
   latestResult?: OrgScreeningLatestResult;
+  medicalRecordId?: string;
 }
 
 export interface AIStandardPrediction {

@@ -180,6 +180,7 @@ export const sidebarNavItems: SidebarNavItem[] = [
     icon: CalendarX,
     requiredPermission: Permissions.SchedulesManage,
   },
+
   {
     id: 'patients',
     label: 'Patients',

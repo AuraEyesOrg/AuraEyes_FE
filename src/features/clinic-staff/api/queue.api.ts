@@ -31,6 +31,7 @@ export interface ClinicQueueItem {
   assignedDoctorId?: string;
   assignedDoctorName?: string;
   medicalRecordId?: string;
+  isAdminCompleted: boolean;
   flowState: ClinicFlowState;
 }
 

@@ -31,12 +31,16 @@ interface NotificationState extends Record<string, unknown> {
   /** SignalR connection status */
   connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error';
 
+  /** Urgent consilium invitation for doctors */
+  urgentInvitation: Notification | null;
+
   /** Actions */
   setNotifications: (
     notifications: Notification[],
     unreadCount?: number
   ) => void;
   addNotification: (notification: SignalRNotification) => void;
+  setUrgentInvitation: (notification: Notification | null) => void;
   markAsRead: (notificationId: string) => void;
   markAllAsRead: () => void;
   setUnreadCount: (count: number) => void;
@@ -62,6 +66,7 @@ const useNotificationStore = create<NotificationState>()(
       isPanelOpen: false,
       isLoading: false,
       connectionStatus: 'disconnected',
+      urgentInvitation: null,
 
       /**
        * Set notifications list (from API fetch)
@@ -98,10 +103,28 @@ const useNotificationStore = create<NotificationState>()(
         });
 
         // Play notification sound if available
-        playNotificationSound();
+        playNotificationSound(
+          parseNotificationType(newNotification.type) ===
+            NotificationType.ConsiliumInvitation
+        );
 
         // Show browser notification if permitted
         showBrowserNotification(newNotification);
+
+        // Set as urgent invitation if type matches
+        if (
+          parseNotificationType(newNotification.type) ===
+          NotificationType.ConsiliumInvitation
+        ) {
+          set({ urgentInvitation: newNotification });
+        }
+      },
+
+      /**
+       * Set/Clear urgent invitation
+       */
+      setUrgentInvitation: (notification) => {
+        set({ urgentInvitation: notification });
       },
 
       /**
@@ -211,8 +234,9 @@ const useNotificationStore = create<NotificationState>()(
 
 /**
  * Play notification sound effect
+ * @param isUrgent - If true, play a more urgent/longer tone
  */
-function playNotificationSound(): void {
+function playNotificationSound(isUrgent = false): void {
   try {
     // Use Web Audio API for notification sound
     const audioContext = new (
@@ -228,18 +252,27 @@ function playNotificationSound(): void {
     gainNode.connect(audioContext.destination);
 
     // Pleasant notification tone
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5
-    oscillator.frequency.setValueAtTime(1046.5, audioContext.currentTime + 0.1); // C6
+    oscillator.type = isUrgent ? 'sawtooth' : 'sine';
+    oscillator.frequency.setValueAtTime(
+      isUrgent ? 440 : 880,
+      audioContext.currentTime
+    );
+    oscillator.frequency.linearRampToValueAtTime(
+      isUrgent ? 880 : 1046.5,
+      audioContext.currentTime + (isUrgent ? 0.2 : 0.1)
+    );
 
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(
+      isUrgent ? 0.5 : 0.3,
+      audioContext.currentTime
+    );
     gainNode.gain.exponentialRampToValueAtTime(
       0.01,
-      audioContext.currentTime + 0.3
+      audioContext.currentTime + (isUrgent ? 1.5 : 0.3)
     );
 
     oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.3);
+    oscillator.stop(audioContext.currentTime + (isUrgent ? 1.5 : 0.3));
   } catch {
     // Audio not supported or blocked
     console.debug('Notification sound not available');

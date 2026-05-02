@@ -3665,6 +3665,8 @@
         "citizenId": "Citizen ID (CCCD)",
         "citizenIdPlaceholder": "e.g. 001099000000",
         "dateOfBirth": "Date of Birth *",
+        "email": "Email",
+        "emailPlaceholder": "patient@example.com (optional)",
         "fullName": "Full Name *",
         "fullNamePlaceholder": "e.g. John Doe",
         "gender": "Gender *",
@@ -3679,13 +3681,59 @@
       "scan": {
         "action": "Scan VNeID / CCCD QR Code",
         "cancel": "Cancel Scanning",
-        "hint": "Autofill patient details accurately"
+        "hint": "Autofill patient details accurately",
+        "opening": "Opening camera scanner..."
       },
       "toast": {
+        "accountCreatedEmailSent": "Account created and login details were sent by email.",
+        "accountCreatedTempPassword": "Account created. Login email: {{loginEmail}} | Temporary password: {{temporaryPassword}}",
         "createSuccess": "Walk-in patient created successfully!",
         "invalidQr": "Invalid QR code or unsupported CCCD/VNeID format.",
         "qrExtractSuccess": "Citizen profile extracted successfully!"
       }
+    },
+    "paymentConfirmationModal": {
+      "actions": {
+        "confirmCash": "Confirm cash payment",
+        "goToPayment": "Go to payment page"
+      },
+      "header": {
+        "order": "Order: {{orderId}}",
+        "title": "Confirm payment"
+      },
+      "methods": {
+        "cash": "Cash",
+        "label": "Payment method",
+        "payosQr": "PayOS QR"
+      },
+      "summary": {
+        "depositPaid": "Deposit paid (Online)",
+        "patient": "Patient",
+        "remaining": "Remaining amount",
+        "totalFee": "Total service fee"
+      }
+    },
+    "qrScannerModal": {
+      "actions": {
+        "flashOff": "Turn off flash",
+        "flashOn": "Turn on flash",
+        "retry": "Retry"
+      },
+      "error": {
+        "initFailed": "Unable to start camera. Please try again.",
+        "notAllowed": "Camera access was denied. Please allow camera permission in your browser settings.",
+        "notFound": "No camera was found on this device."
+      },
+      "footer": "AURA QR support · Auto detection",
+      "hint": "Place QR code inside the frame",
+      "loading": "Starting camera...",
+      "status": {
+        "error": "Camera error",
+        "initializing": "Initializing...",
+        "scanning": "Ready to scan",
+        "success": "Detected!"
+      },
+      "title": "Scan QR Check-in"
     },
     "calendar": {
       "actions": {
@@ -5202,6 +5250,87 @@
     },
     "organisation": {
       "title": "Organisation",
+      "common": {
+        "gender": {
+          "male": "Male",
+          "female": "Female"
+        },
+        "yearsAbbr": "yrs",
+        "idLabel": "ID",
+        "notAvailable": "N/A"
+      },
+      "screening": {
+        "title": "Retinal Screening",
+        "navigation": {
+          "cancelAndReturn": "Cancel & Return",
+          "proceedToReview": "Proceed to Review",
+          "transferringFiles": "Transferring Files...",
+          "executingAiModel": "Executing AI Model...",
+          "startAiAnalysis": "Start AI Analysis"
+        },
+        "upload": {
+          "title": "Image Acquisition",
+          "subtitle": "Select or drag retinal scan files for processing.",
+          "dropzone": {
+            "title": "Drag files or click to browse",
+            "supportedFormats": "Supported formats: JPG, PNG, TIFF (Max 50MB per file)"
+          },
+          "analyzingQuality": "Analyzing image quality..."
+        },
+        "quality": {
+          "notFundus": "Not a clear retinal scan.",
+          "croppedEdges": "Image appears cropped.",
+          "blurry": "Image appears blurry.",
+          "tooDark": "Image appears too dark.",
+          "overexposed": "Image appears overexposed.",
+          "optimal": "Optimal quality",
+          "acceptable": "Acceptable quality",
+          "poor": "Poor quality",
+          "validationServiceError": "Validation service error."
+        },
+        "launch": {
+          "title": "Launch Diagnostic Model",
+          "readyDescription": "System is ready to process {{count}} scan(s). This will consume 1 AI screening credit.",
+          "clinicalAdvisory": {
+            "title": "Clinical Advisory",
+            "description": "Aura AI triage results provide preliminary probabilities. They are not intended to replace formal diagnosis by an ophthalmologist or clinical specialist."
+          },
+          "includedScans": "Included Scans"
+        },
+        "quotaBanner": {
+          "title": "Quota exhausted",
+          "description": "Buy more quota from wallet. If your balance is insufficient, top up your wallet first."
+        },
+        "quotaModal": {
+          "title": "Buy more AI quota",
+          "quantityLabel": "Number of credits to purchase",
+          "unitPriceLabel": "Unit price/credit",
+          "totalPaymentLabel": "Total payment",
+          "walletBalanceLabel": "Wallet balance",
+          "walletSufficient": "Your wallet has sufficient balance to buy quota.",
+          "walletInsufficient": "Insufficient wallet balance. Need {{amount}} VND more.",
+          "suggestedTopUp": "Suggested top-up: {{amount}} VND"
+        },
+        "actions": {
+          "buyMoreQuota": "Buy more",
+          "buyQuota": "Buy quota",
+          "topUpWallet": "Top up wallet"
+        },
+        "toast": {
+          "buyQuotaSuccess": "Purchased {{count}} AI quota credits successfully.",
+          "walletInsufficient": "Insufficient wallet balance. Please top up your wallet.",
+          "buyQuotaFailed": "Unable to buy quota. Please try again.",
+          "paymentLinkUnavailable": "Unable to get payment link. Please try again.",
+          "createTopUpFailed": "Unable to create top-up request. Please try again.",
+          "noPatientSelected": "No patient selected",
+          "quotaExhausted": "Quota exhausted. Please buy more quota from wallet or top up your balance.",
+          "quotaUnitPriceUnavailable": "Quota unit price is unavailable. Please try again later.",
+          "invalidTopUpAmount": "Invalid top-up amount."
+        },
+        "wallet": {
+          "topUpDescription": "Top up for organisation quota purchase ({{amount}} VND)"
+        }
+      },
       "types": {
         "hospital": "Hospital",
         "clinic": "Clinic",
@@ -6084,6 +6213,167 @@
     },
     "empty": {
       "description": "Please perform a screening to view results."
+    }
+  },
+  "ClinicStaff": {
+    "screeningNew": {
+      "title": "New Retinal Screening",
+      "subtitle": "Upload retinal scan images for AI diagnostic triage.",
+      "steps": {
+        "upload": "1. Upload Images",
+        "launch": "2. Launch AI"
+      },
+      "quality": {
+        "title": "Image Quality Standards",
+        "lighting": "Even Lighting",
+        "lightingDesc": "Avoid glare and uneven illumination",
+        "focus": "Sharp Focus",
+        "focusDesc": "Image should be clear and not blurry",
+        "centered": "Centered Optic Disc",
+        "centeredDesc": "Optic disc should be visible and centered",
+        "supportedFormats": "Supported Formats",
+        "supportedFormatsList": "JPG, PNG, TIFF, BMP"
+      },
+      "launch": {
+        "title": "Launch AI Diagnostic Model",
+        "readyCount": "Ready to analyse {{count}} scan(s). This will consume 1 AI screening credit.",
+        "advisory": {
+          "title": "Clinical Advisory",
+          "description": "AI triage results provide preliminary probabilities. They are not intended to replace formal diagnosis by a clinical specialist."
+        },
+        "scansIncluded": "Optimal Scans",
+        "scansWarning": "Scans with Warnings"
+      },
+      "actions": {
+        "proceed": "Proceed to Review",
+        "launch": "Start AI Analysis",
+        "cancel": "Cancel",
+        "back": "Back",
+        "uploading": "Uploading...",
+        "analyzing": "Analyzing..."
+      },
+      "toast": {
+        "noPatient": "No patient selected"
+      }
+    },
+    "queue": {
+      "doctor": {
+        "yearsExp": "{{count}} years exp",
+        "notAssigned": "Not assigned"
+      },
+      "screening": {
+        "completed": "Completed",
+        "pending": "Pending"
+      },
+      "states": {
+        "checkedIn": "Checked In",
+        "screeningPending": "Screening Pending",
+        "aiCompleted": "AI Completed",
+        "sentToDoctor": "Sent to Doctor",
+        "consultationInProgress": "In Consultation",
+        "finalized": "Finalized"
+      }
+    },
+    "patients": {
+      "summary": {
+        "countFound": "{{count}} {{unit}} found",
+        "patients": "patients",
+        "patient": "patient"
+      },
+      "risk": {
+        "low": "low",
+        "medium": "medium",
+        "high": "high"
+      }
+    },
+    "common": {
+      "gender": {
+        "male": "Male",
+        "female": "Female"
+      },
+      "yearsAbbr": "yrs",
+      "idLabel": "ID",
+      "close": "Close"
+    },
+    "walkInPatientModal": {
+      "actions": {
+        "createPatient": "Create Patient"
+      },
+      "form": {
+        "address": "Address",
+        "addressPlaceholder": "Street, ward, district, city",
+        "citizenId": "Citizen ID (CCCD)",
+        "citizenIdPlaceholder": "e.g. 001099000000",
+        "dateOfBirth": "Date of Birth *",
+        "email": "Email",
+        "emailPlaceholder": "patient@example.com (optional)",
+        "fullName": "Full Name *",
+        "fullNamePlaceholder": "e.g. John Doe",
+        "gender": "Gender *",
+        "genderOther": "Other",
+        "phoneNumber": "Phone Number",
+        "phonePlaceholder": "+1 (555) 000-0000"
+      },
+      "header": {
+        "subtitle": "Quickly register a new patient",
+        "title": "Create Walk-in Patient"
+      },
+      "scan": {
+        "action": "Scan VNeID / CCCD QR Code",
+        "cancel": "Cancel Scanning",
+        "hint": "Autofill patient details accurately",
+        "opening": "Opening camera scanner..."
+      },
+      "toast": {
+        "accountCreatedEmailSent": "Account created and login details were sent by email.",
+        "accountCreatedTempPassword": "Account created. Login email: {{loginEmail}} | Temporary password: {{temporaryPassword}}",
+        "createSuccess": "Walk-in patient created successfully!",
+        "invalidQr": "Invalid QR code or unsupported CCCD/VNeID format.",
+        "qrExtractSuccess": "Citizen profile extracted successfully!"
+      }
+    },
+    "paymentConfirmationModal": {
+      "actions": {
+        "confirmCash": "Confirm cash payment",
+        "goToPayment": "Go to payment page"
+      },
+      "header": {
+        "order": "Order: {{orderId}}",
+        "title": "Confirm payment"
+      },
+      "methods": {
+        "cash": "Cash",
+        "label": "Payment method",
+        "payosQr": "PayOS QR"
+      },
+      "summary": {
+        "depositPaid": "Deposit paid (Online)",
+        "patient": "Patient",
+        "remaining": "Remaining amount",
+        "totalFee": "Total service fee"
+      }
+    },
+    "qrScannerModal": {
+      "actions": {
+        "flashOff": "Turn off flash",
+        "flashOn": "Turn on flash",
+        "retry": "Retry"
+      },
+      "error": {
+        "initFailed": "Unable to start camera. Please try again.",
+        "notAllowed": "Camera access was denied. Please allow camera permission in your browser settings.",
+        "notFound": "No camera was found on this device."
+      },
+      "footer": "AURA QR support · Auto detection",
+      "hint": "Place QR code inside the frame",
+      "loading": "Starting camera...",
+      "status": {
+        "error": "Camera error",
+        "initializing": "Initializing...",
+        "scanning": "Ready to scan",
+        "success": "Detected!"
+      },
+      "title": "Scan QR Check-in"
     }
   }
 }

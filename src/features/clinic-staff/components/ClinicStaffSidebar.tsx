@@ -153,7 +153,11 @@ export default function ClinicStaffSidebar() {
     const newLocale: AppLocale = locale === 'en' ? 'vi' : 'en';
     persistLocale(newLocale);
     i18n.changeLanguage(newLocale);
-    const newPath = withLocalePathname(newLocale, location.pathname);
+    // Keep search params like ?patientId=...
+    const newPath = withLocalePathname(
+      newLocale,
+      location.pathname + location.search
+    );
     navigate(newPath);
   };
 

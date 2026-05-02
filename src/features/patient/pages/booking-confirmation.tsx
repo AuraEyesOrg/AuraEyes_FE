@@ -427,10 +427,14 @@ export default function BookingConfirmationPage(
         {/* Back Button */}
         <button
           onClick={handleCancel}
-          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6"
+          className="group flex items-center gap-2 text-slate-500 hover:text-brand transition-colors mb-8"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Cancel and go back
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 group-hover:border-brand/30 group-hover:bg-brand/5 transition-all">
+            <ArrowLeft className="w-5 h-5" />
+          </div>
+          <span className="text-sm font-bold uppercase tracking-tight">
+            Cancel and go back
+          </span>
         </button>
 
         <div className="mb-6">

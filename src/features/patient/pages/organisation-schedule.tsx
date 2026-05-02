@@ -159,16 +159,18 @@ export default function OrganisationSchedulePage() {
     <PatientLayout>
       <div className="max-w-7xl mx-auto space-y-6 pb-20 px-4 md:px-6">
         {/* Header Section */}
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-white">
-            Available Slots
-          </h1>
-          <p className="text-slate-500 text-sm flex items-center gap-2">
-            Organisation:{' '}
-            <span className="font-semibold text-slate-700 dark:text-slate-300">
-              {schedule?.name || 'Aura Eyes Clinic'}
-            </span>
-          </p>
+        <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              {t('ClinicBooking.page.title')}
+            </h1>
+            <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
+              Organisation:{' '}
+              <span className="font-bold text-slate-700 dark:text-slate-300">
+                {schedule?.name || 'Aura Eyes Clinic'}
+              </span>
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

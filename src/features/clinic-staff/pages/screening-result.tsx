@@ -843,20 +843,26 @@ export default function ClinicStaffScreeningResultPage() {
   const handleCreateMedicalRecord = useCallback(() => {
     if (!sessionData) return;
 
+    if (sessionData.medicalRecordId) {
+      navigate(
+        resolvePathWithLocale(`/medical-records/${sessionData.medicalRecordId}`)
+      );
+      return;
+    }
+
     const findingsText = draft?.findings || '';
     const summaryText = draft?.summary || '';
 
-    // Map AI findings to ERM Form Data structure
+    // Map patient info but DO NOT pre-fill clinical diagnosis from AI
     const formData = {
       fullName: sessionData.patientName || '',
       maYT: sessionData.patientId?.slice(0, 8).toUpperCase() || '',
-      admissionReason:
-        t(
-          'ClinicStaff.screeningResult.emr.admissionReasonPrefix',
-          'Khám mắt sàng lọc AI. '
-        ) + (summaryText ? `\nKết quả AI: ${summaryText}` : ''),
-      medicalHistory: findingsText ? `AI Findings: ${findingsText}` : '',
-      finalDiagnosisMain: findingsText.split('\n')[0]?.replace(/^- /, '') || '',
+      admissionReason: t(
+        'ClinicStaff.screeningResult.emr.admissionReasonPrefix',
+        'Khám mắt sàng lọc AI. '
+      ),
+      medicalHistory: '', // Strictly empty for doctor to fill
+      finalDiagnosisMain: '', // Strictly empty for doctor to fill
       screeningId: sessionData.screeningId,
       patientId: sessionData.patientId,
     };
@@ -1038,10 +1044,15 @@ export default function ClinicStaffScreeningResultPage() {
                 className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <FilePlus className="h-4 w-4" />
-                {t(
-                  'ClinicStaff.screeningResult.actions.createMedicalRecord',
-                  'Tạo Hồ sơ bệnh án'
-                )}
+                {sessionData.medicalRecordId
+                  ? t(
+                      'ClinicStaff.screeningResult.actions.viewMedicalRecord',
+                      'Xem Hồ sơ bệnh án'
+                    )
+                  : t(
+                      'ClinicStaff.screeningResult.actions.createMedicalRecord',
+                      'Tạo Hồ sơ bệnh án'
+                    )}
               </button>
 
               <button
