@@ -1097,7 +1097,7 @@ const Router = () => (
         />
 
         <Route
-          path="/:locale/organisation/dashboard"
+          path="/:locale/clinic-staff/management/dashboard"
           element={
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
@@ -1106,7 +1106,7 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/organisation/patients"
+          path="/:locale/clinic-staff/management/patients"
           element={
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
@@ -1115,7 +1115,7 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/organisation/patients/:patientId/history"
+          path="/:locale/clinic-staff/management/patients/:patientId/history"
           element={
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
@@ -1124,7 +1124,7 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/organisation/analytics"
+          path="/:locale/clinic-staff/management/analytics"
           element={
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
@@ -1133,7 +1133,7 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/organisation/screening"
+          path="/:locale/clinic-staff/management/screening"
           element={
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
@@ -1142,7 +1142,7 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/organisation/screening/result"
+          path="/:locale/clinic-staff/management/screening/result"
           element={
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
@@ -1151,7 +1151,7 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/organisation/wallet"
+          path="/:locale/clinic-staff/management/wallet"
           element={
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
@@ -1160,7 +1160,7 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/organisation/billing"
+          path="/:locale/clinic-staff/management/billing"
           element={
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
@@ -1169,7 +1169,7 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/organisation/reports"
+          path="/:locale/clinic-staff/management/reports"
           element={
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
@@ -1178,7 +1178,7 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/organisation/calendar"
+          path="/:locale/clinic-staff/management/calendar"
           element={
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
@@ -1187,7 +1187,7 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/organisation/slots"
+          path="/:locale/clinic-staff/management/slots"
           element={
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
@@ -1196,7 +1196,7 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/organisation/contract"
+          path="/:locale/clinic-staff/management/contract"
           element={
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}

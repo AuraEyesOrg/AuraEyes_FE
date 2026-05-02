@@ -334,13 +334,13 @@
       "skip": "Bỏ qua"
     },
     "steps": {
-      "logo": "Nhấn vào logo để quay về Trang chủ bất cứ lúc nào.",
-      "navAbout": "Mục Về chúng tôi giới thiệu sứ mệnh AURA và giá trị cốt lõi của nền tảng.",
-      "navHowItWorks": "Mục Cách hoạt động mô tả quy trình từ tải ảnh đáy mắt đến kết quả phân tích AI.",
-      "aboutMission": "Khu vực này tóm tắt sứ mệnh và chức năng chính của AURA: sàng lọc nhanh, chính xác và an toàn.",
-      "contactOrganisation": "Mục Liên hệ dành cho tổ chức/phòng khám muốn hợp tác hoặc nhận tư vấn onboarding.",
-      "getStartedPatient": "Nút Bắt đầu dẫn tới đăng nhập/đăng ký, nơi bệnh nhân có thể tạo tài khoản Patient mới.",
-      "getStartedDoctor": "Từ nút Bắt đầu, bác sĩ có thể đi tới luồng đăng ký Ophthalmologist để tham gia nền tảng."
+      "logo": "Nhấn vào logo để quay về Trang chủ của AURA Digital Clinic bất cứ lúc nào.",
+      "navAbout": "Khám phá sứ mệnh phổ cập y tế số và đội ngũ chuyên gia nhãn khoa hàng đầu của chúng tôi.",
+      "navHowItWorks": "Tìm hiểu chi tiết quy trình sàng lọc AI 4 bước khép kín từ lúc đặt lịch đến khi nhận kết quả.",
+      "navEthics": "Xem các cam kết nghiêm ngặt của chúng tôi về bảo mật dữ liệu y tế và đạo đức trong ứng dụng AI.",
+      "navContact": "Kết nối với đội ngũ hỗ trợ AURA nếu bạn cần tư vấn kỹ thuật hoặc thông tin hợp tác.",
+      "bookAppointment": "Bắt đầu hành trình chăm sóc bằng cách đặt lịch hẹn tại cơ sở y tế gần nhất.",
+      "patientPortalLogin": "Đăng nhập vào Cổng Bệnh Nhân để tra cứu Lịch sử khám và tải Bệnh án điện tử (EMR) cá nhân."
     }
   },
   "Auth": {
@@ -1822,20 +1822,20 @@
     },
     "steps": {
       "capture": {
-        "title": "Chụp ảnh võng mạc",
-        "description": "Sử dụng camera đáy mắt tiêu chuẩn hoặc thiết bị gắn điện thoại để chụp ảnh võng mạc độ phân giải cao."
+        "title": "1. Đặt lịch trực tuyến",
+        "description": "Dễ dàng lựa chọn cơ sở y tế, bác sĩ chuyên khoa và khung giờ khám phù hợp ngay trên website."
       },
       "upload": {
-        "title": "Tải lên bảo mật và mã hóa",
-        "description": "Ảnh được mã hóa đầu-cuối và truyền lên máy chủ đạt chuẩn HIPAA. Dữ liệu bệnh nhân được ẩn danh ngay lập tức."
+        "title": "2. Thăm khám & Chụp ảnh",
+        "description": "Đến phòng khám theo lịch hẹn. Kỹ thuật viên sẽ thực hiện chụp ảnh đáy mắt bằng thiết bị chuyên dụng."
       },
       "analysis": {
-        "title": "Phân tích bằng AI",
-        "description": "Mô hình học sâu phân tích hình học mạch máu, cấu trúc phân nhánh và vi phình mạch để nhận diện dấu hiệu bệnh sớm."
+        "title": "3. AI Phân tích & Tư vấn",
+        "description": "Hệ thống AI phân tích tức thì và bác sĩ nhãn khoa sẽ tư vấn trực tiếp dựa trên kết quả sàng lọc."
       },
       "assessment": {
-        "title": "Nhận đánh giá nguy cơ",
-        "description": "Nhận báo cáo đầy đủ gồm điểm tin cậy, mức nguy cơ và khuyến nghị lâm sàng trong vài giây."
+        "title": "4. Xem hồ sơ trực tuyến",
+        "description": "Tra cứu bệnh án điện tử (EMR), ảnh chụp và lộ trình chăm sóc sức khỏe của bạn mọi lúc, mọi nơi."
       }
     },
     "ai": {
@@ -2058,7 +2058,7 @@
       "titleHighlight": "Y tế số thông minh",
       "description": "Aura mang đến giải pháp khám bệnh và tư vấn từ xa hiện đại, tích hợp AI chẩn đoán sớm các bất thường sức khỏe. Chuyên nghiệp, bảo mật và tận tâm.",
       "primaryCta": "Khám phá ngay",
-      "secondaryCta": "Đọc về chúng tôi",
+      "secondaryCta": "Đặt lịch ngay",
       "socialProof": "Được hàng ngàn bệnh nhân tin tưởng mỗi ngày",
       "analysisResult": "Kết quả chẩn đoán",
       "lowRisk": "Bình thường",
@@ -2358,14 +2358,6 @@
       "title": "Lịch hẹn",
       "subtitle": "Quản lý lịch hẹn với bác sĩ và cơ sở y tế"
     },
-    "stats": {
-      "upcoming": "Sắp tới",
-      "completed": "Hoàn thành",
-      "total": "Tổng",
-      "cancelled": "Đã hủy",
-      "slots": "Lượt",
-      "awaitingPayment": "Chờ thanh toán"
-    },
     "pagination": {
       "prev": "Trước",
       "next": "Sau",
@@ -2477,80 +2469,140 @@
       "afternoon": "Chào buổi chiều",
       "evening": "Chào buổi tối"
     },
-    "header": {
-      "retinalOverview": "Tổng quan sức khỏe võng mạc"
+    "risk": {
+      "notAvailable": "Chưa có kết quả"
     },
-    "stats": {
-      "latestAiRiskStatus": "Rủi ro AI mới nhất",
-      "noScans": "Chưa có lượt quét",
-      "nextAppointment": "Lịch hẹn tiếp theo",
-      "noneScheduled": "Chưa lên lịch"
+    "badge": {
+      "looksHealthy": "Mắt khỏe mạnh",
+      "needsAttention": "Cần lưu ý"
+    },
+    "detectedSummary": {
+      "low": "Dựa trên phân tích AI gần nhất, võng mạc của bạn trông khỏe mạnh. Hãy tiếp tục duy trì thói quen kiểm tra định kỳ.",
+      "medium": "AI phát hiện một số dấu hiệu bất thường nhẹ. Bạn nên đặt lịch tư vấn với bác sĩ để được kiểm tra kỹ hơn.",
+      "high": "AI phát hiện các dấu hiệu bệnh lý võng mạc đáng lo ngại. Vui lòng đặt lịch khám với bác sĩ chuyên khoa ngay lập tức.",
+      "default": "Hãy thực hiện sàng lọc AI để kiểm tra sức khỏe võng mạc của bạn."
+    },
+    "fallback": {
+      "firstName": "Bạn"
     },
     "hero": {
       "title": {
-        "aiScreening": "Phân tích AI mới nhất",
+        "aiScreening": "Sàng lọc AI",
         "specialistVerified": "Bác sĩ đã xác nhận"
       },
-      "awaitingAnalysis": "Đang chờ phân tích",
-      "latestRetinalScanAlt": "Hình ảnh võng mạc mới nhất",
-      "scanId": "Mã lượt quét: {{id}}",
-      "latestAnalysisResult": "Kết quả phân tích mới nhất",
-      "dateScanned": "Ngày quét",
-      "nextScreening": "Lần quét tiếp theo",
-      "processingTitle": "Đang xử lý...",
-      "processingDescription": "Hình ảnh của bạn đang được hệ thống AI phân tích.",
-      "noResultsTitle": "Chưa có dữ liệu",
-      "noResultsDescription": "Bạn chưa thực hiện lượt quét võng mạc nào."
+      "awaitingAnalysis": "Đang phân tích...",
+      "latestRetinalScanAlt": "Ảnh chụp võng mạc gần nhất",
+      "scanId": "Mã: {{id}}",
+      "latestAnalysisResult": "Kết quả phân tích gần nhất",
+      "dateScanned": "Ngày chụp",
+      "nextScreening": "Lịch hẹn tới",
+      "processingTitle": "Đang xử lý hồ sơ",
+      "noResultsTitle": "Chưa có kết quả khám",
+      "processingDescription": "Hệ thống AI đang phân tích ảnh chụp võng mạc của bạn. Vui lòng quay lại sau ít phút.",
+      "noResultsDescription": "Bạn chưa thực hiện bất kỳ ca sàng lọc nào. Hãy đặt lịch hẹn để kiểm tra sức khỏe mắt ngay hôm nay."
     },
-    "actions": {
-      "viewFullReport": "Xem báo cáo đầy đủ",
-      "openLatestSession": "Mở phiên mới nhất"
+    "stats": {
+      "latestAiRiskStatus": "Tình trạng mắt (AI)",
+      "noScans": "Chưa có dữ liệu",
+      "nextAppointment": "Lịch khám tiếp theo",
+      "noneScheduled": "Chưa có lịch hẹn"
     },
-    "history": {
-      "title": "Lịch sử lượt quét gần đây",
-      "viewAll": "Xem tất cả",
-      "sessionLabel": "Phiên khám",
-      "imagesSingle": "{{count}} hình ảnh",
-      "imagesMultiple": "{{count}} hình ảnh",
-      "recentScreeningAlt": "Hình ảnh lượt quét",
-      "empty": "Chưa có lịch sử lượt quét."
+    "header": {
+      "retinalOverview": "Tổng quan sức khỏe võng mạc"
     },
     "quickActions": {
       "title": "Thao tác nhanh",
-      "messageSpecialist": "Nhắn tin cho chuyên gia",
-      "bookAppointment": "Đặt lịch khám tại cơ sở",
-      "bookFollowUp": "Đặt lịch tái khám"
+      "bookAppointment": "Đặt lịch khám",
+      "bookFollowUp": "Đặt lịch tái khám",
+      "messageSpecialist": "Nhắn tin cho bác sĩ"
+    },
+    "actions": {
+      "viewFullReport": "Xem báo cáo đầy đủ",
+      "openLatestSession": "Mở phiên gần nhất"
+    },
+    "history": {
+      "title": "Lịch sử sàng lọc",
+      "viewAll": "Xem tất cả",
+      "recentScreeningAlt": "Ảnh chụp võng mạc",
+      "sessionLabel": "Phiên sàng lọc",
+      "imagesSingle": "{{count}} ảnh",
+      "imagesMultiple": "{{count}} ảnh",
+      "empty": "Chưa có lịch sử sàng lọc."
     }
   },
   "PatientCarePlan": {
+    "badge": "Lộ trình chăm sóc",
     "page": {
-      "title": "Kế hoạch chăm sóc",
-      "subtitle": "Lộ trình chăm sóc sức khỏe được thiết lập bởi bác sĩ của bạn. Các bước được sắp xếp theo thời gian để bạn dễ dàng theo dõi."
+      "title": "Lộ trình sức khỏe của tôi",
+      "description": "Lịch trình các bước chăm sóc sức khỏe do bác sĩ chỉ định. Các mục được sắp xếp theo ngày để bạn có thể lên kế hoạch trước."
     },
     "stats": {
       "upcoming": "Sắp tới",
       "overdue": "Quá hạn",
-      "completed": "Hoàn thành"
+      "completed": "Hoàn tất"
     },
-    "loading": "Đang tải kế hoạch chăm sóc...",
-    "error": "Không thể tải lộ trình chăm sóc sức khỏe. Vui lòng thử lại.",
+    "loading": "Đang tải lộ trình chăm sóc...",
+    "error": "Không thể tải lộ trình sức khỏe. Vui lòng thử lại sau.",
     "empty": {
-      "title": "Chưa có kế hoạch chăm sóc.",
-      "subtitle": "Bác sĩ sẽ thêm các bước chăm sóc tại đây sau buổi thăm khám tiếp theo của bạn."
+      "title": "Chưa có lộ trình chăm sóc.",
+      "message": "Bác sĩ sẽ thêm các bước chăm sóc tại đây sau lượt khám tiếp theo của bạn."
     }
   },
   "PatientHelpFeedback": {
     "page": {
       "title": "Hỗ trợ & Phản hồi",
-      "subtitle": "Chia sẻ trải nghiệm của bạn để giúp chúng tôi cải thiện dịch vụ chăm sóc võng mạc."
+      "subtitle": "Chia sẻ trải nghiệm của bạn để giúp chúng tôi hoàn thiện dịch vụ chăm sóc võng mạc."
     },
     "whyFeedbackMatters": {
-      "title": "Tại sao phản hồi của bạn quan trọng?",
+      "title": "Tại sao phản hồi của bạn quan trọng",
       "items": {
-        "bookingAndConsultation": "Giúp chúng tôi cải thiện trải nghiệm đặt lịch và tư vấn.",
-        "bugReporting": "Phát hiện lỗi sớm trước khi chúng ảnh hưởng đến nhiều bệnh nhân khác.",
-        "featureSuggestions": "Đề xuất các tính năng giúp hành trình chăm sóc của bạn thuận tiện hơn."
+        "bookingAndConsultation": "Giúp chúng tôi cải thiện quy trình đặt lịch và tư vấn.",
+        "bugReporting": "Báo cáo lỗi kỹ thuật để chúng tôi khắc phục kịp thời.",
+        "featureSuggestions": "Đề xuất các tính năng mới giúp trải nghiệm của bạn tốt hơn."
       }
+    },
+    "form": {
+      "title": "Hỗ trợ & Phản hồi",
+      "subtitle": "Chỉ mất chưa đầy 30 giây. Phản hồi của bạn giúp chúng tôi cải thiện nền tảng.",
+      "unlockHint": "Hoàn thành ít nhất một lần sàng lọc hoặc lịch hẹn để mở khóa tính năng gửi phản hồi.",
+      "success": {
+        "title": "Đã gửi phản hồi",
+        "message": "Cảm ơn bạn đã góp ý để chúng tôi hoàn thiện dịch vụ."
+      },
+      "actions": {
+        "leaveFeedback": "Gửi phản hồi về website"
+      }
+    },
+    "modal": {
+      "title": "Phản hồi về website",
+      "subtitle": "Hãy cho chúng tôi biết điều gì tốt và điều gì cần cải thiện.",
+      "submitLabel": "Gửi phản hồi",
+      "labels": {
+        "rating": "Đánh giá",
+        "ratingValidation": "Vui lòng chọn mức đánh giá từ 1 đến 5.",
+        "category": "Danh mục",
+        "commentOptional": "Bình luận (tùy chọn)",
+        "commentPlaceholder": "Chia sẻ thêm về trải nghiệm của bạn..."
+      },
+      "categories": {
+        "BUG": "Lỗi kỹ thuật",
+        "UX": "Trải nghiệm người dùng",
+        "SUGGESTION": "Góp ý tính năng",
+        "OTHER": "Khác"
+      },
+      "actions": {
+        "notNow": "Để sau",
+        "submitting": "Đang gửi..."
+      },
+      "discard": {
+        "title": "Hủy bản nháp?",
+        "description": "Phản hồi của bạn chưa được gửi. Nếu bạn rời đi, dữ liệu sẽ bị mất.",
+        "keepEditing": "Tiếp tục viết",
+        "discardDraft": "Hủy bỏ"
+      }
+    },
+    "toast": {
+      "feedbackSubmitted": "Đã gửi phản hồi thành công"
     }
   },
   "PatientDashboard_Legacy": {
@@ -2657,63 +2709,6 @@
     "language": {
       "title": "Ngôn ngữ và khu vực",
       "subtitle": "Chọn ngôn ngữ hiển thị bạn muốn sử dụng"
-    }
-  },
-  "PatientHelpFeedback": {
-    "page": {
-      "title": "Hỗ trợ & phản hồi",
-      "subtitle": "Chia sẻ trải nghiệm sử dụng website để giúp chúng tôi cải thiện hành trình chăm sóc võng mạc."
-    },
-    "whyFeedbackMatters": {
-      "title": "Vì sao phản hồi của bạn quan trọng",
-      "items": {
-        "bookingAndConsultation": "Giúp chúng tôi cải thiện trải nghiệm đặt lịch và tư vấn.",
-        "bugReporting": "Phát hiện lỗi sớm trước khi ảnh hưởng đến nhiều bệnh nhân hơn.",
-        "featureSuggestions": "Đề xuất tính năng để hành trình chăm sóc của bạn thuận tiện hơn."
-      }
-    },
-    "form": {
-      "title": "Hỗ trợ & phản hồi",
-      "subtitle": "Chỉ mất dưới 30 giây. Phản hồi của bạn giúp chúng tôi cải thiện nền tảng.",
-      "unlockHint": "Hoàn tất ít nhất một lần phân tích, báo cáo hoặc lịch hẹn để mở phản hồi website.",
-      "success": {
-        "title": "Đã gửi phản hồi",
-        "message": "Cảm ơn bạn đã giúp chúng tôi cải thiện hành trình chăm sóc."
-      },
-      "actions": {
-        "leaveFeedback": "Gửi phản hồi website"
-      }
-    },
-    "modal": {
-      "title": "Phản hồi website",
-      "subtitle": "Hãy cho chúng tôi biết điều gì hoạt động tốt và điều gì cần cải thiện.",
-      "submitLabel": "Gửi phản hồi website",
-      "labels": {
-        "rating": "Đánh giá",
-        "ratingValidation": "Vui lòng chọn mức đánh giá từ 1 đến 5.",
-        "category": "Danh mục",
-        "commentOptional": "Nội dung (không bắt buộc)",
-        "commentPlaceholder": "Hãy chia sẻ thêm về trải nghiệm của bạn"
-      },
-      "categories": {
-        "BUG": "Lỗi",
-        "UX": "Trải nghiệm người dùng",
-        "SUGGESTION": "Đề xuất",
-        "OTHER": "Khác"
-      },
-      "actions": {
-        "notNow": "Để sau",
-        "submitting": "Đang gửi..."
-      },
-      "discard": {
-        "title": "Hủy bản nháp?",
-        "description": "Phản hồi hiện tại của bạn chưa được gửi. Nếu rời đi bây giờ, bản nháp sẽ bị mất.",
-        "keepEditing": "Tiếp tục chỉnh sửa",
-        "discardDraft": "Hủy bản nháp"
-      }
-    },
-    "toast": {
-      "feedbackSubmitted": "Đã gửi phản hồi"
     }
   },
   "PatientRoadmap": {
@@ -3769,7 +3764,10 @@
         "completeVisit": "Hoàn tất khám",
         "noShow": "Vắng mặt",
         "scanQrCheckIn": "Quét QR check-in",
-        "startConsultation": "Bắt đầu tư vấn"
+        "startConsultation": "Bắt đầu tư vấn",
+        "newWalkIn": "Bệnh nhân mới",
+        "payRemaining": "Thanh toán",
+        "markNoShow": "Vắng mặt"
       },
       "pageName": "Lịch",
       "patient": {
@@ -3786,6 +3784,11 @@
           "cancelled": "Lịch hẹn đã hủy",
           "completed": "Đã hoàn tất lượt khám",
           "noShow": "Đã đánh dấu vắng mặt"
+        },
+        "billing": {
+          "pending": "Chờ thanh toán",
+          "partiallyPaid": "Đã cọc",
+          "fullyPaid": "Đã tất toán"
         }
       },
       "stats": {
@@ -3816,29 +3819,6 @@
         "qrNotMatchAppointment": "Mã QR này không khớp lịch hẹn đã chọn.",
         "visitCompleted": "Đã hoàn tất lượt khám.",
         "noShowMarked": "Đã đánh dấu vắng mặt."
-      },
-      "actions": {
-        "completeVisit": "Hoàn tất khám",
-        "newWalkIn": "Bệnh nhân mới",
-        "noShow": "Vắng mặt",
-        "payRemaining": "Thanh toán",
-        "scanQrCheckIn": "Quét QR check-in",
-        "startConsultation": "Bắt đầu tư vấn",
-        "markNoShow": "Vắng mặt"
-      },
-      "states": {
-        "billing": {
-          "pending": "Chờ thanh toán",
-          "partiallyPaid": "Đã cọc",
-          "fullyPaid": "Đã tất toán"
-        },
-        "loadingAppointments": "Đang tải lịch hẹn...",
-        "noAppointments": "Không có lịch hẹn trong ngày này.",
-        "terminal": {
-          "cancelled": "Lịch hẹn đã hủy",
-          "completed": "Đã hoàn tất lượt khám",
-          "noShow": "Đã đánh dấu vắng mặt"
-        }
       },
       "bento": {
         "totalBill": "Tổng hóa đơn",
@@ -5467,33 +5447,37 @@
     }
   },
   "ClinicStaffDashboard": {
-    "greeting": "Chào buổi sáng",
-    "greetingAfternoon": "Chào buổi chiều",
-    "greetingEvening": "Chào buổi tối",
-    "subtitle": "Tổng quan vận hành thời gian thực",
-    "stats": {
-      "todayAppointments": "LỊCH HẸN HÔM NAY",
-      "checkedIn": "ĐÃ TIẾP NHẬN",
-      "pendingWork": "CÔNG VIỆC CHỜ XỬ LÝ",
-      "completed": "ĐÃ HOÀN TẤT",
-      "today": "Hôm nay",
-      "needsAction": "Cần xử lý"
+    "greetings": {
+      "morning": "Chào buổi sáng",
+      "afternoon": "Chào buổi chiều",
+      "evening": "Chào buổi tối"
     },
-    "recentActivity": {
+    "stats": {
+      "todayAppointments": "Lịch hẹn hôm nay",
+      "scheduled": "Đã lên lịch",
+      "patientsCheckedIn": "Đã check-in",
+      "today": "Hôm nay",
+      "pendingTasks": "Việc cần làm",
+      "requiresAction": "Cần xử lý",
+      "completedToday": "Đã hoàn tất"
+    },
+    "subtitle": "Cổng AURA Clinic • Tổng quan hoạt động thời gian thực",
+    "activity": {
       "title": "Hoạt động gần đây",
-      "subtitle": "Thông tin bệnh nhân tiếp nhận và cập nhật lịch hẹn trực tiếp"
+      "subtitle": "Thông tin bệnh nhân tiếp nhận và cập nhật lịch hẹn trực tiếp",
+      "empty": "Chưa có hoạt động nào. Chúc bạn một ngày làm việc hiệu quả!"
     },
     "quickActions": {
       "title": "Thao tác nhanh",
       "subtitle": "Các tác vụ phổ biến trong ngày",
-      "newAppointment": "Hẹn lịch mới",
-      "newAppointmentDesc": "Hẹn lịch khám cho bệnh nhân mới",
+      "newAppointment": "Tạo lịch hẹn",
+      "newAppointmentDesc": "Lên lịch hẹn cho bệnh nhân mới",
       "registerPatient": "Đăng ký bệnh nhân",
       "registerPatientDesc": "Thêm bệnh nhân mới vào hệ thống",
       "viewSchedule": "Xem lịch biểu",
       "viewScheduleDesc": "Xem toàn bộ lịch trình hôm nay",
-      "cashier": "Quầy thu ngân",
-      "cashierDesc": "Kiểm tra các lượt khám đã hoàn tất và thu phí"
+      "cashierDesk": "Quầy thu ngân",
+      "cashierDeskDesc": "Kiểm tra các lượt khám đã hoàn tất và thu phí"
     }
   },
   "ClinicStaffQueue": {
@@ -5557,64 +5541,6 @@
     },
     "actions": {
       "toggleTheme": "Chuyển chế độ sáng/tối"
-    },
-    "Cashier": {
-      "header": {
-        "workspace": "Cashier workspace",
-        "title": "Thu ngân thủ công cho ca khám đã hoàn tất",
-        "description": "Chọn ca đã finalize để nhập giá thuốc và phí dịch vụ. Tổng tiền sẽ được tính ngay để hỗ trợ xác nhận thanh toán nhanh và chính xác."
-      },
-      "stats": {
-        "finalizedVisits": "Ca finalized",
-        "selectedVisit": "Đang chọn",
-        "noVisitSelected": "Chưa chọn ca"
-      },
-      "queue": {
-        "title": "Danh sách ca chờ thu ngân",
-        "loading": "Đang tải danh sách...",
-        "error": "Không thể tải danh sách ca thu ngân. Vui lòng thử lại sau.",
-        "empty": "Chưa có ca nào sẵn sàng thu ngân",
-        "emptyDesc": "Hệ thống sẽ tự cập nhật ngay khi bác sĩ finalize ca khám.",
-        "selected": "Đang chọn",
-        "doctor": "Bác sĩ: {{name}}"
-      },
-      "pricingPanel": {
-        "title": "Bảng giá thủ công",
-        "subtitle": "Nhập chi phí theo từng thuốc và dịch vụ trong ca khám đã chọn.",
-        "selectedVisitId": "Visit {{id}}",
-        "noVisitSelected": "Chưa chọn ca",
-        "selectToStart": "Chọn một ca khám để bắt đầu nhập giá",
-        "selectToStartDesc": "Danh sách ca nằm ở cột bên trái. Sau khi chọn, thông tin đơn thuốc sẽ hiển thị tại đây.",
-        "loading": "Đang tải...",
-        "error": "Không thể tải payment context cho visit này.",
-        "success": {
-          "title": "Thanh toán thành công!",
-          "message": "Ca khám của bệnh nhân <0>{{name}}</0> đã được hoàn tất và chuyển trạng thái thành công.",
-          "backToList": "Quay lại danh sách"
-        },
-        "patient": "Bệnh nhân",
-        "doctor": "Bác sĩ phụ trách",
-        "noMedication": "Bác sĩ đánh dấu không kê thuốc cho ca này.",
-        "medicationCount": "Có {{count}} thuốc trong đơn",
-        "medicationPrice": "Giá thuốc (VND)",
-        "manualPricePlaceholder": "Nhập giá thủ công",
-        "subtotal": "Tạm tính: {{amount}}",
-        "serviceFee": "Phí khám / dịch vụ khác",
-        "serviceFeeDesc": "Nhập khoản phí ngoài giá thuốc nếu có.",
-        "serviceFeeLabel": "Phí dịch vụ (VND)",
-        "totalManual": "Tổng tiền thủ công",
-        "payButton": "Thanh toán PayOS"
-      },
-      "confirmModal": {
-        "title": "Xác nhận thanh toán PayOS",
-        "message": "Bạn có chắc chắn muốn tạo lệnh thanh toán qua PayOS cho bệnh nhân {{patientName}} với tổng số tiền là {{total}}?",
-        "confirm": "Tiến hành thanh toán",
-        "cancel": "Quay lại"
-      },
-      "toast": {
-        "success": "Đã tạo link thanh toán PayOS thành công!",
-        "error": "Không thể tạo lệnh thanh toán qua PayOS."
-      }
     }
   },
   "Cashier": {
@@ -5750,40 +5676,6 @@
       "subtitle": "Chọn ngôn ngữ ưu tiên cho cổng thông tin"
     }
   },
-  "ClinicStaffDashboard": {
-    "greetings": {
-      "morning": "Chào buổi sáng",
-      "afternoon": "Chào buổi chiều",
-      "evening": "Chào buổi tối"
-    },
-    "stats": {
-      "todayAppointments": "Lịch hẹn hôm nay",
-      "scheduled": "Đã lên lịch",
-      "patientsCheckedIn": "Đã check-in",
-      "today": "Hôm nay",
-      "pendingTasks": "Việc cần làm",
-      "requiresAction": "Cần xử lý",
-      "completedToday": "Đã hoàn tất"
-    },
-    "subtitle": "Cổng AURA Clinic • Tổng quan hoạt động thời gian thực",
-    "activity": {
-      "title": "Hoạt động gần đây",
-      "subtitle": "Check-in bệnh nhân và cập nhật lịch hẹn trực tiếp",
-      "empty": "Chưa có hoạt động nào. Chúc bạn một ngày làm việc hiệu quả!"
-    },
-    "quickActions": {
-      "title": "Thao tác nhanh",
-      "subtitle": "Các tác vụ phổ biến trong ngày",
-      "newAppointment": "Tạo lịch hẹn",
-      "newAppointmentDesc": "Lên lịch hẹn cho bệnh nhân mới",
-      "registerPatient": "Đăng ký bệnh nhân",
-      "registerPatientDesc": "Thêm bệnh nhân mới vào hệ thống",
-      "viewSchedule": "Xem lịch biểu",
-      "viewScheduleDesc": "Xem toàn bộ lịch trình hôm nay",
-      "cashierDesk": "Quầy thu ngân",
-      "cashierDeskDesc": "Kiểm tra các lượt khám đã hoàn tất và thu phí"
-    }
-  },
   "ClinicStaff": {
     "queue": {
       "toast": {
@@ -5842,201 +5734,6 @@
     },
     "common": {
       "close": "Đóng"
-    }
-  },
-  "Cashier": {
-    "toast": {
-      "createSuccess": "Đã tạo yêu cầu thanh toán.",
-      "createError": "Lỗi tạo yêu cầu thanh toán."
-    },
-    "header": {
-      "badge": "Quầy thu ngân",
-      "title": "Quy trình thanh toán",
-      "description": "Nhập chi phí thuốc và phí dịch vụ để tạo liên kết thanh toán qua PayOS."
-    },
-    "stats": {
-      "finalizedCount": "Ca hoàn tất",
-      "currentlySelecting": "Đang chọn",
-      "noVisitSelected": "Chưa chọn lượt khám"
-    },
-    "queue": {
-      "title": "Hàng đợi chờ thanh toán",
-      "loadError": "Không thể tải danh sách chờ thanh toán.",
-      "empty": "Không có ca chờ thanh toán",
-      "emptySub": "Các ca khám sẽ hiện ở đây sau khi bác sĩ kết luận",
-      "selectedBadge": "Đang chọn",
-      "doctorName": "Bác sĩ"
-    },
-    "pricingPanel": {
-      "title": "Chi tiết thanh toán",
-      "description": "Vui lòng kiểm tra kỹ chi phí trước khi tạo yêu cầu",
-      "noVisitSelectedBadge": "Chưa chọn ca khám",
-      "selectPrompt": "Chọn một bệnh nhân từ danh sách",
-      "selectPromptSub": "Để bắt đầu quy trình thanh toán và kê đơn",
-      "contextLoadError": "Không thể tải ngữ cảnh thanh toán.",
-      "paymentSuccessTitle": "Thanh toán thành công!",
-      "paymentSuccessDescription": "Ca khám của bệnh nhân <0>{{name}}</0> đã được hoàn tất và chuyển trạng thái thành công.",
-      "backToList": "Quay lại danh sách",
-      "patientLabel": "Bệnh nhân",
-      "doctorLabel": "Bác sĩ chẩn đoán",
-      "noMedication": "Không có thuốc nào được kê trong ca này.",
-      "medicationCount": "Đơn thuốc ({{count}} loại)",
-      "medicinePriceLabel": "Đơn giá (VND)",
-      "manualPricePlaceholder": "Nhập giá...",
-      "estimated": "Thành tiền",
-      "serviceFeeLabel": "Phí dịch vụ",
-      "serviceFeeDescription": "Bao gồm phí khám và các dịch vụ phòng khám đi kèm",
-      "serviceFeeInputLabel": "Tổng phí dịch vụ (VND)",
-      "totalManual": "Tổng cộng",
-      "payButton": "Thanh toán ngay"
-    },
-    "confirmModal": {
-      "title": "Xác nhận thanh toán",
-      "message": "Tạo yêu cầu thanh toán {{amount}} cho bệnh nhân {{name}}?",
-      "confirm": "Xác nhận",
-      "cancel": "Hủy"
-    }
-  },
-  "PatientDashboard": {
-    "greeting": {
-      "morning": "Chào buổi sáng",
-      "afternoon": "Chào buổi chiều",
-      "evening": "Chào buổi tối"
-    },
-    "risk": {
-      "notAvailable": "Chưa có kết quả"
-    },
-    "badge": {
-      "looksHealthy": "Mắt khỏe mạnh",
-      "needsAttention": "Cần lưu ý"
-    },
-    "detectedSummary": {
-      "low": "Dựa trên phân tích AI gần nhất, võng mạc của bạn trông khỏe mạnh. Hãy tiếp tục duy trì thói quen kiểm tra định kỳ.",
-      "medium": "AI phát hiện một số dấu hiệu bất thường nhẹ. Bạn nên đặt lịch tư vấn với bác sĩ để được kiểm tra kỹ hơn.",
-      "high": "AI phát hiện các dấu hiệu bệnh lý võng mạc đáng lo ngại. Vui lòng đặt lịch khám với bác sĩ chuyên khoa ngay lập tức.",
-      "default": "Hãy thực hiện sàng lọc AI để kiểm tra sức khỏe võng mạc của bạn."
-    },
-    "fallback": {
-      "firstName": "Bạn"
-    },
-    "hero": {
-      "title": {
-        "aiScreening": "Sàng lọc AI",
-        "specialistVerified": "Bác sĩ đã xác nhận"
-      },
-      "awaitingAnalysis": "Đang phân tích...",
-      "latestRetinalScanAlt": "Ảnh chụp võng mạc gần nhất",
-      "scanId": "Mã: {{id}}",
-      "latestAnalysisResult": "Kết quả phân tích gần nhất",
-      "dateScanned": "Ngày chụp",
-      "nextScreening": "Lịch hẹn tới",
-      "processingTitle": "Đang xử lý hồ sơ",
-      "noResultsTitle": "Chưa có kết quả khám",
-      "processingDescription": "Hệ thống AI đang phân tích ảnh chụp võng mạc của bạn. Vui lòng quay lại sau ít phút.",
-      "noResultsDescription": "Bạn chưa thực hiện bất kỳ ca sàng lọc nào. Hãy đặt lịch hẹn để kiểm tra sức khỏe mắt ngay hôm nay."
-    },
-    "stats": {
-      "latestAiRiskStatus": "Tình trạng mắt (AI)",
-      "noScans": "Chưa có dữ liệu",
-      "nextAppointment": "Lịch khám tiếp theo",
-      "noneScheduled": "Chưa có lịch hẹn"
-    },
-    "header": {
-      "retinalOverview": "Tổng quan sức khỏe võng mạc"
-    },
-    "quickActions": {
-      "title": "Thao tác nhanh",
-      "bookAppointment": "Đặt lịch khám",
-      "bookFollowUp": "Đặt lịch tái khám",
-      "messageSpecialist": "Nhắn tin cho bác sĩ"
-    },
-    "actions": {
-      "viewFullReport": "Xem báo cáo đầy đủ",
-      "openLatestSession": "Mở phiên gần nhất"
-    },
-    "history": {
-      "title": "Lịch sử sàng lọc",
-      "viewAll": "Xem tất cả",
-      "recentScreeningAlt": "Ảnh chụp võng mạc",
-      "sessionLabel": "Phiên sàng lọc",
-      "imagesSingle": "{{count}} ảnh",
-      "imagesMultiple": "{{count}} ảnh",
-      "empty": "Chưa có lịch sử sàng lọc."
-    }
-  },
-  "PatientCarePlan": {
-    "badge": "Lộ trình chăm sóc",
-    "page": {
-      "title": "Lộ trình sức khỏe của tôi",
-      "description": "Lịch trình các bước chăm sóc sức khỏe do bác sĩ chỉ định. Các mục được sắp xếp theo ngày để bạn có thể lên kế hoạch trước."
-    },
-    "stats": {
-      "upcoming": "Sắp tới",
-      "overdue": "Quá hạn",
-      "completed": "Hoàn tất"
-    },
-    "loading": "Đang tải lộ trình chăm sóc...",
-    "error": "Không thể tải lộ trình sức khỏe. Vui lòng thử lại sau.",
-    "empty": {
-      "title": "Chưa có lộ trình chăm sóc.",
-      "message": "Bác sĩ sẽ thêm các bước chăm sóc tại đây sau lượt khám tiếp theo của bạn."
-    }
-  },
-  "PatientHelpFeedback": {
-    "page": {
-      "title": "Hỗ trợ & Phản hồi",
-      "subtitle": "Chia sẻ trải nghiệm của bạn để giúp chúng tôi hoàn thiện dịch vụ chăm sóc võng mạc."
-    },
-    "whyFeedbackMatters": {
-      "title": "Tại sao phản hồi của bạn quan trọng",
-      "items": {
-        "bookingAndConsultation": "Giúp chúng tôi cải thiện quy trình đặt lịch và tư vấn.",
-        "bugReporting": "Báo cáo lỗi kỹ thuật để chúng tôi khắc phục kịp thời.",
-        "featureSuggestions": "Đề xuất các tính năng mới giúp trải nghiệm của bạn tốt hơn."
-      }
-    },
-    "form": {
-      "title": "Hỗ trợ & Phản hồi",
-      "subtitle": "Chỉ mất chưa đầy 30 giây. Phản hồi của bạn giúp chúng tôi cải thiện nền tảng.",
-      "unlockHint": "Hoàn thành ít nhất một lần sàng lọc hoặc lịch hẹn để mở khóa tính năng gửi phản hồi.",
-      "success": {
-        "title": "Đã gửi phản hồi",
-        "message": "Cảm ơn bạn đã góp ý để chúng tôi hoàn thiện dịch vụ."
-      },
-      "actions": {
-        "leaveFeedback": "Gửi phản hồi về website"
-      }
-    },
-    "modal": {
-      "title": "Phản hồi về website",
-      "subtitle": "Hãy cho chúng tôi biết điều gì tốt và điều gì cần cải thiện.",
-      "submitLabel": "Gửi phản hồi",
-      "labels": {
-        "rating": "Đánh giá",
-        "ratingValidation": "Vui lòng chọn mức đánh giá từ 1 đến 5.",
-        "category": "Danh mục",
-        "commentOptional": "Bình luận (tùy chọn)",
-        "commentPlaceholder": "Chia sẻ thêm về trải nghiệm của bạn..."
-      },
-      "categories": {
-        "BUG": "Lỗi kỹ thuật",
-        "UX": "Trải nghiệm người dùng",
-        "SUGGESTION": "Góp ý tính năng",
-        "OTHER": "Khác"
-      },
-      "actions": {
-        "notNow": "Để sau",
-        "submitting": "Đang gửi..."
-      },
-      "discard": {
-        "title": "Hủy bản nháp?",
-        "description": "Phản hồi của bạn chưa được gửi. Nếu bạn rời đi, dữ liệu sẽ bị mất.",
-        "keepEditing": "Tiếp tục viết",
-        "discardDraft": "Hủy bỏ"
-      }
-    },
-    "toast": {
-      "feedbackSubmitted": "Đã gửi phản hồi thành công"
     }
   }
 }

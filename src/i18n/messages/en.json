@@ -334,13 +334,10 @@
       "skip": "Skip"
     },
     "steps": {
-      "logo": "Click the logo anytime to return to the home page.",
-      "navAbout": "About Us explains AURA's mission and how the platform supports AI-powered retinal screening.",
-      "navHowItWorks": "How It Works shows the journey from retinal image upload to AI screening report.",
-      "aboutMission": "This section highlights AURA's mission and core value: fast, accurate, and safe ophthalmology screening.",
-      "contactOrganisation": "Use Contact if your clinic or organization wants onboarding support or partnership registration.",
-      "getStartedPatient": "Get Started leads to login/register, where a new Patient account can be created.",
-      "getStartedDoctor": "From Get Started, ophthalmologists can continue to the dedicated doctor registration flow."
+      "logo": "Click the logo anytime to return to the AURA Digital Clinic home page.",
+      "navAiScreening": "Learn about our frontline AI Retinal Screening technology that helps detect ophthalmic risks early.",
+      "bookAppointment": "Experience Online Booking. You can select a specialist, time slot, and pay your deposit right here.",
+      "patientPortalLogin": "Log in to the Patient Portal to search your medical history, track treatment plans, and download your EMR (PDF)."
     }
   },
   "Auth": {
