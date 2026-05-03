@@ -9,6 +9,7 @@ import {
   useParams,
 } from 'react-router-dom';
 import PrivateRoute from './private-route';
+import { Permissions } from '@/constants/permissions';
 import PublicRoute from './public-route';
 import Spinner from '@/components/ui/spinner';
 import { setRouterNavigator } from '@/lib/router';
@@ -422,15 +423,22 @@ const LocalizedPublicRoute = ({ element }: LocalizedAuthRouteProps) => (
 interface LocalizedPrivateRouteProps {
   element: ReactElement;
   allowedRoles?: string[];
+  requiredPermissions?: string[];
 }
 
 const LocalizedPrivateRoute = ({
   element,
   allowedRoles,
+  requiredPermissions,
 }: LocalizedPrivateRouteProps) => (
   <>
     <LocaleSync />
-    <PrivateRoute allowedRoles={allowedRoles}>{element}</PrivateRoute>
+    <PrivateRoute
+      allowedRoles={allowedRoles}
+      requiredPermissions={requiredPermissions}
+    >
+      {element}
+    </PrivateRoute>
   </>
 );
 
@@ -1004,6 +1012,7 @@ const Router = () => (
           element={
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              requiredPermissions={[Permissions.AppointmentsManage]}
               element={<ClinicStaffAppointmentsPage />}
             />
           }
@@ -1745,6 +1754,7 @@ const Router = () => (
           element={
             <PrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
+              requiredPermissions={[Permissions.AppointmentsManage]}
             >
               <ClinicStaffAppointmentsPage />
             </PrivateRoute>

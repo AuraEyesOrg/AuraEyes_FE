@@ -143,19 +143,19 @@ const AboutPage = () => {
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <SeoMeta
-        title="About AURA — Our Mission in Retinal Health"
-        description="AURA is an AI-powered medical platform dedicated to democratising eye health. We connect patients with verified ophthalmologists for early retinal disease detection."
+        title="Về Aura Digital Hospital — Tầm nhìn Y tế Kỹ thuật số"
+        description="Aura là nền tảng bệnh viện kỹ thuật số ứng dụng AI, kết nối bệnh nhân với đội ngũ chuyên gia nhãn khoa hàng đầu để mang lại dịch vụ chăm sóc sức khỏe võng mạc tối ưu."
         canonical="https://web.auraeyes.site/en/about"
         structuredData={{
           '@context': 'https://schema.org',
           '@type': 'AboutPage',
-          name: 'About AURA',
+          name: 'Về Aura Digital Hospital',
           url: 'https://web.auraeyes.site/en/about',
           description:
-            'AURA is an AI-powered platform dedicated to democratising access to retinal health screening.',
+            'Aura là nền tảng y tế kỹ thuật số hiện đại, tiên phong trong việc ứng dụng AI vào chẩn đoán và điều trị nhãn khoa.',
           publisher: {
             '@type': 'MedicalOrganization',
-            name: 'AURA',
+            name: 'Aura Digital Hospital',
             url: 'https://web.auraeyes.site',
           },
         }}

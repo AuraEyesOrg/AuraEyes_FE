@@ -267,42 +267,42 @@ const HowItWorksPage = () => {
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <SeoMeta
-        title="How AURA AI Retinal Screening Works"
-        description="Learn how AURA's 4-step AI retinal screening process works: capture, upload, AI analysis, and ophthalmologist assessment. Clinical-grade accuracy in minutes."
+        title="Quy trình chăm sóc sức khỏe tại Aura Digital Hospital"
+        description="Tìm hiểu quy trình khám bệnh hiện đại tại Aura: từ đặt lịch khám, phân tích AI đến tư vấn chuyên sâu cùng bác sĩ nhãn khoa hàng đầu."
         canonical="https://web.auraeyes.site/en/how-it-works"
         structuredData={{
           '@context': 'https://schema.org',
           '@type': 'HowTo',
-          name: 'How AURA Retinal Screening Works',
+          name: 'Quy trình khám bệnh tại Aura Digital Hospital',
           description:
-            'A 4-step process for AI-powered retinal vascular health screening.',
+            'Quy trình 4 bước chăm sóc sức khỏe võng mạc hiện đại kết hợp AI.',
           step: [
             {
               '@type': 'HowToStep',
               position: 1,
-              name: 'Capture Retinal Image',
-              text: 'Capture a high-resolution fundus photograph of the retina.',
+              name: 'Đặt lịch khám',
+              text: 'Bệnh nhân dễ dàng đặt lịch hẹn trực tuyến với bác sĩ chuyên khoa.',
             },
             {
               '@type': 'HowToStep',
               position: 2,
-              name: 'Upload to AURA',
-              text: 'Securely upload your retinal image to the AURA platform.',
+              name: 'Khám lâm sàng',
+              text: 'Thực hiện các bước kiểm tra mắt với thiết bị hiện đại tại bệnh viện hoặc phòng khám.',
             },
             {
               '@type': 'HowToStep',
               position: 3,
-              name: 'AI Analysis',
-              text: "AURA's deep learning model analyses the image for vascular markers in seconds.",
+              name: 'Phân tích AI',
+              text: 'Hệ thống AI tiên tiến phân tích dữ liệu hình ảnh để hỗ trợ bác sĩ chẩn đoán.',
             },
             {
               '@type': 'HowToStep',
               position: 4,
-              name: 'Doctor Assessment',
-              text: 'A verified ophthalmologist reviews the AI report and provides clinical guidance.',
+              name: 'Tư vấn chuyên sâu',
+              text: 'Bác sĩ nhãn khoa trực tiếp tư vấn phác đồ điều trị dựa trên kết quả phân tích.',
             },
           ],
-          totalTime: 'PT10M',
+          totalTime: 'PT15M',
         }}
       />
       <Header />
