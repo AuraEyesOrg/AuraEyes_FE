@@ -1526,9 +1526,7 @@ export default function ScreeningReviewPage() {
                     type="button"
                     onClick={() => {
                       if (activeGroupId) {
-                        navigate(
-                          `/professional-network/collaboration?groupId=${activeGroupId}`
-                        );
+                        navigate(`/network/collaboration`);
                       } else {
                         setSelectedDoctors([]);
                         setConsiliumReason('');

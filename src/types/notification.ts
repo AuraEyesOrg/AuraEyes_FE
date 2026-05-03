@@ -644,11 +644,7 @@ export function getNotificationRoute(
       const groupId =
         readString(payload, 'groupId', 'internalGroupId') ||
         fallbackReferenceId;
-      return appendIdQuery(
-        '/professional-network/collaboration',
-        'groupId',
-        groupId
-      );
+      return appendIdQuery('/network/collaboration', 'groupId', groupId);
     }
 
     default:
