@@ -12,6 +12,7 @@ const INTERNAL_CHAT_HUB_URL =
 const RECONNECT_DELAYS = [0, 2000, 5000, 10000, 30000];
 const TOKEN_EXPIRY_BUFFER_MS = 15_000;
 let activeInternalChatConnection: HubConnection | null = null;
+const pendingJoinGroupIds = new Set<string>();
 
 export const SIGNALR_INTERNAL_MESSAGE_EVENT = 'signalr:internal-message';
 export const SIGNALR_INTERNAL_GROUP_UPDATE_EVENT =
@@ -23,10 +24,12 @@ const sanitizeToken = (value: string | null): string =>
 export const joinInternalChatGroup = async (groupId: string): Promise<void> => {
   if (!groupId) return;
   if (activeInternalChatConnection?.state !== HubConnectionState.Connected) {
+    pendingJoinGroupIds.add(groupId);
     return;
   }
 
   try {
+    pendingJoinGroupIds.delete(groupId);
     await activeInternalChatConnection.invoke('JoinGroup', groupId);
   } catch (error) {
     if (import.meta.env.DEV) {
@@ -39,6 +42,7 @@ export const leaveInternalChatGroup = async (
   groupId: string
 ): Promise<void> => {
   if (!groupId) return;
+  pendingJoinGroupIds.delete(groupId);
   if (activeInternalChatConnection?.state !== HubConnectionState.Connected) {
     return;
   }
@@ -54,6 +58,8 @@ export const leaveInternalChatGroup = async (
 
 export function useSignalRInternalChat(): void {
   const connectionRef = useRef<HubConnection | null>(null);
+  const isStartingRef = useRef(false);
+  const shouldStopRef = useRef(false);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const getAccessToken = useCallback(async (): Promise<string> => {
@@ -131,6 +137,9 @@ export function useSignalRInternalChat(): void {
       return;
     }
 
+    if (isStartingRef.current) return;
+    isStartingRef.current = true;
+
     try {
       if (!connectionRef.current) {
         connectionRef.current = buildConnection();
@@ -138,16 +147,46 @@ export function useSignalRInternalChat(): void {
 
       await connectionRef.current.start();
       activeInternalChatConnection = connectionRef.current;
+
+      for (const groupId of Array.from(pendingJoinGroupIds)) {
+        try {
+          await connectionRef.current.invoke('JoinGroup', groupId);
+          pendingJoinGroupIds.delete(groupId);
+        } catch (error) {
+          if (import.meta.env.DEV) {
+            console.warn(
+              '[InternalChatHub] Failed to re-join pending group:',
+              groupId,
+              error
+            );
+          }
+        }
+      }
+
       console.log('[InternalChatHub] Connected successfully');
+      if (shouldStopRef.current) {
+        shouldStopRef.current = false;
+        await stopConnection();
+      }
     } catch (error) {
       console.error('[InternalChatHub] Connection failed:', error);
       activeInternalChatConnection = null;
       connectionRef.current = null;
+    } finally {
+      isStartingRef.current = false;
     }
   }, [buildConnection, isAuthenticated]);
 
   const stopConnection = useCallback(async (): Promise<void> => {
     if (!connectionRef.current) return;
+
+    if (
+      connectionRef.current.state === HubConnectionState.Connecting ||
+      isStartingRef.current
+    ) {
+      shouldStopRef.current = true;
+      return;
+    }
 
     try {
       await connectionRef.current.stop();

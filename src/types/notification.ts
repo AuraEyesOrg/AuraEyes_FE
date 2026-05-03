@@ -641,7 +641,10 @@ export function getNotificationRoute(
     }
 
     case NotificationType.ConsiliumInvitation: {
-      return '/network/collaborations';
+      const groupId =
+        readString(payload, 'groupId', 'internalGroupId') ||
+        fallbackReferenceId;
+      return appendIdQuery('/network/collaboration', 'groupId', groupId);
     }
 
     default:

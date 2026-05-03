@@ -22,13 +22,12 @@ import {
   PlusSquare,
   Trash2,
   Undo2,
-  Users,
   Check,
-  Send,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import { collaborationApi } from '@/features/professional-network/api/collaboration.api';
 import type { AvailableDoctorForConsiliumDto } from '@/features/professional-network/api/collaboration.api';
+import { internalChatApi } from '@/features/professional-network/api/internal-chat.api';
 import { medicalRecordApi } from '@/features/medical-records/api/medical-record.api';
 import {
   getOphthalmologistScreeningDetail,
@@ -270,6 +269,7 @@ export default function ScreeningReviewPage() {
   const [consiliumReason, setConsiliumReason] = useState('');
   const [isEmergencyConsilium, setIsEmergencyConsilium] = useState(false);
   const [requestingConsilium, setRequestingConsilium] = useState(false);
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 
   // Diagnosis & Finalization states
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
@@ -1068,8 +1068,8 @@ export default function ScreeningReviewPage() {
       setSelectedDoctors([]);
       setConsiliumReason('');
 
-      // Navigate to chat
-      navigate(`/professional-network/collaboration?groupId=${groupId}`);
+      // Refresh groups status
+      setActiveGroupId(groupId);
     } catch {
       ophthalToast.error(
         t(
@@ -1081,6 +1081,26 @@ export default function ScreeningReviewPage() {
       setRequestingConsilium(false);
     }
   };
+
+  useEffect(() => {
+    if (reportableSessionId) {
+      void (async () => {
+        try {
+          const groups = await internalChatApi.getGroups();
+          const existing = groups.find(
+            (g) =>
+              g.consultationSessionId === reportableSessionId &&
+              g.consiliumStatus !== 'Concluded'
+          );
+          if (existing) {
+            setActiveGroupId(existing.id);
+          }
+        } catch (e) {
+          console.error('Error checking existing consilium', e);
+        }
+      })();
+    }
+  }, [reportableSessionId]);
 
   const handleFinalizeMedicalRecord = async () => {
     if (!detail?.medicalRecordId) return;
@@ -1505,15 +1525,22 @@ export default function ScreeningReviewPage() {
                     id="btn-request-consilium"
                     type="button"
                     onClick={() => {
-                      setSelectedDoctors([]);
-                      setConsiliumReason('');
-                      setIsEmergencyConsilium(false);
-                      setShowConsiliumModal(true);
+                      if (activeGroupId) {
+                        navigate(`/network/collaboration`);
+                      } else {
+                        setSelectedDoctors([]);
+                        setConsiliumReason('');
+                        setIsEmergencyConsilium(false);
+                        setShowConsiliumModal(true);
+                      }
                     }}
-                    className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-amber-500/30 transition-all hover:-translate-y-0.5 hover:bg-amber-600 active:translate-y-0"
+                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 ${
+                      activeGroupId
+                        ? 'bg-cyan-600 hover:bg-cyan-700 shadow-cyan-500/30'
+                        : 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/30'
+                    }`}
                   >
-                    <Stethoscope className="h-4 w-4" />
-                    Yêu cầu Hội chẩn
+                    {activeGroupId ? 'Vào Hội chẩn' : 'Yêu cầu Hội chẩn'}
                   </button>
                   <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded-full text-xs font-medium">
                     {t('Ophthalmologist.screeningReview.aiModel', 'AI Model')}:{' '}
@@ -2777,7 +2804,7 @@ export default function ScreeningReviewPage() {
             <div className="p-6 border-b border-gray-200 dark:border-[#1e3a5f] flex items-center justify-between bg-amber-50/50 dark:bg-amber-900/10">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-amber-600" />
+                  <span className="text-xl">🤝</span>
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -2840,6 +2867,7 @@ export default function ScreeningReviewPage() {
                             avatarUrl={doc.avatar ?? undefined}
                             size="md"
                             className="shrink-0"
+                            useStoredAvatarFallback={false}
                           />
                           <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-[#0a1f44] rounded-full" />
                         </div>
@@ -2912,12 +2940,8 @@ export default function ScreeningReviewPage() {
                 disabled={requestingConsilium || selectedDoctors.length === 0}
                 className="px-8 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-400 text-white rounded-xl text-sm font-bold shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2"
               >
-                {requestingConsilium ? (
-                  <Spinner size={16} />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-                Gửi yêu cầu khẩn cấp
+                {requestingConsilium && <Spinner size={16} />}
+                Gửi yêu cầu hội chẩn
               </button>
             </div>
           </div>

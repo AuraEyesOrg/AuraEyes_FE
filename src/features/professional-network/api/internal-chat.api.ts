@@ -144,7 +144,7 @@ export const internalChatApi = {
    * Uses system-admin users endpoint to support "add all by role" UX.
    */
   async getCandidateUsers(): Promise<InternalChatCandidateUser[]> {
-    const response = await api.get('/system-admin/users', {
+    const response = await api.get('/internal-chat/candidates', {
       params: { pageNumber: 1, pageSize: 500 },
     });
     const items = response?.data?.data?.items ?? [];
