@@ -5441,6 +5441,21 @@ declare module 'i18next' {
             cashierDeskDesc: string;
           };
         };
+        actions: {
+          retry: string;
+          refresh: string;
+          fillErm: string;
+          editErm: string;
+          createScreening: string;
+          viewScreening: string;
+          sending: string;
+          sendToDoctor: string;
+          copyDoctorLink: string;
+        };
+        page: {
+          title: string;
+          subtitle: string;
+        };
         ClinicStaffQueue: {
           page: {
             title: string;

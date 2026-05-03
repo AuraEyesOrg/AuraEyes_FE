@@ -34,29 +34,31 @@ const PAYMENT_STATUS_COLOR: Record<PaymentStatus, string> = {
   Cancelled: 'bg-slate-500/10 text-slate-500 dark:text-slate-400',
 };
 
+type TransactionRow = any; // Quickest fix for complex inferred types
+
 export default function BillingPage() {
   const { t } = useTranslation();
 
   const ORDER_STATUS_LABEL: Record<string, string> = {
-    Pending: t('ClinicStaffBilling.filters.pending', {
+    Pending: t('ClinicStaffBilling.filters.pending' as any, {
       defaultValue: 'Chờ thanh toán',
     }),
-    PartiallyPaid: t('ClinicStaffBilling.status.partiallyPaid', {
+    PartiallyPaid: t('ClinicStaffBilling.status.partiallyPaid' as any, {
       defaultValue: 'Thanh toán cọc',
     }),
-    Confirmed: t('ClinicStaffBilling.status.partiallyPaid', {
+    Confirmed: t('ClinicStaffBilling.status.partiallyPaid' as any, {
       defaultValue: 'Thanh toán cọc',
     }),
-    FullyPaid: t('ClinicStaffBilling.status.fullyPaid', {
+    FullyPaid: t('ClinicStaffBilling.status.fullyPaid' as any, {
       defaultValue: 'Đã tất toán',
     }),
-    Completed: t('ClinicStaffBilling.status.fullyPaid', {
+    Completed: t('ClinicStaffBilling.status.fullyPaid' as any, {
       defaultValue: 'Đã tất toán',
     }),
-    Cancelled: t('ClinicStaffBilling.filters.cancelled', {
+    Cancelled: t('ClinicStaffBilling.filters.cancelled' as any, {
       defaultValue: 'Đã hủy',
     }),
-    Refunded: t('ClinicStaffBilling.stats.totalRefund', {
+    Refunded: t('ClinicStaffBilling.stats.totalRefund' as any, {
       defaultValue: 'Hoàn tiền',
     }),
   };
@@ -151,6 +153,26 @@ export default function BillingPage() {
     return orders;
   }, [activeFilter, orders]);
 
+  // ── Flatten Orders to Transactions ──────────────────────────────────────────
+  const visibleTransactions = useMemo<TransactionRow[]>(() => {
+    return visibleOrders.flatMap((order) => {
+      if (!order.payments || order.payments.length === 0) {
+        return [{ ...order, currentPayment: null, paymentIndex: 0 }] as any[];
+      }
+      // Sort payments by date to keep history chronological
+      const sortedPayments = [...order.payments].sort(
+        (a, b) =>
+          new Date(a.paidAt || order.createdAt).getTime() -
+          new Date(b.paidAt || order.createdAt).getTime()
+      );
+      return sortedPayments.map((p, index) => ({
+        ...order,
+        currentPayment: p,
+        paymentIndex: index,
+      })) as any[];
+    });
+  }, [visibleOrders]);
+
   // ── Summary ─────────────────────────────────────────────────────────────────
   const summary = useMemo(() => {
     const completedOrders = orders.filter(
@@ -194,7 +216,7 @@ export default function BillingPage() {
     <ClinicStaffLayout>
       <div className="max-w-[1200px] mx-auto space-y-6">
         {/* ── Header ─────────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden rounded-3xl border border-(--border-color) bg-gradient-to-br from-(--bg-primary) via-(--bg-secondary) to-(--bg-primary) p-6 md:p-8">
+        <section className="relative overflow-hidden rounded-3xl border border-(--border-color) bg-linear-to-br from-(--bg-primary) via-(--bg-secondary) to-(--bg-primary) p-6 md:p-8">
           <div
             className="pointer-events-none absolute inset-0 opacity-40"
             style={{
@@ -205,12 +227,12 @@ export default function BillingPage() {
           <div className="relative grid gap-4 md:grid-cols-[1.2fr_0.8fr] md:items-end">
             <div>
               <h1 className="mt-2 text-3xl font-bold tracking-tight text-(--text-primary) md:text-4xl">
-                {t('ClinicStaffBilling.page.title', {
+                {t('ClinicStaffBilling.page.title' as any, {
                   defaultValue: 'Quản lý thanh toán',
                 })}
               </h1>
               <p className="mt-3 max-w-[60ch] text-sm leading-relaxed text-(--text-secondary)">
-                {t('ClinicStaffBilling.page.subtitle', {
+                {t('ClinicStaffBilling.page.subtitle' as any, {
                   defaultValue:
                     'Theo dõi tất cả đơn thanh toán khám chữa bệnh của bệnh nhân.',
                 })}
@@ -222,7 +244,7 @@ export default function BillingPage() {
         <section className="grid grid-cols-1 gap-4 md:grid-cols-6">
           <div className="medical-card md:col-span-2">
             <p className="text-xs font-medium tracking-wide text-(--text-muted)">
-              {t('ClinicStaffBilling.stats.totalRevenue', {
+              {t('ClinicStaffBilling.stats.totalRevenue' as any, {
                 defaultValue: 'Tổng doanh thu (ước tính)',
               })}
             </p>
@@ -232,7 +254,7 @@ export default function BillingPage() {
           </div>
           <div className="medical-card md:col-span-2">
             <p className="text-xs font-medium tracking-wide text-(--text-muted)">
-              {t('ClinicStaffBilling.stats.totalRefund', {
+              {t('ClinicStaffBilling.stats.totalRefund' as any, {
                 defaultValue: 'Đã hoàn tiền',
               })}
             </p>
@@ -242,7 +264,7 @@ export default function BillingPage() {
           </div>
           <div className="medical-card md:col-span-2">
             <p className="text-xs font-medium tracking-wide text-(--text-muted)">
-              {t('ClinicStaffBilling.stats.orders', {
+              {t('ClinicStaffBilling.stats.orders' as any, {
                 defaultValue: 'Tổng đơn',
               })}
             </p>
@@ -257,8 +279,8 @@ export default function BillingPage() {
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-(--text-primary) flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-brand" />
-              {t('ClinicStaffBilling.transactions.title', {
-                defaultValue: 'Danh sách đơn hàng',
+              {t('ClinicStaffBilling.transactions.title' as any, {
+                defaultValue: 'Lịch sử giao dịch',
               })}
             </h2>
 
@@ -280,18 +302,18 @@ export default function BillingPage() {
                   }`}
                 >
                   {option === 'all'
-                    ? t('ClinicStaffBilling.filters.all', {
+                    ? t('ClinicStaffBilling.filters.all' as any, {
                         defaultValue: 'Tất cả',
                       })
                     : option === 'completed'
-                      ? t('ClinicStaffBilling.filters.completed', {
+                      ? t('ClinicStaffBilling.filters.completed' as any, {
                           defaultValue: 'Hoàn thành',
                         })
                       : option === 'pending'
-                        ? t('ClinicStaffBilling.filters.pending', {
+                        ? t('ClinicStaffBilling.filters.pending' as any, {
                             defaultValue: 'Chờ thanh toán',
                           })
-                        : t('ClinicStaffBilling.filters.cancelled', {
+                        : t('ClinicStaffBilling.filters.cancelled' as any, {
                             defaultValue: 'Đã hủy',
                           })}
                 </button>
@@ -330,7 +352,7 @@ export default function BillingPage() {
             <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-center">
               <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
               <p className="text-(--text-secondary)">
-                {t('ClinicStaffBilling.transactions.loadFailed', {
+                {t('ClinicStaffBilling.transactions.loadFailed' as any, {
                   defaultValue: 'Lỗi khi tải dữ liệu',
                 })}
               </p>
@@ -338,7 +360,7 @@ export default function BillingPage() {
                 onClick={() => window.location.reload()}
                 className="mt-4 rounded-lg border border-red-500/30 px-4 py-2 text-sm font-semibold text-red-500 transition-colors hover:bg-red-500/10"
               >
-                {t('ClinicStaffBilling.error.retry', {
+                {t('ClinicStaffBilling.error.retry' as any, {
                   defaultValue: 'Thử lại',
                 })}
               </button>
@@ -346,170 +368,182 @@ export default function BillingPage() {
           )}
 
           {/* Empty state */}
-          {!isLoading && !error && visibleOrders.length === 0 && (
+          {!isLoading && !error && visibleTransactions.length === 0 && (
             <div className="text-center py-12">
               <History className="w-12 h-12 text-(--text-muted) mx-auto mb-3" />
               <p className="text-(--text-secondary) font-medium">
-                {t('ClinicStaffBilling.transactions.emptyTitle', {
-                  defaultValue: 'Không có đơn nào',
+                {t('ClinicStaffBilling.transactions.emptyTitle' as any, {
+                  defaultValue: 'Không có giao dịch nào',
                 })}
               </p>
             </div>
           )}
 
           {/* Order list */}
-          {!isLoading && !error && visibleOrders.length > 0 && (
+          {!isLoading && !error && visibleTransactions.length > 0 && (
             <>
               <div className="space-y-3">
-                {visibleOrders.map((order) => {
+                {visibleTransactions.map((tx: TransactionRow) => {
+                  const order = tx;
+                  const payment = tx.currentPayment;
+                  const pIndex = tx.paymentIndex;
+
                   const isCompleted =
-                    order.status === 'Completed' ||
+                    (payment?.status ?? order.status) === 'Completed' ||
                     order.status === 'Confirmed' ||
                     order.status === 'FullyPaid';
-                  const isRefunded = order.status === 'Refunded';
-                  const isCancelled = order.status === 'Cancelled';
-                  const isOnlineDeposit = order.depositAmount != null;
+                  const isRefunded =
+                    (payment?.status ?? order.status) === 'Refunded';
+                  const isCancelled =
+                    (payment?.status ?? order.status) === 'Cancelled';
 
-                  const firstPayment = order.payments?.[0];
+                  // Determine payment type label
+                  const isDeposit =
+                    payment?.description?.includes('Đặt cọc') ||
+                    (order.depositAmount != null && pIndex === 0);
+                  const isFinal =
+                    payment?.description?.includes('Thanh toán nốt') ||
+                    (order.status === 'FullyPaid' && pIndex > 0);
 
                   return (
                     <article
-                      key={order.id}
-                      className="group rounded-2xl border border-(--border-color) bg-(--bg-primary) p-5 transition-all hover:border-brand/40 hover:-translate-y-[1px]"
+                      key={`${order.id}-${payment?.id ?? 'none'}`}
+                      className="group rounded-2xl border border-(--border-color) bg-(--bg-primary) p-5 transition-all hover:border-brand/40 hover:-translate-y-px"
                     >
                       <div className="flex items-center justify-between gap-4 flex-wrap">
                         <div className="flex min-w-0 items-center gap-4">
                           {/* Icon */}
                           <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-(--bg-secondary)">
-                            {getOrderStatusIcon(order.status)}
+                            {getOrderStatusIcon(
+                              payment?.status ?? order.status
+                            )}
                           </div>
 
                           {/* Info */}
                           <div className="min-w-0">
                             <p className="text-(--text-primary) font-semibold truncate flex items-center gap-2">
-                              {cleanDescription(order.description) ||
+                              {cleanDescription(
+                                payment?.description || order.description
+                              ) ||
                                 t(
-                                  'ClinicStaffBilling.orderDetails.description'
+                                  'ClinicStaffBilling.orderDetails.description' as any
                                 )}
-                              {isOnlineDeposit ? (
+
+                              {isDeposit && (
                                 <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs font-medium">
                                   {t(
-                                    'ClinicStaffBilling.orderDetails.depositOnline'
-                                  )}
-                                </span>
-                              ) : (
-                                <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs font-medium">
-                                  {t(
-                                    'ClinicStaffBilling.orderDetails.walkInFull'
+                                    'ClinicStaffBilling.orderDetails.depositOnline' as any
                                   )}
                                 </span>
                               )}
+                              {isFinal && (
+                                <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs font-medium">
+                                  {t(
+                                    'ClinicStaffBilling.status.fullyPaid' as any
+                                  )}
+                                </span>
+                              )}
+                              {!isDeposit &&
+                                !isFinal &&
+                                order.depositAmount == null && (
+                                  <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400 text-xs font-medium">
+                                    {t(
+                                      'ClinicStaffBilling.orderDetails.walkInFull' as any
+                                    )}
+                                  </span>
+                                )}
                             </p>
                             <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-(--text-secondary)">
                               <span className="inline-flex items-center gap-1.5">
                                 <Calendar className="w-3 h-3 shrink-0" />
-                                {formatDateTimeWithYear(order.createdAt)}
+                                {formatDateTimeWithYear(
+                                  payment?.paidAt || order.createdAt
+                                )}
                               </span>
                               <span className="inline-flex items-center gap-1.5 font-medium text-brand">
                                 <User className="w-3 h-3 shrink-0" />
                                 {order.patientName ||
-                                  `${t('ClinicStaffBilling.orderDetails.idLabel')} ${order.userId.slice(0, 8)}`}
+                                  `${t('ClinicStaffBilling.orderDetails.idLabel' as any)} ${order.userId.slice(0, 8)}`}
                               </span>
                               <span className="inline-flex items-center gap-1.5">
                                 <Clock3 className="w-3 h-3 shrink-0" />
                                 {t(
-                                  'ClinicStaffBilling.orderDetails.idLabel'
+                                  'ClinicStaffBilling.orderDetails.idLabel' as any
                                 )}{' '}
-                                {order.id.slice(0, 8)}
+                                {(payment?.id ?? order.id).slice(0, 8)}
                               </span>
                             </div>
 
-                            {/* Payment status badge */}
-                            {firstPayment && (
+                            {/* Payment Method & Status Badge */}
+                            <div className="mt-2 flex items-center gap-2">
+                              {payment && (
+                                <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase">
+                                  {payment.method}
+                                </span>
+                              )}
                               <span
-                                className={`mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${PAYMENT_STATUS_COLOR[firstPayment.status]}`}
+                                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${PAYMENT_STATUS_COLOR[(payment?.status || (order.status === 'FullyPaid' ? 'Completed' : order.status === 'PartiallyPaid' ? 'Processing' : order.status)) as PaymentStatus] || 'bg-slate-500/10 text-slate-500'}`}
                               >
-                                {firstPayment.status === 'Completed'
-                                  ? t(
-                                      'ClinicStaffBilling.orderDetails.confirmedDeposit'
-                                    )
-                                  : firstPayment.status === 'Pending'
-                                    ? t('ClinicStaffBilling.filters.pending')
-                                    : firstPayment.status === 'Cancelled'
-                                      ? t(
-                                          'ClinicStaffBilling.filters.cancelled'
-                                        )
-                                      : firstPayment.status === 'Failed'
-                                        ? t('ClinicStaffBilling.error.retry')
-                                        : firstPayment.status === 'Refunded'
-                                          ? t(
-                                              'ClinicStaffBilling.stats.totalRefund'
-                                            )
-                                          : t(
-                                              'ClinicStaffBilling.orderDetails.processing'
-                                            )}
+                                {payment?.status === 'Completed' ||
+                                order.status === 'Completed' ||
+                                order.status === 'FullyPaid'
+                                  ? isDeposit
+                                    ? t(
+                                        'ClinicStaffBilling.orderDetails.confirmedDeposit' as any
+                                      )
+                                    : t(
+                                        'ClinicStaffBilling.status.fullyPaid' as any
+                                      )
+                                  : payment?.status === 'Pending' ||
+                                      order.status === 'Pending'
+                                    ? t(
+                                        'ClinicStaffBilling.filters.pending' as any
+                                      )
+                                    : t(order.status as any)}
                               </span>
-                            )}
+                            </div>
                           </div>
                         </div>
 
                         {/* Amount + Action */}
                         <div className="text-left md:text-right shrink-0 flex flex-col items-end gap-2">
                           <p className="font-bold text-lg text-(--text-primary)">
-                            {formatCurrency(order.totalAmount, {
-                              absolute: true,
-                            })}
+                            {formatCurrency(
+                              payment?.amount ?? order.totalAmount,
+                              {
+                                absolute: true,
+                              }
+                            )}
                           </p>
-                          {isOnlineDeposit && (
-                            <p className="text-sm text-(--text-secondary) font-medium flex items-center gap-2">
-                              {t('ClinicStaffBilling.orderDetails.paid')}{' '}
-                              <span className="text-blue-600 dark:text-blue-400">
-                                {formatCurrency(order.paidAmount)}
-                              </span>
-                              <span className="text-(--text-muted)">|</span>
+
+                          {/* Only show "Confirm Final Payment" if it's the last payment of a partially paid order and it's pending */}
+                          {order.status === 'Confirmed' &&
+                            (!payment || payment.status === 'Pending') && (
+                              <button
+                                onClick={() =>
+                                  completeMutation.mutate(order.id)
+                                }
+                                disabled={completeMutation.isPending}
+                                className="mt-1 px-3 py-1.5 bg-brand text-white text-xs font-bold rounded-lg hover:bg-brand/90 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                              >
+                                {completeMutation.isPending
+                                  ? t(
+                                      'ClinicStaffBilling.orderDetails.processing' as any
+                                    )
+                                  : t(
+                                      'ClinicStaffBilling.orderDetails.confirmFinalPayment' as any
+                                    )}
+                              </button>
+                            )}
+
+                          {/* Show overall order status if multiple payments exist */}
+                          {order.payments && order.payments.length > 1 && (
+                            <p className="text-[10px] text-(--text-muted) font-medium uppercase tracking-wider">
                               {t(
-                                'ClinicStaffBilling.orderDetails.remaining'
-                              )}{' '}
-                              <span className="text-rose-500">
-                                {formatCurrency(
-                                  Math.max(
-                                    0,
-                                    order.totalAmount - order.paidAmount
-                                  )
-                                )}
-                              </span>
+                                'ClinicStaffBilling.transactions.title' as any
+                              )}
+                              : {ORDER_STATUS_LABEL[order.status]}
                             </p>
-                          )}
-
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
-                              isCompleted
-                                ? 'bg-green-500/10 text-green-600 dark:text-green-400'
-                                : isCancelled
-                                  ? 'bg-slate-500/10 text-slate-500'
-                                  : isRefunded
-                                    ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
-                                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                            }`}
-                          >
-                            {isCompleted && <CheckCircle className="w-3 h-3" />}
-                            {ORDER_STATUS_LABEL[order.status]}
-                          </span>
-
-                          {!isCompleted && !isCancelled && !isRefunded && (
-                            <button
-                              onClick={() => completeMutation.mutate(order.id)}
-                              disabled={completeMutation.isPending}
-                              className="mt-2 px-3 py-1.5 bg-brand text-white text-xs font-bold rounded-lg hover:bg-brand/90 transition-all shadow-sm active:scale-95 disabled:opacity-50"
-                            >
-                              {completeMutation.isPending
-                                ? t(
-                                    'ClinicStaffBilling.orderDetails.processing'
-                                  )
-                                : t(
-                                    'ClinicStaffBilling.orderDetails.confirmFinalPayment'
-                                  )}
-                            </button>
                           )}
                         </div>
                       </div>
@@ -527,13 +561,13 @@ export default function BillingPage() {
                     className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-(--bg-secondary) hover:bg-(--bg-tertiary) disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    {t('ClinicStaffBilling.pagination.previous', {
+                    {t('ClinicStaffBilling.pagination.previous' as any, {
                       defaultValue: 'Trước',
                     })}
                   </button>
 
                   <span className="text-sm text-(--text-secondary)">
-                    {t('ClinicStaffBilling.pagination.pageOf', {
+                    {t('ClinicStaffBilling.pagination.pageOf' as any, {
                       page: ordersData.pageNumber,
                       total: ordersData.totalPages,
                       defaultValue: `Trang ${ordersData.pageNumber} / ${ordersData.totalPages}`,
@@ -547,7 +581,7 @@ export default function BillingPage() {
                     disabled={!ordersData.hasNext}
                     className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-(--bg-secondary) hover:bg-(--bg-tertiary) disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    {t('ClinicStaffBilling.pagination.next', {
+                    {t('ClinicStaffBilling.pagination.next' as any, {
                       defaultValue: 'Sau',
                     })}
                     <ChevronRight className="w-4 h-4" />
@@ -585,13 +619,13 @@ function CashierPricingPanel({
       <div className="rounded-2xl border border-(--border-color) bg-(--bg-secondary) p-4">
         <p className="text-sm text-(--text-secondary)">
           <span className="font-semibold text-(--text-primary)">
-            {t('ClinicStaffBilling.orderDetails.patientLabel')}
+            {t('ClinicStaffBilling.orderDetails.patientLabel' as any)}
           </span>{' '}
           {context.patientName}
         </p>
         <p className="mt-1 text-sm text-(--text-secondary)">
           <span className="font-semibold text-(--text-primary)">
-            {t('ClinicStaffBilling.orderDetails.doctorLabel')}
+            {t('ClinicStaffBilling.orderDetails.doctorLabel' as any)}
           </span>{' '}
           {context.diagnosis.diagnosedBy.doctorName || 'N/A'}
         </p>
@@ -599,15 +633,18 @@ function CashierPricingPanel({
 
       {context.diagnosis.noMedicationPrescribed ? (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
-          {t('ClinicStaffBilling.orderDetails.noMedication')}
+          {t('ClinicStaffBilling.orderDetails.noMedication' as any)}
         </div>
       ) : (
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
             <Pill className="h-3.5 w-3.5" />
-            {t('ClinicStaffBilling.orderDetails.medicationCount', {
-              count: context.diagnosis.prescriptionItems.length,
-            })}
+            {t(
+              'ClinicStaffBilling.orderDetails.medicationCount' as any,
+              {
+                count: context.diagnosis.prescriptionItems.length,
+              } as any
+            )}
           </div>
           {context.diagnosis.prescriptionItems.map((item, index) => {
             const inputKey = `medicine-${index}`;
@@ -629,7 +666,9 @@ function CashierPricingPanel({
                     htmlFor={inputKey}
                     className="block text-xs font-semibold text-(--text-secondary)"
                   >
-                    {t('ClinicStaffBilling.orderDetails.medicinePriceLabel')}
+                    {t(
+                      'ClinicStaffBilling.orderDetails.medicinePriceLabel' as any
+                    )}
                   </label>
                   <input
                     id={inputKey}
@@ -638,9 +677,11 @@ function CashierPricingPanel({
                     onChange={(event) =>
                       onMedicinePriceChange(inputKey, event.target.value)
                     }
-                    placeholder={t(
-                      'ClinicStaffBilling.orderDetails.manualPricePlaceholder'
-                    )}
+                    placeholder={
+                      t(
+                        'ClinicStaffBilling.orderDetails.manualPricePlaceholder' as any
+                      ) as any
+                    }
                     className="w-full rounded-xl border border-(--border-color) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary) placeholder:text-(--text-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                   />
                 </div>
@@ -653,10 +694,10 @@ function CashierPricingPanel({
       <div className="grid grid-cols-1 gap-3 rounded-2xl border border-(--border-color) bg-(--bg-secondary) p-4 md:grid-cols-[2fr_1fr] md:items-end">
         <div>
           <p className="text-sm font-semibold text-(--text-primary)">
-            {t('ClinicStaffBilling.orderDetails.serviceFeeLabel')}
+            {t('ClinicStaffBilling.orderDetails.serviceFeeLabel' as any)}
           </p>
           <p className="mt-1 text-xs text-(--text-muted)">
-            {t('ClinicStaffBilling.orderDetails.serviceFeeDescription')}
+            {t('ClinicStaffBilling.orderDetails.serviceFeeDescription' as any)}
           </p>
         </div>
         <div className="space-y-1">
@@ -664,7 +705,7 @@ function CashierPricingPanel({
             htmlFor="service-fee-input"
             className="block text-xs font-semibold text-(--text-secondary)"
           >
-            {t('ClinicStaffBilling.orderDetails.serviceFeeInputLabel')}
+            {t('ClinicStaffBilling.orderDetails.serviceFeeInputLabel' as any)}
           </label>
           <input
             id="service-fee-input"
@@ -679,14 +720,14 @@ function CashierPricingPanel({
 
       <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
         <p className="text-xs text-(--text-secondary)">
-          {t('ClinicStaffBilling.orderDetails.totalManual')}
+          {t('ClinicStaffBilling.orderDetails.totalManual' as any)}
         </p>
         <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
           {formatCurrency(computedManualTotal, { absolute: true })}
         </p>
       </div>
       <p className="text-xs text-(--text-muted)">
-        {t('ClinicStaffBilling.orderDetails.note')}
+        {t('ClinicStaffBilling.orderDetails.note' as any)}
       </p>
     </div>
   );
