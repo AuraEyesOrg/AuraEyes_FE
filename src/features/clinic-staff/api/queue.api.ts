@@ -51,6 +51,7 @@ export interface AvailableDoctor {
   id: string;
   fullName: string;
   avatarUrl?: string;
+  yearsOfExperience: number;
 }
 
 export interface ClinicPaymentContext {
@@ -109,6 +110,7 @@ interface AvailableDoctorApiItem {
   userFullName?: string | null;
   avatarUrl?: string | null;
   userAvatarUrl?: string | null;
+  yearsOfExperience?: number;
 }
 
 interface PagedResult<T> {
@@ -129,6 +131,7 @@ const normalizeAvailableDoctor = (
     doctor.userFullName?.trim() ||
     `Doctor #${index + 1}`,
   avatarUrl: doctor.avatarUrl ?? doctor.userAvatarUrl ?? undefined,
+  yearsOfExperience: doctor.yearsOfExperience ?? 0,
 });
 
 // ─── API calls ───────────────────────────────────────────────────────────────

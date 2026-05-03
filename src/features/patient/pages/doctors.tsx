@@ -1,8 +1,29 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-
+import { toast } from 'react-toastify';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import {
+  Stethoscope,
+  Wallet,
+  ChevronRight,
+  AlertTriangle,
+  CheckCircle,
+  Search,
+  Clock,
+  Star,
+  Award,
+  MapPin,
+  FileText,
+  Calendar,
+  Banknote,
+  Sparkles,
+  ExternalLink,
+  MessageSquare,
+  X,
+  ArrowLeft,
+} from 'lucide-react';
+
 import {
   searchOphthalmologistsForPatient,
   getOphthalmologistDetailForPatient,
@@ -19,6 +40,14 @@ import {
 } from '../types/consultation-context';
 import type { Anomaly, RetinalImage } from '../types/type';
 import { useWallet } from '../hooks/use-wallet';
+import { resolvePathWithLocale } from '@/i18n/middleware';
+import { formatCurrency } from '@/lib/helper';
+import Spinner from '@/components/ui/spinner';
+import Footer from '@/features/guest/components/Footer';
+import N8nChatWidget, { openN8nChat } from '../components/N8nChatWidget';
+import DoctorLottie from '../components/DoctorLottie';
+import BookAppointmentPage from './book-appointment';
+import BookingConfirmationPage from './booking-confirmation';
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);

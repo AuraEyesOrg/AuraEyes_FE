@@ -318,7 +318,7 @@ export default function CalendarPage() {
     );
 
     scanner.render(
-      (decodedText) => {
+      (decodedText: string) => {
         if (hasHandledScan) return;
         hasHandledScan = true;
 
