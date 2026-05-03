@@ -134,7 +134,8 @@ export const ophthalmologistApi = {
   async getOphthalmologists(
     pageNumber = 1,
     pageSize = 10,
-    searchTerm?: string
+    searchTerm?: string,
+    status?: string
   ) {
     const response = await api.get<
       ApiResponse<PagedResult<OphthalmologistListItem>>
@@ -143,6 +144,7 @@ export const ophthalmologistApi = {
         pageNumber,
         pageSize,
         searchTerm: searchTerm || undefined,
+        status: status || undefined,
       },
     });
     return unwrapApiData<PagedResult<OphthalmologistListItem>>(response.data);
@@ -161,10 +163,10 @@ export const ophthalmologistApi = {
   /**
    * Approve or reject ophthalmologist verification
    */
-  async verifyOphthalmologist(id: string, approve: boolean) {
+  async verifyOphthalmologist(id: string, approve: boolean, reason?: string) {
     const response = await api.post<ApiResponse<string>>(
       API_ENDPOINTS.SYSTEM_ADMIN.OPHTHALMOLOGISTS.VERIFY(id),
-      { approve }
+      { approve, reason }
     );
     return response.data;
   },

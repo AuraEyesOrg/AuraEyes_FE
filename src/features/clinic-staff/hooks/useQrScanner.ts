@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { BrowserMultiFormatReader } from '@zxing/browser';
+import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
+import { Result } from '@zxing/library';
 
 interface UseQrScannerOptions {
   isActive: boolean;
@@ -38,7 +39,11 @@ export function useQrScanner({
       .decodeFromVideoDevice(
         undefined, // dùng camera mặc định
         videoRef.current,
-        (result, error, controls) => {
+        (
+          result: Result | undefined,
+          error: any,
+          controls: IScannerControls
+        ) => {
           controlsRef.current = controls;
 
           if (result && !hasScannedRef.current) {
@@ -52,7 +57,7 @@ export function useQrScanner({
           }
         }
       )
-      .catch((err) => {
+      .catch((err: any) => {
         onError?.(err as Error);
       });
 
