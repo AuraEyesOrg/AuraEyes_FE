@@ -67,6 +67,9 @@ const ResetPasswordPage = lazy(
 const ForceChangePasswordPage = lazy(
   () => import('@/features/auth/pages/force-change-password')
 );
+const WelcomeOnboardingPage = lazy(
+  () => import('../features/auth/pages/welcome-onboarding')
+);
 const RegisterOrganisationPage = lazy(
   () => import('@/features/auth/pages/register-organisation')
 );
@@ -564,6 +567,15 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
               element={<ForceChangePasswordPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/welcome/onboarding"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Ophthalmologist', 'ClinicStaff']}
+              element={<WelcomeOnboardingPage />}
             />
           }
         />
@@ -1469,6 +1481,14 @@ const Router = () => (
               allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
             >
               <ForceChangePasswordPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/welcome/onboarding"
+          element={
+            <PrivateRoute allowedRoles={['Ophthalmologist', 'ClinicStaff']}>
+              <WelcomeOnboardingPage />
             </PrivateRoute>
           }
         />

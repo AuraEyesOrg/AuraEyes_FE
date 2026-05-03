@@ -19,6 +19,20 @@
       "Mismatch": "Passwords do not match"
     }
   },
+  "Shared": {
+    "buttons": {
+      "back": "Back",
+      "next": "Continue",
+      "submit": "Submit",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    }
+  },
   "Navigation": {
     "home": "Home",
     "about": "About Us",
@@ -348,9 +362,40 @@
   "AuthPages": {
     "shared": {
       "copyright": "© {{year}} Aura Medical Systems.",
-      "backToLogin": "Back to Login",
+      "backToLogin": "Back to login",
       "termsOfService": "Terms of Service",
       "privacyPolicy": "Privacy Policy"
+    },
+    "onboarding": {
+      "title": "Welcome to AURA Digital Clinic",
+      "subtitle": "Complete your professional profile to start working in our digital ecosystem.",
+      "success": "Setup completed! Welcome to AURA.",
+      "error": "Failed to complete setup. Please try again.",
+      "submit": "Complete Setup",
+      "security": {
+        "tipTitle": "Security Check",
+        "tipDesc": "For your protection, please change your temporary password provided by the administrator."
+      },
+      "form": {
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm New Password",
+        "fullName": "Full Name",
+        "phone": "Phone Number",
+        "dob": "Date of Birth",
+        "gender": "Gender",
+        "citizenId": "Citizen ID (CCCD)",
+        "address": "Primary Address",
+        "licenseNumber": "Medical License Number",
+        "licenseImage": "Certificate Image",
+        "uploadText": "Click to upload or drag and drop"
+      },
+      "validation": {
+        "passwordRequired": "Password is required",
+        "passwordMin": "Password must be at least 8 characters",
+        "passwordPattern": "Password must contain uppercase, lowercase, and number",
+        "confirmPasswordRequired": "Please confirm your password",
+        "passwordMismatch": "Passwords do not match"
+      }
     },
     "login": {
       "leftPanel": {

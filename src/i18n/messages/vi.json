@@ -19,6 +19,20 @@
       "Mismatch": "Mật khẩu xác nhận không khớp"
     }
   },
+  "Shared": {
+    "buttons": {
+      "back": "Quay lại",
+      "next": "Tiếp tục",
+      "submit": "Gửi",
+      "save": "Lưu",
+      "cancel": "Hủy"
+    },
+    "gender": {
+      "male": "Nam",
+      "female": "Nữ",
+      "other": "Khác"
+    }
+  },
   "Navigation": {
     "home": "Trang chủ",
     "about": "Về chúng tôi",
@@ -354,6 +368,37 @@
       "backToLogin": "Quay lại đăng nhập",
       "termsOfService": "Điều khoản dịch vụ",
       "privacyPolicy": "Chính sách quyền riêng tư"
+    },
+    "onboarding": {
+      "title": "Chào mừng bạn đến với AURA Digital Clinic",
+      "subtitle": "Hoàn thiện hồ sơ chuyên môn của bạn để bắt đầu làm việc trong hệ sinh thái kỹ thuật số của chúng tôi.",
+      "success": "Hoàn tất thiết lập! Chào mừng bạn đến với AURA.",
+      "error": "Không thể hoàn tất thiết lập. Vui lòng thử lại.",
+      "submit": "Hoàn tất thiết lập",
+      "security": {
+        "tipTitle": "Kiểm tra bảo mật",
+        "tipDesc": "Để bảo vệ tài khoản, vui lòng thay đổi mật khẩu tạm thời do quản trị viên cung cấp."
+      },
+      "form": {
+        "newPassword": "Mật khẩu mới",
+        "confirmPassword": "Xác nhận mật khẩu mới",
+        "fullName": "Họ và tên",
+        "phone": "Số điện thoại",
+        "dob": "Ngày sinh",
+        "gender": "Giới tính",
+        "citizenId": "Số CCCD/VNeID",
+        "address": "Địa chỉ liên lạc",
+        "licenseNumber": "Số chứng chỉ hành nghề",
+        "licenseImage": "Ảnh chứng chỉ hành nghề",
+        "uploadText": "Nhấn để tải lên hoặc kéo thả tệp"
+      },
+      "validation": {
+        "passwordRequired": "Mật khẩu là bắt buộc",
+        "passwordMin": "Mật khẩu phải có ít nhất 8 ký tự",
+        "passwordPattern": "Mật khẩu phải bao gồm chữ hoa, chữ thường và số",
+        "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+        "passwordMismatch": "Mật khẩu không khớp"
+      }
     },
     "login": {
       "leftPanel": {
