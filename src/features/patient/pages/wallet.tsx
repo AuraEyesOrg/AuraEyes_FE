@@ -29,6 +29,7 @@ const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   Refunded: 'Hoàn tiền',
   FullyPaid: 'Đã tất toán',
   PartiallyPaid: 'Đã thanh toán cọc',
+  CancellationRequested: 'Đang yêu cầu hoàn tiền',
 };
 
 const PAYMENT_STATUS_COLOR: Record<PaymentStatus, string> = {
@@ -146,7 +147,7 @@ export default function WalletPage() {
           <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
         </div>
       );
-    if (status === 'Refunded')
+    if (status === 'Refunded' || status === 'CancellationRequested')
       return (
         <div className="w-10 h-10 rounded-2xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
           <RefreshCw className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -469,7 +470,9 @@ export default function WalletPage() {
                                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                                     : isCancelled
                                       ? 'bg-slate-500/10 text-slate-400'
-                                      : isRefunded
+                                      : isRefunded ||
+                                          order.status ===
+                                            'CancellationRequested'
                                         ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
                                         : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                 }`}

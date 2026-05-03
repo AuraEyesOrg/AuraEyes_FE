@@ -2470,7 +2470,8 @@
       "inProgress": "In Progress",
       "completed": "Completed",
       "cancelled": "Cancelled",
-      "noShow": "No Show"
+      "noShow": "No Show",
+      "cancellationRequested": "Refund Pending"
     },
     "empty": {
       "clinicAll": "No clinic appointments yet.",
@@ -2498,6 +2499,20 @@
       "modalTitle": "Clinic feedback",
       "modalSubtitle": "Share your clinic visit experience.",
       "submitLabel": "Submit clinic feedback"
+    },
+    "cancellation": {
+      "modalTitle": "Request Appointment Cancellation",
+      "modalSubtitle": "Please provide your banking information so we can refund your deposit (30% of slot price).",
+      "bankName": "Bank Name",
+      "accountName": "Account Name",
+      "bankNumber": "Bank Account Number",
+      "reason": "Cancellation Reason (optional)",
+      "successToast": "Cancellation request submitted. An administrator will review and process your refund.",
+      "errorToast": "Failed to submit cancellation request. Please try again later.",
+      "ruleNotice": "Note: You can only cancel an appointment at least 6 hours before the start time.",
+      "ruleViolated": "Cannot cancel appointment as it is less than 6 hours before the start time.",
+      "confirmLabel": "Submit Request",
+      "cancelling": "Submitting..."
     }
   },
   "PatientDashboard_Legacy": {
@@ -4713,7 +4728,38 @@
         }
       },
       "items": {
-        "staff-management": "Staff Management"
+        "staff-management": "Staff Management",
+        "refund-requests": "Refund Requests"
+      }
+    },
+    "refundRequests": {
+      "title": "Refund Requests",
+      "description": "Process refunds for cancelled appointments",
+      "searchPlaceholder": "Search patient, phone, bank number...",
+      "empty": "No pending refund requests found.",
+      "labels": {
+        "appointmentDate": "Appointment Time",
+        "refundAmount": "Refund Amount",
+        "bankingInfo": "Banking Information",
+        "bankName": "Bank",
+        "accountName": "Account",
+        "accountNumber": "Number",
+        "reason": "Cancellation Reason"
+      },
+      "actions": {
+        "confirmRefund": "Confirm & Complete Refund"
+      },
+      "modals": {
+        "confirm": {
+          "title": "Process Refund",
+          "subtitle": "Enter refund details after completing the bank transfer.",
+          "transactionId": "Transaction ID (Optional)",
+          "notePlaceholder": "e.g. Refunded via Vietcombank app"
+        }
+      },
+      "toasts": {
+        "confirmSuccess": "Refund confirmed successfully.",
+        "confirmError": "Unable to confirm refund."
       }
     },
     "staff": {

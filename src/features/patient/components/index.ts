@@ -28,3 +28,4 @@ export {
   StarRatingInput,
   WebsiteFeedbackForm,
 } from './feedback';
+export { default as CancellationModal } from './CancellationModal';
