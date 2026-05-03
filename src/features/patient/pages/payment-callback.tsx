@@ -110,8 +110,10 @@ export default function PaymentCallbackPage() {
 
         setOrderData(order);
 
-        const firstPayment = order.payments?.[0];
-        const paymentDone = firstPayment?.status === 'Completed';
+        const targetPayment = order.payments?.find(
+          (p) => p.paymentOrderCode === orderCode
+        );
+        const paymentDone = targetPayment?.status === 'Completed';
         const orderDone =
           order.status === 'Completed' ||
           order.status === 'Confirmed' ||
@@ -119,8 +121,8 @@ export default function PaymentCallbackPage() {
           order.status === 'PartiallyPaid';
         const isCancelled =
           order.status === 'Cancelled' ||
-          firstPayment?.status === 'Cancelled' ||
-          firstPayment?.status === 'Failed';
+          targetPayment?.status === 'Cancelled' ||
+          targetPayment?.status === 'Failed';
 
         if (paymentDone || orderDone) {
           setStatus('success');
