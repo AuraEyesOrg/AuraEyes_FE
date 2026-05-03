@@ -3,16 +3,21 @@ import { useTranslation } from 'react-i18next';
 import { Users, ArrowRight, Bell } from 'lucide-react';
 import useNotificationStore from '@/store/useNotificationStore';
 import { router } from '@/lib/router';
+import { getNotificationRoute } from '@/types/notification';
+import useAuthStore from '@/store/auth-store';
 
 export const ConsiliumInvitationOverlay: React.FC = () => {
   const { t } = useTranslation();
   const { urgentInvitation, setUrgentInvitation } = useNotificationStore();
 
+  const { user } = useAuthStore();
+
   if (!urgentInvitation) return null;
 
   const handleJoin = () => {
-    // Navigate to collaboration page
-    router.navigate('/professional-network/collaboration');
+    // Navigate to collaboration page with specific groupId
+    const route = getNotificationRoute(urgentInvitation, user?.roles || []);
+    router.navigate(route);
     setUrgentInvitation(null);
   };
 
