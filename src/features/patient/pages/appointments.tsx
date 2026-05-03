@@ -23,11 +23,13 @@ import { resolvePathWithLocale } from '@/i18n/middleware';
 import {
   usePatientClinicAppointments,
   usePatientClinicAppointmentCounts,
+  useRequestClinicCancellation,
 } from '@/features/patient/hooks/use-clinic-booking';
 import { useCreateClinicFeedback } from '@/features/patient/hooks/use-feedback';
 import {
   FeedbackModal,
   FeedbackSubmittedBadge,
+  CancellationModal,
 } from '@/features/patient/components';
 import useAuthStore from '@/store/auth-store';
 import { formatSlotTime } from '@/lib/date-utils';
@@ -63,6 +65,8 @@ const CLINIC_STATUS_STYLES: Record<string, string> = {
   NoShow: 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
   Booked:
     'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200',
+  CancellationRequested:
+    'bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800/50',
 };
 
 const CLINIC_STATUS_LABEL_KEYS: Record<string, string> = {
@@ -73,6 +77,7 @@ const CLINIC_STATUS_LABEL_KEYS: Record<string, string> = {
   Completed: 'completed',
   Cancelled: 'cancelled',
   NoShow: 'noShow',
+  CancellationRequested: 'cancellationRequested',
 };
 
 const AppointmentsPage = () => {
@@ -85,6 +90,8 @@ const AppointmentsPage = () => {
   const [clinicFeedbackTarget, setClinicFeedbackTarget] =
     useState<ClinicAppointmentDto | null>(null);
   const [qrTarget, setQrTarget] = useState<ClinicAppointmentDto | null>(null);
+  const [cancellationTarget, setCancellationTarget] =
+    useState<ClinicAppointmentDto | null>(null);
 
   const { user } = useAuthStore();
   const patientId = user?.roleId;
@@ -119,6 +126,7 @@ const AppointmentsPage = () => {
   );
 
   const createClinicFeedbackMutation = useCreateClinicFeedback();
+  const requestCancellationMutation = useRequestClinicCancellation();
 
   const clinicAppointments = clinicAppointmentsQuery.data?.items ?? [];
   const clinicTotalPages = clinicAppointmentsQuery.data?.totalPages ?? 1;
@@ -199,6 +207,21 @@ const AppointmentsPage = () => {
         return;
       }
       toast.error(t('PatientAppointments.toast.feedbackSubmitFailed'));
+    }
+  };
+
+  const handleRequestCancellation = async (values: any) => {
+    if (!cancellationTarget || !patientId) return;
+    try {
+      await requestCancellationMutation.mutateAsync({
+        patientId,
+        appointmentId: cancellationTarget.id,
+        request: values,
+      });
+      setCancellationTarget(null);
+      toast.success(t('PatientAppointments.cancellation.successToast'));
+    } catch (error) {
+      toast.error(t('PatientAppointments.cancellation.errorToast'));
     }
   };
 
@@ -366,6 +389,7 @@ const AppointmentsPage = () => {
                   onViewQR={() => setQrTarget(appointment)}
                   onSync={handleSync}
                   isSyncing={isSyncing}
+                  onCancel={() => setCancellationTarget(appointment)}
                 />
               ))}
             </div>
@@ -446,6 +470,29 @@ const AppointmentsPage = () => {
           }
         }}
       />
+
+      <CancellationModal
+        open={!!cancellationTarget}
+        isSubmitting={requestCancellationMutation.isPending}
+        initialValues={{
+          bankName: null,
+          accountName: null,
+          bankNumber: null,
+        }}
+        labels={{
+          modalTitle: t('PatientAppointments.cancellation.modalTitle'),
+          modalSubtitle: t('PatientAppointments.cancellation.modalSubtitle'),
+          bankName: t('PatientAppointments.cancellation.bankName'),
+          accountName: t('PatientAppointments.cancellation.accountName'),
+          bankNumber: t('PatientAppointments.cancellation.bankNumber'),
+          reason: t('PatientAppointments.cancellation.reason'),
+          confirmLabel: t('PatientAppointments.cancellation.confirmLabel'),
+          cancelling: t('PatientAppointments.cancellation.cancelling'),
+          ruleNotice: t('PatientAppointments.cancellation.ruleNotice'),
+        }}
+        onClose={() => setCancellationTarget(null)}
+        onSubmit={handleRequestCancellation}
+      />
     </PatientLayout>
   );
 };
@@ -522,6 +569,7 @@ interface ClinicAppointmentCardProps {
   onViewQR: () => void;
   onSync: (orderId: string) => void;
   isSyncing?: boolean;
+  onCancel?: () => void;
 }
 
 const ClinicAppointmentCard = ({
@@ -536,13 +584,16 @@ const ClinicAppointmentCard = ({
   onViewQR,
   onSync,
   isSyncing,
+  onCancel,
 }: ClinicAppointmentCardProps) => {
   const { t: i18nT } = useTranslation();
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
 
   const dimmed =
-    appointment.status === 'Cancelled' || appointment.status === 'NoShow';
+    appointment.status === 'Cancelled' ||
+    appointment.status === 'NoShow' ||
+    appointment.status === 'CancellationRequested';
 
   return (
     <article
@@ -725,6 +776,19 @@ const ClinicAppointmentCard = ({
                       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
                     </button>
                   )}
+                </div>
+              )}
+
+              {(appointment.status === 'Pending' ||
+                appointment.status === 'Confirmed') && (
+                <div className="w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={onCancel}
+                    className="w-full sm:w-auto px-6 py-3.5 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all active:scale-95 shadow-sm"
+                  >
+                    {t('PatientAppointments.actions.cancel')}
+                  </button>
                 </div>
               )}
             </div>
