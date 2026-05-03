@@ -45,6 +45,11 @@ import { usePatientProfile } from '@/features/patient/hooks/useProfile';
 import { clinicScreeningApi } from '@/features/clinic-staff/api/screening.api';
 import { getConsultationSession } from '@/features/consultation/api/consultation.api';
 import {
+  useConsultationSessions,
+  useSubmitVerificationReport,
+} from '@/features/consultation/hooks/use-consultation';
+import { ConsultationSessionType, SessionStatus } from '@/types/consultation';
+import {
   masterDataApi,
   Province,
   District,
@@ -384,6 +389,33 @@ export default function ErmForm() {
   const finalizeMutation = useFinalizeRecord();
   const startConsultationMutation = useStartConsultation();
   const updateAdministrativeMutation = useUpdateAdministrative();
+  const submitVerificationReportMutation = useSubmitVerificationReport();
+
+  // Fetch patient profile if needed
+  const patientIdFromRecord =
+    record?.patientId || location.state?.formData?.patientId;
+
+  // Find the active consultation session to link the diagnosis for the Cashier
+  const consultationSessionsQuery = useConsultationSessions(
+    {
+      patientId: patientIdFromRecord,
+    },
+    { enabled: Boolean(patientIdFromRecord) }
+  );
+
+  const linkedSessions = consultationSessionsQuery.data?.items ?? [];
+  const activeSessions = linkedSessions.filter(
+    (s) =>
+      s.status !== SessionStatus.Cancelled &&
+      s.status !== SessionStatus.Completed
+  );
+  const reportableSession = activeSessions.find(
+    (s) =>
+      s.type === ConsultationSessionType.ClinicBooking ||
+      s.type === ConsultationSessionType.Verification ||
+      s.type === ConsultationSessionType.VideoCall
+  );
+  const reportableSessionId = reportableSession?.id ?? null;
 
   // Role Detection
   const isOphthalmologist = user?.roles.includes('Ophthalmologist');
@@ -404,9 +436,6 @@ export default function ErmForm() {
     }
   }, [id, isOphthalmologist, navigate]);
 
-  // Fetch patient profile if needed
-  const patientIdFromRecord =
-    record?.patientId || location.state?.formData?.patientId;
   const { data: patientProfile } = usePatientProfile(patientIdFromRecord);
 
   const {
@@ -1054,6 +1083,33 @@ export default function ErmForm() {
             treatmentPlan: currentValues.finalDiagnosisExtra,
           },
         });
+
+        // Submit the Diagnosis report to the Consultation Session so the Cashier can process it
+        if (reportableSessionId) {
+          const doctorId = user?.roleId || '';
+          await submitVerificationReportMutation.mutateAsync({
+            sessionId: reportableSessionId,
+            doctorId: doctorId,
+            diagnosisCode: currentValues.finalDiagnosisMain || 'N/A',
+            clinicalFindings:
+              clinicalData.diseaseProcess ||
+              currentValues.finalDiagnosisMain ||
+              'No findings recorded',
+            treatmentPlan: currentValues.finalDiagnosisExtra || '',
+            prescriptionItems:
+              normalizedPrescriptionItems.length > 0
+                ? normalizedPrescriptionItems
+                : undefined,
+            prescriptionNote: prescriptionNote.trim() || undefined,
+            noMedicationPrescribed,
+            status: 'Finalized',
+            finalizedAt: new Date().toISOString(),
+          });
+        } else {
+          toast.warning(
+            'Không tìm thấy phiên khám nào đang hoạt động để liên kết chẩn đoán. Thu ngân có thể không tìm thấy phí khám.'
+          );
+        }
       }
 
       // Finalize the record → sends to Cashier
