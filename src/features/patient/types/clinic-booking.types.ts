@@ -28,6 +28,21 @@ export interface DoctorSlotDetailDto {
   doctorAvatar?: string | null;
   isBooked: boolean;
   price: number;
+  bio?: string | null;
+  ratingAverage: number;
+  ratingCount: number;
+  certificates: CertificateDto[];
+}
+
+export interface CertificateDto {
+  id: string;
+  type: string;
+  degreeLevel?: string | null;
+  name: string;
+  issuingAuthority?: string | null;
+  issuedDate: string;
+  expiryDate?: string | null;
+  certificateUrl?: string | null;
 }
 
 export interface AggregatedSlotDto {
