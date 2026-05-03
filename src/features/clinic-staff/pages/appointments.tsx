@@ -29,14 +29,13 @@ import QrScannerModal from '../components/QrScannerModal'; // <-- NEW IMPORT
 import LatePatientModal from '@/features/organisation/components/LatePatientModal';
 import { getClinicPatients, type ClinicPatientDto } from '../api/patients.api';
 import { getCurrentClinicAppointments } from '@/features/organisation/api/organisation-clinic-booking.api';
+import type { OrganisationClinicAppointmentDto } from '@/features/organisation/api/organisation-clinic-booking.api';
 import {
   organisationClinicBookingKeys,
   useCheckInClinicAppointment,
-  useCompleteClinicAppointment,
   useClinicStaffAvailableSlots,
   useCreateClinicStaffAppointment,
   useMarkNoShowClinicAppointment,
-  useStartClinicAppointment,
   useCompleteOrderPayment,
 } from '@/features/organisation/hooks/use-organisation-clinic-booking';
 import { mapClinicStaffErrorMessage } from '@/lib/api-error';
@@ -76,6 +75,31 @@ const STATUS_STEP_INDEX: Record<string, number> = {
   Cancelled: -1,
   NoShow: -1,
 };
+
+/** Backend clinic-queue FlowState → progress segment (matches PIPELINE_STEPS indices). */
+const FLOW_STATE_STEP_INDEX: Record<string, number> = {
+  CheckedIn: 2,
+  ScreeningPending: 2,
+  AICompleted: 2,
+  SentToDoctor: 3,
+  ConsultationInProgress: 3,
+  Finalized: 4,
+};
+
+function getPipelineStepIndex(appt: OrganisationClinicAppointmentDto): number {
+  if (['Cancelled', 'NoShow'].includes(appt.status)) return -1;
+  if (appt.status === 'Completed') return 5;
+  const flow = appt.flowState;
+  if (flow && FLOW_STATE_STEP_INDEX[flow] !== undefined) {
+    return FLOW_STATE_STEP_INDEX[flow]!;
+  }
+  return STATUS_STEP_INDEX[appt.status] ?? 0;
+}
+
+function getFlowStateTranslationKey(flowState: string): string {
+  const camel = flowState.charAt(0).toLowerCase() + flowState.slice(1);
+  return `ClinicStaff.queue.states.${camel}`;
+}
 
 const statusBadge: Record<string, string> = {
   Pending:
@@ -289,8 +313,6 @@ export default function ClinicStaffAppointmentsPage() {
   });
 
   const checkInMutation = useCheckInClinicAppointment();
-  const startMutation = useStartClinicAppointment();
-  const completeMutation = useCompleteClinicAppointment();
   const noShowMutation = useMarkNoShowClinicAppointment();
   const payRemainingMutation = useCompleteOrderPayment();
   const createWalkInAppointmentMutation = useCreateClinicStaffAppointment();
@@ -340,20 +362,36 @@ export default function ClinicStaffAppointmentsPage() {
       total: appointments.length,
       pending: appointments.filter((a) => a.status === 'Pending').length,
       checkedIn: appointments.filter((a) => a.status === 'CheckedIn').length,
-      inProgress: appointments.filter((a) => a.status === 'InProgress').length,
+      inProgress: appointments.filter(
+        (a) =>
+          a.status === 'InProgress' ||
+          a.flowState === 'SentToDoctor' ||
+          a.flowState === 'ConsultationInProgress'
+      ).length,
     }),
     [appointments]
   );
 
   const isMutating =
     checkInMutation.isPending ||
-    startMutation.isPending ||
-    completeMutation.isPending ||
     noShowMutation.isPending ||
     payRemainingMutation.isPending ||
     createWalkInAppointmentMutation.isPending;
 
   const getStatusDisplay = (appointment: (typeof appointments)[number]) => {
+    if (appointment.flowState === 'Finalized') {
+      const fullyPaid =
+        appointment.orderStatus === 'FullyPaid' ||
+        (appointment.remainingAmount ?? 0) <= 0;
+      if (fullyPaid) {
+        return t('Organisation.calendar.status.completed', 'Completed');
+      }
+      return t(
+        'Organisation.calendar.status.waitingForPayment',
+        'Waiting for payment'
+      );
+    }
+
     const { status, isPaidDeposit } = appointment;
     switch (status) {
       case 'Pending':
@@ -596,49 +634,6 @@ export default function ClinicStaffAppointmentsPage() {
     }
   };
 
-  const getPrimaryAction = (appointment: (typeof appointments)[number]) => {
-    if (appointment.status === 'CheckedIn') {
-      return {
-        label: t(
-          'Organisation.calendar.actions.startConsultation',
-          'Start consultation'
-        ),
-        icon: Play,
-        successMessage: t(
-          'Organisation.calendar.toast.consultationStarted',
-          'Consultation started.'
-        ),
-        className:
-          'bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50',
-        action: () => startMutation.mutateAsync(appointment.id),
-      };
-    }
-    if (appointment.status === 'InProgress') {
-      return {
-        label: t(
-          'Organisation.calendar.actions.completeVisit',
-          'Complete visit'
-        ),
-        icon: Calendar,
-        successMessage: t(
-          'Organisation.calendar.toast.visitCompleted',
-          'Visit completed.'
-        ),
-        className:
-          'bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-50',
-        action: () =>
-          completeMutation.mutateAsync({ appointmentId: appointment.id }),
-      };
-    }
-    return null;
-  };
-
-  const [isLatePatientModalOpen, setIsLatePatientModalOpen] = useState(false);
-  const [
-    selectedLatePatientAppointmentId,
-    setSelectedLatePatientAppointmentId,
-  ] = useState('');
-
   return (
     <ClinicStaffLayout>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
@@ -858,8 +853,7 @@ export default function ClinicStaffAppointmentsPage() {
           ) : (
             <div className="grid grid-cols-1 gap-4">
               {appointments.map((appt) => {
-                const primaryAction = getPrimaryAction(appt);
-                const stepIdx = STATUS_STEP_INDEX[appt.status] ?? 0;
+                const stepIdx = getPipelineStepIndex(appt);
                 const isTerminal = [
                   'Completed',
                   'Cancelled',
@@ -887,7 +881,7 @@ export default function ClinicStaffAppointmentsPage() {
                     ].join(' ')}
                   >
                     {!isTerminal && (
-                      <div className="mb-6 flex items-center gap-1">
+                      <div className="relative mb-6 flex items-center gap-1">
                         {PIPELINE_STEPS.map((step, i) => (
                           <div
                             key={step}
@@ -905,7 +899,14 @@ export default function ClinicStaffAppointmentsPage() {
                             />
                             {i === stepIdx && (
                               <span className="absolute -top-4 text-[8px] font-black uppercase tracking-tighter text-brand">
-                                {getStatusDisplay(appt)}
+                                {appt.flowState
+                                  ? t(
+                                      getFlowStateTranslationKey(
+                                        appt.flowState
+                                      ),
+                                      appt.flowState
+                                    )
+                                  : getStatusDisplay(appt)}
                               </span>
                             )}
                           </div>
@@ -998,9 +999,14 @@ export default function ClinicStaffAppointmentsPage() {
                             appt.orderStatus === 'FullyPaid' ||
                             (appt.remainingAmount ?? 0) <= 0;
                           const effectiveStatus =
-                            appt.status === 'WaitingForPayment' && isFullyPaid
-                              ? 'Completed'
-                              : appt.status;
+                            appt.flowState === 'Finalized'
+                              ? isFullyPaid
+                                ? 'Completed'
+                                : 'WaitingForPayment'
+                              : appt.status === 'WaitingForPayment' &&
+                                  isFullyPaid
+                                ? 'Completed'
+                                : appt.status;
                           return (
                             <span
                               className={`rounded-xl px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] shadow-sm ${statusBadge[effectiveStatus] ?? statusBadge.Pending}`}
@@ -1158,49 +1164,71 @@ export default function ClinicStaffAppointmentsPage() {
                     <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-6 dark:border-slate-800">
                       <div className="flex flex-wrap items-center gap-3">
                         {['Pending', 'Confirmed'].includes(appt.status) ? (
-                          <button
-                            type="button"
-                            disabled={isMutating || selectedDate > todayKey}
-                            onClick={() => {
-                              if (selectedDate > todayKey) {
-                                toast.error(
-                                  t(
-                                    'Organisation.calendar.toast.qrBeforeAppointmentDate',
-                                    'Cannot check in before the appointment date.'
-                                  )
-                                );
-                                return;
+                          <div className="flex flex-wrap items-center gap-3">
+                            {!appt.isPaidDeposit && appt.orderId ? (
+                              <button
+                                type="button"
+                                disabled={isMutating || selectedDate > todayKey}
+                                onClick={() => {
+                                  setAppointmentToPay(appt);
+                                  setIsPaymentModalOpen(true);
+                                }}
+                                className="inline-flex h-11 items-center gap-2 rounded-2xl border-2 border-amber-500 bg-amber-500/10 px-6 text-xs font-black uppercase tracking-widest text-amber-800 transition-all hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:text-amber-200"
+                              >
+                                <Banknote className="h-4 w-4" />
+                                {t(
+                                  'Organisation.calendar.actions.collectCashDeposit',
+                                  'Collect cash deposit'
+                                )}
+                              </button>
+                            ) : null}
+                            <button
+                              type="button"
+                              disabled={
+                                isMutating ||
+                                selectedDate > todayKey ||
+                                (!appt.isPaidDeposit && !!appt.orderId)
                               }
-                              setScanTargetAppointmentId(appt.id);
-                              setIsQrScannerOpen(true);
-                            }}
-                            className="inline-flex h-11 items-center gap-2 rounded-2xl bg-emerald-600 px-6 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <QrCode className="h-4 w-4" />
-                            {t(
-                              'Organisation.calendar.actions.scanQrCheckIn',
-                              'Scan QR check-in'
-                            )}
-                          </button>
-                        ) : primaryAction ? (
-                          <button
-                            type="button"
-                            disabled={isMutating}
-                            onClick={() =>
-                              void runAction(
-                                primaryAction.action,
-                                primaryAction.successMessage
-                              )
-                            }
-                            className={`inline-flex h-11 items-center gap-2 rounded-2xl px-6 text-xs font-black uppercase tracking-widest text-white transition-all hover:shadow-lg disabled:opacity-50 ${
-                              primaryAction.className.includes('bg-violet')
-                                ? 'bg-violet-600 hover:bg-violet-700 hover:shadow-violet-500/20'
-                                : 'bg-cyan-600 hover:bg-cyan-700 hover:shadow-cyan-500/20'
-                            }`}
-                          >
-                            <primaryAction.icon className="h-4 w-4" />
-                            {primaryAction.label}
-                          </button>
+                              onClick={() => {
+                                if (selectedDate > todayKey) {
+                                  toast.error(
+                                    t(
+                                      'Organisation.calendar.toast.qrBeforeAppointmentDate',
+                                      'Cannot check in before the appointment date.'
+                                    )
+                                  );
+                                  return;
+                                }
+                                if (!appt.isPaidDeposit && appt.orderId) {
+                                  toast.warning(
+                                    t(
+                                      'Organisation.calendar.toast.depositRequiredBeforeCheckIn',
+                                      'Collect the deposit before check-in.'
+                                    )
+                                  );
+                                  return;
+                                }
+                                setScanTargetAppointmentId(appt.id);
+                                setIsQrScannerOpen(true);
+                              }}
+                              className="inline-flex h-11 items-center gap-2 rounded-2xl bg-emerald-600 px-6 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <QrCode className="h-4 w-4" />
+                              {t(
+                                'Organisation.calendar.actions.scanQrCheckIn',
+                                'Scan QR check-in'
+                              )}
+                            </button>
+                          </div>
+                        ) : !isTerminal && appt.flowState ? (
+                          <div className="inline-flex h-11 max-w-full items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-5 dark:border-slate-700 dark:bg-slate-800/80">
+                            <span className="truncate text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                              {t(
+                                getFlowStateTranslationKey(appt.flowState),
+                                appt.flowState
+                              )}
+                            </span>
+                          </div>
                         ) : null}
 
                         {appt.orderId &&

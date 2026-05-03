@@ -1602,11 +1602,17 @@
     "ophthalmology": "Ophthalmology"
   },
   "GuestHome": {
-    "badge": "AI-powered retinal health screening platform",
-    "title": "Detect retinal diseases early with clinical-grade precision",
-    "description": "Aura Eyes helps medical organizations accelerate screening, standardize data, and connect patients to specialists.",
-    "primaryCta": "Book Appointment",
-    "secondaryCta": "Find a Doctor"
+    "badge": "Aura Digital Hospital System",
+    "title": "Intelligent Healthcare with Clinical-Grade Precision",
+    "description": "Aura Digital Hospital provides comprehensive digital health solutions, combining the power of AI and top experts to protect your health.",
+    "primaryCta": "Book Now",
+    "secondaryCta": "Find a Doctor",
+    "recruitmentPopup": {
+      "title": "Join our Specialist Team",
+      "description": "We are looking for talented doctors to co-create the future of digital healthcare. Become a part of Aura today!",
+      "cta": "Apply Now",
+      "close": "Maybe later"
+    }
   },
   "GuestMaintenance": {
     "badge": "System Maintenance",
@@ -1765,7 +1771,7 @@
       "degreeMissing": "Degree information is unavailable",
       "certificateLabel": "Certificates",
       "certificateMissing": "Certificate information is unavailable",
-      "experience": "AuraEyes Clinic, {{years}} years of experience",
+      "experience": "Aura Hospital, {{years}} years of experience",
       "expertiseLabel": "Expertise",
       "aboutLabel": "About",
       "bioMissing": "No bio provided yet",
@@ -1812,49 +1818,49 @@
     }
   },
   "About": {
-    "heroTitle": "Shaping the future of retinal screening",
-    "heroDescription": "Aura Eyes combines clinical expertise and responsible medical AI to improve early diagnosis access.",
+    "heroTitle": "Aura Digital Hospital",
+    "heroDescription": "Aura Eyes merges clinical expertise with advanced medical AI to provide a comprehensive, precise, and accessible healthcare experience.",
     "values": {
-      "badge": "Our Values",
-      "title": "Built on Principles That Matter",
-      "description": "Every decision we make is guided by our commitment to health equity, privacy, and scientific integrity.",
+      "badge": "Our Core Values",
+      "title": "Built on a Foundation of Trust",
+      "description": "Every procedure at Aura is guided by our commitment to patient care, data privacy, and cutting-edge medical technology.",
       "cards": {
         "healthEquity": {
-          "title": "Health Equity",
-          "description": "Making advanced retinal screening accessible to underserved communities worldwide."
+          "title": "Healthcare for Everyone",
+          "description": "Bringing high-quality digital eye care to every community, regardless of geographical barriers."
         },
         "privacyFirst": {
-          "title": "Privacy First",
-          "description": "Your health data is encrypted, anonymized, and never sold to third parties."
+          "title": "Absolute Privacy",
+          "description": "Your medical data is protected by the highest security standards, ensuring lifelong privacy."
         },
         "openSource": {
-          "title": "Open Source",
-          "description": "Our core algorithms are open for peer review, ensuring transparency and trust."
+          "title": "Technological Transparency",
+          "description": "Our diagnostic processes are verified by leading experts, building trust through clinical excellence."
         },
         "collaboration": {
-          "title": "Collaboration",
-          "description": "Partnering with researchers and clinicians globally to advance retinal health."
+          "title": "Specialist Network",
+          "description": "Connecting a global network of elite ophthalmologists to provide optimal treatment plans for every patient."
         }
       }
     },
     "cta": {
-      "title": "Join Our Mission",
-      "description": "Whether you're a healthcare provider, researcher, or advocate, there's a place for you in the AURA community.",
-      "primary": "Partner With Us"
+      "title": "Experience Future Healthcare",
+      "description": "Whether you are a patient seeking consultation or a doctor joining our network, Aura is here to walk with you.",
+      "primary": "Explore Now"
     }
   },
   "HowItWorks": {
     "hero": {
-      "badge": "AI-Driven Diagnostics",
-      "titlePrefix": "Demystifying the",
-      "titleSuffix": "Screening Process",
-      "description": "Our platform leverages advanced computer vision to analyze retinal images for early signs of vascular abnormalities. A non-invasive, secure, and instant check-up for your systemic health.",
-      "processingStatus": "Processing Status",
-      "analyzing": "Analyzing"
+      "badge": "Digital Healthcare",
+      "titlePrefix": "Smart",
+      "titleSuffix": "Diagnostic Workflow",
+      "description": "Our platform integrates artificial intelligence and medical expertise to provide a precise, rapid, and non-invasive retinal diagnostic process.",
+      "processingStatus": "Diagnostic Status",
+      "analyzing": "Analyzing Data"
     },
     "process": {
-      "badge": "The Journey",
-      "title": "From Scan to Insight in Seconds",
+      "badge": "Workflow",
+      "title": "From Booking to Results in Simple Steps",
       "description": "The entire process is designed to be seamless, secure, and fast."
     },
     "steps": {
@@ -3661,12 +3667,14 @@
         "depositPaid": "Deposit Paid",
         "inProgress": "In progress",
         "noShow": "No-show",
-        "pending": "Pending"
+        "pending": "Pending",
+        "waitingForPayment": "Awaiting final payment"
       },
       "summary": {
         "records": "{{count}} records"
       },
       "toast": {
+        "depositRequiredBeforeCheckIn": "Collect the deposit before check-in.",
         "consultationStarted": "Consultation started.",
         "invalidQr": "Invalid clinic check-in QR code.",
         "markedNoShow": "Marked as no-show.",
@@ -3677,6 +3685,7 @@
         "noShowMarked": "Marked as no-show."
       },
       "actions": {
+        "collectCashDeposit": "Collect cash deposit",
         "completeVisit": "Complete visit",
         "newWalkIn": "New Walk-in",
         "noShow": "No-show",
@@ -5559,66 +5568,6 @@
       "cashierDeskDesc": "Review finalized visits and collect payment"
     }
   },
-  "ClinicStaff": {
-    "queue": {
-      "toast": {
-        "sentToDoctorSuccess": "Case sent to doctor successfully.",
-        "sentToDoctorFailed": "Unable to send this case to doctor.",
-        "screeningRequired": "Please complete AI screening before sending to doctor.",
-        "loadDoctorsFailed": "Unable to load available doctors.",
-        "copyDoctorConsultationLinkSuccess": "Doctor consultation link copied.",
-        "copyDoctorConsultationLinkFailed": "Failed to copy doctor consultation link."
-      },
-      "error": {
-        "title": "Failed to load queue",
-        "message": "Unable to fetch clinic queue. Please try again."
-      },
-      "actions": {
-        "retry": "Retry",
-        "refresh": "Refresh",
-        "fillErm": "Fill ERM",
-        "createScreening": "Create Screening",
-        "viewScreening": "View Screening",
-        "sending": "Sending...",
-        "sendToDoctor": "Send to Doctor",
-        "copyDoctorLink": "Copy Doctor Link"
-      },
-      "page": {
-        "title": "Clinic Queue",
-        "subtitle": "Monitor patient flow and coordinate care"
-      },
-      "tabs": {
-        "all": "All"
-      },
-      "empty": {
-        "title": "No patients in queue",
-        "message": "Patients will appear here as they check in"
-      },
-      "table": {
-        "patient": "Patient",
-        "checkedIn": "Checked In",
-        "status": "Status",
-        "screening": "Screening",
-        "doctor": "Doctor",
-        "action": "Action"
-      },
-      "states": {
-        "awaitingDoctor": "Awaiting doctor",
-        "inConsultation": "In consultation",
-        "completed": "Done"
-      },
-      "sendDoctorModal": {
-        "title": "Send Case to Doctor",
-        "doctorLabel": "Available Doctor",
-        "loadingDoctors": "Loading doctors…",
-        "selectDoctor": "Select an available doctor",
-        "noDoctors": "No available ophthalmologists were found."
-      }
-    },
-    "common": {
-      "close": "Close"
-    }
-  },
   "Cashier": {
     "toast": {
       "createSuccess": "Payment request created.",
@@ -6062,6 +6011,58 @@
       }
     },
     "queue": {
+      "toast": {
+        "sentToDoctorSuccess": "Case sent to doctor successfully.",
+        "sentToDoctorFailed": "Unable to send this case to doctor.",
+        "missingBasicInfo": "Missing basic patient information.",
+        "screeningRequired": "Please complete AI screening before sending to doctor.",
+        "loadDoctorsFailed": "Unable to load available doctors.",
+        "copyDoctorConsultationLinkSuccess": "Doctor consultation link copied.",
+        "copyDoctorConsultationLinkFailed": "Failed to copy doctor consultation link."
+      },
+      "error": {
+        "title": "Failed to load queue",
+        "message": "Unable to fetch clinic queue. Please try again."
+      },
+      "actions": {
+        "retry": "Retry",
+        "refresh": "Refresh",
+        "fillErm": "Fill ERM",
+        "createScreening": "Create Screening",
+        "viewScreening": "View Screening",
+        "sending": "Sending...",
+        "sendToDoctor": "Send to Doctor",
+        "copyDoctorLink": "Copy Doctor Link"
+      },
+      "page": {
+        "title": "Clinic Queue",
+        "subtitle": "Monitor patient flow and coordinate care"
+      },
+      "tabs": {
+        "all": "All"
+      },
+      "empty": {
+        "title": "No patients in queue",
+        "message": "Patients will appear here as they check in"
+      },
+      "table": {
+        "patient": "Patient",
+        "checkedIn": "Checked In",
+        "status": "Status",
+        "screening": "Screening",
+        "doctor": "Doctor",
+        "action": "Action"
+      },
+      "sendDoctorModal": {
+        "title": "Send Case to Doctor",
+        "doctorLabel": "Available Doctor",
+        "loadingDoctors": "Loading doctors…",
+        "selectDoctor": "Select an available doctor",
+        "noDoctors": "No available ophthalmologists were found.",
+        "notesLabel": "Notes",
+        "notesPlaceholder": "Optional notes for the doctor",
+        "confirm": "Confirm send"
+      },
       "doctor": {
         "yearsExp": "{{count}} years exp",
         "notAssigned": "Not assigned"
@@ -6076,7 +6077,10 @@
         "aiCompleted": "AI Completed",
         "sentToDoctor": "Sent to Doctor",
         "consultationInProgress": "In Consultation",
-        "finalized": "Finalized"
+        "finalized": "Awaiting final payment",
+        "awaitingDoctor": "Awaiting doctor",
+        "inConsultation": "In consultation",
+        "completed": "Done"
       }
     },
     "patients": {

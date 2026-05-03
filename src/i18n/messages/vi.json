@@ -77,7 +77,7 @@
       "intro": {
         "complianceLabel": "Tiêu chuẩn tuân thủ:",
         "complianceDescription": "Áp dụng các nguyên tắc bảo vệ dữ liệu theo tiêu chuẩn Y tế số và quy định pháp luật sở tại (bao gồm yêu cầu bảo vệ Dữ liệu cá nhân nhạy cảm).",
-        "commitment": "AURA Eyes nhận thức rõ tầm quan trọng và tính nhạy cảm của Dữ liệu Y tế (Protected Health Information - PHI). Chúng tôi cam kết thiết lập các lớp bảo mật cấp độ doanh nghiệp (Enterprise-grade Security) để bảo vệ quyền riêng tư của bạn."
+        "commitment": "Aura Digital Hospital nhận thức rõ tầm quan trọng và tính nhạy cảm của Dữ liệu Y tế (Protected Health Information - PHI). Chúng tôi cam kết thiết lập các lớp bảo mật cấp độ doanh nghiệp (Enterprise-grade Security) để bảo vệ quyền riêng tư của bạn trọn vẹn."
       },
       "sections": {
         "classification": {
@@ -107,7 +107,7 @@
           "items": {
             "coreOperations": {
               "title": "Vận hành cốt lõi:",
-              "description": "Phân tích hình ảnh võng mạc qua mô hình AI để cảnh báo rủi ro lâm sàng."
+              "description": "Cung cấp các dịch vụ chăm sóc sức khỏe và phân tích y tế dựa trên công nghệ AI."
             },
             "medicalCoordination": {
               "title": "Điều phối Y tế:",
@@ -287,13 +287,13 @@
         "version": "Phiên bản: 1.0"
       },
       "intro": {
-        "welcome": "Chào mừng bạn đến với Hệ thống Sàng lọc Sức khỏe Mạch máu Võng mạc - AURA Eyes (\"Hệ thống\", \"Chúng tôi\", hoặc \"AURA Eyes\").",
-        "description": "Bằng việc tạo tài khoản, truy cập và sử dụng nền tảng của chúng tôi, Người dùng (bao gồm Bệnh nhân, Bác sĩ và Cơ sở Y tế) đồng ý tuân thủ toàn bộ các điều khoản được quy định dưới đây."
+        "welcome": "Chào mừng bạn đến với Bệnh viện Kỹ thuật số Aura (\"Bệnh viện\", \"Chúng tôi\", hoặc \"Aura Digital Hospital\").",
+        "description": "Bằng việc tạo tài khoản, truy cập và sử dụng nền tảng của chúng tôi, Người dùng (bao gồm Bệnh nhân, Bác sĩ và Nhân viên y tế) đồng ý tuân thủ toàn bộ các điều khoản được quy định dưới đây."
       },
       "sections": {
         "serviceNature": {
           "title": "Bản chất dịch vụ và Miễn trừ trách nhiệm y tế",
-          "description": "AURA Eyes là nền tảng phần mềm dạng dịch vụ (SaaS) cung cấp công cụ Hỗ trợ Quyết định Lâm sàng (CDS). Trí tuệ nhân tạo (AI) của AURA Eyes hoạt động như một hệ thống phân loại sơ bộ, phân tích rủi ro dựa trên hình ảnh đáy mắt (hỗ trợ định dạng tiêu chuẩn như JPG, PNG, DICOM).",
+          "description": "Aura Digital Hospital là nền tảng bệnh viện thông minh cung cấp các công cụ Hỗ trợ Quyết định Lâm sàng (CDS). Trí tuệ nhân tạo (AI) của Aura hoạt động như một hệ thống hỗ trợ chẩn đoán chuyên sâu, giúp bác sĩ đưa ra phác đồ điều trị chính xác nhất.",
           "disclaimer": {
             "title": "Khuyến cáo quan trọng",
             "descriptionPrefix": "Mọi báo cáo, bản đồ nhiệt, lộ trình rủi ro hoặc điểm số được tạo ra bởi AI của AURA Eyes",
@@ -348,13 +348,13 @@
       "skip": "Bỏ qua"
     },
     "steps": {
-      "logo": "Nhấn vào logo để quay về Trang chủ của AURA Digital Clinic bất cứ lúc nào.",
-      "navAbout": "Khám phá sứ mệnh phổ cập y tế số và đội ngũ chuyên gia nhãn khoa hàng đầu của chúng tôi.",
-      "navHowItWorks": "Tìm hiểu chi tiết quy trình sàng lọc AI 4 bước khép kín từ lúc đặt lịch đến khi nhận kết quả.",
-      "navEthics": "Xem các cam kết nghiêm ngặt của chúng tôi về bảo mật dữ liệu y tế và đạo đức trong ứng dụng AI.",
-      "navContact": "Kết nối với đội ngũ hỗ trợ AURA nếu bạn cần tư vấn kỹ thuật hoặc thông tin hợp tác.",
-      "bookAppointment": "Bắt đầu hành trình chăm sóc bằng cách đặt lịch hẹn tại cơ sở y tế gần nhất.",
-      "patientPortalLogin": "Đăng nhập vào Cổng Bệnh Nhân để tra cứu Lịch sử khám và tải Bệnh án điện tử (EMR) cá nhân."
+      "logo": "Nhấn vào logo để quay về Trang chủ bất cứ lúc nào.",
+      "navAbout": "Mục Về chúng tôi giới thiệu tầm nhìn Aura và các giá trị cốt lõi của Bệnh viện số.",
+      "navHowItWorks": "Mục Cách hoạt động mô tả quy trình hiện đại từ khi đặt lịch đến lúc nhận tư vấn chuyên môn.",
+      "aboutMission": "Khu vực này tóm tắt sứ mệnh của Aura: Mang công nghệ y tế tiên tiến nhất đến gần hơn với bệnh nhân.",
+      "contactOrganisation": "Mục Liên hệ dành cho các đối tác chiến lược hoặc bác sĩ muốn gia nhập mạng lưới.",
+      "getStartedPatient": "Nút Bắt đầu dẫn tới cổng bệnh nhân, nơi bạn có thể quản lý hồ sơ sức khỏe và đặt lịch khám.",
+      "getStartedDoctor": "Từ nút Bắt đầu, bác sĩ có thể đăng ký gia nhập đội ngũ chuyên gia của Bệnh viện Aura."
     }
   },
   "Auth": {
@@ -442,7 +442,7 @@
       },
       "registerForm": {
         "heading": "Tạo tài khoản",
-        "description": "Đăng ký với vai trò bệnh nhân để sử dụng dịch vụ sàng lọc võng mạc AuraEyes.",
+        "description": "Đăng ký tài khoản bệnh nhân để trải nghiệm dịch vụ y tế số tại Aura Digital Hospital.",
         "fullNameLabel": "Họ và tên",
         "fullNamePlaceholder": "Nguyen Van A",
         "emailLabel": "Địa chỉ email",
@@ -639,12 +639,12 @@
       }
     },
     "pendingApproval": {
-      "brandSubtitle": "Sàng lọc sức khỏe võng mạc",
-      "brandDescription": "Hệ thống sàng lọc sức khỏe võng mạc",
+      "brandSubtitle": "Bệnh viện Kỹ thuật số",
+      "brandDescription": "Nền tảng quản lý bệnh viện thông minh",
       "statusBadge": "Đang xác minh",
       "title": "Chào mừng bạn đến với AURA!",
       "primaryMessage": "Vui lòng đợi admin xác minh thông tin bạn cung cấp.",
-      "secondaryMessage": "Hệ thống đang xem xét các chứng chỉ hành nghề của bạn để đảm bảo tiêu chuẩn y tế và mở tính năng tư vấn.",
+      "secondaryMessage": "Hệ thống đang xem xét các chứng chỉ hành nghề của bạn để đảm bảo tiêu chuẩn y tế cao nhất trước khi bắt đầu làm việc.",
       "processingTime": "24-48 giờ làm việc",
       "closing": "Cảm ơn bạn đã kiên nhẫn",
       "infoBox": "Bạn sẽ nhận được email thông báo ngay khi hồ sơ được phê duyệt. Sau đó, hãy đăng nhập lại để bắt đầu nhận ca bệnh và tư vấn.",
@@ -1773,7 +1773,7 @@
       "degreeMissing": "Chưa cập nhật bằng cấp",
       "certificateLabel": "Chứng chỉ",
       "certificateMissing": "Chưa cập nhật chứng chỉ",
-      "experience": "Phòng khám AuraEyes, {{years}} năm kinh nghiệm",
+      "experience": "Bệnh viện Aura, {{years}} năm kinh nghiệm",
       "expertiseLabel": "Chuyên môn",
       "aboutLabel": "Giới thiệu",
       "bioMissing": "Chưa cập nhật phần giới thiệu",
@@ -1820,49 +1820,49 @@
     }
   },
   "About": {
-    "heroTitle": "Định hình tương lai sàng lọc võng mạc",
-    "heroDescription": "Aura Eyes kết hợp chuyên môn lâm sàng và AI y tế có trách nhiệm để cải thiện khả năng tiếp cận chẩn đoán sớm.",
+    "heroTitle": "Bệnh viện Kỹ thuật số Aura",
+    "heroDescription": "Aura Eyes kết hợp chuyên môn lâm sàng và AI y tế tiên tiến để mang đến trải nghiệm chăm sóc sức khỏe toàn diện, chính xác và dễ tiếp cận.",
     "values": {
       "badge": "Giá trị cốt lõi",
-      "title": "Xây dựng trên những nguyên tắc quan trọng",
-      "description": "Mọi quyết định của chúng tôi đều được dẫn dắt bởi cam kết về công bằng y tế, quyền riêng tư và tính toàn vẹn khoa học.",
+      "title": "Nền tảng của sự tin cậy",
+      "description": "Mọi quy trình tại Aura đều được dẫn dắt bởi cam kết về sự tận tâm, quyền riêng tư và công nghệ y tế hiện đại.",
       "cards": {
         "healthEquity": {
-          "title": "Tiếp cận y tế công bằng",
-          "description": "Đưa công nghệ sàng lọc võng mạc tiên tiến đến các cộng đồng thiếu nguồn lực trên toàn cầu."
+          "title": "Y tế cho mọi người",
+          "description": "Mang dịch vụ chăm sóc mắt kỹ thuật số chất lượng cao đến mọi cộng đồng, không phân biệt khoảng cách địa lý."
         },
         "privacyFirst": {
-          "title": "Ưu tiên quyền riêng tư",
-          "description": "Dữ liệu sức khỏe của bạn luôn được mã hóa, ẩn danh và không bao giờ bị thương mại hóa cho bên thứ ba."
+          "title": "Bảo mật tuyệt đối",
+          "description": "Dữ liệu y tế của bạn được bảo vệ bằng các tiêu chuẩn an ninh cao nhất, đảm bảo tính riêng tư trọn đời."
         },
         "openSource": {
-          "title": "Mã nguồn mở",
-          "description": "Thuật toán lõi được mở cho phản biện chuyên môn để đảm bảo minh bạch và xây dựng niềm tin."
+          "title": "Minh bạch công nghệ",
+          "description": "Quy trình chẩn đoán được kiểm chứng bởi các chuyên gia đầu ngành, xây dựng niềm tin dựa trên kết quả thực tế."
         },
         "collaboration": {
-          "title": "Hợp tác",
-          "description": "Đồng hành cùng các nhà nghiên cứu và bác sĩ lâm sàng trên toàn thế giới để nâng cao sức khỏe võng mạc."
+          "title": "Mạng lưới chuyên gia",
+          "description": "Kết nối đội ngũ bác sĩ nhãn khoa ưu tú để mang lại phác đồ điều trị tối ưu cho từng bệnh nhân."
         }
       }
     },
     "cta": {
-      "title": "Tham gia sứ mệnh của chúng tôi",
-      "description": "Dù bạn là đơn vị y tế, nhà nghiên cứu hay người ủng hộ y tế cộng đồng, luôn có chỗ cho bạn trong cộng đồng AURA.",
-      "primary": "Hợp tác cùng chúng tôi"
+      "title": "Trải nghiệm y tế tương lai",
+      "description": "Dù bạn là bệnh nhân cần tư vấn hay bác sĩ muốn tham gia mạng lưới, Aura luôn sẵn sàng đồng hành cùng bạn.",
+      "primary": "Khám phá ngay"
     }
   },
   "HowItWorks": {
     "hero": {
-      "badge": "Chẩn đoán hỗ trợ AI",
-      "titlePrefix": "Giải mã quy trình sàng lọc",
-      "titleSuffix": "của chúng tôi",
-      "description": "Nền tảng của chúng tôi ứng dụng thị giác máy tính để phân tích ảnh võng mạc, phát hiện sớm bất thường mạch máu. Quy trình không xâm lấn, bảo mật và cho kết quả nhanh.",
-      "processingStatus": "Trạng thái xử lý",
-      "analyzing": "Đang phân tích"
+      "badge": "Y tế Kỹ thuật số",
+      "titlePrefix": "Quy trình khám bệnh",
+      "titleSuffix": "thông minh",
+      "description": "Nền tảng của chúng tôi kết hợp trí tuệ nhân tạo và chuyên môn bác sĩ để cung cấp quy trình chẩn đoán võng mạc chính xác, nhanh chóng và không xâm lấn.",
+      "processingStatus": "Trạng thái chẩn đoán",
+      "analyzing": "Đang phân tích dữ liệu"
     },
     "process": {
-      "badge": "Hành trình",
-      "title": "Từ ảnh chụp đến kết luận chỉ trong vài giây",
+      "badge": "Quy trình",
+      "title": "Từ đăng ký đến kết quả chỉ trong vài bước",
       "description": "Toàn bộ quy trình được thiết kế liền mạch, bảo mật và tốc độ cao."
     },
     "steps": {
@@ -3850,12 +3850,14 @@
         "depositPaid": "Đã đặt cọc",
         "inProgress": "Đang tư vấn",
         "noShow": "Vắng mặt",
-        "pending": "Chờ xác nhận"
+        "pending": "Chờ xác nhận",
+        "waitingForPayment": "Chờ thanh toán cuối"
       },
       "summary": {
         "records": "{{count}} hồ sơ"
       },
       "toast": {
+        "depositRequiredBeforeCheckIn": "Vui lòng thu tiền cọc trước khi check-in.",
         "consultationStarted": "Đã bắt đầu tư vấn.",
         "invalidQr": "Mã QR check-in không hợp lệ.",
         "markedNoShow": "Đã đánh dấu vắng mặt.",
@@ -3864,6 +3866,30 @@
         "qrNotMatchAppointment": "Mã QR này không khớp lịch hẹn đã chọn.",
         "visitCompleted": "Đã hoàn tất lượt khám.",
         "noShowMarked": "Đã đánh dấu vắng mặt."
+      },
+      "actions": {
+        "collectCashDeposit": "Thu cọc tiền mặt",
+        "completeVisit": "Hoàn tất khám",
+        "newWalkIn": "Bệnh nhân mới",
+        "noShow": "Vắng mặt",
+        "payRemaining": "Thanh toán",
+        "scanQrCheckIn": "Quét QR check-in",
+        "startConsultation": "Bắt đầu tư vấn",
+        "markNoShow": "Vắng mặt"
+      },
+      "states": {
+        "billing": {
+          "pending": "Chờ thanh toán",
+          "partiallyPaid": "Đã cọc",
+          "fullyPaid": "Đã tất toán"
+        },
+        "loadingAppointments": "Đang tải lịch hẹn...",
+        "noAppointments": "Không có lịch hẹn trong ngày này.",
+        "terminal": {
+          "cancelled": "Lịch hẹn đã hủy",
+          "completed": "Đã hoàn tất lượt khám",
+          "noShow": "Đã đánh dấu vắng mặt"
+        }
       },
       "bento": {
         "totalBill": "Tổng hóa đơn",
@@ -5721,64 +5747,38 @@
       "subtitle": "Chọn ngôn ngữ ưu tiên cho cổng thông tin"
     }
   },
-  "ClinicStaff": {
-    "queue": {
-      "toast": {
-        "sentToDoctorSuccess": "Đã gửi hồ sơ cho bác sĩ.",
-        "sentToDoctorFailed": "Không thể gửi hồ sơ cho bác sĩ.",
-        "screeningRequired": "Vui lòng hoàn tất sàng lọc AI trước khi gửi bác sĩ.",
-        "loadDoctorsFailed": "Không thể tải danh sách bác sĩ.",
-        "copyDoctorConsultationLinkSuccess": "Đã sao chép liên kết tư vấn cho bác sĩ.",
-        "copyDoctorConsultationLinkFailed": "Không thể sao chép liên kết tư vấn."
-      },
-      "error": {
-        "title": "Lỗi tải hàng đợi",
-        "message": "Không thể lấy dữ liệu hàng đợi. Vui lòng thử lại."
-      },
-      "actions": {
-        "retry": "Thử lại",
-        "refresh": "Làm mới",
-        "fillErm": "Nhập ERM",
-        "createScreening": "Tạo sàng lọc",
-        "viewScreening": "Xem sàng lọc",
-        "sending": "Đang gửi...",
-        "sendToDoctor": "Gửi bác sĩ",
-        "copyDoctorLink": "Copy link bác sĩ"
-      },
-      "page": {
-        "title": "Hàng đợi phòng khám",
-        "subtitle": "Theo dõi luồng bệnh nhân và phối hợp điều trị"
-      },
-      "tabs": {
-        "all": "Tất cả"
-      },
-      "empty": {
-        "title": "Không có bệnh nhân trong hàng đợi",
-        "message": "Bệnh nhân sẽ xuất hiện ở đây sau khi check-in"
-      },
-      "table": {
-        "patient": "Bệnh nhân",
-        "checkedIn": "Đã check-in",
-        "status": "Trạng thái",
-        "screening": "Sàng lọc AI",
-        "doctor": "Bác sĩ",
-        "action": "Thao tác"
-      },
-      "states": {
-        "awaitingDoctor": "Chờ bác sĩ",
-        "inConsultation": "Đang tư vấn",
-        "completed": "Xong"
-      },
-      "sendDoctorModal": {
-        "title": "Gửi hồ sơ cho bác sĩ",
-        "doctorLabel": "Bác sĩ hiện có",
-        "loadingDoctors": "Đang tìm bác sĩ...",
-        "selectDoctor": "Chọn bác sĩ tư vấn",
-        "noDoctors": "Không tìm thấy bác sĩ nào hiện có."
-      }
+  "ClinicStaffDashboard": {
+    "greetings": {
+      "morning": "Chào buổi sáng",
+      "afternoon": "Chào buổi chiều",
+      "evening": "Chào buổi tối"
     },
-    "common": {
-      "close": "Đóng"
+    "stats": {
+      "todayAppointments": "Lịch hẹn hôm nay",
+      "scheduled": "Đã lên lịch",
+      "patientsCheckedIn": "Đã check-in",
+      "today": "Hôm nay",
+      "pendingTasks": "Việc cần làm",
+      "requiresAction": "Cần xử lý",
+      "completedToday": "Đã hoàn tất"
+    },
+    "subtitle": "Cổng AURA Clinic • Tổng quan hoạt động thời gian thực",
+    "activity": {
+      "title": "Hoạt động gần đây",
+      "subtitle": "Check-in bệnh nhân và cập nhật lịch hẹn trực tiếp",
+      "empty": "Chưa có hoạt động nào. Chúc bạn một ngày làm việc hiệu quả!"
+    },
+    "quickActions": {
+      "title": "Thao tác nhanh",
+      "subtitle": "Các tác vụ phổ biến trong ngày",
+      "newAppointment": "Tạo lịch hẹn",
+      "newAppointmentDesc": "Lên lịch hẹn cho bệnh nhân mới",
+      "registerPatient": "Đăng ký bệnh nhân",
+      "registerPatientDesc": "Thêm bệnh nhân mới vào hệ thống",
+      "viewSchedule": "Xem lịch biểu",
+      "viewScheduleDesc": "Xem toàn bộ lịch trình hôm nay",
+      "cashierDesk": "Quầy thu ngân",
+      "cashierDeskDesc": "Kiểm tra các lượt khám đã hoàn tất và thu phí"
     }
   },
   "Cashier": {
@@ -6224,6 +6224,58 @@
       }
     },
     "queue": {
+      "toast": {
+        "sentToDoctorSuccess": "Đã gửi hồ sơ cho bác sĩ.",
+        "sentToDoctorFailed": "Không thể gửi hồ sơ cho bác sĩ.",
+        "missingBasicInfo": "Thiếu thông tin bệnh nhân cơ bản.",
+        "screeningRequired": "Vui lòng hoàn tất sàng lọc AI trước khi gửi bác sĩ.",
+        "loadDoctorsFailed": "Không thể tải danh sách bác sĩ.",
+        "copyDoctorConsultationLinkSuccess": "Đã sao chép liên kết tư vấn cho bác sĩ.",
+        "copyDoctorConsultationLinkFailed": "Không thể sao chép liên kết tư vấn."
+      },
+      "error": {
+        "title": "Lỗi tải hàng đợi",
+        "message": "Không thể lấy dữ liệu hàng đợi. Vui lòng thử lại."
+      },
+      "actions": {
+        "retry": "Thử lại",
+        "refresh": "Làm mới",
+        "fillErm": "Nhập ERM",
+        "createScreening": "Tạo sàng lọc",
+        "viewScreening": "Xem sàng lọc",
+        "sending": "Đang gửi...",
+        "sendToDoctor": "Gửi bác sĩ",
+        "copyDoctorLink": "Copy link bác sĩ"
+      },
+      "page": {
+        "title": "Hàng đợi phòng khám",
+        "subtitle": "Theo dõi luồng bệnh nhân và phối hợp điều trị"
+      },
+      "tabs": {
+        "all": "Tất cả"
+      },
+      "empty": {
+        "title": "Không có bệnh nhân trong hàng đợi",
+        "message": "Bệnh nhân sẽ xuất hiện ở đây sau khi check-in"
+      },
+      "table": {
+        "patient": "Bệnh nhân",
+        "checkedIn": "Đã check-in",
+        "status": "Trạng thái",
+        "screening": "Sàng lọc AI",
+        "doctor": "Bác sĩ",
+        "action": "Thao tác"
+      },
+      "sendDoctorModal": {
+        "title": "Gửi hồ sơ cho bác sĩ",
+        "doctorLabel": "Bác sĩ hiện có",
+        "loadingDoctors": "Đang tìm bác sĩ...",
+        "selectDoctor": "Chọn bác sĩ tư vấn",
+        "noDoctors": "Không tìm thấy bác sĩ nào hiện có.",
+        "notesLabel": "Ghi chú",
+        "notesPlaceholder": "Thêm ghi chú cho bác sĩ (tuỳ chọn)",
+        "confirm": "Xác nhận gửi"
+      },
       "doctor": {
         "yearsExp": "{{count}} năm kinh nghiệm",
         "notAssigned": "Chưa phân công"
@@ -6233,12 +6285,15 @@
         "pending": "Đang chờ"
       },
       "states": {
-        "checkedIn": "Đã tiếp nhận",
+        "checkedIn": "Đã check-in",
         "screeningPending": "Chờ sàng lọc",
         "aiCompleted": "AI đã hoàn thành",
         "sentToDoctor": "Đã chuyển bác sĩ",
         "consultationInProgress": "Đang khám",
-        "finalized": "Đã hoàn tất"
+        "finalized": "Chờ thanh toán cuối",
+        "awaitingDoctor": "Chờ bác sĩ",
+        "inConsultation": "Đang tư vấn",
+        "completed": "Xong"
       }
     },
     "patients": {

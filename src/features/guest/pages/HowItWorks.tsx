@@ -267,42 +267,42 @@ const HowItWorksPage = () => {
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <SeoMeta
-        title="Quy trình sàng lọc võng mạc AI tại AURA Digital Clinic"
-        description="Tìm hiểu quy trình 4 bước sàng lọc sức khỏe võng mạc bằng AI tại AURA: Đặt lịch trực tuyến, thăm khám tại cơ sở, phân tích AI và xem kết quả bệnh án điện tử."
-        canonical="https://web.auraeyes.site/vi/how-it-works"
+        title="Quy trình chăm sóc sức khỏe tại Aura Digital Hospital"
+        description="Tìm hiểu quy trình khám bệnh hiện đại tại Aura: từ đặt lịch khám, phân tích AI đến tư vấn chuyên sâu cùng bác sĩ nhãn khoa hàng đầu."
+        canonical="https://web.auraeyes.site/en/how-it-works"
         structuredData={{
           '@context': 'https://schema.org',
           '@type': 'HowTo',
-          name: 'Quy trình sàng lọc võng mạc AURA',
+          name: 'Quy trình khám bệnh tại Aura Digital Hospital',
           description:
-            'Quy trình 4 bước chăm sóc sức khỏe võng mạc ứng dụng công nghệ AI.',
+            'Quy trình 4 bước chăm sóc sức khỏe võng mạc hiện đại kết hợp AI.',
           step: [
             {
               '@type': 'HowToStep',
               position: 1,
-              name: 'Đặt lịch trực tuyến',
-              text: 'Lựa chọn bác sĩ và khung giờ khám phù hợp ngay trên website.',
+              name: 'Đặt lịch khám',
+              text: 'Bệnh nhân dễ dàng đặt lịch hẹn trực tuyến với bác sĩ chuyên khoa.',
             },
             {
               '@type': 'HowToStep',
               position: 2,
-              name: 'Thăm khám & Chụp ảnh',
-              text: 'Đến cơ sở y tế để được kỹ thuật viên chụp ảnh đáy mắt chuyên dụng.',
+              name: 'Khám lâm sàng',
+              text: 'Thực hiện các bước kiểm tra mắt với thiết bị hiện đại tại bệnh viện hoặc phòng khám.',
             },
             {
               '@type': 'HowToStep',
               position: 3,
               name: 'Phân tích AI',
-              text: 'Hệ thống AI phân tích mạch máu võng mạc và bác sĩ tư vấn trực tiếp.',
+              text: 'Hệ thống AI tiên tiến phân tích dữ liệu hình ảnh để hỗ trợ bác sĩ chẩn đoán.',
             },
             {
               '@type': 'HowToStep',
               position: 4,
-              name: 'Xem hồ sơ trực tuyến',
-              text: 'Tra cứu bệnh án điện tử và kết quả phân tích mọi lúc mọi nơi.',
+              name: 'Tư vấn chuyên sâu',
+              text: 'Bác sĩ nhãn khoa trực tiếp tư vấn phác đồ điều trị dựa trên kết quả phân tích.',
             },
           ],
-          totalTime: 'PT30M',
+          totalTime: 'PT15M',
         }}
       />
       <Header />

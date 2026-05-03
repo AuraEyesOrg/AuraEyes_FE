@@ -129,6 +129,11 @@ export const mapClinicStaffErrorMessage = (error: unknown): string => {
 
   return mapByKeywords(raw, [
     {
+      pattern: /DepositNotPaid/i,
+      mappedMessage:
+        'Chưa thu tiền cọc. Vui lòng thu cọc tiền mặt hoặc xác nhận thanh toán trước khi check-in.',
+    },
+    {
       pattern: /(appointment\s+not\s+found|APPOINTMENT_NOT_FOUND)/i,
       mappedMessage: 'Không tìm thấy lịch khám.',
     },

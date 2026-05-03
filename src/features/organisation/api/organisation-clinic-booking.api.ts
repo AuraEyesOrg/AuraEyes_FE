@@ -24,6 +24,17 @@ export interface OrganisationClinicAppointmentDto {
     | 'Completed'
     | 'Cancelled'
     | 'NoShow';
+  /** PatientVisit status when a visit exists */
+  visitStatus?: string | null;
+  /** Unified clinic pipeline step (matches queue flowState) */
+  flowState?:
+    | 'CheckedIn'
+    | 'ScreeningPending'
+    | 'AICompleted'
+    | 'SentToDoctor'
+    | 'ConsultationInProgress'
+    | 'Finalized'
+    | string;
   createdAt?: string;
   ophthalId?: string;
   ophthalFullName?: string | null;

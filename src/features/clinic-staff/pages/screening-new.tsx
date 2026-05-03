@@ -195,11 +195,16 @@ export default function ClinicStaffScreeningNewPage() {
         patientId: selectedPatient.id,
         retinalImages,
       });
-      const sessionData = unwrapApiData<{ screeningId: string }>(
+      // BE trả data là string UUID trực tiếp (không phải object { screeningId })
+      const rawSessionData = unwrapApiData<string | { screeningId: string }>(
         sessionResponse
       );
+      const screeningId =
+        typeof rawSessionData === 'string'
+          ? rawSessionData
+          : rawSessionData?.screeningId;
 
-      if (!sessionData?.screeningId) {
+      if (!screeningId) {
         throw new Error(
           t(
             'ClinicStaff.screeningNew.errors.createFailed',
@@ -210,7 +215,7 @@ export default function ClinicStaffScreeningNewPage() {
 
       navigate(
         resolvePathWithLocale(
-          `/clinic-staff/screenings/result?id=${sessionData.screeningId}`
+          `/clinic-staff/screenings/result?id=${screeningId}`
         ),
         {
           state: {
