@@ -331,715 +331,730 @@ const WelcomeOnboardingPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#f8fafc] dark:bg-[#0f172a] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Decorations */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-teal-500/10 rounded-full blur-[120px] pointer-events-none" />
+    <>
+      <style>{`
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+          display: none !important;
+        }
+        input[type="password"]::-webkit-credentials-auto-fill-button {
+          visibility: hidden !important;
+          display: none !important;
+        }
+      `}</style>
+      <div className="min-h-screen w-full bg-[#f8fafc] dark:bg-[#0f172a] flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Background Decorations */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-teal-500/10 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-3xl bg-white dark:bg-[#1e293b] rounded-3xl shadow-xl border border-white/20 overflow-hidden relative z-10">
-        {/* Progress Bar */}
-        <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 flex">
-          {filteredSteps.map((_, idx) => (
-            <div
-              key={idx}
-              className={`h-full transition-all duration-500 ease-out ${
-                idx <= currentStep ? 'bg-emerald-500' : 'bg-transparent'
-              }`}
-              style={{ width: `${100 / filteredSteps.length}%` }}
-            />
-          ))}
-        </div>
-
-        <div className="p-6 sm:p-10">
-          {/* Header */}
-          <div className="flex flex-col items-center text-center mb-6">
-            <AuraLogo size="md" className="mb-4" />
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1 whitespace-nowrap">
-              {t(
-                'AuthPages.onboarding.title',
-                'Welcome to AURA Digital Clinic'
-              )}
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-              {t(
-                'AuthPages.onboarding.subtitle_unified',
-                'Để bảo mật tài khoản, vui lòng đổi mật khẩu và hoàn thiện hồ sơ chuyên môn của bạn.'
-              )}
-            </p>
-          </div>
-
-          {/* Stepper Icons */}
-          <div className="flex items-center justify-center gap-4 mb-8">
-            {filteredSteps.map((step, idx) => (
-              <div key={step.id} className="flex items-center">
-                <div
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                    idx === currentStep
-                      ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
-                      : idx < currentStep
-                        ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
-                        : 'bg-gray-100 text-gray-400 dark:bg-gray-800'
-                  }`}
-                >
-                  <step.icon size={22} />
-                </div>
-                {idx < filteredSteps.length - 1 && (
-                  <div
-                    className={`w-8 h-0.5 ${idx < currentStep ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700'}`}
-                  />
-                )}
-              </div>
+        <div className="w-full max-w-3xl bg-white dark:bg-[#1e293b] rounded-3xl shadow-xl border border-white/20 overflow-hidden relative z-10">
+          {/* Progress Bar */}
+          <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 flex">
+            {filteredSteps.map((_, idx) => (
+              <div
+                key={idx}
+                className={`h-full transition-all duration-500 ease-out ${
+                  idx <= currentStep ? 'bg-cyan-600' : 'bg-transparent'
+                }`}
+                style={{ width: `${100 / filteredSteps.length}%` }}
+              />
             ))}
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <AnimatePresence mode="wait">
-              {currentStep === 0 && (
-                <motion.div
-                  key="step-security"
-                  variants={stepVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="space-y-6"
-                >
-                  <div className="space-y-3">
-                    <div className="space-y-1">
-                      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                        <Lock size={16} />{' '}
-                        {t(
-                          'AuthPages.onboarding.form.currentPassword',
-                          'Current Password'
-                        )}
-                      </label>
-                      <div className="relative group">
-                        <input
-                          {...register('currentPassword', {
-                            required: t(
-                              'AuthPages.onboarding.validation.currentPasswordRequired',
-                              'Current password is required'
-                            ),
-                          })}
-                          type={showCurrentPassword ? 'text' : 'password'}
-                          className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 transition-all outline-none"
-                          placeholder="••••••••"
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowCurrentPassword(!showCurrentPassword)
-                          }
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-500 transition-colors"
-                        >
-                          {showCurrentPassword ? (
-                            <EyeOff size={18} />
-                          ) : (
-                            <Eye size={18} />
-                          )}
-                        </button>
-                      </div>
-                      {errors.currentPassword && (
-                        <p className="text-xs text-red-500 ml-1">
-                          {errors.currentPassword.message}
-                        </p>
-                      )}
-                    </div>
+          <div className="p-6 sm:p-10">
+            {/* Header */}
+            <div className="flex flex-col items-center text-center mb-6">
+              <AuraLogo size="md" className="mb-4" />
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1 whitespace-nowrap">
+                {t(
+                  'AuthPages.onboarding.title',
+                  'Welcome to AURA Digital Clinic'
+                )}
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                {t(
+                  'AuthPages.onboarding.subtitle_unified',
+                  'Để bảo mật tài khoản, vui lòng đổi mật khẩu và hoàn thiện hồ sơ chuyên môn của bạn.'
+                )}
+              </p>
+            </div>
 
-                    <div className="space-y-1">
-                      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                        <Lock size={16} />{' '}
-                        {t(
-                          'AuthPages.onboarding.form.newPassword',
-                          'New Password'
-                        )}
-                      </label>
-                      <div className="relative group">
-                        <input
-                          {...register('newPassword', {
-                            required: t(
-                              'AuthPages.onboarding.validation.passwordRequired',
-                              'Password is required'
-                            ),
-                            minLength: {
-                              value: 8,
-                              message: t(
-                                'AuthPages.onboarding.validation.passwordMin',
-                                'Minimum 8 characters'
-                              ),
-                            },
-                          })}
-                          type={showPassword ? 'text' : 'password'}
-                          className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 transition-all outline-none"
-                          placeholder="••••••••"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-500 transition-colors"
-                        >
-                          {showPassword ? (
-                            <EyeOff size={18} />
-                          ) : (
-                            <Eye size={18} />
-                          )}
-                        </button>
-                      </div>
-                      {errors.newPassword && (
-                        <p className="text-xs text-red-500 ml-1">
-                          {errors.newPassword.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                        <CheckCircle size={16} />{' '}
-                        {t(
-                          'AuthPages.onboarding.form.confirmPassword',
-                          'Confirm New Password'
-                        )}
-                      </label>
-                      <div className="relative group">
-                        <input
-                          {...register('confirmPassword', {
-                            required: t(
-                              'AuthPages.onboarding.validation.confirmPasswordRequired',
-                              'Please confirm your password'
-                            ),
-                            validate: (val) =>
-                              val === watch('newPassword') ||
-                              t(
-                                'AuthPages.onboarding.validation.passwordMismatch',
-                                'Passwords do not match'
-                              ),
-                          })}
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 transition-all outline-none"
-                          placeholder="••••••••"
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-500 transition-colors"
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff size={18} />
-                          ) : (
-                            <Eye size={18} />
-                          )}
-                        </button>
-                      </div>
-                      {errors.confirmPassword && (
-                        <p className="text-xs text-red-500 ml-1">
-                          {errors.confirmPassword.message}
-                        </p>
-                      )}
-                    </div>
+            {/* Stepper Icons */}
+            <div className="flex items-center justify-center gap-4 mb-8">
+              {filteredSteps.map((step, idx) => (
+                <div key={step.id} className="flex items-center">
+                  <div
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                      idx === currentStep
+                        ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-600/20'
+                        : idx < currentStep
+                          ? 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400'
+                          : 'bg-gray-100 text-gray-400 dark:bg-gray-800'
+                    }`}
+                  >
+                    <step.icon size={22} />
                   </div>
-                </motion.div>
-              )}
+                  {idx < filteredSteps.length - 1 && (
+                    <div
+                      className={`w-8 h-0.5 ${idx < currentStep ? 'bg-cyan-500' : 'bg-gray-200 dark:bg-gray-700'}`}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
 
-              {currentStep === 1 && (
-                <motion.div
-                  key="step-personal"
-                  variants={stepVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="space-y-6"
-                >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-                    <div className="space-y-1 sm:col-span-2">
-                      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                        <User size={16} />{' '}
-                        {t('AuthPages.onboarding.form.fullName', 'Full Name')}
-                      </label>
-                      <input
-                        {...register('fullName', { required: true })}
-                        className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 transition-all outline-none"
-                        placeholder="Dr. John Doe"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                        <Phone size={16} />{' '}
-                        {t('AuthPages.onboarding.form.phone', 'Phone Number')}
-                      </label>
-                      <input
-                        {...register('phone', { required: true })}
-                        className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 transition-all outline-none"
-                        placeholder="+84 123 456 789"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                        <IdCard size={16} />{' '}
-                        {t(
-                          'AuthPages.onboarding.form.citizenId',
-                          'Citizen ID (CCCD)'
-                        )}
-                      </label>
-                      <input
-                        {...register('citizenId', { required: true })}
-                        className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 transition-all outline-none"
-                        placeholder="012345678901"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                        <Calendar size={16} />{' '}
-                        {t('AuthPages.onboarding.form.dob', 'Date of Birth')}
-                      </label>
-                      <input
-                        {...register('dateOfBirth', { required: true })}
-                        type="date"
-                        className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 transition-all outline-none"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                        <CircleUser size={16} />{' '}
-                        {t('AuthPages.onboarding.form.gender', 'Gender')}
-                      </label>
-                      <div className="flex gap-2">
-                        {[
-                          { value: 1, label: t('Shared.gender.male', 'Male') },
-                          {
-                            value: 2,
-                            label: t('Shared.gender.female', 'Female'),
-                          },
-                          {
-                            value: 3,
-                            label: t('Shared.gender.other', 'Other'),
-                          },
-                        ].map((g) => (
-                          <button
-                            key={g.value}
-                            type="button"
-                            onClick={() => setValue('gender', g.value as any)}
-                            className={`flex-1 py-2 px-3 rounded-xl border text-sm font-medium transition-all ${
-                              Number(selectedGender) === g.value
-                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-md'
-                                : 'bg-gray-50 dark:bg-[#161e2b] border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-emerald-500/50'
-                            }`}
-                          >
-                            {g.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-1 sm:col-span-2">
-                      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                        <Building2 size={16} />{' '}
-                        {t(
-                          'AuthPages.onboarding.form.address',
-                          'Primary Address'
-                        )}
-                      </label>
-                      <input
-                        {...register('address', { required: true })}
-                        className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 transition-all outline-none"
-                        placeholder="123 Street, District 1, HCMC"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {currentStep === 2 && (
-                <motion.div
-                  key="step-professional"
-                  variants={stepVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="space-y-4"
-                >
-                  {isOphthalmologist ? (
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <AnimatePresence mode="wait">
+                {currentStep === 0 && (
+                  <motion.div
+                    key="step-security"
+                    variants={stepVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="space-y-6"
+                  >
+                    <div className="space-y-3">
                       <div className="space-y-1">
                         <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                          <Heart size={16} className="text-pink-500" />{' '}
+                          <Lock size={16} />{' '}
                           {t(
-                            'AuthPages.onboarding.form.bio',
-                            'Professional Bio'
+                            'AuthPages.onboarding.form.currentPassword',
+                            'Current Password'
                           )}
                         </label>
-                        <textarea
-                          {...register('bio', { required: true })}
-                          className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 focus:ring-2 focus:ring-emerald-500 transition-all outline-none resize-none text-sm"
-                          placeholder="Experienced ophthalmologist specializing in..."
-                          rows={2}
+                        <div className="relative group">
+                          <input
+                            {...register('currentPassword', {
+                              required: t(
+                                'AuthPages.onboarding.validation.currentPasswordRequired',
+                                'Current password is required'
+                              ),
+                            })}
+                            type={showCurrentPassword ? 'text' : 'password'}
+                            className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-cyan-500 transition-all outline-none"
+                            placeholder="••••••••"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowCurrentPassword(!showCurrentPassword)
+                            }
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cyan-600 transition-colors"
+                          >
+                            {showCurrentPassword ? (
+                              <EyeOff size={18} />
+                            ) : (
+                              <Eye size={18} />
+                            )}
+                          </button>
+                        </div>
+                        {errors.currentPassword && (
+                          <p className="text-xs text-red-500 ml-1">
+                            {errors.currentPassword.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <Lock size={16} />{' '}
+                          {t(
+                            'AuthPages.onboarding.form.newPassword',
+                            'New Password'
+                          )}
+                        </label>
+                        <div className="relative group">
+                          <input
+                            {...register('newPassword', {
+                              required: t(
+                                'AuthPages.onboarding.validation.passwordRequired',
+                                'Password is required'
+                              ),
+                              minLength: {
+                                value: 8,
+                                message: t(
+                                  'AuthPages.onboarding.validation.passwordMin',
+                                  'Minimum 8 characters'
+                                ),
+                              },
+                            })}
+                            type={showPassword ? 'text' : 'password'}
+                            className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-cyan-500 transition-all outline-none"
+                            placeholder="••••••••"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cyan-600 transition-colors"
+                          >
+                            {showPassword ? (
+                              <EyeOff size={18} />
+                            ) : (
+                              <Eye size={18} />
+                            )}
+                          </button>
+                        </div>
+                        {errors.newPassword && (
+                          <p className="text-xs text-red-500 ml-1">
+                            {errors.newPassword.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <CheckCircle size={16} />{' '}
+                          {t(
+                            'AuthPages.onboarding.form.confirmPassword',
+                            'Confirm New Password'
+                          )}
+                        </label>
+                        <div className="relative group">
+                          <input
+                            {...register('confirmPassword', {
+                              required: t(
+                                'AuthPages.onboarding.validation.confirmPasswordRequired',
+                                'Please confirm your password'
+                              ),
+                              validate: (val) =>
+                                val === watch('newPassword') ||
+                                t(
+                                  'AuthPages.onboarding.validation.passwordMismatch',
+                                  'Passwords do not match'
+                                ),
+                            })}
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-cyan-500 transition-all outline-none"
+                            placeholder="••••••••"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cyan-600 transition-colors"
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff size={18} />
+                            ) : (
+                              <Eye size={18} />
+                            )}
+                          </button>
+                        </div>
+                        {errors.confirmPassword && (
+                          <p className="text-xs text-red-500 ml-1">
+                            {errors.confirmPassword.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {currentStep === 1 && (
+                  <motion.div
+                    key="step-personal"
+                    variants={stepVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="space-y-6"
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                      <div className="space-y-1 sm:col-span-2">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <User size={16} />{' '}
+                          {t('AuthPages.onboarding.form.fullName', 'Full Name')}
+                        </label>
+                        <input
+                          {...register('fullName', { required: true })}
+                          className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-cyan-500 transition-all outline-none"
+                          placeholder="Dr. John Doe"
                         />
                       </div>
 
-                      {/* Degrees */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-1">
-                          <label className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            <Award size={16} className="text-emerald-500" />{' '}
-                            {t(
-                              'AuthPages.onboarding.form.degrees',
-                              'Medical Degrees'
-                            )}
-                          </label>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              appendDegree({
-                                name: '',
-                                degreeLevel: 3,
-                                issuingInstitution: '',
-                                issuedDate: '',
-                              })
-                            }
-                            className="text-xs font-bold text-emerald-500 hover:text-emerald-600 flex items-center gap-1 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-lg transition-colors"
-                          >
-                            <Plus size={14} /> Add
-                          </button>
-                        </div>
-
-                        {degreeFields.map((field, index) => (
-                          <div
-                            key={field.id}
-                            className="relative bg-gray-50 dark:bg-gray-800/40 p-3 rounded-xl border border-gray-100 dark:border-gray-700 space-y-3"
-                          >
-                            <button
-                              type="button"
-                              onClick={() => removeDegree(index)}
-                              className="absolute top-2 right-2 text-red-400 hover:text-red-500"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                  Name
-                                </label>
-                                <input
-                                  {...register(
-                                    `degrees.${index}.name` as const,
-                                    { required: true }
-                                  )}
-                                  className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-emerald-500"
-                                  placeholder="MBBS, MD..."
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                  Level
-                                </label>
-                                <select
-                                  {...register(
-                                    `degrees.${index}.degreeLevel` as const,
-                                    { required: true }
-                                  )}
-                                  className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
-                                >
-                                  {DEGREE_LEVEL_OPTIONS.map((opt) => (
-                                    <option key={opt.value} value={opt.value}>
-                                      {opt.label}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                  Institution
-                                </label>
-                                <input
-                                  {...register(
-                                    `degrees.${index}.issuingInstitution` as const,
-                                    { required: true }
-                                  )}
-                                  className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
-                                  placeholder="Medical University..."
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                  Issued Date
-                                </label>
-                                <input
-                                  type="date"
-                                  {...register(
-                                    `degrees.${index}.issuedDate` as const,
-                                    { required: true }
-                                  )}
-                                  className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                  Document
-                                </label>
-                                <input
-                                  type="file"
-                                  accept=".pdf,.jpg,.jpeg,.png,.webp"
-                                  {...register(
-                                    `degrees.${index}.file` as const
-                                  )}
-                                  className="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-emerald-50 file:text-emerald-700"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="space-y-1">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <Phone size={16} />{' '}
+                          {t('AuthPages.onboarding.form.phone', 'Phone Number')}
+                        </label>
+                        <input
+                          {...register('phone', { required: true })}
+                          className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-cyan-500 transition-all outline-none"
+                          placeholder="+84 123 456 789"
+                        />
                       </div>
 
-                      {/* Certificates */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-1">
-                          <label className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            <FileText size={16} className="text-blue-500" />{' '}
-                            {t(
-                              'AuthPages.onboarding.form.certificates',
-                              'Licenses & Certificates'
-                            )}
-                          </label>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              appendCertificate({
-                                name: '',
-                                licenseNumber: '',
-                                issuingAuthority: '',
-                                scopeOfPractice: '',
-                                issuedDate: '',
-                                expiryDate: '',
-                              })
-                            }
-                            className="text-xs font-bold text-blue-500 hover:text-blue-600 flex items-center gap-1 bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded-lg transition-colors"
-                          >
-                            <Plus size={14} /> Add
-                          </button>
-                        </div>
+                      <div className="space-y-1">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <IdCard size={16} />{' '}
+                          {t(
+                            'AuthPages.onboarding.form.citizenId',
+                            'Citizen ID (CCCD)'
+                          )}
+                        </label>
+                        <input
+                          {...register('citizenId', { required: true })}
+                          className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-cyan-500 transition-all outline-none"
+                          placeholder="012345678901"
+                        />
+                      </div>
 
-                        {certificateFields.map((field, index) => (
-                          <div
-                            key={field.id}
-                            className="relative bg-gray-50 dark:bg-gray-800/40 p-3 rounded-xl border border-gray-100 dark:border-gray-700 space-y-3"
-                          >
+                      <div className="space-y-1">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <Calendar size={16} />{' '}
+                          {t('AuthPages.onboarding.form.dob', 'Date of Birth')}
+                        </label>
+                        <input
+                          {...register('dateOfBirth', { required: true })}
+                          type="date"
+                          className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-cyan-500 transition-all outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <CircleUser size={16} />{' '}
+                          {t('AuthPages.onboarding.form.gender', 'Gender')}
+                        </label>
+                        <div className="flex gap-2">
+                          {[
+                            {
+                              value: 1,
+                              label: t('Shared.gender.male', 'Male'),
+                            },
+                            {
+                              value: 2,
+                              label: t('Shared.gender.female', 'Female'),
+                            },
+                            {
+                              value: 3,
+                              label: t('Shared.gender.other', 'Other'),
+                            },
+                          ].map((g) => (
                             <button
+                              key={g.value}
                               type="button"
-                              onClick={() => removeCertificate(index)}
-                              className="absolute top-2 right-2 text-red-400 hover:text-red-500"
+                              onClick={() => setValue('gender', g.value as any)}
+                              className={`flex-1 py-2 px-3 rounded-xl border text-sm font-medium transition-all ${
+                                Number(selectedGender) === g.value
+                                  ? 'bg-cyan-500 text-white shadow-md'
+                                  : 'bg-gray-50 dark:bg-[#161e2b] border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-cyan-600/50'
+                              }`}
                             >
-                              <Trash2 size={14} />
+                              {g.label}
                             </button>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                  Name
-                                </label>
-                                <input
-                                  {...register(
-                                    `certificates.${index}.name` as const,
-                                    { required: true }
-                                  )}
-                                  className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-blue-500"
-                                  placeholder="Medical License..."
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                  License Number
-                                </label>
-                                <input
-                                  {...register(
-                                    `certificates.${index}.licenseNumber` as const,
-                                    { required: true }
-                                  )}
-                                  className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
-                                  placeholder="GPHN-..."
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                  Authority
-                                </label>
-                                <input
-                                  {...register(
-                                    `certificates.${index}.issuingAuthority` as const,
-                                    { required: true }
-                                  )}
-                                  className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
-                                  placeholder="MOH, Health Dept..."
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                  Scope of Practice
-                                </label>
-                                <input
-                                  {...register(
-                                    `certificates.${index}.scopeOfPractice` as const
-                                  )}
-                                  className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
-                                  placeholder="Ophthalmology..."
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                  Issued Date
-                                </label>
-                                <input
-                                  type="date"
-                                  {...register(
-                                    `certificates.${index}.issuedDate` as const,
-                                    { required: true }
-                                  )}
-                                  className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                  Expiration Date
-                                </label>
-                                <input
-                                  type="date"
-                                  {...register(
-                                    `certificates.${index}.expiryDate` as const,
-                                    { required: true }
-                                  )}
-                                  className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                  Document
-                                </label>
-                                <input
-                                  type="file"
-                                  accept=".pdf,.jpg,.jpeg,.png,.webp"
-                                  {...register(
-                                    `certificates.${index}.file` as const
-                                  )}
-                                  className="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-blue-50 file:text-blue-700"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 sm:col-span-2">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <Building2 size={16} />{' '}
+                          {t(
+                            'AuthPages.onboarding.form.address',
+                            'Primary Address'
+                          )}
+                        </label>
+                        <input
+                          {...register('address', { required: true })}
+                          className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-cyan-500 transition-all outline-none"
+                          placeholder="123 Street, District 1, HCMC"
+                        />
                       </div>
                     </div>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  </motion.div>
+                )}
+
+                {currentStep === 2 && (
+                  <motion.div
+                    key="step-professional"
+                    variants={stepVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="space-y-4"
+                  >
+                    {isOphthalmologist ? (
+                      <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                         <div className="space-y-1">
                           <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                            <Building2 size={16} />{' '}
+                            <Heart size={16} className="text-pink-500" />{' '}
                             {t(
-                              'AuthPages.onboarding.form.department',
-                              'Department'
+                              'AuthPages.onboarding.form.bio',
+                              'Professional Bio'
                             )}
                           </label>
-                          <input
-                            {...register('department', { required: true })}
-                            className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 transition-all outline-none"
-                            placeholder="Reception / Pharmacy"
+                          <textarea
+                            {...register('bio', { required: true })}
+                            className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 focus:ring-2 focus:ring-cyan-500 transition-all outline-none resize-none text-sm"
+                            placeholder="Experienced ophthalmologist specializing in..."
+                            rows={2}
                           />
                         </div>
 
-                        <div className="space-y-1">
-                          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                            <IdCard size={16} />{' '}
-                            {t(
-                              'AuthPages.onboarding.form.employeeCode',
-                              'Employee Code'
-                            )}
-                          </label>
-                          <input
-                            {...register('employeeCode', { required: true })}
-                            className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 transition-all outline-none"
-                            placeholder="CS-12345"
-                          />
+                        {/* Degrees */}
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-1">
+                            <label className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                              <Award size={16} className="text-cyan-600" />{' '}
+                              {t(
+                                'AuthPages.onboarding.form.degrees',
+                                'Medical Degrees'
+                              )}
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                appendDegree({
+                                  name: '',
+                                  degreeLevel: 3,
+                                  issuingInstitution: '',
+                                  issuedDate: '',
+                                })
+                              }
+                              className="text-xs font-bold text-cyan-600 hover:text-cyan-600 flex items-center gap-1 bg-cyan-50 dark:bg-cyan-500/10 px-2 py-1 rounded-lg transition-colors"
+                            >
+                              <Plus size={14} /> Add
+                            </button>
+                          </div>
+
+                          {degreeFields.map((field, index) => (
+                            <div
+                              key={field.id}
+                              className="relative bg-gray-50 dark:bg-gray-800/40 p-3 rounded-xl border border-gray-100 dark:border-gray-700 space-y-3"
+                            >
+                              <button
+                                type="button"
+                                onClick={() => removeDegree(index)}
+                                className="absolute top-2 right-2 text-red-400 hover:text-red-500"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                    Name
+                                  </label>
+                                  <input
+                                    {...register(
+                                      `degrees.${index}.name` as const,
+                                      { required: true }
+                                    )}
+                                    className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-cyan-500"
+                                    placeholder="MBBS, MD..."
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                    Level
+                                  </label>
+                                  <select
+                                    {...register(
+                                      `degrees.${index}.degreeLevel` as const,
+                                      { required: true }
+                                    )}
+                                    className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
+                                  >
+                                    {DEGREE_LEVEL_OPTIONS.map((opt) => (
+                                      <option key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                    Institution
+                                  </label>
+                                  <input
+                                    {...register(
+                                      `degrees.${index}.issuingInstitution` as const,
+                                      { required: true }
+                                    )}
+                                    className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
+                                    placeholder="Medical University..."
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                    Issued Date
+                                  </label>
+                                  <input
+                                    type="date"
+                                    {...register(
+                                      `degrees.${index}.issuedDate` as const,
+                                      { required: true }
+                                    )}
+                                    className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                    Document
+                                  </label>
+                                  <input
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                    {...register(
+                                      `degrees.${index}.file` as const
+                                    )}
+                                    className="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-cyan-50 file:text-cyan-700"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Certificates */}
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-1">
+                            <label className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                              <FileText size={16} className="text-blue-500" />{' '}
+                              {t(
+                                'AuthPages.onboarding.form.certificates',
+                                'Licenses & Certificates'
+                              )}
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                appendCertificate({
+                                  name: '',
+                                  licenseNumber: '',
+                                  issuingAuthority: '',
+                                  scopeOfPractice: '',
+                                  issuedDate: '',
+                                  expiryDate: '',
+                                })
+                              }
+                              className="text-xs font-bold text-blue-500 hover:text-blue-600 flex items-center gap-1 bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded-lg transition-colors"
+                            >
+                              <Plus size={14} /> Add
+                            </button>
+                          </div>
+
+                          {certificateFields.map((field, index) => (
+                            <div
+                              key={field.id}
+                              className="relative bg-gray-50 dark:bg-gray-800/40 p-3 rounded-xl border border-gray-100 dark:border-gray-700 space-y-3"
+                            >
+                              <button
+                                type="button"
+                                onClick={() => removeCertificate(index)}
+                                className="absolute top-2 right-2 text-red-400 hover:text-red-500"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                    Name
+                                  </label>
+                                  <input
+                                    {...register(
+                                      `certificates.${index}.name` as const,
+                                      { required: true }
+                                    )}
+                                    className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-blue-500"
+                                    placeholder="Medical License..."
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                    License Number
+                                  </label>
+                                  <input
+                                    {...register(
+                                      `certificates.${index}.licenseNumber` as const,
+                                      { required: true }
+                                    )}
+                                    className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
+                                    placeholder="GPHN-..."
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                    Authority
+                                  </label>
+                                  <input
+                                    {...register(
+                                      `certificates.${index}.issuingAuthority` as const,
+                                      { required: true }
+                                    )}
+                                    className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
+                                    placeholder="MOH, Health Dept..."
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                    Scope of Practice
+                                  </label>
+                                  <input
+                                    {...register(
+                                      `certificates.${index}.scopeOfPractice` as const
+                                    )}
+                                    className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
+                                    placeholder="Ophthalmology..."
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                    Issued Date
+                                  </label>
+                                  <input
+                                    type="date"
+                                    {...register(
+                                      `certificates.${index}.issuedDate` as const,
+                                      { required: true }
+                                    )}
+                                    className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                    Expiration Date
+                                  </label>
+                                  <input
+                                    type="date"
+                                    {...register(
+                                      `certificates.${index}.expiryDate` as const,
+                                      { required: true }
+                                    )}
+                                    className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                    Document
+                                  </label>
+                                  <input
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                    {...register(
+                                      `certificates.${index}.file` as const
+                                    )}
+                                    className="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-blue-50 file:text-blue-700"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-
-                      <div className="bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/20">
-                        <div className="flex gap-3">
-                          <div className="bg-emerald-500 text-white p-2 rounded-xl h-fit">
-                            <CheckCircle size={18} />
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                              <Building2 size={16} />{' '}
+                              {t(
+                                'AuthPages.onboarding.form.department',
+                                'Department'
+                              )}
+                            </label>
+                            <input
+                              {...register('department', { required: true })}
+                              className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-cyan-500 transition-all outline-none"
+                              placeholder="Reception / Pharmacy"
+                            />
                           </div>
-                          <div>
-                            <h4 className="text-sm font-bold text-emerald-900 dark:text-emerald-400">
+
+                          <div className="space-y-1">
+                            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                              <IdCard size={16} />{' '}
                               {t(
-                                'AuthPages.onboarding.staff.welcome',
-                                'Ready to Start!'
+                                'AuthPages.onboarding.form.employeeCode',
+                                'Employee Code'
                               )}
-                            </h4>
-                            <p className="text-xs text-emerald-700 dark:text-emerald-400/70 mt-1 leading-relaxed">
-                              {t(
-                                'AuthPages.onboarding.staff.desc',
-                                'Your profile is almost ready. Once submitted, you can start managing clinic operations.'
-                              )}
-                            </p>
+                            </label>
+                            <input
+                              {...register('employeeCode', { required: true })}
+                              className="w-full bg-gray-50 dark:bg-[#161e2b] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-cyan-500 transition-all outline-none"
+                              placeholder="CS-12345"
+                            />
                           </div>
                         </div>
-                      </div>
-                    </>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
 
-            {/* Actions */}
-            <div className="mt-8 flex gap-4">
-              {currentStep > 0 && (
-                <button
-                  type="button"
-                  onClick={prevStep}
-                  className="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
-                >
-                  <ArrowLeft size={18} /> {t('Shared.buttons.back', 'Back')}
-                </button>
-              )}
+                        <div className="bg-cyan-50 dark:bg-cyan-900/10 p-4 rounded-2xl border border-cyan-100 dark:border-cyan-900/20">
+                          <div className="flex gap-3">
+                            <div className="bg-cyan-500 text-white p-2 rounded-xl h-fit">
+                              <CheckCircle size={18} />
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-bold text-cyan-900 dark:text-cyan-400">
+                                {t(
+                                  'AuthPages.onboarding.staff.welcome',
+                                  'Ready to Start!'
+                                )}
+                              </h4>
+                              <p className="text-xs text-cyan-700 dark:text-cyan-400/70 mt-1 leading-relaxed">
+                                {t(
+                                  'AuthPages.onboarding.staff.desc',
+                                  'Your profile is almost ready. Once submitted, you can start managing clinic operations.'
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              {currentStep < filteredSteps.length - 1 ? (
-                <button
-                  type="button"
-                  onClick={nextStep}
-                  className="flex-[2] flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/30"
-                >
-                  {t('Shared.buttons.next', 'Continue')}{' '}
-                  <ArrowRight size={18} />
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-[2] flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
-                    <Spinner size={20} />
-                  ) : (
-                    <>
-                      {t('AuthPages.onboarding.submit', 'Complete Setup')}{' '}
-                      <CheckCircle size={18} />
-                    </>
-                  )}
-                </button>
-              )}
+              {/* Actions */}
+              <div className="mt-8 flex gap-4">
+                {currentStep > 0 && (
+                  <button
+                    type="button"
+                    onClick={prevStep}
+                    className="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+                  >
+                    <ArrowLeft size={18} /> {t('Shared.buttons.back', 'Back')}
+                  </button>
+                )}
+
+                {currentStep < filteredSteps.length - 1 ? (
+                  <button
+                    type="button"
+                    onClick={nextStep}
+                    className="flex-[2] flex items-center justify-center gap-2 py-3.5 px-6 rounded-full bg-cyan-500 text-white font-bold hover:bg-cyan-700 transition-all shadow-lg shadow-cyan-600/20"
+                  >
+                    {t('Shared.buttons.next', 'Continue')}{' '}
+                    <ArrowRight size={18} />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="flex-[2] flex items-center justify-center gap-2 py-3.5 px-6 rounded-full bg-cyan-500 text-white font-bold hover:bg-cyan-700 transition-all shadow-lg shadow-cyan-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? (
+                      <Spinner size={20} />
+                    ) : (
+                      <>
+                        {t('AuthPages.onboarding.submit', 'Complete Setup')}{' '}
+                        <CheckCircle size={18} />
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+
+          {/* Footer info */}
+          <div className="bg-gray-50 dark:bg-gray-800/50 p-3 flex items-center justify-center">
+            <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+              AURAEYES 2026 ❤️
             </div>
-          </form>
-        </div>
-
-        {/* Footer info */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 p-3 flex items-center justify-center">
-          <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
-            AURAEYES 2026 ❤️
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
