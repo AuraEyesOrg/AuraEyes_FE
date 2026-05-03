@@ -110,6 +110,11 @@ export const mapClinicPatientErrorMessage = (error: unknown): string => {
       mappedMessage: 'Không thể hủy lịch ở trạng thái hiện tại.',
     },
     {
+      pattern: /6\s*hours/i,
+      mappedMessage:
+        'Bạn chỉ có thể hủy lịch hẹn trước giờ bắt đầu ít nhất 6 tiếng.',
+    },
+    {
       pattern: /(timeout|network|ECONNABORTED)/i,
       mappedMessage: 'Kết nối chậm hoặc bị gián đoạn. Vui lòng thử lại.',
     },

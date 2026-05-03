@@ -38,6 +38,7 @@ import type {
   ClinicAppointmentDto,
   PatientAppointmentTab,
 } from '@/features/patient/types/clinic-booking.types';
+import { mapClinicPatientErrorMessage } from '@/lib/api-error';
 
 type FilterTab = 'all' | 'upcoming' | 'completed' | 'cancelled';
 
@@ -221,7 +222,8 @@ const AppointmentsPage = () => {
       setCancellationTarget(null);
       toast.success(t('PatientAppointments.cancellation.successToast'));
     } catch (error) {
-      toast.error(t('PatientAppointments.cancellation.errorToast'));
+      const errorMessage = mapClinicPatientErrorMessage(error);
+      toast.error(errorMessage);
     }
   };
 
