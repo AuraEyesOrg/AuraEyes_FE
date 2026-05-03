@@ -269,17 +269,8 @@ export default function ClinicStaffQueuePage() {
   };
 
   const handleCreateScreening = (item: ClinicQueueItem) => {
-    // Validation: Require basic info (Age, Gender, MRN, Admission Reason)
-    // Since MRN and Admission Reason are in the Medical Record, we at least require medicalRecordId to exist.
-    if (!item.medicalRecordId || !item.isAdminCompleted) {
-      toast.error(
-        t(
-          'ClinicStaff.queue.toast.missingBasicInfo',
-          'Vui lòng hoàn thiện thông tin hành chính (Tuổi/GT, Mã Y tế, Lý do khám) trong Hồ sơ bệnh án trước khi tạo Screening.'
-        )
-      );
-      return;
-    }
+    // Guard by current visit flow state only (not by historical record id).
+    if (!item.isAdminCompleted) return;
 
     navigate(
       resolvePathWithLocale(
@@ -628,54 +619,79 @@ export default function ClinicStaffQueuePage() {
                           )}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          {item.flowState === 'CheckedIn' && (
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (item.medicalRecordId) {
-                                    navigate(
-                                      `/medical-records/${item.medicalRecordId}`
-                                    );
-                                  } else {
-                                    navigate('/erm-patient', {
-                                      state: {
-                                        formData: {
-                                          patientId: item.patientId,
-                                          fullName: item.patientName,
-                                          maYT: item.visitId
-                                            .substring(0, 8)
-                                            .toUpperCase(),
-                                          gender: item.patientGender,
-                                          age:
-                                            item.patientAge?.toString() || '',
-                                          citizenId: item.citizenId,
-                                        },
-                                      },
-                                    });
-                                  }
-                                }}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3.5 py-1.5 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100"
-                              >
-                                <FileText className="h-3.5 w-3.5" />
-                                {t(
-                                  'ClinicStaff.queue.actions.fillErm',
-                                  'Fill ERM'
-                                )}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleCreateScreening(item)}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
-                              >
-                                <Sparkles className="h-3.5 w-3.5" />
-                                {t(
-                                  'ClinicStaff.queue.actions.createScreening',
-                                  'Create Screening'
-                                )}
-                              </button>
-                            </div>
-                          )}
+                          {item.flowState === 'CheckedIn' &&
+                            (() => {
+                              const isErmReady = item.isAdminCompleted;
+                              const navigateToErm = () => {
+                                // Always open ERM flow from current queue context.
+                                // Do not gate by existing medicalRecordId because it may belong to an older visit.
+                                navigate('/erm-patient', {
+                                  state: {
+                                    formData: {
+                                      patientId: item.patientId,
+                                      fullName: item.patientName,
+                                      maYT: item.visitId
+                                        .substring(0, 8)
+                                        .toUpperCase(),
+                                      gender: item.patientGender,
+                                      age: item.patientAge?.toString() || '',
+                                      citizenId: item.citizenId,
+                                      visitId: item.visitId,
+                                      appointmentId: item.appointmentId,
+                                    },
+                                  },
+                                });
+                              };
+
+                              if (!isErmReady) {
+                                return (
+                                  <div className="flex items-center justify-end gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={navigateToErm}
+                                      title={t(
+                                        'ClinicStaff.queue.actions.fillErmRequired',
+                                        'Phải hoàn tất ERM trước khi screening'
+                                      )}
+                                      className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3.5 py-1.5 text-xs font-semibold text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-100"
+                                    >
+                                      <FileText className="h-3.5 w-3.5" />
+                                      {t(
+                                        'ClinicStaff.queue.actions.fillErm',
+                                        'Fill ERM'
+                                      )}
+                                    </button>
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={navigateToErm}
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-100"
+                                  >
+                                    <FileText className="h-3.5 w-3.5" />
+                                    {t(
+                                      'ClinicStaff.queue.actions.editErm',
+                                      'Sửa ERM'
+                                    )}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCreateScreening(item)}
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
+                                  >
+                                    <Sparkles className="h-3.5 w-3.5" />
+                                    {t(
+                                      'ClinicStaff.queue.actions.createScreening',
+                                      'Create Screening'
+                                    )}
+                                  </button>
+                                </div>
+                              );
+                            })()}
                           {(item.flowState === 'ScreeningPending' ||
                             item.flowState === 'AICompleted') && (
                             <div className="flex items-center justify-end gap-2">

@@ -27,6 +27,7 @@ import { toast } from 'react-toastify';
 import useAuthStore from '@/store/auth-store';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import { MedicalRecordStatus } from '../api/medical-record.api';
 import {
   useMedicalRecord,
@@ -516,10 +517,32 @@ export default function ErmForm() {
         }
       );
 
+      const mergeEyeSections = (savedEye: Record<string, any> | undefined) =>
+        SECTION_KEYS.reduce(
+          (acc, key) => {
+            const savedSection = savedEye?.[key] ?? {};
+            acc[key] = {
+              ...INITIAL_ITEM,
+              ...savedSection,
+              checks: { ...(savedSection.checks ?? {}) },
+              inputs: { ...(savedSection.inputs ?? {}) },
+              other: savedSection.other ?? '',
+            };
+            return acc;
+          },
+          {} as Record<string, DetailedEyeItem>
+        );
+
+      const normalizedClinicalData = {
+        ...clinicalData,
+        rightEye: mergeEyeSections(clinicalData?.rightEye),
+        leftEye: mergeEyeSections(clinicalData?.leftEye),
+      };
+
       reset({
         ...INITIAL_VALUES,
         ...formattedAdmin,
-        ...clinicalData,
+        ...normalizedClinicalData,
         maYT: record.medicalRecordNumber,
         finalDiagnosisMain: record.finalDiagnosis,
         finalDiagnosisExtra: record.treatmentPlan,
@@ -831,11 +854,18 @@ export default function ErmForm() {
           id,
           data: { administrativeDataJson: JSON.stringify(adminData) },
         });
+
+        await queryClient.invalidateQueries({
+          queryKey: ['clinic-staff', 'queue'],
+        });
+        navigate(resolvePathWithLocale('/clinic-staff/queue'));
       } else if (isOphthalmologist) {
         const clinicalFields = [
           'medicalHistory',
           'personalHistory',
           'familyHistory',
+          'diseaseProcess',
+          'companionDisease',
           'rightEyeVisionNoGlass',
           'leftEyeVisionNoGlass',
           'rightEyeVisionWithGlass',
@@ -846,6 +876,7 @@ export default function ErmForm() {
           'leftEyeField',
           'rightEye',
           'leftEye',
+          'doctorName',
         ];
         const clinicalData = clinicalFields.reduce((acc, field) => {
           acc[field] = (data as any)[field];
@@ -1296,7 +1327,8 @@ export default function ErmForm() {
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                     <div className="md:col-span-4 space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                        Họ và tên (In hoa)
+                        Họ và tên (In hoa){' '}
+                        <span className="text-rose-500">*</span>
                       </label>
                       <input
                         {...register('fullName')}
@@ -1306,7 +1338,7 @@ export default function ErmForm() {
                     </div>
                     <div className="md:col-span-2 space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                        Ngày sinh
+                        Ngày sinh <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -1317,7 +1349,7 @@ export default function ErmForm() {
                     </div>
                     <div className="md:col-span-1 space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                        Tuổi
+                        Tuổi <span className="text-rose-500">*</span>
                       </label>
                       <input
                         {...register('age')}
@@ -1327,7 +1359,7 @@ export default function ErmForm() {
                     </div>
                     <div className="md:col-span-2 space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                        Giới tính
+                        Giới tính <span className="text-rose-500">*</span>
                       </label>
                       <select
                         {...register('gender')}
@@ -1407,7 +1439,8 @@ export default function ErmForm() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                        Tỉnh / Thành phố
+                        Tỉnh / Thành phố{' '}
+                        <span className="text-rose-500">*</span>
                       </label>
                       <div className="relative">
                         <select
@@ -1457,7 +1490,7 @@ export default function ErmForm() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                        Quận / Huyện
+                        Quận / Huyện <span className="text-rose-500">*</span>
                       </label>
                       <div className="relative">
                         <select
@@ -1507,7 +1540,7 @@ export default function ErmForm() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                        Phường / Xã
+                        Phường / Xã <span className="text-rose-500">*</span>
                       </label>
                       <div className="relative">
                         <select
@@ -1550,7 +1583,7 @@ export default function ErmForm() {
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                      Số nhà, tên đường
+                      Số nhà, tên đường <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
                       <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
@@ -1764,7 +1797,7 @@ export default function ErmForm() {
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                      Lý do vào viện
+                      Lý do vào viện <span className="text-rose-500">*</span>
                     </label>
                     <textarea
                       {...register('admissionReason')}
@@ -1954,6 +1987,9 @@ export default function ErmForm() {
                           placeholder="V"
                           className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-cyan-600 border border-slate-100 focus:border-cyan-500/20"
                         />
+                        <p className="text-[9px] text-slate-400 mt-1">
+                          Định dạng: n/10 (vd 8/10). Có kính ≥ không kính.
+                        </p>
                       </div>
                       <div className="space-y-1">
                         <label className="text-[9px] font-black text-slate-400 uppercase">
@@ -1968,6 +2004,9 @@ export default function ErmForm() {
                           placeholder="V"
                           className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-cyan-600 border border-slate-100 focus:border-cyan-500/20"
                         />
+                        <p className="text-[9px] text-slate-400 mt-1">
+                          Định dạng: n/10 (vd 8/10). Có kính ≥ không kính.
+                        </p>
                       </div>
                       <div className="space-y-1">
                         <label className="text-[9px] font-black text-slate-400 uppercase">
@@ -2012,6 +2051,9 @@ export default function ErmForm() {
                           placeholder="V"
                           className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-rose-500 border border-transparent focus:border-rose-500/20"
                         />
+                        <p className="text-[9px] text-slate-400 mt-1">
+                          Định dạng: n/10 (vd 8/10). Có kính ≥ không kính.
+                        </p>
                       </div>
                       <div className="space-y-1">
                         <label className="text-[9px] font-black text-slate-400 uppercase">
@@ -2026,6 +2068,9 @@ export default function ErmForm() {
                           placeholder="V"
                           className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-rose-500 border border-transparent focus:border-rose-500/20"
                         />
+                        <p className="text-[9px] text-slate-400 mt-1">
+                          Định dạng: n/10 (vd 8/10). Có kính ≥ không kính.
+                        </p>
                       </div>
                       <div className="space-y-1">
                         <label className="text-[9px] font-black text-slate-400 uppercase">
