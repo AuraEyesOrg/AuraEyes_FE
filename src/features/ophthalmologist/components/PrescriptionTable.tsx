@@ -7,6 +7,7 @@ import {
   ChangeEvent,
 } from 'react';
 import { PlusSquare, X, AlertCircle } from 'lucide-react';
+import type { PrescriptionItemRequest } from '@/types/consultation';
 import { DrugEntry, RxItem } from '../types/drug.type';
 
 export interface PrescriptionTableProps {
@@ -705,4 +706,28 @@ export function validatePrescriptionItems(
     if (missing.length) errors[item.id] = missing;
   }
   return { valid: Object.keys(errors).length === 0, errors };
+}
+
+/** Strips UI row ids; trims fields; drops fully empty rows (ERM + consultation report). */
+export function normalizePrescriptionItemsForPersistence(
+  items: RxItem[]
+): PrescriptionItemRequest[] {
+  return items
+    .map((item) => ({
+      medicineName: item.medicineName.trim(),
+      unit: item.unit.trim() || undefined,
+      dosage: item.dosage.trim(),
+      frequency: item.frequency.trim(),
+      duration: item.duration.trim(),
+      instruction: item.instruction.trim() || undefined,
+    }))
+    .filter(
+      (row) =>
+        row.medicineName ||
+        row.unit ||
+        row.dosage ||
+        row.frequency ||
+        row.duration ||
+        row.instruction
+    );
 }

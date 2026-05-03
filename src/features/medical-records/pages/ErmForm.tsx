@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import {
   PrescriptionTable,
+  normalizePrescriptionItemsForPersistence,
   validatePrescriptionItems,
 } from '@/features/ophthalmologist/components/PrescriptionTable';
 import type { RxItem } from '@/features/ophthalmologist/types/drug.type';
@@ -962,24 +963,8 @@ export default function ErmForm() {
             ? JSON.parse(record.clinicalDataJson).screeningId
             : null);
 
-        // Normalize and persist prescription (strip empty rows)
-        const normalizedPrescriptionItems = prescriptionItems
-          .map((item) => ({
-            ...item,
-            medicineName: item.medicineName.trim(),
-            dosage: item.dosage.trim(),
-            unit: item.unit.trim(),
-            frequency: item.frequency.trim(),
-            duration: item.duration.trim(),
-            instruction: item.instruction.trim(),
-          }))
-          .filter(
-            (item) =>
-              item.medicineName ||
-              item.dosage ||
-              item.frequency ||
-              item.duration
-          );
+        const normalizedPrescriptionItems =
+          normalizePrescriptionItemsForPersistence(prescriptionItems);
         clinicalData.prescriptionItems = normalizedPrescriptionItems;
         clinicalData.prescriptionNote = prescriptionNote.trim();
         clinicalData.noMedicationPrescribed = noMedicationPrescribed;
@@ -1053,24 +1038,8 @@ export default function ErmForm() {
           return acc;
         }, {} as any);
 
-        // Persist prescription into clinicalDataJson
-        const normalizedPrescriptionItems = prescriptionItems
-          .map((item) => ({
-            ...item,
-            medicineName: item.medicineName.trim(),
-            dosage: item.dosage.trim(),
-            unit: item.unit.trim(),
-            frequency: item.frequency.trim(),
-            duration: item.duration.trim(),
-            instruction: item.instruction.trim(),
-          }))
-          .filter(
-            (item) =>
-              item.medicineName ||
-              item.dosage ||
-              item.frequency ||
-              item.duration
-          );
+        const normalizedPrescriptionItems =
+          normalizePrescriptionItemsForPersistence(prescriptionItems);
         clinicalData.prescriptionItems = normalizedPrescriptionItems;
         clinicalData.prescriptionNote = prescriptionNote.trim();
         clinicalData.noMedicationPrescribed = noMedicationPrescribed;
