@@ -36,10 +36,18 @@ export const Header = () => {
   };
 
   const getTourSelectorByHref = (href: string) => {
-    if (href === '/about') return 'guest-nav-about';
-    if (href === '/how-it-works') return 'guest-nav-how-it-works';
-    if (href === '/contact') return 'guest-nav-contact-orga';
-    return undefined;
+    switch (href) {
+      case '/about':
+        return 'guest-nav-about';
+      case '/how-it-works':
+        return 'guest-nav-how-it-works';
+      case '/ethics':
+        return 'guest-nav-ethics';
+      case '/contact':
+        return 'guest-nav-contact';
+      default:
+        return undefined;
+    }
   };
 
   return (
@@ -77,7 +85,7 @@ export const Header = () => {
 
             <Link
               to={withLocalePathname(locale, '/login')}
-              data-tour="guest-cta-get-started"
+              data-tour="guest-patient-portal-login"
               className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-(--color-brand-primary) px-6 text-base font-bold text-white transition-all hover:brightness-110 hover:shadow-lg hover:shadow-(--color-brand-primary)/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
             >
               {t('Common.getStarted')}
@@ -136,7 +144,7 @@ export const Header = () => {
 
             <Link
               to={withLocalePathname(locale, '/login')}
-              data-tour="guest-cta-get-started"
+              data-tour="guest-patient-portal-login"
               className="mt-2 inline-flex h-11 items-center justify-center rounded-lg bg-(--color-brand-primary) px-4 text-sm font-bold text-white transition-all hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >

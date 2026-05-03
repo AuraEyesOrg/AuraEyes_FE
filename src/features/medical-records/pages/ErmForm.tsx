@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import { AuraLogo } from '@/components/ui/aura-logo';
+import { useTheme } from '@/contexts/ThemeContext';
 import ConfirmModal from '@/components/ui/confirm-modal';
 import { toast } from 'react-toastify';
 import useAuthStore from '@/store/auth-store';
@@ -343,6 +344,7 @@ export default function ErmForm() {
   const location = useLocation();
   const { id } = useParams();
   const { user } = useAuthStore();
+  const { theme } = useTheme();
 
   const [recordStatus, setRecordStatus] = useState<MedicalRecordStatus>(
     MedicalRecordStatus.DraftAdmin
@@ -1007,13 +1009,6 @@ export default function ErmForm() {
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans pb-20 selection:bg-cyan-500/20">
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-5">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 bg-slate-50 text-slate-600 px-4 py-2 rounded-xl font-black text-[10px] hover:bg-slate-100 transition-all border border-slate-200"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> QUAY LẠI
-          </button>
-          <div className="h-4 w-px bg-slate-200" />
           <AuraLogo size="sm" />
           <div className="h-4 w-px bg-slate-200" />
           <div
@@ -1059,7 +1054,7 @@ export default function ErmForm() {
             <Eye className="w-3.5 h-3.5" /> XEM BẢN IN
           </button>
 
-          {(isFinalizer || isOphthalmologist) &&
+          {((isFinalizer && !isStaff) || isOphthalmologist) &&
             recordStatus !== MedicalRecordStatus.Finalized && (
               <button
                 onClick={handleFinalize}
@@ -2169,7 +2164,7 @@ export default function ErmForm() {
                       />
                     </div>
                     <div className="flex items-end justify-end gap-4">
-                      {(isFinalizer || isOphthalmologist) &&
+                      {isOphthalmologist &&
                         recordStatus !== MedicalRecordStatus.Finalized && (
                           <button
                             type="button"

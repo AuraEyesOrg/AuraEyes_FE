@@ -62,6 +62,22 @@ export interface ConfirmEmailRequest {
   token: string;
 }
 
+export interface ForceUpdateProfileRequest {
+  newPassword?: string;
+  fullName: string;
+  phone: string;
+  avatarUrl?: string;
+  dateOfBirth?: string;
+  gender?: number;
+  address?: string;
+  citizenId?: string;
+  bio?: string;
+  consultationFee?: number;
+  department?: string;
+  medicalLicenseNumber?: string;
+  licenseImageUrl?: string;
+}
+
 export interface UserInfoResponse {
   id: string;
   email: string;

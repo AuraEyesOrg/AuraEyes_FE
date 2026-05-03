@@ -122,13 +122,7 @@ const HowItWorksPage = () => {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
           />
         </svg>
       ),
@@ -148,7 +142,13 @@ const HowItWorksPage = () => {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
           />
         </svg>
       ),
@@ -267,42 +267,42 @@ const HowItWorksPage = () => {
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <SeoMeta
-        title="How AURA AI Retinal Screening Works"
-        description="Learn how AURA's 4-step AI retinal screening process works: capture, upload, AI analysis, and ophthalmologist assessment. Clinical-grade accuracy in minutes."
-        canonical="https://web.auraeyes.site/en/how-it-works"
+        title="Quy trình sàng lọc võng mạc AI tại AURA Digital Clinic"
+        description="Tìm hiểu quy trình 4 bước sàng lọc sức khỏe võng mạc bằng AI tại AURA: Đặt lịch trực tuyến, thăm khám tại cơ sở, phân tích AI và xem kết quả bệnh án điện tử."
+        canonical="https://web.auraeyes.site/vi/how-it-works"
         structuredData={{
           '@context': 'https://schema.org',
           '@type': 'HowTo',
-          name: 'How AURA Retinal Screening Works',
+          name: 'Quy trình sàng lọc võng mạc AURA',
           description:
-            'A 4-step process for AI-powered retinal vascular health screening.',
+            'Quy trình 4 bước chăm sóc sức khỏe võng mạc ứng dụng công nghệ AI.',
           step: [
             {
               '@type': 'HowToStep',
               position: 1,
-              name: 'Capture Retinal Image',
-              text: 'Capture a high-resolution fundus photograph of the retina.',
+              name: 'Đặt lịch trực tuyến',
+              text: 'Lựa chọn bác sĩ và khung giờ khám phù hợp ngay trên website.',
             },
             {
               '@type': 'HowToStep',
               position: 2,
-              name: 'Upload to AURA',
-              text: 'Securely upload your retinal image to the AURA platform.',
+              name: 'Thăm khám & Chụp ảnh',
+              text: 'Đến cơ sở y tế để được kỹ thuật viên chụp ảnh đáy mắt chuyên dụng.',
             },
             {
               '@type': 'HowToStep',
               position: 3,
-              name: 'AI Analysis',
-              text: "AURA's deep learning model analyses the image for vascular markers in seconds.",
+              name: 'Phân tích AI',
+              text: 'Hệ thống AI phân tích mạch máu võng mạc và bác sĩ tư vấn trực tiếp.',
             },
             {
               '@type': 'HowToStep',
               position: 4,
-              name: 'Doctor Assessment',
-              text: 'A verified ophthalmologist reviews the AI report and provides clinical guidance.',
+              name: 'Xem hồ sơ trực tuyến',
+              text: 'Tra cứu bệnh án điện tử và kết quả phân tích mọi lúc mọi nơi.',
             },
           ],
-          totalTime: 'PT10M',
+          totalTime: 'PT30M',
         }}
       />
       <Header />
