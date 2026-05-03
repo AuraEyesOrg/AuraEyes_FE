@@ -6,7 +6,8 @@ export type ClinicAppointmentStatus =
   | 'WaitingForPayment'
   | 'Completed'
   | 'Cancelled'
-  | 'NoShow';
+  | 'NoShow'
+  | 'CancellationRequested';
 
 export interface OrganisationSummaryDto {
   id: string;
@@ -27,6 +28,21 @@ export interface DoctorSlotDetailDto {
   doctorAvatar?: string | null;
   isBooked: boolean;
   price: number;
+  bio?: string | null;
+  ratingAverage: number;
+  ratingCount: number;
+  certificates: CertificateDto[];
+}
+
+export interface CertificateDto {
+  id: string;
+  type: string;
+  degreeLevel?: string | null;
+  name: string;
+  issuingAuthority?: string | null;
+  issuedDate: string;
+  expiryDate?: string | null;
+  certificateUrl?: string | null;
 }
 
 export interface AggregatedSlotDto {
@@ -82,6 +98,17 @@ export interface ClinicAppointmentDto {
   isPaidDeposit?: boolean;
   paidAmount?: number | null;
   orderStatus?: string | null;
+  refundBankNumber?: string | null;
+  refundAccountName?: string | null;
+  refundBankName?: string | null;
+  cancellationReason?: string | null;
+}
+
+export interface RequestCancellationRequest {
+  bankNumber?: string | null;
+  accountName?: string | null;
+  bankName?: string | null;
+  reason?: string | null;
 }
 
 /** Matches backend enum {@link Application.Scheduling.Appointments.Queries.GetPatientClinicAppointments.PatientAppointmentTab}. */

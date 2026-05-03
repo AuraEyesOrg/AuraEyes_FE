@@ -10,6 +10,14 @@ import {
   CheckCircle2,
   User,
   RefreshCw,
+  Eye,
+  Star,
+  Award,
+  FileText,
+  GraduationCap,
+  MapPin,
+  X,
+  Stethoscope,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -34,6 +42,7 @@ import {
 import { formatSlotTime } from '@/lib/date-utils';
 import { toast } from 'react-toastify';
 import { mapClinicPatientErrorMessage } from '@/lib/api-error';
+import { resolveAvatarUrl } from '@/lib/user-avatar';
 import { useNavigate } from 'react-router-dom';
 import type {
   AggregatedSlotDto,
@@ -66,6 +75,9 @@ export default function OrganisationSchedulePage() {
     useState<AggregatedSlotDto | null>(null);
   const [selectedDoctorSlot, setSelectedDoctorSlot] =
     useState<DoctorSlotDetailDto | null>(null);
+  const [viewingDoctor, setViewingDoctor] =
+    useState<DoctorSlotDetailDto | null>(null);
+  const [isDoctorModalOpen, setIsDoctorModalOpen] = useState(false);
 
   const dateParams = useMemo(() => {
     const d = format(selectedDate, 'yyyy-MM-dd');
@@ -89,6 +101,8 @@ export default function OrganisationSchedulePage() {
     (_, i) => i
   );
 
+  const MIN_ADVANCE_MS = 30 * 60 * 1000; // 30 minutes
+
   // 3. Filter expired slots client-side (belt-and-suspenders)
   const upcomingAggregatedSlots = useMemo(() => {
     if (!schedule?.aggregatedSlots) return [];
@@ -98,7 +112,7 @@ export default function OrganisationSchedulePage() {
         slot.startTime.length === 5 ? `${slot.startTime}:00` : slot.startTime;
       const startAt = new Date(`${dateKey}T${normalizedTime}+07:00`).getTime();
       if (Number.isNaN(startAt)) return false; // hide broken
-      return startAt >= Date.now();
+      return startAt >= Date.now() + MIN_ADVANCE_MS;
     });
   }, [schedule, selectedDate]);
 
@@ -122,6 +136,21 @@ export default function OrganisationSchedulePage() {
     if (!selectedDoctorSlot) {
       toast.warn('Vui lòng chọn bác sĩ để tiếp tục.');
       return;
+    }
+
+    if (selectedAggregatedSlot) {
+      const dateKey = format(selectedDate, 'yyyy-MM-dd');
+      const normalizedTime =
+        selectedAggregatedSlot.startTime.length === 5
+          ? `${selectedAggregatedSlot.startTime}:00`
+          : selectedAggregatedSlot.startTime;
+      const startAt = new Date(`${dateKey}T${normalizedTime}+07:00`).getTime();
+      if (!Number.isNaN(startAt) && startAt < Date.now() + MIN_ADVANCE_MS) {
+        toast.error(
+          'Slot này đã quá gần giờ bắt đầu. Vui lòng chọn slot khác cách ít nhất 30 phút.'
+        );
+        return;
+      }
     }
 
     createBooking(
@@ -153,6 +182,11 @@ export default function OrganisationSchedulePage() {
   const handleTimeSelect = (slot: AggregatedSlotDto) => {
     setSelectedAggregatedSlot(slot);
     setSelectedDoctorSlot(null);
+  };
+
+  const handleViewDoctorDetails = (doctor: DoctorSlotDetailDto) => {
+    setViewingDoctor(doctor);
+    setIsDoctorModalOpen(true);
   };
 
   return (
@@ -418,6 +452,9 @@ export default function OrganisationSchedulePage() {
                                   !doctor.isBooked &&
                                   setSelectedDoctorSlot(doctor)
                                 }
+                                onViewDetails={() =>
+                                  handleViewDoctorDetails(doctor)
+                                }
                               />
                             ))}
                           </div>
@@ -471,7 +508,222 @@ export default function OrganisationSchedulePage() {
           </div>
         </div>
       </div>
+
+      <DoctorDetailsModal
+        doctor={viewingDoctor}
+        isOpen={isDoctorModalOpen}
+        onClose={() => setIsDoctorModalOpen(false)}
+      />
     </PatientLayout>
+  );
+}
+
+function DoctorDetailsModal({
+  doctor,
+  isOpen,
+  onClose,
+}: {
+  doctor: DoctorSlotDetailDto | null;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  if (!doctor) return null;
+
+  // Real data from doctor object
+  const degrees = doctor.certificates?.filter((c) => c.type === 'Degree') || [];
+  const licenses =
+    doctor.certificates?.filter((c) => c.type === 'License') || [];
+
+  const getDocThumbnail = (url: string | null | undefined) => {
+    if (!url) return null;
+    if (url.toLowerCase().endsWith('.pdf')) {
+      return url.replace(/\.pdf$/i, '.jpg');
+    }
+    return url;
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6"
+          >
+            {/* Modal Container */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-slate-900 w-full max-w-2xl max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col relative"
+            >
+              {/* Close Button */}
+              <button
+                onClick={onClose}
+                className="absolute top-6 right-6 p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 transition-colors z-10"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="flex-1 overflow-y-auto p-8 sm:p-10">
+                <div className="space-y-10">
+                  {/* Section 1: Basic Info */}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-2">
+                      <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                        {doctor.doctorName}
+                      </h3>
+                      <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-bold uppercase tracking-widest text-xs">
+                        <Stethoscope size={14} />
+                        Chuyên gia nhãn khoa
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 2: Bio */}
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <FileText size={14} /> Giới thiệu & Kinh nghiệm
+                    </h4>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed font-medium">
+                      {doctor.bio ||
+                        `Bác sĩ ${doctor.doctorName} là chuyên gia đầu ngành trong lĩnh vực Phẫu thuật Phaco và điều trị các bệnh lý về võng mạc. Với nhiều năm kinh nghiệm làm việc tại các bệnh viện mắt lớn, bác sĩ đã thực hiện thành công hàng ngàn ca phẫu thuật, mang lại thị lực cho rất nhiều bệnh nhân.`}
+                    </p>
+                  </div>
+
+                  {/* Section 3: Credentials */}
+                  {(degrees.length > 0 || licenses.length > 0) && (
+                    <div className="space-y-4">
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <GraduationCap size={16} /> Bằng cấp & Chứng chỉ
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {degrees.map((degree, idx) => (
+                          <div
+                            key={degree.id || idx}
+                            className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800"
+                          >
+                            <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-white">
+                              {degree.certificateUrl ? (
+                                <img
+                                  src={getDocThumbnail(degree.certificateUrl)!}
+                                  alt={degree.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-cyan-600">
+                                  <GraduationCap size={20} />
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <h5 className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
+                                {degree.name}
+                              </h5>
+                              <p className="text-[10px] text-slate-500 truncate">
+                                {degree.issuingAuthority}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                        {licenses.map((cert, idx) => (
+                          <div
+                            key={cert.id || idx}
+                            className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800"
+                          >
+                            <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-white">
+                              {cert.certificateUrl ? (
+                                <img
+                                  src={getDocThumbnail(cert.certificateUrl)!}
+                                  alt={cert.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-emerald-600">
+                                  <Award size={20} />
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <h5 className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
+                                {cert.name}
+                              </h5>
+                              <p className="text-[10px] text-slate-500 truncate">
+                                {cert.issuingAuthority}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Section 4: Avatar & Stats & Price (Bottom) */}
+                  <div className="pt-10 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-8">
+                    <div className="flex items-center gap-6">
+                      <div className="relative">
+                        <div className="w-24 h-24 rounded-3xl overflow-hidden border-4 border-white dark:border-slate-700 shadow-2xl">
+                          {resolveAvatarUrl(doctor.doctorAvatar) ? (
+                            <img
+                              src={resolveAvatarUrl(doctor.doctorAvatar)}
+                              alt={doctor.doctorName}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-300">
+                              <User size={40} />
+                            </div>
+                          )}
+                        </div>
+                        <div className="absolute -bottom-2 -right-2 bg-amber-500 text-white p-1.5 rounded-xl border-2 border-white shadow-lg">
+                          <Star size={14} fill="currentColor" />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-8">
+                        <div className="text-center sm:text-left">
+                          <div className="text-xl font-black text-slate-900 dark:text-white">
+                            {doctor.ratingAverage}
+                          </div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            Rating
+                          </p>
+                        </div>
+                        <div className="text-center sm:text-left">
+                          <div className="text-xl font-black text-slate-900 dark:text-white">
+                            {doctor.ratingCount}
+                          </div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            Bệnh nhân
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-center sm:text-right space-y-1">
+                      <div className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest justify-center sm:justify-end">
+                        <MapPin size={12} /> Aura Eyes Clinic
+                      </div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                        Phí khám
+                      </p>
+                      <p className="text-3xl font-black text-cyan-600 dark:text-cyan-400">
+                        {doctor.price.toLocaleString('vi-VN')}₫
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -528,16 +780,18 @@ function DoctorCard({
   doctor,
   isSelected,
   onClick,
+  onViewDetails,
 }: {
   doctor: DoctorSlotDetailDto;
   isSelected: boolean;
   onClick: () => void;
+  onViewDetails: () => void;
 }) {
   return (
     <button
       disabled={doctor.isBooked}
       onClick={onClick}
-      className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${
+      className={`flex items-center gap-4 p-4 rounded-2xl border transition-all relative group ${
         isSelected
           ? 'bg-cyan-50 border-cyan-200 dark:bg-cyan-900/20 dark:border-cyan-800 shadow-sm'
           : doctor.isBooked
@@ -545,10 +799,10 @@ function DoctorCard({
             : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-cyan-200'
       }`}
     >
-      <div className="relative">
-        {doctor.doctorAvatar ? (
+      <div className="relative group/avatar">
+        {resolveAvatarUrl(doctor.doctorAvatar) ? (
           <img
-            src={doctor.doctorAvatar}
+            src={resolveAvatarUrl(doctor.doctorAvatar)}
             alt={doctor.doctorName}
             className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
           />
@@ -557,6 +811,19 @@ function DoctorCard({
             <User size={24} />
           </div>
         )}
+
+        {/* View Details Overlay Button */}
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewDetails();
+          }}
+          className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity cursor-pointer"
+          title="Xem chi tiết"
+        >
+          <Eye size={16} className="text-white" />
+        </div>
+
         {doctor.isBooked && (
           <div className="absolute -bottom-1 -right-1 bg-red-500 text-white rounded-full p-1 border-2 border-white">
             <Info size={10} />
@@ -565,11 +832,24 @@ function DoctorCard({
       </div>
 
       <div className="flex-1 text-left">
-        <h4
-          className={`text-sm font-bold ${doctor.isBooked ? 'text-slate-400' : 'text-slate-900 dark:text-white'}`}
-        >
-          {doctor.doctorName}
-        </h4>
+        <div className="flex items-center justify-between">
+          <h4
+            className={`text-sm font-bold ${doctor.isBooked ? 'text-slate-400' : 'text-slate-900 dark:text-white'}`}
+          >
+            {doctor.doctorName}
+          </h4>
+          {!doctor.isBooked && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewDetails();
+              }}
+              className="text-[10px] font-bold text-cyan-600 hover:text-cyan-700 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
+            >
+              <Eye size={10} /> Xem chi tiết
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-2 mt-0.5">
           {doctor.isBooked ? (
             <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider">

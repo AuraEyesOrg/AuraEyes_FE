@@ -198,6 +198,11 @@ export const API_ENDPOINTS = {
       APPLY: (policyId: string, doctorId: string) =>
         `/system-admin/leave-policies/${policyId}/apply/${doctorId}`,
     },
+    APPOINTMENTS: {
+      PENDING_CANCELLATIONS: '/system-admin/appointments/pending-cancellations',
+      CONFIRM_REFUND: (id: string) =>
+        `/system-admin/appointments/${id}/confirm-refund`,
+    },
   },
 
   // Patient features
@@ -307,6 +312,8 @@ export const API_ENDPOINTS = {
     LIST: '/clinic-appointments',
     CREATE: '/clinic-appointments',
     CANCEL: (appointmentId: string) => `/clinic-appointments/${appointmentId}`,
+    REQUEST_CANCELLATION: (patientId: string, appointmentId: string) =>
+      `/patients/${patientId}/appointments/${appointmentId}/request-cancellation`,
     CHECK_IN: (appointmentId: string) =>
       `/clinic-appointments/${appointmentId}/check-in`,
     START: (appointmentId: string) =>

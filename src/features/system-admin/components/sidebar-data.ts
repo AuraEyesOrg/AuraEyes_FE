@@ -147,6 +147,7 @@ import {
   Settings,
   Users,
   Wallet,
+  Undo2,
 } from 'lucide-react';
 import { Permissions } from '@/constants/permissions';
 
@@ -193,6 +194,13 @@ export const sidebarNavItems: SidebarNavItem[] = [
     label: 'Payment Transactions',
     path: '/system-admin/cashflow',
     icon: Wallet,
+    requiredPermission: Permissions.CashflowRead,
+  },
+  {
+    id: 'refund-requests',
+    label: 'Refund Requests',
+    path: '/system-admin/refund-requests',
+    icon: Undo2,
     requiredPermission: Permissions.CashflowRead,
   },
   {

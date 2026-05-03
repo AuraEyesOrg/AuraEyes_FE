@@ -87,3 +87,24 @@ export const uploadOphthalmologistAvatar = async (
 
   return unwrapApiData<{ avatarUrl: string }>(response.data).avatarUrl;
 };
+
+export const deleteCertificate = async (
+  certificateId: string
+): Promise<void> => {
+  await api.delete(`/ophthalmologist/profile/certificates/${certificateId}`);
+};
+
+export const updateCertificate = async (
+  certificateId: string,
+  data: FormData
+): Promise<void> => {
+  await api.put(
+    `/ophthalmologist/profile/certificates/${certificateId}`,
+    data,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+};
