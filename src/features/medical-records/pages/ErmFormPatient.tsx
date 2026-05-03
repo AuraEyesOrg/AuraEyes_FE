@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { medicalRecordApi } from '../api/medical-record.api';
 import { masterDataApi, District, Ward } from '../api/master-data.api';
 import { AuraLogo } from '@/components/ui/aura-logo';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import ethnicities from '../data/ethnicities.json';
 import provinces from '../data/provinces.json';
 import nationalities from '../data/nationalities.json';
@@ -137,6 +138,8 @@ export default function ErmFormPatient() {
         giaLo: 'Giả lỗ',
         seoHDCo: 'Sẹo HĐ có',
         seoHDKhong: 'Sẹo HĐ không',
+        bongVM: 'Bong VM',
+        rachVM: 'Rách VM',
         thoaiHoaVMChuBien: 'Thoái hóa VM chu biên',
         thoaiHoaVMTrungTam: 'Thoái hóa VM trung tâm',
       },
@@ -369,6 +372,7 @@ export default function ErmFormPatient() {
         administrativeDataJson: JSON.stringify(data),
       });
       toast.success('Thông tin hành chính đã được lưu!');
+      navigate(resolvePathWithLocale('/clinic-staff/queue'));
     } catch (error) {
       toast.error('Lỗi khi lưu thông tin');
     }
@@ -582,7 +586,9 @@ export default function ErmFormPatient() {
           <div className="flex justify-between items-end border-b-2 border-black pb-0.5 mb-2">
             <h2 className="text-lg font-bold uppercase">I. HÀNH CHÍNH</h2>
             <div className="flex items-center gap-4 text-[11px] font-bold">
-              <span>Tuổi</span>
+              <span>
+                Tuổi <span className="text-rose-500">*</span>
+              </span>
               <div className="flex gap-0.5">
                 <span className="border border-black px-1.5 min-w-[20px] text-center">
                   {data.age?.charAt(0) || ' '}
@@ -596,7 +602,7 @@ export default function ErmFormPatient() {
 
           <div className="grid grid-cols-12 text-[12.5px] font-medium leading-relaxed gap-y-1">
             <div className="col-span-8 flex items-end">
-              1. Họ và tên:{' '}
+              1. Họ và tên <span className="text-rose-500">*</span>:{' '}
               <input
                 type="text"
                 value={data.fullName || ''}
@@ -607,7 +613,7 @@ export default function ErmFormPatient() {
               />
             </div>
             <div className="col-span-4 flex items-center justify-end gap-2">
-              2. Ngày sinh{' '}
+              2. Ngày sinh <span className="text-rose-500">*</span>{' '}
               <div className="flex gap-0.5">
                 {renderDateDigits(data.birthDate).map((digit, i) => (
                   <span
@@ -621,7 +627,8 @@ export default function ErmFormPatient() {
             </div>
 
             <div className="col-span-12 flex items-center">
-              3. Giới: {renderSquare(data.gender === 'Nam', 'gender')} Nam{' '}
+              3. Giới <span className="text-rose-500">*</span>:{' '}
+              {renderSquare(data.gender === 'Nam', 'gender')} Nam{' '}
               {renderSquare(data.gender === 'Nữ', 'gender')} Nữ
               <span className="ml-10">4. Nghề nghiệp:</span>{' '}
               <input
@@ -680,7 +687,7 @@ export default function ErmFormPatient() {
             </div>
 
             <div className="col-span-12 flex items-center">
-              7. Địa chỉ:{' '}
+              7. Địa chỉ <span className="text-rose-500">*</span>:{' '}
               <input
                 type="text"
                 value={data.address || ''}
@@ -689,7 +696,7 @@ export default function ErmFormPatient() {
                 className="border-b border-black flex-1 px-2 h-5 outline-none bg-transparent"
                 placeholder="Số nhà …… Thôn, phố ……"
               />
-              Xã, phường:{' '}
+              Xã, phường <span className="text-rose-500">*</span>:{' '}
               <select
                 value={data.wardCode || ''}
                 onChange={(e) => handleChange('wardCode', e.target.value)}
@@ -705,7 +712,7 @@ export default function ErmFormPatient() {
               </select>
             </div>
             <div className="col-span-12 flex items-center">
-              Huyện (Quận, thị xã):{' '}
+              Huyện (Quận, thị xã) <span className="text-rose-500">*</span>:{' '}
               <select
                 value={data.districtCode || ''}
                 onChange={(e) => handleChange('districtCode', e.target.value)}
@@ -719,7 +726,7 @@ export default function ErmFormPatient() {
                   </option>
                 ))}
               </select>
-              Tỉnh (thành phố):{' '}
+              Tỉnh (thành phố) <span className="text-rose-500">*</span>:{' '}
               <select
                 value={data.provinceCode || ''}
                 onChange={(e) => handleChange('provinceCode', e.target.value)}
@@ -1258,7 +1265,9 @@ export default function ErmFormPatient() {
 
           <div className="space-y-6 text-[14px] font-medium leading-relaxed px-2">
             <p>
-              <span className="font-bold uppercase">I. LÝ DO VÀO VIỆN:</span>{' '}
+              <span className="font-bold uppercase">
+                I. LÝ DO VÀO VIỆN <span className="text-rose-500">*</span>:
+              </span>{' '}
               <span className="border-b border-black flex-1 min-w-[400px] inline-block h-5 mx-2">
                 {data.admissionReason ||
                   '...........................................................................'}
@@ -1373,6 +1382,7 @@ export default function ErmFormPatient() {
                       { id: 6, key: 'mongMat', label: 'Mống mắt' },
                       { id: 7, key: 'theThuyTinh', label: 'Thể thủy tinh' },
                       { id: 8, key: 'dichKinh', label: 'Dịch kính' },
+                      { id: 9, key: 'vongMac', label: 'Võng mạc' },
                     ].map((row) => {
                       const rightEyeData = data.rightEye?.[row.key as any];
                       const leftEyeData = data.leftEye?.[row.key as any];
@@ -1402,319 +1412,96 @@ export default function ErmFormPatient() {
                         </tr>
                       );
                     })}
-                    {/* Section 9: Võng mạc is extra tall */}
-                    <tr className="divide-x divide-black align-top">
-                      <td className="p-2 relative min-h-[300px]">
-                        <p className="font-bold uppercase tracking-tight border-b border-black/10 pb-1 text-[12px]">
-                          9. Võng mạc:
-                          <span className="ml-2 normal-case font-medium">
-                            Bình thường{' '}
-                            {renderSquare(!!data.rightEye?.vongMac?.normal)}
-                          </span>
-                        </p>
-                        <div className="pl-4 text-[11px] space-y-2 mt-2">
-                          <p className="font-bold">
-                            Hệ mạch:{' '}
-                            <span className="font-medium normal-case">
-                              BT{' '}
-                              {renderSquare(
-                                !!data.rightEye?.vongMac?.checks?.heMachBT
-                              )}
-                            </span>
-                          </p>
-                          <div className="pl-6 space-y-1">
-                            <p>
-                              Tắc ĐM : trung tâm{' '}
-                              {renderSquare(
-                                !!data.rightEye?.vongMac?.checks?.tacDM &&
-                                  data.rightEye?.vongMac?.checks?.tacDM ===
-                                    'trungTam'
-                              )}{' '}
-                              nhánh{' '}
-                              {renderSquare(
-                                !!data.rightEye?.vongMac?.checks?.tacDM &&
-                                  data.rightEye?.vongMac?.checks?.tacDM ===
-                                    'nhanh'
-                              )}{' '}
-                              mi VM{' '}
-                              {renderSquare(
-                                !!data.rightEye?.vongMac?.checks?.tacDM &&
-                                  data.rightEye?.vongMac?.checks?.tacDM ===
-                                    'miVM'
-                              )}
-                            </p>
-                            <p>
-                              Tắc TM : trung tâm{' '}
-                              {renderSquare(
-                                !!data.rightEye?.vongMac?.checks?.tacTM &&
-                                  data.rightEye?.vongMac?.checks?.tacTM ===
-                                    'trungTam'
-                              )}{' '}
-                              nhánh{' '}
-                              {renderSquare(
-                                !!data.rightEye?.vongMac?.checks?.tacTM &&
-                                  data.rightEye?.vongMac?.checks?.tacTM ===
-                                    'nhanh'
-                              )}
-                            </p>
-                            <p className="pl-16">
-                              Phù{' '}
-                              {renderSquare(
-                                !!data.rightEye?.vongMac?.checks?.phu
-                              )}{' '}
-                              Thiếu máu{' '}
-                              {renderSquare(
-                                !!data.rightEye?.vongMac?.checks?.thieuMau
-                              )}
-                            </p>
-                            <p>
-                              Tân mạch võng mạc{' '}
-                              {renderSquare(
-                                !!data.rightEye?.vongMac?.checks?.tanMachVM
-                              )}
-                            </p>
-                          </div>
-
-                          <p className="font-bold border-t border-black/10 pt-1 mt-1">
-                            Đĩa thị:{' '}
-                            <span className="font-medium normal-case">
-                              BT{' '}
-                              {renderSquare(
-                                !!data.rightEye?.vongMac?.checks?.diaThiBT
-                              )}
-                            </span>{' '}
-                            Phù{' '}
-                            {renderSquare(
-                              !!data.rightEye?.vongMac?.checks?.diaThiPhu
-                            )}{' '}
-                            Teo{' '}
-                            {renderSquare(
-                              !!data.rightEye?.vongMac?.checks?.diaThiTeo
-                            )}
-                          </p>
-
-                          <p className="font-bold mt-1">
-                            Hoàng điểm:{' '}
-                            <span className="font-medium normal-case">
-                              BT{' '}
-                              {renderSquare(
-                                !!data.rightEye?.vongMac?.checks?.hoangDiemBT
-                              )}
-                            </span>{' '}
-                            Mất ánh HĐ{' '}
-                            {renderSquare(
-                              !!data.rightEye?.vongMac?.checks?.matAnhHD
-                            )}
-                          </p>
-                          <p className="pl-12">
-                            Phù : Khu trú{' '}
-                            {renderSquare(
-                              !!data.rightEye?.vongMac?.checks?.phuKhuTru
-                            )}{' '}
-                            Tỏa lan{' '}
-                            {renderSquare(
-                              !!data.rightEye?.vongMac?.checks?.phuToaLan
-                            )}
-                          </p>
-                          <p>
-                            Lỗ:{' '}
-                            {renderSquare(!!data.rightEye?.vongMac?.checks?.lo)}{' '}
-                            Độ {data.rightEye?.vongMac?.inputs?.loDo || '.....'}{' '}
-                            Lỗ lớp{' '}
-                            {renderSquare(
-                              !!data.rightEye?.vongMac?.checks?.loLop
-                            )}{' '}
-                            Giả lỗ{' '}
-                            {renderSquare(
-                              !!data.rightEye?.vongMac?.checks?.giaLo
-                            )}
-                          </p>
-                          <p>
-                            Sẹo HĐ: Có{' '}
-                            {renderSquare(
-                              !!data.rightEye?.vongMac?.checks?.seoHDCo
-                            )}{' '}
-                            Không{' '}
-                            {renderSquare(
-                              !!data.rightEye?.vongMac?.checks?.seoHDKhong
-                            )}
-                          </p>
-                          <p className="font-bold mt-1">
-                            Thoái hóa VM:{' '}
-                            <span className="font-medium normal-case">
-                              Chu biên{' '}
-                              {renderSquare(
-                                !!data.rightEye?.vongMac?.checks
-                                  ?.thoaiHoaVMChuBien
-                              )}{' '}
-                              Trung tâm{' '}
-                              {renderSquare(
-                                !!data.rightEye?.vongMac?.checks
-                                  ?.thoaiHoaVMTrungTam
-                              )}
-                            </span>
-                          </p>
-                        </div>
-                        <p className="text-[11px] border-b border-black border-dotted h-5 w-full mt-2"></p>
-                      </td>
-                      <td className="p-2 relative min-h-[300px]">
-                        <p className="font-bold uppercase tracking-tight border-b border-black/10 pb-1 text-[12px]">
-                          9. Võng mạc:
-                          <span className="ml-2 normal-case font-medium">
-                            Bình thường{' '}
-                            {renderSquare(!!data.leftEye?.vongMac?.normal)}
-                          </span>
-                        </p>
-                        <div className="pl-4 text-[11px] space-y-2 mt-2">
-                          <p className="font-bold">
-                            Hệ mạch:{' '}
-                            <span className="font-medium normal-case">
-                              BT{' '}
-                              {renderSquare(
-                                !!data.leftEye?.vongMac?.checks?.heMachBT
-                              )}
-                            </span>
-                          </p>
-                          <div className="pl-6 space-y-1">
-                            <p>
-                              Tắc ĐM : trung tâm{' '}
-                              {renderSquare(
-                                !!data.leftEye?.vongMac?.checks?.tacDM &&
-                                  data.leftEye?.vongMac?.checks?.tacDM ===
-                                    'trungTam'
-                              )}{' '}
-                              nhánh{' '}
-                              {renderSquare(
-                                !!data.leftEye?.vongMac?.checks?.tacDM &&
-                                  data.leftEye?.vongMac?.checks?.tacDM ===
-                                    'nhanh'
-                              )}{' '}
-                              mi VM{' '}
-                              {renderSquare(
-                                !!data.leftEye?.vongMac?.checks?.tacDM &&
-                                  data.leftEye?.vongMac?.checks?.tacDM ===
-                                    'miVM'
-                              )}
-                            </p>
-                            <p>
-                              Tắc TM : trung tâm{' '}
-                              {renderSquare(
-                                !!data.leftEye?.vongMac?.checks?.tacTM &&
-                                  data.leftEye?.vongMac?.checks?.tacTM ===
-                                    'trungTam'
-                              )}{' '}
-                              nhánh{' '}
-                              {renderSquare(
-                                !!data.leftEye?.vongMac?.checks?.tacTM &&
-                                  data.leftEye?.vongMac?.checks?.tacTM ===
-                                    'nhanh'
-                              )}
-                            </p>
-                            <p className="pl-16">
-                              Phù{' '}
-                              {renderSquare(
-                                !!data.leftEye?.vongMac?.checks?.phu
-                              )}{' '}
-                              Thiếu máu{' '}
-                              {renderSquare(
-                                !!data.leftEye?.vongMac?.checks?.thieuMau
-                              )}
-                            </p>
-                            <p>
-                              Tân mạch võng mạc{' '}
-                              {renderSquare(
-                                !!data.leftEye?.vongMac?.checks?.tanMachVM
-                              )}
-                            </p>
-                          </div>
-
-                          <p className="font-bold border-t border-black/10 pt-1 mt-1">
-                            Đĩa thị:{' '}
-                            <span className="font-medium normal-case">
-                              BT{' '}
-                              {renderSquare(
-                                !!data.leftEye?.vongMac?.checks?.diaThiBT
-                              )}
-                            </span>{' '}
-                            Phù{' '}
-                            {renderSquare(
-                              !!data.leftEye?.vongMac?.checks?.diaThiPhu
-                            )}{' '}
-                            Teo{' '}
-                            {renderSquare(
-                              !!data.leftEye?.vongMac?.checks?.diaThiTeo
-                            )}
-                          </p>
-
-                          <p className="font-bold mt-1">
-                            Hoàng điểm:{' '}
-                            <span className="font-medium normal-case">
-                              BT{' '}
-                              {renderSquare(
-                                !!data.leftEye?.vongMac?.checks?.hoangDiemBT
-                              )}
-                            </span>{' '}
-                            Mất ánh HĐ{' '}
-                            {renderSquare(
-                              !!data.leftEye?.vongMac?.checks?.matAnhHD
-                            )}
-                          </p>
-                          <p className="pl-12">
-                            Phù : Khu trú{' '}
-                            {renderSquare(
-                              !!data.leftEye?.vongMac?.checks?.phuKhuTru
-                            )}{' '}
-                            Tỏa lan{' '}
-                            {renderSquare(
-                              !!data.leftEye?.vongMac?.checks?.phuToaLan
-                            )}
-                          </p>
-                          <p>
-                            Lỗ:{' '}
-                            {renderSquare(!!data.leftEye?.vongMac?.checks?.lo)}{' '}
-                            Độ {data.leftEye?.vongMac?.inputs?.loDo || '.....'}{' '}
-                            Lỗ lớp{' '}
-                            {renderSquare(
-                              !!data.leftEye?.vongMac?.checks?.loLop
-                            )}{' '}
-                            Giả lỗ{' '}
-                            {renderSquare(
-                              !!data.leftEye?.vongMac?.checks?.giaLo
-                            )}
-                          </p>
-                          <p>
-                            Sẹo HĐ: Có{' '}
-                            {renderSquare(
-                              !!data.leftEye?.vongMac?.checks?.seoHDCo
-                            )}{' '}
-                            Không{' '}
-                            {renderSquare(
-                              !!data.leftEye?.vongMac?.checks?.seoHDKhong
-                            )}
-                          </p>
-                          <p className="font-bold mt-1">
-                            Thoái hóa VM:{' '}
-                            <span className="font-medium normal-case">
-                              Chu biên{' '}
-                              {renderSquare(
-                                !!data.leftEye?.vongMac?.checks
-                                  ?.thoaiHoaVMChuBien
-                              )}{' '}
-                              Trung tâm{' '}
-                              {renderSquare(
-                                !!data.leftEye?.vongMac?.checks
-                                  ?.thoaiHoaVMTrungTam
-                              )}
-                            </span>
-                          </p>
-                        </div>
-                        <p className="text-[11px] border-b border-black border-dotted h-5 w-full mt-2"></p>
-                      </td>
-                    </tr>
                   </tbody>
                 </table>
               </div>
             </div>
+
+            {/* PRESCRIPTION SECTION */}
+            {(() => {
+              const rxItems: Array<{
+                id?: string;
+                medicineName?: string;
+                dosage?: string;
+                unit?: string;
+                frequency?: string;
+                duration?: string;
+                instruction?: string;
+              }> = Array.isArray(data.prescriptionItems)
+                ? data.prescriptionItems
+                : [];
+              const rxNote: string = data.prescriptionNote ?? '';
+              const noMed: boolean = data.noMedicationPrescribed ?? false;
+
+              return (
+                <div className="space-y-4 mt-6 px-2">
+                  <p className="font-bold uppercase">IV. ĐƠN THUỐC</p>
+                  {noMed ? (
+                    <p className="ml-4 italic text-[13px]">
+                      Không kê thuốc (chỉ tư vấn / lifestyle).
+                    </p>
+                  ) : rxItems.length === 0 ? (
+                    <p className="ml-4 italic text-[13px] text-slate-400">
+                      Chưa có đơn thuốc.
+                    </p>
+                  ) : (
+                    <div className="border border-black mx-4 overflow-hidden">
+                      <table className="w-full border-collapse text-[11.5px]">
+                        <thead>
+                          <tr className="divide-x divide-black border-b border-black bg-white font-bold text-center h-8">
+                            <th className="w-6 px-1">STT</th>
+                            <th className="text-left px-2">Tên thuốc</th>
+                            <th className="px-2 whitespace-nowrap">
+                              Liều dùng
+                            </th>
+                            <th className="px-2 whitespace-nowrap">Đơn vị</th>
+                            <th className="px-2 whitespace-nowrap">Tần suất</th>
+                            <th className="px-2 whitespace-nowrap">Số ngày</th>
+                            <th className="text-left px-2">Hướng dẫn</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-black">
+                          {rxItems.map((item, idx) => (
+                            <tr
+                              key={item.id ?? idx}
+                              className="divide-x divide-black h-8 align-middle"
+                            >
+                              <td className="text-center px-1 font-bold">
+                                {idx + 1}
+                              </td>
+                              <td className="px-2 font-bold">
+                                {item.medicineName ?? ''}
+                              </td>
+                              <td className="px-2 text-center">
+                                {item.dosage ?? ''}
+                              </td>
+                              <td className="px-2 text-center">
+                                {item.unit ?? ''}
+                              </td>
+                              <td className="px-2 text-center">
+                                {item.frequency ?? ''}
+                              </td>
+                              <td className="px-2 text-center">
+                                {item.duration ?? ''}
+                              </td>
+                              <td className="px-2 italic">
+                                {item.instruction ?? ''}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                  {rxNote && (
+                    <p className="ml-4 text-[12px] italic">
+                      <span className="font-bold not-italic">Ghi chú:</span>{' '}
+                      {rxNote}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
 

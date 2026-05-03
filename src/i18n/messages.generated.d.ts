@@ -2482,6 +2482,7 @@ declare module 'i18next' {
         completed: string;
         cancelled: string;
         noShow: string;
+        cancellationRequested: string;
       };
       empty: {
         clinicAll: string;
@@ -2515,6 +2516,20 @@ declare module 'i18next' {
         targetStaff: string;
         ratingLabel: string;
         commentPlaceholder: string;
+      };
+      cancellation: {
+        modalTitle: string;
+        modalSubtitle: string;
+        bankName: string;
+        accountName: string;
+        bankNumber: string;
+        reason: string;
+        successToast: string;
+        errorToast: string;
+        ruleNotice: string;
+        ruleViolated: string;
+        confirmLabel: string;
+        cancelling: string;
       };
     };
     PatientDashboard: {

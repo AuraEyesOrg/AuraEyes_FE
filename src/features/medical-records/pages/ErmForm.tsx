@@ -1,5 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import {
+  PrescriptionTable,
+  normalizePrescriptionItemsForPersistence,
+  validatePrescriptionItems,
+} from '@/features/ophthalmologist/components/PrescriptionTable';
+import type { RxItem } from '@/features/ophthalmologist/types/drug.type';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import {
   Save,
@@ -19,6 +25,7 @@ import {
   CheckCircle,
   ArrowLeft,
   X,
+  Pill,
 } from 'lucide-react';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -27,6 +34,7 @@ import { toast } from 'react-toastify';
 import useAuthStore from '@/store/auth-store';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import { MedicalRecordStatus } from '../api/medical-record.api';
 import {
   useMedicalRecord,
@@ -38,6 +46,11 @@ import {
 import { usePatientProfile } from '@/features/patient/hooks/useProfile';
 import { clinicScreeningApi } from '@/features/clinic-staff/api/screening.api';
 import { getConsultationSession } from '@/features/consultation/api/consultation.api';
+import {
+  useConsultationSessions,
+  useSubmitVerificationReport,
+} from '@/features/consultation/hooks/use-consultation';
+import { ConsultationSessionType, SessionStatus } from '@/types/consultation';
 import {
   masterDataApi,
   Province,
@@ -357,10 +370,20 @@ export default function ErmForm() {
   const [aiResult, setAiResult] = useState<any>(null);
   const [screeningId, setScreeningId] = useState<string | null>(null);
   const [showAiResult, setShowAiResult] = useState(false);
-  const [activeStep, setActiveStep] = useState<'admin' | 'clinical'>('admin');
+  const [activeStep, setActiveStep] = useState<
+    'admin' | 'clinical' | 'prescription'
+  >('admin');
   const [hasAutoSwitched, setHasAutoSwitched] = useState(false);
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
   const hasInitiatedConsultation = useRef(false);
+
+  // ─── Prescription state ────────────────────────────────────────────────────
+  const [prescriptionItems, setPrescriptionItems] = useState<RxItem[]>([]);
+  const [prescriptionNote, setPrescriptionNote] = useState('');
+  const [noMedicationPrescribed, setNoMedicationPrescribed] = useState(false);
+  const [prescriptionErrors, setPrescriptionErrors] = useState<
+    Record<string, (keyof Omit<RxItem, 'id'>)[]>
+  >({});
 
   // Custom Hooks
   const { data: record, isLoading: isLoadingRecord } = useMedicalRecord(
@@ -370,6 +393,33 @@ export default function ErmForm() {
   const finalizeMutation = useFinalizeRecord();
   const startConsultationMutation = useStartConsultation();
   const updateAdministrativeMutation = useUpdateAdministrative();
+  const submitVerificationReportMutation = useSubmitVerificationReport();
+
+  // Fetch patient profile if needed
+  const patientIdFromRecord =
+    record?.patientId || location.state?.formData?.patientId;
+
+  // Find the active consultation session to link the diagnosis for the Cashier
+  const consultationSessionsQuery = useConsultationSessions(
+    {
+      patientId: patientIdFromRecord,
+    },
+    { enabled: Boolean(patientIdFromRecord) }
+  );
+
+  const linkedSessions = consultationSessionsQuery.data?.items ?? [];
+  const activeSessions = linkedSessions.filter(
+    (s) =>
+      s.status !== SessionStatus.Cancelled &&
+      s.status !== SessionStatus.Completed
+  );
+  const reportableSession = activeSessions.find(
+    (s) =>
+      s.type === ConsultationSessionType.ClinicBooking ||
+      s.type === ConsultationSessionType.Verification ||
+      s.type === ConsultationSessionType.VideoCall
+  );
+  const reportableSessionId = reportableSession?.id ?? null;
 
   // Role Detection
   const isOphthalmologist = user?.roles.includes('Ophthalmologist');
@@ -390,9 +440,6 @@ export default function ErmForm() {
     }
   }, [id, isOphthalmologist, navigate]);
 
-  // Fetch patient profile if needed
-  const patientIdFromRecord =
-    record?.patientId || location.state?.formData?.patientId;
   const { data: patientProfile } = usePatientProfile(patientIdFromRecord);
 
   const {
@@ -489,10 +536,17 @@ export default function ErmForm() {
   ]);
 
   useEffect(() => {
-    if (location.state?.initialTab) {
-      setActiveStep(location.state.initialTab as 'admin' | 'clinical');
+    const tab = location.state?.initialTab;
+    if (tab === 'admin' || tab === 'clinical' || tab === 'prescription') {
+      setActiveStep(tab);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    if (!isOphthalmologist && activeStep === 'prescription') {
+      setActiveStep('admin');
+    }
+  }, [isOphthalmologist, activeStep]);
 
   useEffect(() => {
     if (record) {
@@ -516,14 +570,67 @@ export default function ErmForm() {
         }
       );
 
+      const mergeEyeSections = (savedEye: Record<string, any> | undefined) =>
+        SECTION_KEYS.reduce(
+          (acc, key) => {
+            const savedSection = savedEye?.[key] ?? {};
+            acc[key] = {
+              ...INITIAL_ITEM,
+              ...savedSection,
+              checks: { ...(savedSection.checks ?? {}) },
+              inputs: { ...(savedSection.inputs ?? {}) },
+              other: savedSection.other ?? '',
+            };
+            return acc;
+          },
+          {} as Record<string, DetailedEyeItem>
+        );
+
+      const normalizedClinicalData = {
+        ...clinicalData,
+        rightEye: mergeEyeSections(clinicalData?.rightEye),
+        leftEye: mergeEyeSections(clinicalData?.leftEye),
+      };
+
       reset({
         ...INITIAL_VALUES,
         ...formattedAdmin,
-        ...clinicalData,
+        ...normalizedClinicalData,
         maYT: record.medicalRecordNumber,
         finalDiagnosisMain: record.finalDiagnosis,
         finalDiagnosisExtra: record.treatmentPlan,
       });
+
+      // Hydrate prescription from clinicalDataJson (safe fallback for old records)
+      try {
+        const savedItems = clinicalData?.prescriptionItems;
+        if (Array.isArray(savedItems) && savedItems.length > 0) {
+          setPrescriptionItems(
+            savedItems.map((item: Partial<RxItem>) => ({
+              id:
+                item.id ??
+                `rx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              medicineName: item.medicineName ?? '',
+              dosage: item.dosage ?? '',
+              unit: item.unit ?? '',
+              frequency: item.frequency ?? '',
+              duration: item.duration ?? '',
+              instruction: item.instruction ?? '',
+            }))
+          );
+        } else {
+          setPrescriptionItems([]);
+        }
+        setPrescriptionNote(clinicalData?.prescriptionNote ?? '');
+        setNoMedicationPrescribed(
+          clinicalData?.noMedicationPrescribed ?? false
+        );
+      } catch {
+        // silently ignore malformed prescription data from old records
+        setPrescriptionItems([]);
+        setPrescriptionNote('');
+        setNoMedicationPrescribed(false);
+      }
 
       // Explicitly load geographic data and set values to ensure they aren't lost
       const loadLocations = async () => {
@@ -831,11 +938,18 @@ export default function ErmForm() {
           id,
           data: { administrativeDataJson: JSON.stringify(adminData) },
         });
+
+        await queryClient.invalidateQueries({
+          queryKey: ['clinic-staff', 'queue'],
+        });
+        navigate(resolvePathWithLocale('/clinic-staff/queue'));
       } else if (isOphthalmologist) {
         const clinicalFields = [
           'medicalHistory',
           'personalHistory',
           'familyHistory',
+          'diseaseProcess',
+          'companionDisease',
           'rightEyeVisionNoGlass',
           'leftEyeVisionNoGlass',
           'rightEyeVisionWithGlass',
@@ -846,6 +960,7 @@ export default function ErmForm() {
           'leftEyeField',
           'rightEye',
           'leftEye',
+          'doctorName',
         ];
         const clinicalData = clinicalFields.reduce((acc, field) => {
           acc[field] = (data as any)[field];
@@ -857,6 +972,12 @@ export default function ErmForm() {
           (record?.clinicalDataJson
             ? JSON.parse(record.clinicalDataJson).screeningId
             : null);
+
+        const normalizedPrescriptionItems =
+          normalizePrescriptionItemsForPersistence(prescriptionItems);
+        clinicalData.prescriptionItems = normalizedPrescriptionItems;
+        clinicalData.prescriptionNote = prescriptionNote.trim();
+        clinicalData.noMedicationPrescribed = noMedicationPrescribed;
 
         await updateDiagnosisMutation.mutateAsync({
           id,
@@ -883,7 +1004,23 @@ export default function ErmForm() {
     if (!id) return;
     try {
       if (isOphthalmologist) {
-        // If doctor, save latest clinical state first
+        // Validate prescription before finalizing
+        if (!noMedicationPrescribed) {
+          const { valid, errors: rxErrors } = validatePrescriptionItems(
+            prescriptionItems,
+            noMedicationPrescribed
+          );
+          if (!valid) {
+            setPrescriptionErrors(rxErrors);
+            toast.error(
+              'Mỗi dòng thuốc cần điền đủ: Tên thuốc, Liều, Tần suất và Số ngày. Hoặc tick "Không kê thuốc".'
+            );
+            setShowFinalizeModal(false);
+            return;
+          }
+        }
+
+        // Save latest clinical state (including prescription) before finalizing
         const currentValues = getValues();
         const clinicalFields = [
           'medicalHistory',
@@ -911,6 +1048,12 @@ export default function ErmForm() {
           return acc;
         }, {} as any);
 
+        const normalizedPrescriptionItems =
+          normalizePrescriptionItemsForPersistence(prescriptionItems);
+        clinicalData.prescriptionItems = normalizedPrescriptionItems;
+        clinicalData.prescriptionNote = prescriptionNote.trim();
+        clinicalData.noMedicationPrescribed = noMedicationPrescribed;
+
         await updateDiagnosisMutation.mutateAsync({
           id,
           data: {
@@ -919,10 +1062,39 @@ export default function ErmForm() {
             treatmentPlan: currentValues.finalDiagnosisExtra,
           },
         });
+
+        // Submit the Diagnosis report to the Consultation Session so the Cashier can process it
+        if (reportableSessionId) {
+          const doctorId = user?.roleId || '';
+          await submitVerificationReportMutation.mutateAsync({
+            sessionId: reportableSessionId,
+            doctorId: doctorId,
+            diagnosisCode: currentValues.finalDiagnosisMain || 'N/A',
+            clinicalFindings:
+              clinicalData.diseaseProcess ||
+              currentValues.finalDiagnosisMain ||
+              'No findings recorded',
+            treatmentPlan: currentValues.finalDiagnosisExtra || '',
+            prescriptionItems:
+              normalizedPrescriptionItems.length > 0
+                ? normalizedPrescriptionItems
+                : undefined,
+            prescriptionNote: prescriptionNote.trim() || undefined,
+            noMedicationPrescribed,
+            status: 'Finalized',
+            finalizedAt: new Date().toISOString(),
+          });
+        } else {
+          toast.warning(
+            'Không tìm thấy phiên khám nào đang hoạt động để liên kết chẩn đoán. Thu ngân có thể không tìm thấy phí khám.'
+          );
+        }
       }
 
-      // Finalize the record
+      // Finalize the record → sends to Cashier
       await finalizeMutation.mutateAsync(id);
+
+      toast.success('Hồ sơ đã được khóa và gửi tới Thu ngân thành công!');
 
       if (isOphthalmologist) {
         navigate('/ophthalmologist/consultations');
@@ -931,6 +1103,7 @@ export default function ErmForm() {
       }
     } catch (error) {
       console.error(error);
+      toast.error('Lỗi khi khóa hồ sơ. Vui lòng thử lại.');
     } finally {
       setShowFinalizeModal(false);
     }
@@ -1076,7 +1249,7 @@ export default function ErmForm() {
               recordStatus === MedicalRecordStatus.Finalized ||
               !isDirty ||
               isSubmitting
-                ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                ? 'bg-slate-200 text-slate-700 ring-1 ring-inset ring-slate-300 cursor-not-allowed'
                 : 'bg-slate-900 text-white hover:bg-black hover:shadow-lg hover:shadow-black/20'
             }`}
           >
@@ -1213,28 +1386,44 @@ export default function ErmForm() {
             )}
           </div>
 
-          <div className="px-8 py-4 bg-white border-b border-slate-100 flex items-center justify-center">
-            <div className="inline-flex items-center bg-slate-50 p-1.5 rounded-2xl border border-slate-200">
+          <div className="px-4 py-4 bg-white border-b border-slate-100 flex items-center justify-center md:px-8">
+            <div className="inline-flex flex-wrap items-center justify-center gap-1 bg-slate-50 p-1.5 rounded-2xl border border-slate-200">
               <button
+                type="button"
                 onClick={() => setActiveStep('admin')}
-                className={`flex items-center gap-2 px-8 py-2.5 rounded-xl text-[11px] font-black transition-all ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black transition-all md:px-6 md:text-[11px] ${
                   activeStep === 'admin'
                     ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20'
                     : 'text-slate-400 hover:text-slate-600'
                 }`}
               >
-                <User className="w-4 h-4" /> I & II. HÀNH CHÍNH
+                <User className="w-4 h-4 shrink-0" /> I & II. HÀNH CHÍNH
               </button>
               <button
+                type="button"
                 onClick={() => isOphthalmologist && setActiveStep('clinical')}
                 disabled={!isOphthalmologist}
-                className={`flex items-center gap-2 px-8 py-2.5 rounded-xl text-[11px] font-black transition-all ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black transition-all md:px-6 md:text-[11px] ${
                   activeStep === 'clinical'
                     ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20'
-                    : 'text-slate-300'
-                } disabled:opacity-50`}
+                    : 'text-slate-400 hover:text-slate-600'
+                } disabled:opacity-50 disabled:hover:text-slate-400`}
               >
-                <Stethoscope className="w-4 h-4" /> III. LÂM SÀNG
+                <Stethoscope className="w-4 h-4 shrink-0" /> III. LÂM SÀNG
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  isOphthalmologist && setActiveStep('prescription')
+                }
+                disabled={!isOphthalmologist}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black transition-all md:px-6 md:text-[11px] ${
+                  activeStep === 'prescription'
+                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20'
+                    : 'text-slate-400 hover:text-slate-600'
+                } disabled:opacity-50 disabled:hover:text-slate-400`}
+              >
+                <Pill className="w-4 h-4 shrink-0" /> IV. ĐƠN THUỐC
               </button>
             </div>
           </div>
@@ -1296,7 +1485,8 @@ export default function ErmForm() {
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                     <div className="md:col-span-4 space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                        Họ và tên (In hoa)
+                        Họ và tên (In hoa){' '}
+                        <span className="text-rose-500">*</span>
                       </label>
                       <input
                         {...register('fullName')}
@@ -1306,7 +1496,7 @@ export default function ErmForm() {
                     </div>
                     <div className="md:col-span-2 space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                        Ngày sinh
+                        Ngày sinh <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -1317,7 +1507,7 @@ export default function ErmForm() {
                     </div>
                     <div className="md:col-span-1 space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                        Tuổi
+                        Tuổi <span className="text-rose-500">*</span>
                       </label>
                       <input
                         {...register('age')}
@@ -1327,7 +1517,7 @@ export default function ErmForm() {
                     </div>
                     <div className="md:col-span-2 space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                        Giới tính
+                        Giới tính <span className="text-rose-500">*</span>
                       </label>
                       <select
                         {...register('gender')}
@@ -1407,7 +1597,8 @@ export default function ErmForm() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                        Tỉnh / Thành phố
+                        Tỉnh / Thành phố{' '}
+                        <span className="text-rose-500">*</span>
                       </label>
                       <div className="relative">
                         <select
@@ -1457,7 +1648,7 @@ export default function ErmForm() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                        Quận / Huyện
+                        Quận / Huyện <span className="text-rose-500">*</span>
                       </label>
                       <div className="relative">
                         <select
@@ -1507,7 +1698,7 @@ export default function ErmForm() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                        Phường / Xã
+                        Phường / Xã <span className="text-rose-500">*</span>
                       </label>
                       <div className="relative">
                         <select
@@ -1550,7 +1741,7 @@ export default function ErmForm() {
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                      Số nhà, tên đường
+                      Số nhà, tên đường <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
                       <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
@@ -1764,7 +1955,7 @@ export default function ErmForm() {
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase ml-1">
-                      Lý do vào viện
+                      Lý do vào viện <span className="text-rose-500">*</span>
                     </label>
                     <textarea
                       {...register('admissionReason')}
@@ -1932,9 +2123,8 @@ export default function ErmForm() {
                     </div>
                   )}
               </div>
-            ) : (
-              <div className="p-8 md:p-12 space-y-12 animate-in slide-in-from-right-4 duration-500">
-                {/* Removed AI & Quick Normal Header per user request */}
+            ) : activeStep === 'clinical' ? (
+              <div className="p-8 md:p-12 space-y-10 animate-in slide-in-from-right-4 duration-500">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="bg-slate-50 p-8 rounded-[3rem] border border-slate-100 relative overflow-hidden">
                     <div className="absolute top-0 right-0 px-6 py-2 bg-cyan-600 text-white font-black text-[10px] tracking-widest uppercase rounded-bl-3xl">
@@ -1954,6 +2144,9 @@ export default function ErmForm() {
                           placeholder="V"
                           className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-cyan-600 border border-slate-100 focus:border-cyan-500/20"
                         />
+                        <p className="text-[9px] text-slate-400 mt-1">
+                          Định dạng: n/10 (vd 8/10). Có kính ≥ không kính.
+                        </p>
                       </div>
                       <div className="space-y-1">
                         <label className="text-[9px] font-black text-slate-400 uppercase">
@@ -1968,6 +2161,9 @@ export default function ErmForm() {
                           placeholder="V"
                           className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-cyan-600 border border-slate-100 focus:border-cyan-500/20"
                         />
+                        <p className="text-[9px] text-slate-400 mt-1">
+                          Định dạng: n/10 (vd 8/10). Có kính ≥ không kính.
+                        </p>
                       </div>
                       <div className="space-y-1">
                         <label className="text-[9px] font-black text-slate-400 uppercase">
@@ -2012,6 +2208,9 @@ export default function ErmForm() {
                           placeholder="V"
                           className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-rose-500 border border-transparent focus:border-rose-500/20"
                         />
+                        <p className="text-[9px] text-slate-400 mt-1">
+                          Định dạng: n/10 (vd 8/10). Có kính ≥ không kính.
+                        </p>
                       </div>
                       <div className="space-y-1">
                         <label className="text-[9px] font-black text-slate-400 uppercase">
@@ -2026,6 +2225,9 @@ export default function ErmForm() {
                           placeholder="V"
                           className="w-full bg-white p-3 rounded-xl outline-none font-black text-xl text-rose-500 border border-transparent focus:border-rose-500/20"
                         />
+                        <p className="text-[9px] text-slate-400 mt-1">
+                          Định dạng: n/10 (vd 8/10). Có kính ≥ không kính.
+                        </p>
                       </div>
                       <div className="space-y-1">
                         <label className="text-[9px] font-black text-slate-400 uppercase">
@@ -2099,71 +2301,71 @@ export default function ErmForm() {
                   </div>
                 </div>
 
-                <div className="p-10 bg-slate-900 rounded-[3rem] text-white space-y-8 shadow-2xl relative overflow-hidden group">
-                  <div className="absolute -right-20 -top-20 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-all duration-700" />
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-cyan-500 rounded-2xl flex items-center justify-center text-white font-black italic">
-                      !
+                <div className="rounded-[2.5rem] border border-slate-300 bg-slate-50 p-8 shadow-md shadow-slate-300/25 ring-1 ring-slate-200/90 md:p-10 space-y-8">
+                  <div className="flex flex-col gap-4 border-b border-slate-200 pb-8 sm:flex-row sm:items-start sm:gap-6">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 shadow-sm">
+                      <FileText className="h-5 w-5 text-cyan-700" />
                     </div>
-                    <div className="flex flex-col">
-                      <h2 className="text-sm font-black uppercase tracking-[0.2em]">
-                        KẾT LUẬN & CHẨN ĐOÁN
+                    <div className="min-w-0 space-y-1">
+                      <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 sm:text-sm">
+                        Kết luận & chẩn đoán
                       </h2>
-                      <span className="text-[10px] font-bold text-cyan-400 italic mt-1">
-                        (Chẩn đoán cuối cùng của bác sĩ dựa trên khám lâm sàng
-                        và kết quả AI hỗ trợ)
-                      </span>
+                      <p className="max-w-prose text-xs font-medium leading-relaxed text-slate-600">
+                        Chẩn đoán cuối cùng dựa trên khám lâm sàng và kết quả AI
+                        hỗ trợ.
+                      </p>
                     </div>
                   </div>
 
                   <div className="space-y-6">
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-600">
                         Chẩn đoán chính
                       </label>
                       <input
                         {...register('finalDiagnosisMain')}
                         disabled={isReadOnlyClinical}
-                        className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none font-black text-xl text-cyan-400 focus:bg-white/10 transition-all"
+                        className="w-full rounded-2xl border border-slate-300 bg-white p-4 text-sm font-bold text-slate-900 shadow-sm outline-none transition-colors placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 md:p-5 md:text-base disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-800"
                         placeholder="Chẩn đoán..."
                       />
                     </div>
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-600">
                         Bệnh kèm theo
                       </label>
                       <input
                         {...register('companionDisease')}
                         disabled={isReadOnlyClinical}
-                        className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none font-bold text-sm text-slate-200 focus:bg-white/10 transition-all"
+                        className="w-full rounded-2xl border border-slate-300 bg-white p-4 text-sm font-semibold text-slate-900 shadow-sm outline-none transition-colors placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-800"
                         placeholder="Bệnh kèm theo (nếu có)..."
                       />
                     </div>
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-600">
                         Hướng điều trị
                       </label>
                       <textarea
                         {...register('finalDiagnosisExtra')}
                         disabled={isReadOnlyClinical}
-                        className="w-full h-32 bg-white/5 border border-white/10 p-5 rounded-2xl outline-none font-bold text-sm text-slate-200 focus:bg-white/10 transition-all resize-none"
+                        className="h-32 w-full resize-none rounded-2xl border border-slate-300 bg-white p-4 text-sm font-medium text-slate-900 shadow-sm outline-none transition-colors placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-800"
                         placeholder="Lời dặn bác sĩ..."
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                  <div className="grid grid-cols-1 gap-6 border-t border-slate-200 pt-8 md:grid-cols-2 md:gap-8">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-600">
                         Bác sĩ khám
                       </label>
                       <input
                         {...register('doctorName')}
-                        className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none font-black text-sm text-white"
+                        disabled={isReadOnlyClinical}
+                        className="w-full rounded-xl border border-slate-300 bg-white p-4 text-sm font-bold text-slate-900 shadow-sm outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-800"
                         placeholder="Họ tên bác sĩ"
                       />
                     </div>
-                    <div className="flex items-end justify-end gap-4">
+                    <div className="flex flex-col justify-end gap-3 md:flex-row md:items-end md:justify-end">
                       {isOphthalmologist &&
                         recordStatus !== MedicalRecordStatus.Finalized && (
                           <button
@@ -2172,27 +2374,99 @@ export default function ErmForm() {
                             disabled={
                               isSubmitting || finalizeMutation.isPending
                             }
-                            className={`px-10 py-4 rounded-2xl font-black text-xs transition-all shadow-xl uppercase tracking-widest flex items-center gap-2 ${
+                            className={`flex items-center gap-2 rounded-2xl px-8 py-4 text-xs font-black uppercase tracking-widest shadow-lg transition-all md:px-10 ${
                               isSubmitting || finalizeMutation.isPending
-                                ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
-                                : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-600/20'
+                                ? 'cursor-not-allowed bg-slate-200 text-slate-700 ring-1 ring-inset ring-slate-300 shadow-none'
+                                : 'bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-700'
                             }`}
                           >
-                            <Lock className="w-4 h-4" /> Khóa hồ sơ
+                            <Lock className="h-4 w-4" /> Khóa hồ sơ
                           </button>
                         )}
                       <button
                         type="submit"
                         disabled={!isDirty || isSubmitting}
                         onClick={handleSubmit(onSubmit)}
-                        className={`px-12 py-4 rounded-2xl font-black text-xs transition-all shadow-xl uppercase tracking-widest group flex items-center gap-2 ${
+                        className={`group flex items-center gap-2 rounded-2xl px-10 py-4 text-xs font-black uppercase tracking-widest shadow-lg transition-all md:px-12 ${
                           !isDirty || isSubmitting
-                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
-                            : 'bg-cyan-500 text-white hover:bg-cyan-400 shadow-cyan-500/20'
+                            ? 'cursor-not-allowed bg-slate-200 text-slate-700 ring-1 ring-inset ring-slate-300 shadow-none'
+                            : 'bg-cyan-600 text-white shadow-cyan-600/25 hover:bg-cyan-700'
                         }`}
                       >
                         {isSubmitting ? 'ĐANG LƯU...' : 'LƯU CHẨN ĐOÁN'}{' '}
-                        <ChevronRight className="inline w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                        <ChevronRight className="inline h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-8 md:p-12 space-y-10 animate-in slide-in-from-right-4 duration-500">
+                <div className="space-y-8 animate-in fade-in duration-300">
+                  <div className="flex items-center gap-2">
+                    <Pill className="h-4 w-4 text-cyan-600" />
+                    <h2 className="text-xs font-black uppercase tracking-widest text-slate-900">
+                      IV. Đơn thuốc
+                    </h2>
+                  </div>
+                  <p className="max-w-2xl text-sm leading-relaxed text-slate-700">
+                    Kê đơn theo khám thực tế. Khi khóa hồ sơ, hệ thống kiểm tra
+                    đủ thông tin từng dòng thuốc hoặc tùy chọn không kê thuốc.
+                  </p>
+                  <div className="rounded-[2.5rem] border border-slate-300 bg-slate-50 p-6 shadow-md shadow-slate-300/20 ring-1 ring-slate-200/90 md:p-8">
+                    <PrescriptionTable
+                      items={prescriptionItems}
+                      onChange={(items) => {
+                        setPrescriptionItems(items);
+                        setPrescriptionErrors({});
+                      }}
+                      noMedicationPrescribed={noMedicationPrescribed}
+                      onNoMedicationChange={setNoMedicationPrescribed}
+                      prescriptionNote={prescriptionNote}
+                      onNoteChange={setPrescriptionNote}
+                      locked={recordStatus === MedicalRecordStatus.Finalized}
+                      validationErrors={prescriptionErrors}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-6 rounded-[2.5rem] border border-slate-300 bg-slate-100/80 p-6 shadow-sm ring-1 ring-slate-200/90 md:grid-cols-2 md:p-8">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-600">
+                        Bác sĩ khám
+                      </label>
+                      <input
+                        {...register('doctorName')}
+                        disabled={isReadOnlyClinical}
+                        className="w-full rounded-xl border border-slate-300 bg-white p-4 text-sm font-bold text-slate-900 shadow-sm outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-800"
+                        placeholder="Họ tên bác sĩ"
+                      />
+                    </div>
+                    <div className="flex flex-col justify-end gap-3 md:flex-row md:items-end md:justify-end">
+                      {recordStatus !== MedicalRecordStatus.Finalized && (
+                        <button
+                          type="button"
+                          onClick={handleFinalize}
+                          disabled={isSubmitting || finalizeMutation.isPending}
+                          className={`flex items-center gap-2 rounded-2xl px-8 py-4 text-xs font-black uppercase tracking-widest shadow-lg transition-all md:px-10 ${
+                            isSubmitting || finalizeMutation.isPending
+                              ? 'cursor-not-allowed bg-slate-200 text-slate-700 ring-1 ring-inset ring-slate-300 shadow-none'
+                              : 'bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-700'
+                          }`}
+                        >
+                          <Lock className="h-4 w-4" /> Khóa hồ sơ
+                        </button>
+                      )}
+                      <button
+                        type="submit"
+                        disabled={!isDirty || isSubmitting}
+                        onClick={handleSubmit(onSubmit)}
+                        className={`group flex items-center gap-2 rounded-2xl px-10 py-4 text-xs font-black uppercase tracking-widest shadow-lg transition-all md:px-12 ${
+                          !isDirty || isSubmitting
+                            ? 'cursor-not-allowed bg-slate-200 text-slate-700 ring-1 ring-inset ring-slate-300 shadow-none'
+                            : 'bg-cyan-600 text-white shadow-cyan-600/25 hover:bg-cyan-700'
+                        }`}
+                      >
+                        {isSubmitting ? 'ĐANG LƯU...' : 'LƯU CHẨN ĐOÁN'}{' '}
+                        <ChevronRight className="inline h-4 w-4 transition-transform group-hover:translate-x-1" />
                       </button>
                     </div>
                   </div>
@@ -2205,9 +2479,9 @@ export default function ErmForm() {
 
       <ConfirmModal
         open={showFinalizeModal}
-        title="Khóa hồ sơ bệnh án"
-        message="Khóa hồ sơ sẽ chuyển bệnh nhân sang quầy Thu ngân và không thể chỉnh sửa thêm. Bạn có chắc chắn muốn thực hiện?"
-        confirmLabel="Khóa hồ sơ"
+        title="Khóa hồ sơ & Gửi tới Thu ngân"
+        message="Thao tác này sẽ: (1) Lưu chẩn đoán và đơn thuốc, (2) Khóa hồ sơ bệnh án, (3) Gửi bệnh nhân đến quầy Thu ngân. Sau khi khóa sẽ không thể chỉnh sửa. Bạn có chắc chắn?"
+        confirmLabel="Xác nhận Finalize & Gửi Thu ngân"
         cancelLabel="Hủy"
         isLoading={
           finalizeMutation.isPending || updateDiagnosisMutation.isPending

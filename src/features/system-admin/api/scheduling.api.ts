@@ -55,8 +55,9 @@ const schedulingApi = {
     return response.data;
   },
 
-  // --- Slots ---
   getSlots: async (params?: {
+    ophthalId?: string;
+    status?: number; // using ScheduleStatus enum
     fromDate?: string;
     toDate?: string;
     pageNumber?: number;

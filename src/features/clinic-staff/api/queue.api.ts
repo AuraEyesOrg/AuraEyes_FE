@@ -6,6 +6,7 @@ import { unwrapApiData } from '@/types/api-response';
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type ClinicFlowState =
+  | 'ErmPending'
   | 'CheckedIn'
   | 'ScreeningPending'
   | 'AICompleted'

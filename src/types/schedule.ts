@@ -114,6 +114,13 @@ export const SLOT_TYPE_LABELS: Record<SlotType, string> = {
 
 // ============ APPOINTMENT SLOT BOOKING TYPES ============
 
+export interface SlotBookingDto {
+  appointmentId: string;
+  patientId: string;
+  patientName: string;
+  status: string;
+}
+
 /** List item DTO for appointment slots - matches BE AppointmentSlotListDto */
 export interface AppointmentSlotListDto {
   id: string;
@@ -130,6 +137,7 @@ export interface AppointmentSlotListDto {
   ophthalAvatarUrl?: string;
   cost: number | null;
   createdAt: string;
+  bookings: SlotBookingDto[];
 }
 
 /** Full detail DTO for appointment slot - matches BE AppointmentSlotDto */
