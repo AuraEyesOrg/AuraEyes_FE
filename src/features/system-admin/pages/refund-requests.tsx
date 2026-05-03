@@ -85,7 +85,6 @@ export default function RefundRequestsPage() {
     return cancellations.filter(
       (item) =>
         item.patientName.toLowerCase().includes(keyword) ||
-        item.patientPhone.toLowerCase().includes(keyword) ||
         item.refundBankNumber.toLowerCase().includes(keyword)
     );
   }, [cancellations, searchTerm]);
@@ -169,9 +168,6 @@ export default function RefundRequestsPage() {
                         <h3 className="font-black text-slate-900 dark:text-white truncate tracking-tight uppercase text-sm">
                           {item.patientName}
                         </h3>
-                        <p className="text-xs font-bold text-slate-500">
-                          {item.patientPhone}
-                        </p>
                       </div>
                     </div>
 
@@ -185,7 +181,10 @@ export default function RefundRequestsPage() {
                         </p>
                         <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
                           <Calendar className="w-3.5 h-3.5 text-brand" />
-                          {formatDate(item.slotStartTime, dateLocale)}
+                          {formatDate(
+                            new Date(`${item.date}T${item.startTime}`),
+                            dateLocale
+                          )}
                         </div>
                       </div>
                       <div className="space-y-1 text-right">
@@ -196,10 +195,13 @@ export default function RefundRequestsPage() {
                           )}
                         </p>
                         <p className="text-lg font-black text-emerald-600 tracking-tight">
-                          {formatMoney(item.price * 0.3, dateLocale)}
+                          {formatMoney(
+                            item.depositAmount || item.totalAmount * 0.3,
+                            dateLocale
+                          )}
                         </p>
                         <p className="text-[10px] font-medium text-slate-400 italic">
-                          (30% of {formatMoney(item.price, dateLocale)})
+                          (30% of {formatMoney(item.totalAmount, dateLocale)})
                         </p>
                       </div>
                     </div>

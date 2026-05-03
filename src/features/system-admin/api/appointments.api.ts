@@ -7,14 +7,15 @@ export interface PendingCancellationDto {
   id: string;
   patientId: string;
   patientName: string;
-  patientPhone: string;
-  slotStartTime: string;
-  price: number;
+  date: string;
+  startTime: string;
+  totalAmount: number;
+  depositAmount: number;
   refundBankNumber: string;
   refundAccountName: string;
   refundBankName: string;
   cancellationReason: string | null;
-  requestedAt: string;
+  createdAt: string;
 }
 
 export interface ConfirmRefundRequest {
@@ -24,10 +25,11 @@ export interface ConfirmRefundRequest {
 
 export const appointmentsApi = {
   async getPendingCancellations() {
-    const response = await api.get<ApiResponse<PendingCancellationDto[]>>(
+    const response = await api.get<ApiResponse<any>>(
       API_ENDPOINTS.SYSTEM_ADMIN.APPOINTMENTS.PENDING_CANCELLATIONS
     );
-    return unwrapApiData<PendingCancellationDto[]>(response.data);
+    const data = unwrapApiData<any>(response.data);
+    return (data?.items || []) as PendingCancellationDto[];
   },
 
   async confirmRefund(id: string, request: ConfirmRefundRequest) {
