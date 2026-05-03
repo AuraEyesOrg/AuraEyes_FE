@@ -22,7 +22,9 @@ export {
   getRefreshToken,
   getStoredUser,
   clearAuthData,
-  forceUpdateProfile,
+  onboardOphthalmologist,
+  onboardClinicStaff,
+  changePassword,
 } from './auth.api';
 
 // Two-Factor API
