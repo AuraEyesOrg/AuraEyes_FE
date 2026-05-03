@@ -5566,6 +5566,7 @@
       "page": {
         "title": "Hàng đợi phòng khám",
         "subtitle": "Theo dõi luồng bệnh nhân và phối hợp điều trị"
+      },
       "ClinicStaffQueue": {
         "page": {
           "title": "Quản lý hàng đợi",
