@@ -635,12 +635,39 @@ export default function SystemAdminScheduling() {
                           'All Statuses'
                         )}
                       </option>
-                      <option value="Available">Available</option>
-                      <option value="Partial">Partial Booked</option>
-                      <option value="Full">Fully Booked</option>
-                      <option value="Blocked">Blocked</option>
-                      <option value="Attended">Attended (Past)</option>
-                      <option value="Expired">Expired (Past)</option>
+                      <option value="Available">
+                        {t(
+                          'SystemAdmin.scheduling.status.available',
+                          'Available'
+                        )}
+                      </option>
+                      <option value="Partial">
+                        {t(
+                          'SystemAdmin.scheduling.status.partial',
+                          'Partial Booked'
+                        )}
+                      </option>
+                      <option value="Full">
+                        {t(
+                          'SystemAdmin.scheduling.status.full',
+                          'Fully Booked'
+                        )}
+                      </option>
+                      <option value="Blocked">
+                        {t('SystemAdmin.scheduling.status.blocked', 'Blocked')}
+                      </option>
+                      <option value="Attended">
+                        {t(
+                          'SystemAdmin.scheduling.status.attended',
+                          'Attended (Past)'
+                        )}
+                      </option>
+                      <option value="Expired">
+                        {t(
+                          'SystemAdmin.scheduling.status.expired',
+                          'Expired (Past)'
+                        )}
+                      </option>
                     </select>
 
                     <span className="text-sm font-medium text-slate-500 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-xl shadow-sm">
@@ -648,7 +675,7 @@ export default function SystemAdminScheduling() {
                         (acc, g) => acc + g.slots.length,
                         0
                       )}{' '}
-                      records
+                      {t('SystemAdmin.scheduling.records', 'records')}
                     </span>
                   </div>
                 </div>

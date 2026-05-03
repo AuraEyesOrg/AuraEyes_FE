@@ -320,7 +320,10 @@ export default function RefundRequestsPage() {
                 <input
                   value={refundTransactionId}
                   onChange={(e) => setRefundTransactionId(e.target.value)}
-                  placeholder="e.g. REF123456789"
+                  placeholder={t(
+                    'SystemAdmin.refundRequests.placeholders.transactionId',
+                    'e.g. REF123456789'
+                  )}
                   className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm text-slate-900 dark:text-white outline-none focus:border-brand transition-colors"
                 />
               </div>

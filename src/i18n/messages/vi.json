@@ -4897,7 +4897,17 @@
             }
           },
           "items": {
-            "staff-management": "Quản lý nhân viên"
+            "dashboard": "Bảng điều khiển",
+            "staff-management": "Quản lý nhân viên",
+            "leave-requests": "Yêu cầu nghỉ phép",
+            "patients": "Bệnh nhân",
+            "transaction-ledger": "Sổ giao dịch",
+            "refund-requests": "Yêu cầu hoàn tiền",
+            "scheduling": "Lịch trình",
+            "permissions": "Quyền hạn",
+            "audit-logs": "Nhật ký kiểm tra",
+            "settings": "Cài đặt",
+            "aura-network": "Mạng lưới Aura"
           }
         },
         "staff": {
@@ -4908,7 +4918,39 @@
             "fullName": "Họ và tên",
             "email": "Địa chỉ Email",
             "phone": "Số điện thoại",
-            "role": "Vai trò nhân viên"
+            "role": "Vai trò nhân viên",
+            "subRoles": "Vai trò chức năng",
+            "consultationFee": "Phí khám (VND)"
+          },
+          "validation": {
+            "fullNameRequired": "Vui lòng nhập họ và tên",
+            "nameTooShort": "Tên quá ngắn",
+            "emailRequired": "Vui lòng nhập email",
+            "invalidEmail": "Email không hợp lệ",
+            "phoneRequired": "Vui lòng nhập số điện thoại",
+            "invalidPhone": "Số điện thoại không hợp lệ",
+            "roleRequired": "Vui lòng chọn vai trò",
+            "feeNegative": "Phí không thể âm",
+            "feeRequired": "Vui lòng nhập phí khám",
+            "subRoleRequired": "Cần ít nhất một vai trò chức năng"
+          },
+          "placeholders": {
+            "fullName": "Nguyễn Văn A",
+            "email": "nhanvien@auraeyes.com",
+            "phone": "+84 123 456 789",
+            "consultationFee": "500000"
+          },
+          "roles": {
+            "clinicStaff": "Nhân viên phòng khám",
+            "ophthalmologist": "Bác sĩ nhãn khoa"
+          },
+          "subRoles": {
+            "receptionist": "Lễ tân",
+            "coordinator": "Điều phối viên",
+            "cashier": "Thu ngân"
+          },
+          "labels": {
+            "preview": "Xem trước:"
           },
           "actions": {
             "create": "Tạo nhân viên"
@@ -4916,6 +4958,97 @@
           "toasts": {
             "createSuccess": "Đã tạo nhân viên thành công. Mật khẩu tạm thời đã được gửi.",
             "createError": "Không thể tạo nhân viên"
+          }
+        },
+        "leavePolicies": {
+          "title": "Chính sách nghỉ phép",
+          "description": "Thiết lập quy tắc bù ngày nghỉ phép tự động cho nhân viên.",
+          "activeRule": "QUY TẮC ĐANG ÁP DỤNG",
+          "days": "ngày",
+          "empty": "Chưa có chính sách nghỉ phép",
+          "emptyDesc": "Bắt đầu bằng cách thêm chính sách để xác định cách nhân viên nhận thêm ngày nghỉ phép.",
+          "noDescription": "Chưa có mô tả",
+          "fields": {
+            "name": "Tên chính sách",
+            "days": "Ngày bổ sung",
+            "daysUnit": "Ngày",
+            "daysHint": "Số này sẽ được thêm vào quỹ nghỉ phép của nhân viên khi chính sách được áp dụng.",
+            "description": "Mô tả"
+          },
+          "placeholders": {
+            "name": "ví dụ: Làm thêm ngày lễ nhỏ",
+            "description": "Mô tả điều kiện áp dụng chính sách này..."
+          },
+          "actions": {
+            "add": "Thêm chính sách"
+          },
+          "toasts": {
+            "createSuccess": "Đã tạo chính sách thành công",
+            "createError": "Không thể tạo chính sách",
+            "updateSuccess": "Đã cập nhật chính sách thành công",
+            "updateError": "Không thể cập nhật chính sách",
+            "deleteSuccess": "Đã xóa chính sách thành công",
+            "deleteError": "Không thể xóa chính sách"
+          }
+        },
+        "staffManagement": {
+          "title": "Quản lý nhân viên",
+          "description": "Quản lý quyền truy cập và cài đặt chuyên môn cho đội ngũ phòng khám",
+          "actions": {
+            "addStaff": "Thêm nhân viên"
+          },
+          "stats": {
+            "totalStaff": "Tổng nhân viên",
+            "doctors": "Bác sĩ",
+            "locked": "Bị khóa"
+          },
+          "searchPlaceholder": "Tìm kiếm nhân viên...",
+          "toasts": {
+            "loadError": "Không thể tải dữ liệu nhân viên"
+          }
+        },
+        "scheduling": {
+          "records": "bản ghi",
+          "status": {
+            "available": "Còn trống",
+            "partial": "Một phần đã đặt",
+            "full": "Đã đầy",
+            "blocked": "Bị chặn",
+            "attended": "Đã khám (Quá khứ)",
+            "expired": "Hết hạn (Quá khứ)"
+          }
+        },
+        "auditLogs": {
+          "detail": {
+            "title": "Chi tiết nhật ký kiểm tra",
+            "noData": "Không có dữ liệu",
+            "before": "Trước (Giá trị cũ)",
+            "after": "Sau (Giá trị mới)",
+            "createdData": "Dữ liệu đã tạo",
+            "deletedData": "Dữ liệu đã xóa",
+            "actionLabel": "Hành động:",
+            "entityLabel": "Thực thể:",
+            "entityIdLabel": "ID thực thể:",
+            "userLabel": "Người dùng:",
+            "ipLabel": "IP:"
+          }
+        },
+        "settings": {
+          "general": {
+            "sections": {
+              "platformLocale": {
+                "title": "Nền tảng & ngôn ngữ",
+                "description": "Thiết lập cơ bản về danh tính, kênh liên hệ, múi giờ và ngôn ngữ mặc định."
+              }
+            },
+            "timezoneOptions": {
+              "utc": "UTC"
+            }
+          }
+        },
+        "refundRequests": {
+          "placeholders": {
+            "transactionId": "ví dụ: REF123456789"
           }
         },
         "cashflow": {

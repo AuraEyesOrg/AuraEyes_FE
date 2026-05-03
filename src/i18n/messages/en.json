@@ -4735,8 +4735,17 @@
         }
       },
       "items": {
+        "dashboard": "Dashboard",
         "staff-management": "Staff Management",
-        "refund-requests": "Refund Requests"
+        "leave-requests": "Leave Requests",
+        "patients": "Patients",
+        "transaction-ledger": "Transaction Ledger",
+        "refund-requests": "Refund Requests",
+        "scheduling": "Scheduling",
+        "permissions": "Permissions",
+        "audit-logs": "Audit Logs",
+        "settings": "Settings",
+        "aura-network": "Aura Network"
       }
     },
     "refundRequests": {
@@ -4767,6 +4776,9 @@
       "toasts": {
         "confirmSuccess": "Refund confirmed successfully.",
         "confirmError": "Unable to confirm refund."
+      },
+      "placeholders": {
+        "transactionId": "e.g. REF123456789"
       }
     },
     "staff": {
@@ -4777,7 +4789,39 @@
         "fullName": "Full Name",
         "email": "Email Address",
         "phone": "Phone Number",
-        "role": "Staff Role"
+        "role": "Staff Role",
+        "subRoles": "Functional Roles",
+        "consultationFee": "Consultation Fee (VND)"
+      },
+      "validation": {
+        "fullNameRequired": "Full name is required",
+        "nameTooShort": "Name is too short",
+        "emailRequired": "Email is required",
+        "invalidEmail": "Invalid email format",
+        "phoneRequired": "Phone number is required",
+        "invalidPhone": "Invalid phone format",
+        "roleRequired": "Role is required",
+        "feeNegative": "Fee cannot be negative",
+        "feeRequired": "Consultation fee is required",
+        "subRoleRequired": "At least one sub-role is required"
+      },
+      "placeholders": {
+        "fullName": "John Doe",
+        "email": "john.doe@auraeyes.com",
+        "phone": "+84 123 456 789",
+        "consultationFee": "500000"
+      },
+      "roles": {
+        "clinicStaff": "Clinic Staff",
+        "ophthalmologist": "Ophthalmologist"
+      },
+      "subRoles": {
+        "receptionist": "Receptionist",
+        "coordinator": "Coordinator",
+        "cashier": "Cashier"
+      },
+      "labels": {
+        "preview": "Preview:"
       },
       "actions": {
         "create": "Create Staff"
@@ -4785,6 +4829,92 @@
       "toasts": {
         "createSuccess": "Staff created successfully. Temporary password sent.",
         "createError": "Failed to create staff"
+      }
+    },
+    "leavePolicies": {
+      "title": "Leave Policies",
+      "description": "Define automatic leave day compensation rules for staff.",
+      "activeRule": "ACTIVE RULE",
+      "days": "days",
+      "empty": "No leave policies yet",
+      "emptyDesc": "Start by adding a policy to define how staff earn extra leave days.",
+      "noDescription": "No description provided",
+      "fields": {
+        "name": "Policy Name",
+        "days": "Additional Days",
+        "daysUnit": "Days",
+        "daysHint": "This number will be added to the staff member's leave fund when this policy is applied.",
+        "description": "Description"
+      },
+      "placeholders": {
+        "name": "e.g., Small Holiday Shift",
+        "description": "Describe the conditions for this policy..."
+      },
+      "actions": {
+        "add": "Add Policy"
+      },
+      "toasts": {
+        "createSuccess": "Policy created successfully",
+        "createError": "Failed to create policy",
+        "updateSuccess": "Policy updated successfully",
+        "updateError": "Failed to update policy",
+        "deleteSuccess": "Policy deleted successfully",
+        "deleteError": "Failed to delete policy"
+      }
+    },
+    "staffManagement": {
+      "title": "Staff Management",
+      "description": "Control access and professional settings for your clinic team",
+      "actions": {
+        "addStaff": "Add Staff"
+      },
+      "stats": {
+        "totalStaff": "Total Staff",
+        "doctors": "Doctors",
+        "locked": "Locked"
+      },
+      "searchPlaceholder": "Search staff...",
+      "toasts": {
+        "loadError": "Failed to load staff data"
+      }
+    },
+    "scheduling": {
+      "records": "records",
+      "status": {
+        "available": "Available",
+        "partial": "Partial Booked",
+        "full": "Fully Booked",
+        "blocked": "Blocked",
+        "attended": "Attended (Past)",
+        "expired": "Expired (Past)"
+      }
+    },
+    "auditLogs": {
+      "detail": {
+        "title": "Audit Log Detail",
+        "noData": "No data",
+        "before": "Before (Old Value)",
+        "after": "After (New Value)",
+        "createdData": "Created Data",
+        "deletedData": "Deleted Data",
+        "actionLabel": "Action:",
+        "entityLabel": "Entity:",
+        "entityIdLabel": "Entity ID:",
+        "userLabel": "User:",
+        "ipLabel": "IP:"
+      }
+    },
+    "settings": {
+      "general": {
+        "sections": {
+          "platformLocale": {
+            "title": "Platform & locale",
+            "description": "Basic identity, contact channel, timezone, and default language."
+          }
+        },
+        "timezoneOptions": {
+          "utc": "UTC"
+        }
       }
     },
     "cashflow": {
