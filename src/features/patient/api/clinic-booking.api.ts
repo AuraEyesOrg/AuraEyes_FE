@@ -14,6 +14,7 @@ import type {
   OrganisationScheduleDto,
   OrganisationSummaryDto,
   PatientClinicAppointmentsQuery,
+  RequestCancellationRequest,
 } from '../types/clinic-booking.types';
 
 interface PatientSearchOrganisationItem {
@@ -90,6 +91,20 @@ export const cancelClinicAppointment = async (
   appointmentId: string
 ): Promise<void> => {
   await api.delete(API_ENDPOINTS.CLINIC_APPOINTMENTS.CANCEL(appointmentId));
+};
+
+export const requestClinicCancellation = async (
+  patientId: string,
+  appointmentId: string,
+  request: RequestCancellationRequest
+): Promise<void> => {
+  await api.post(
+    API_ENDPOINTS.CLINIC_APPOINTMENTS.REQUEST_CANCELLATION(
+      patientId,
+      appointmentId
+    ),
+    request
+  );
 };
 
 const DEFAULT_PATIENT_CLINIC_PAGE_SIZE = 10;

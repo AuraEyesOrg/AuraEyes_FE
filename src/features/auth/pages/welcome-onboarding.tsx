@@ -756,7 +756,7 @@ const WelcomeOnboardingPage = () => {
                                     `degrees.${index}.name` as const,
                                     { required: true }
                                   )}
-                                  className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-emerald-500"
+                                  className="w-full bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-cyan-500"
                                   placeholder="MBBS, MD..."
                                 />
                               </div>
@@ -814,7 +814,7 @@ const WelcomeOnboardingPage = () => {
                                   {...register(
                                     `degrees.${index}.file` as const
                                   )}
-                                  className="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-emerald-50 file:text-emerald-700"
+                                  className="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-cyan-50 file:text-cyan-700"
                                 />
                               </div>
                             </div>
@@ -1070,5 +1070,4 @@ const WelcomeOnboardingPage = () => {
     </div>
   );
 };
-
 export default WelcomeOnboardingPage;

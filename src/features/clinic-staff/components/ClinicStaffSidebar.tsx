@@ -2,7 +2,6 @@ import {
   Home,
   Calendar,
   Users,
-  Wallet,
   Settings,
   LogOut,
   Globe,
@@ -98,12 +97,6 @@ export default function ClinicStaffSidebar() {
       label: t('ClinicStaffSidebar.nav.transactions', 'Transaction History'),
       path: '/clinic-staff/billing',
       requiredAnySubRole: ['Receptionist', 'Cashier'],
-    },
-    {
-      icon: Wallet,
-      label: t('ClinicStaffSidebar.nav.wallet', 'Wallet'),
-      path: '/clinic-staff/wallet',
-      requiredSubRole: 'Cashier',
     },
     {
       icon: Settings,

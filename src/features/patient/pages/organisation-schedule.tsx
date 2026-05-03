@@ -42,6 +42,7 @@ import {
 import { formatSlotTime } from '@/lib/date-utils';
 import { toast } from 'react-toastify';
 import { mapClinicPatientErrorMessage } from '@/lib/api-error';
+import { resolveAvatarUrl } from '@/lib/user-avatar';
 import { useNavigate } from 'react-router-dom';
 import type {
   AggregatedSlotDto,
@@ -100,6 +101,8 @@ export default function OrganisationSchedulePage() {
     (_, i) => i
   );
 
+  const MIN_ADVANCE_MS = 30 * 60 * 1000; // 30 minutes
+
   // 3. Filter expired slots client-side (belt-and-suspenders)
   const upcomingAggregatedSlots = useMemo(() => {
     if (!schedule?.aggregatedSlots) return [];
@@ -109,7 +112,7 @@ export default function OrganisationSchedulePage() {
         slot.startTime.length === 5 ? `${slot.startTime}:00` : slot.startTime;
       const startAt = new Date(`${dateKey}T${normalizedTime}+07:00`).getTime();
       if (Number.isNaN(startAt)) return false; // hide broken
-      return startAt >= Date.now();
+      return startAt >= Date.now() + MIN_ADVANCE_MS;
     });
   }, [schedule, selectedDate]);
 
@@ -133,6 +136,21 @@ export default function OrganisationSchedulePage() {
     if (!selectedDoctorSlot) {
       toast.warn('Vui lòng chọn bác sĩ để tiếp tục.');
       return;
+    }
+
+    if (selectedAggregatedSlot) {
+      const dateKey = format(selectedDate, 'yyyy-MM-dd');
+      const normalizedTime =
+        selectedAggregatedSlot.startTime.length === 5
+          ? `${selectedAggregatedSlot.startTime}:00`
+          : selectedAggregatedSlot.startTime;
+      const startAt = new Date(`${dateKey}T${normalizedTime}+07:00`).getTime();
+      if (!Number.isNaN(startAt) && startAt < Date.now() + MIN_ADVANCE_MS) {
+        toast.error(
+          'Slot này đã quá gần giờ bắt đầu. Vui lòng chọn slot khác cách ít nhất 30 phút.'
+        );
+        return;
+      }
     }
 
     createBooking(
@@ -650,9 +668,9 @@ function DoctorDetailsModal({
                     <div className="flex items-center gap-6">
                       <div className="relative">
                         <div className="w-24 h-24 rounded-3xl overflow-hidden border-4 border-white dark:border-slate-700 shadow-2xl">
-                          {doctor.doctorAvatar ? (
+                          {resolveAvatarUrl(doctor.doctorAvatar) ? (
                             <img
-                              src={doctor.doctorAvatar}
+                              src={resolveAvatarUrl(doctor.doctorAvatar)}
                               alt={doctor.doctorName}
                               className="w-full h-full object-cover"
                             />
@@ -670,7 +688,7 @@ function DoctorDetailsModal({
                       <div className="flex gap-8">
                         <div className="text-center sm:text-left">
                           <div className="text-xl font-black text-slate-900 dark:text-white">
-                            {doctor.ratingAverage || '5.0'}
+                            {doctor.ratingAverage}
                           </div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             Rating
@@ -678,9 +696,7 @@ function DoctorDetailsModal({
                         </div>
                         <div className="text-center sm:text-left">
                           <div className="text-xl font-black text-slate-900 dark:text-white">
-                            {doctor.ratingCount > 0
-                              ? `${doctor.ratingCount * 12}+`
-                              : '0'}
+                            {doctor.ratingCount}
                           </div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             Bệnh nhân
@@ -784,9 +800,9 @@ function DoctorCard({
       }`}
     >
       <div className="relative group/avatar">
-        {doctor.doctorAvatar ? (
+        {resolveAvatarUrl(doctor.doctorAvatar) ? (
           <img
-            src={doctor.doctorAvatar}
+            src={resolveAvatarUrl(doctor.doctorAvatar)}
             alt={doctor.doctorName}
             className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
           />

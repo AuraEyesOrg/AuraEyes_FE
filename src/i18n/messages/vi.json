@@ -2478,7 +2478,8 @@
       "inProgress": "Đang khám",
       "completed": "Hoàn thành",
       "cancelled": "Đã hủy",
-      "noShow": "Vắng mặt"
+      "noShow": "Vắng mặt",
+      "cancellationRequested": "Chờ hoàn tiền"
     },
     "empty": {
       "clinicAll": "Chưa có lịch hẹn cơ sở y tế.",
@@ -2512,6 +2513,20 @@
       "targetStaff": "Nhân viên",
       "ratingLabel": "Mức độ hài lòng",
       "commentPlaceholder": "Hãy chia sẻ thêm về trải nghiệm của bạn..."
+    },
+    "cancellation": {
+      "modalTitle": "Yêu cầu hủy lịch hẹn",
+      "modalSubtitle": "Vui lòng cung cấp thông tin ngân hàng để chúng tôi hoàn tiền đặt cọc (30% giá trị slot).",
+      "bankName": "Tên ngân hàng",
+      "accountName": "Tên chủ tài khoản",
+      "bankNumber": "Số tài khoản",
+      "reason": "Lý do hủy (tùy chọn)",
+      "successToast": "Yêu cầu hủy đã được gửi. Quản trị viên sẽ kiểm tra và hoàn tiền cho bạn.",
+      "errorToast": "Không thể gửi yêu cầu hủy. Vui lòng thử lại sau.",
+      "ruleNotice": "Lưu ý: Bạn chỉ có thể hủy lịch hẹn trước giờ bắt đầu ít nhất 6 tiếng.",
+      "ruleViolated": "Không thể hủy lịch hẹn vì đã quá hạn (ít hơn 6 tiếng trước giờ khám).",
+      "confirmLabel": "Gửi yêu cầu hủy",
+      "cancelling": "Đang gửi yêu cầu..."
     }
   },
   "PatientDashboard": {
