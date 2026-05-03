@@ -38,7 +38,7 @@ export enum NotificationType {
   SystemAlert = 9,
 
   /** Urgent consilium invitation for doctors */
-  ConsiliumInvitation = 10,
+  ConsiliumInvitation = 11,
 }
 
 export type NotificationTypeValue = NotificationType | string | number;
@@ -381,7 +381,7 @@ function getRoleHome(roles: string[]): string {
   );
 
   if (normalizedRoles.includes('systemadmin')) return '/system-admin/dashboard';
-  if (normalizedRoles.includes('clinicstaff')) return '/organisation/dashboard';
+  if (normalizedRoles.includes('clinicstaff')) return '/clinic-staff/dashboard';
   if (normalizedRoles.includes('ophthalmologist'))
     return '/ophthalmologist/dashboard';
   if (normalizedRoles.includes('patient')) return '/patient/notifications';
@@ -443,7 +443,7 @@ export function getNotificationRoute(
     case NotificationType.AiScreeningCompleted: {
       if (isClinicStaff && screeningId) {
         return appendIdQuery(
-          '/organisation/screening/result',
+          '/clinic-staff/management/screening/result',
           'id',
           screeningId
         );
@@ -469,7 +469,7 @@ export function getNotificationRoute(
         : isPatient
           ? '/patient/chat'
           : isClinicStaff
-            ? '/organisation/calendar'
+            ? '/clinic-staff/schedules'
             : isSystemAdmin
               ? '/system-admin/verifications'
               : fallbackHome;
@@ -484,7 +484,7 @@ export function getNotificationRoute(
         : isPatient
           ? '/patient/chat'
           : isClinicStaff
-            ? '/organisation/calendar'
+            ? '/clinic-staff/schedules'
             : isSystemAdmin
               ? '/system-admin/verifications'
               : fallbackHome;
@@ -515,7 +515,7 @@ export function getNotificationRoute(
       const base = isOphthalmologist
         ? '/ophthalmologist/appointments'
         : isClinicStaff
-          ? '/organisation/calendar'
+          ? '/clinic-staff/schedules'
           : isPatient
             ? '/patient/appointments'
             : isSystemAdmin
@@ -541,7 +541,7 @@ export function getNotificationRoute(
       const base = isPatient
         ? '/patient/wallet'
         : isClinicStaff
-          ? '/organisation/wallet'
+          ? '/clinic-staff/wallet'
           : isOphthalmologist
             ? '/ophthalmologist/wallet'
             : isSystemAdmin
@@ -556,7 +556,7 @@ export function getNotificationRoute(
         .trim();
       const visitId = readString(payload, 'visitId');
       if (isClinicStaff && action === 'cashier_payment_ready') {
-        const basePath = '/clinic-staff/queue';
+        const basePath = '/clinic-staff/cashier';
         return appendIdQuery(basePath, 'visitId', visitId);
       }
       const flowType = readString(
@@ -605,7 +605,7 @@ export function getNotificationRoute(
           : isOphthalmologist
             ? '/ophthalmologist/settings'
             : isClinicStaff
-              ? '/organisation/contract'
+              ? '/clinic-staff/settings'
               : fallbackHome;
       }
 
@@ -613,7 +613,7 @@ export function getNotificationRoute(
         return isOphthalmologist
           ? '/ophthalmologist/settings'
           : isClinicStaff
-            ? '/organisation/contract'
+            ? '/clinic-staff/settings'
             : isSystemAdmin
               ? '/system-admin/verifications'
               : fallbackHome;
@@ -623,7 +623,7 @@ export function getNotificationRoute(
         return isOphthalmologist
           ? '/ophthalmologist/contract'
           : isClinicStaff
-            ? '/organisation/contract'
+            ? '/clinic-staff/settings'
             : fallbackHome;
       }
 
@@ -633,15 +633,15 @@ export function getNotificationRoute(
           : isOphthalmologist
             ? '/ophthalmologist/settings'
             : isClinicStaff
-              ? '/organisation/contract'
+              ? '/clinic-staff/settings'
               : fallbackHome;
       }
 
-      if (isPatient) {
-        return '/patient/notifications';
-      }
-
       return fallbackHome;
+    }
+
+    case NotificationType.ConsiliumInvitation: {
+      return '/network/collaborations';
     }
 
     default:

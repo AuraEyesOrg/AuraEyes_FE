@@ -29,6 +29,8 @@ export default function ErmFormPatient() {
   const [isLoading, setIsLoading] = useState(false);
   const [districts, setDistricts] = useState<District[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
+  const [status, setStatus] = useState<string>('');
+  const isFinalized = status === 'Finalized';
 
   const sectionConfig: Record<
     string,
@@ -174,6 +176,7 @@ export default function ErmFormPatient() {
           }
 
           if (record) {
+            setStatus(record.status || record.Status || '');
             // Handle both camelCase and PascalCase from .NET backend
             const adminJson =
               record.administrativeDataJson ||
@@ -212,7 +215,7 @@ export default function ErmFormPatient() {
               });
             }
 
-            const mergedData = {
+            const mergedData: any = {
               // Default patient info from patient object if not in adminData
               fullName:
                 patient.fullName || patient.FullName || adminData.fullName,
@@ -234,6 +237,11 @@ export default function ErmFormPatient() {
               maYT: record.medicalRecordNumber || record.MedicalRecordNumber,
               patient: patient,
             };
+
+            // Normalize nationality
+            if (mergedData.nationality === 'Vietnam') {
+              mergedData.nationality = 'Việt Nam';
+            }
 
             setData(mergedData);
 
@@ -266,6 +274,7 @@ export default function ErmFormPatient() {
   }, [id]);
 
   const handleChange = async (field: string, value: any) => {
+    if (isFinalized) return;
     setData((prev: any) => ({ ...prev, [field]: value }));
 
     // Handle cascading locations
@@ -408,6 +417,7 @@ export default function ErmFormPatient() {
   const renderSquare = (checked: boolean, field?: string, value?: string) => (
     <span
       onClick={() => {
+        if (isFinalized) return;
         if (field) {
           if (value) {
             handleChange(field, value);
@@ -467,12 +477,14 @@ export default function ErmFormPatient() {
         >
           <ArrowLeft className="w-4 h-4" /> QUAY LẠI
         </button>
-        <button
-          onClick={handleSave}
-          className="bg-primary text-white px-8 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 hover:bg-primary/90 shadow-xl transition-all"
-        >
-          <Save className="w-4 h-4" /> LƯU THÔNG TIN
-        </button>
+        {!isFinalized && (
+          <button
+            onClick={handleSave}
+            className="bg-primary text-white px-8 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 hover:bg-primary/90 shadow-xl transition-all"
+          >
+            <Save className="w-4 h-4" /> LƯU THÔNG TIN
+          </button>
+        )}
         <button
           onClick={() => window.print()}
           className="bg-slate-900 text-white px-8 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 hover:bg-black shadow-xl transition-all"
@@ -528,6 +540,7 @@ export default function ErmFormPatient() {
                 spellCheck={false}
                 value={data.maYT || ''}
                 onChange={(e) => handleChange('maYT', e.target.value)}
+                disabled={isFinalized}
                 className="w-32 border-b border-black outline-none bg-transparent text-center font-bold"
                 placeholder="...................."
               />
@@ -544,6 +557,7 @@ export default function ErmFormPatient() {
               spellCheck={false}
               value={data.khoa || ''}
               onChange={(e) => handleChange('khoa', e.target.value)}
+              disabled={isFinalized}
               className="border-b border-black w-[150px] text-center outline-none bg-transparent font-bold not-italic"
               placeholder="................"
             />
@@ -556,6 +570,7 @@ export default function ErmFormPatient() {
               spellCheck={false}
               value={data.giuong || ''}
               onChange={(e) => handleChange('giuong', e.target.value)}
+              disabled={isFinalized}
               className="border-b border-black w-[80px] text-center outline-none bg-transparent font-bold not-italic"
               placeholder="............"
             />
@@ -586,6 +601,7 @@ export default function ErmFormPatient() {
                 type="text"
                 value={data.fullName || ''}
                 onChange={(e) => handleChange('fullName', e.target.value)}
+                disabled={isFinalized}
                 className="uppercase font-bold border-b border-black flex-1 ml-1 px-2 h-5 outline-none bg-transparent"
                 placeholder="..………………………...................................."
               />
@@ -612,6 +628,7 @@ export default function ErmFormPatient() {
                 type="text"
                 value={data.job || ''}
                 onChange={(e) => handleChange('job', e.target.value)}
+                disabled={isFinalized}
                 className="border-b border-black flex-1 px-2 mx-2 h-5 outline-none bg-transparent"
                 placeholder=".............................................."
               />
@@ -626,6 +643,7 @@ export default function ErmFormPatient() {
               <select
                 value={data.ethnicity || ''}
                 onChange={(e) => handleChange('ethnicity', e.target.value)}
+                disabled={isFinalized}
                 className="border-b border-black min-w-[120px] px-2 h-5 outline-none bg-transparent appearance-none cursor-pointer hover:bg-slate-50 transition-colors"
               >
                 <option value="">Chọn dân tộc...</option>
@@ -645,6 +663,7 @@ export default function ErmFormPatient() {
               <select
                 value={data.nationality || ''}
                 onChange={(e) => handleChange('nationality', e.target.value)}
+                disabled={isFinalized}
                 className="border-b border-black flex-1 px-2 h-5 outline-none bg-transparent appearance-none cursor-pointer hover:bg-slate-50 transition-colors"
               >
                 <option value="">Chọn quốc tịch...</option>
@@ -666,6 +685,7 @@ export default function ErmFormPatient() {
                 type="text"
                 value={data.address || ''}
                 onChange={(e) => handleChange('address', e.target.value)}
+                disabled={isFinalized}
                 className="border-b border-black flex-1 px-2 h-5 outline-none bg-transparent"
                 placeholder="Số nhà …… Thôn, phố ……"
               />
@@ -673,6 +693,7 @@ export default function ErmFormPatient() {
               <select
                 value={data.wardCode || ''}
                 onChange={(e) => handleChange('wardCode', e.target.value)}
+                disabled={isFinalized}
                 className="border-b border-black flex-1 px-2 h-5 outline-none bg-transparent mx-2 appearance-none cursor-pointer hover:bg-slate-50 transition-colors"
               >
                 <option value="">Chọn Phường/Xã...</option>
@@ -688,6 +709,7 @@ export default function ErmFormPatient() {
               <select
                 value={data.districtCode || ''}
                 onChange={(e) => handleChange('districtCode', e.target.value)}
+                disabled={isFinalized}
                 className="border-b border-black flex-1 px-2 h-5 outline-none bg-transparent mx-2 appearance-none cursor-pointer hover:bg-slate-50 transition-colors"
               >
                 <option value="">Chọn Quận/Huyện...</option>
@@ -701,6 +723,7 @@ export default function ErmFormPatient() {
               <select
                 value={data.provinceCode || ''}
                 onChange={(e) => handleChange('provinceCode', e.target.value)}
+                disabled={isFinalized}
                 className="border-b border-black flex-1 px-2 h-5 outline-none bg-transparent mx-2 appearance-none cursor-pointer hover:bg-slate-50 transition-colors font-bold"
               >
                 <option value="">Chọn tỉnh/thành...</option>
@@ -718,6 +741,7 @@ export default function ErmFormPatient() {
                 type="text"
                 value={data.workplace || ''}
                 onChange={(e) => handleChange('workplace', e.target.value)}
+                disabled={isFinalized}
                 className="border-b border-black flex-1 px-2 h-5 outline-none bg-transparent"
                 placeholder=".................................................................."
               />
@@ -753,6 +777,7 @@ export default function ErmFormPatient() {
                   parts[2] = e.target.value;
                   handleChange('bhytExpiry', parts.join('-'));
                 }}
+                disabled={isFinalized}
                 className="border-b border-black w-8 text-center h-5 outline-none bg-transparent mx-1"
               />
               tháng
@@ -764,6 +789,7 @@ export default function ErmFormPatient() {
                   parts[1] = e.target.value;
                   handleChange('bhytExpiry', parts.join('-'));
                 }}
+                disabled={isFinalized}
                 className="border-b border-black w-8 text-center h-5 outline-none bg-transparent mx-1"
               />
               năm 20
@@ -775,6 +801,7 @@ export default function ErmFormPatient() {
                   parts[0] = '20' + e.target.value;
                   handleChange('bhytExpiry', parts.join('-'));
                 }}
+                disabled={isFinalized}
                 className="border-b border-black w-8 text-center h-5 outline-none bg-transparent mx-1"
               />
               Số thẻ BHYT:
@@ -782,6 +809,7 @@ export default function ErmFormPatient() {
                 type="text"
                 value={data.bhytNumber || ''}
                 onChange={(e) => handleChange('bhytNumber', e.target.value)}
+                disabled={isFinalized}
                 className="border-b border-black flex-1 px-2 h-5 outline-none bg-transparent mx-2"
                 placeholder="………..........................................….."
               />
@@ -792,6 +820,7 @@ export default function ErmFormPatient() {
                 type="text"
                 value={data.relativeName || ''}
                 onChange={(e) => handleChange('relativeName', e.target.value)}
+                disabled={isFinalized}
                 className="border-b border-black flex-1 px-2 h-5 outline-none bg-transparent mx-2"
                 placeholder="……..………………………….........................................."
               />
@@ -802,6 +831,7 @@ export default function ErmFormPatient() {
                 type="text"
                 value={data.relativePhone || ''}
                 onChange={(e) => handleChange('relativePhone', e.target.value)}
+                disabled={isFinalized}
                 className="border-b border-black w-64 px-2 h-5 outline-none bg-transparent mx-2"
                 placeholder="…………..........................................."
               />

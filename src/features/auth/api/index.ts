@@ -22,6 +22,7 @@ export {
   getRefreshToken,
   getStoredUser,
   clearAuthData,
+  forceUpdateProfile,
 } from './auth.api';
 
 // Two-Factor API

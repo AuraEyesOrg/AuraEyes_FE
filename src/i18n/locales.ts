@@ -74,3 +74,12 @@ export const withLocalePathname = (
 
   return `/${locale}${cleanPath}`;
 };
+
+/**
+ * Hook to get a function that prefixes a path with the current locale
+ */
+export const useLocalePath = () => {
+  const locale =
+    getLocaleFromPathname(window.location.pathname) || DEFAULT_LOCALE;
+  return (pathname: string) => withLocalePathname(locale, pathname);
+};

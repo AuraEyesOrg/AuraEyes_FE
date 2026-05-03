@@ -2,6 +2,7 @@ import React from 'react';
 import { usePatientMedicalRecords } from '@/features/medical-records/hooks/useMedicalRecords';
 import PatientLayout from '../components/PatientLayout';
 import useAuthStore from '@/store/auth-store';
+import { useProfile } from '../hooks/useProfile';
 import { useTranslation } from 'react-i18next';
 import {
   FileText,
@@ -22,7 +23,10 @@ import { resolvePathWithLocale } from '@/i18n/middleware';
 
 const HistoryCard = ({ record }: { record: MedicalRecordDto }) => {
   const navigate = useNavigate();
-  const isLocked = record.status === 'Locked';
+  const isLocked =
+    record.status === 'Finalized' ||
+    record.status === '3' ||
+    (record.status as any) === 3;
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -49,7 +53,9 @@ const HistoryCard = ({ record }: { record: MedicalRecordDto }) => {
   return (
     <div
       className="group bg-white rounded-3xl border border-slate-100 p-6 hover:shadow-xl hover:shadow-primary/5 transition-all cursor-pointer"
-      onClick={() => navigate(`/medical-records/${record.id}`)}
+      onClick={() =>
+        navigate(resolvePathWithLocale(`/medical-records/patient/${record.id}`))
+      }
     >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-start gap-4">
@@ -108,7 +114,18 @@ export default function MedicalHistoryPage() {
     i18nT(key as never, options as never) as unknown as string;
 
   const { user } = useAuthStore();
-  const { data: records, isLoading } = usePatientMedicalRecords(user?.id || '');
+  const { data: profile } = useProfile();
+  const { data: allRecords, isLoading } = usePatientMedicalRecords(
+    profile?.id || ''
+  );
+
+  const records = React.useMemo(() => {
+    if (!allRecords) return [];
+    return allRecords.filter(
+      (r) =>
+        r.status === 'Finalized' || r.status === '3' || (r.status as any) === 3
+    );
+  }, [allRecords]);
 
   const PageHeader = () => (
     <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

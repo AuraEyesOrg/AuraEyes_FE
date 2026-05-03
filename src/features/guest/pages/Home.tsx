@@ -677,6 +677,7 @@ const HomePage = () => {
                     onClick={() =>
                       navigate(resolvePathWithLocale('/how-it-works'))
                     }
+                    data-tour="guest-nav-ai-screening"
                     className="magnetic-btn inline-flex min-h-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 py-2 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30"
                   >
                     <span className="flex flex-col items-start leading-tight">
@@ -685,6 +686,15 @@ const HomePage = () => {
                         {t('GuestEnhancements.ctaSubtext.quickAction')}
                       </span>
                     </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate(resolvePathWithLocale('/login'))}
+                    data-tour="guest-book-appointment"
+                    className="magnetic-btn inline-flex min-h-12 items-center justify-center rounded-lg border-2 border-[var(--color-brand-primary)] px-6 py-2 text-base font-bold text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)] hover:text-white transition-all shadow-sm"
+                  >
+                    {t('Home.hero.secondaryCta')}
                   </button>
                 </div>
 
@@ -1010,7 +1020,7 @@ const HomePage = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                       />
                     </svg>
                   </div>

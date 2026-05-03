@@ -21,6 +21,23 @@ const PrivateRoute: React.FC<Props> = ({
     return <Navigate to={resolvePathWithLocale('/')} replace />;
   }
 
+  // Force onboarding if profile update is required
+  const isInternalStaff =
+    user?.roles?.includes('Ophthalmologist') ||
+    user?.roles?.includes('ClinicStaff');
+
+  if (user?.mustUpdateProfile && isInternalStaff) {
+    const onboardingPath = resolvePathWithLocale('/welcome/onboarding');
+    const currentPath = window.location.pathname;
+
+    // Check if current path matches onboarding path (handling potential locale prefix)
+    const isOnOnboardingPage = currentPath.includes('/welcome/onboarding');
+
+    if (!isOnOnboardingPage) {
+      return <Navigate to={onboardingPath} replace />;
+    }
+  }
+
   // Role check helper
   const hasAnyRole = (roles: string[]) => {
     if (!user?.roles) return false;
