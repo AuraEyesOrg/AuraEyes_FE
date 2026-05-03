@@ -5552,6 +5552,20 @@
           "cashierDeskDesc": "Kiểm tra các lượt khám đã hoàn tất và thu phí"
         }
       },
+      "actions": {
+        "retry": "Thử lại",
+        "refresh": "Làm mới",
+        "fillErm": "Nhập ERM",
+        "editErm": "Sửa ERM",
+        "createScreening": "Tạo sàng lọc",
+        "viewScreening": "Xem sàng lọc",
+        "sending": "Đang gửi...",
+        "sendToDoctor": "Gửi bác sĩ",
+        "copyDoctorLink": "Copy link bác sĩ"
+      },
+      "page": {
+        "title": "Hàng đợi phòng khám",
+        "subtitle": "Theo dõi luồng bệnh nhân và phối hợp điều trị"
       "ClinicStaffQueue": {
         "page": {
           "title": "Quản lý hàng đợi",

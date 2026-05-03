@@ -5,18 +5,14 @@ import {
   Bot,
   Mail,
   Network,
-  Link as LinkIcon,
-  FilePlus,
   Loader2,
   Stethoscope,
   X,
   Sparkles,
-  Printer,
   RefreshCw,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 
 import { postsApi } from '@/features/professional-network/api/network.api';
 import { resolveAuthorType } from '@/features/professional-network/utils/authorType';
@@ -25,19 +21,11 @@ import i18n from '@/i18n/i18n';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { aiCoreClient } from '@/lib/axios';
-import {
-  downloadBlobFile,
-  getFileNameFromContentDisposition,
-} from '@/lib/file-export';
 import useAuthStore from '@/store/auth-store';
 import { unwrapApiData } from '@/types/api-response';
 
 import { clinicScreeningApi } from '../api/screening.api';
-import {
-  clinicQueueApi,
-  type AvailableDoctor,
-  type ClinicPaymentContext,
-} from '../api/queue.api';
+import { clinicQueueApi } from '../api/queue.api';
 import { ClinicRetinalViewerCard } from '../components/ClinicRetinalViewerCard';
 import ClinicStaffLayout from '../components/ClinicStaffLayout';
 import { ClinicScreeningStepper } from '../components/ClinicScreeningStepper';
@@ -107,12 +95,9 @@ export default function ClinicStaffScreeningResultPage() {
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [enhancingAnalysis, setEnhancingAnalysis] = useState(false);
-  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [sendingToDoctor, setSendingToDoctor] = useState(false);
   const [queueVisitId, setQueueVisitId] = useState<string | null>(null);
-  const [consultationSessionId, setConsultationSessionId] = useState<
-    string | null
-  >(null);
+  const [bookedDoctorId, setBookedDoctorId] = useState<string | null>(null);
 
   const [sessionData, setSessionData] =
     useState<OrgScreeningSessionDetail | null>(null);
@@ -138,15 +123,6 @@ export default function ClinicStaffScreeningResultPage() {
     useState(false);
   const [consultationNote, setConsultationNote] = useState('');
 
-  // Send to Doctor Modal State
-  const [sendDoctorModalOpen, setSendDoctorModalOpen] = useState(false);
-  const [availableDoctors, setAvailableDoctors] = useState<AvailableDoctor[]>(
-    []
-  );
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
-  const [sendDoctorNotes, setSendDoctorNotes] = useState('');
-  const [loadingDoctors, setLoadingDoctors] = useState(false);
-
   const imageContainerRef = useRef<HTMLDivElement | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const heatmapCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -154,25 +130,13 @@ export default function ClinicStaffScreeningResultPage() {
 
   const selectedImage =
     sessionData?.images[selectedImageIndex] ?? sessionData?.images[0];
-  const canShareResult = Boolean(screeningId && sessionData?.latestResult);
-  const canDownloadPdf = Boolean(screeningId && sessionData?.latestResult);
-  const canOpenSendToDoctor = Boolean(
+  const canSendToDoctor = Boolean(
     screeningId && sessionData?.latestResult && !sendingToDoctor
   );
-  const doctorReviewPath = screeningId
-    ? resolvePathWithLocale(`/ophthalmologist/screenings/${screeningId}/review`)
-    : null;
   const patientDisplayName =
     sessionData?.patientName?.trim() ||
     locationPatientName ||
     t('ClinicStaff.screeningResult.patientFallback', 'Patient');
-
-  const paymentContextQuery = useQuery<ClinicPaymentContext>({
-    queryKey: ['clinic-staff', 'payment-context', queueVisitId],
-    queryFn: () => clinicQueueApi.getPaymentContext(queueVisitId!),
-    enabled: Boolean(queueVisitId),
-    staleTime: 10_000,
-  });
 
   const hydrateVisualArtifacts = useCallback(
     (imageWidth: number, imageHeight: number) => {
@@ -345,10 +309,10 @@ export default function ClinicStaffScreeningResultPage() {
       );
 
       setQueueVisitId(queueItem?.visitId ?? null);
-      setConsultationSessionId(queueItem?.consultationSessionId ?? null);
+      setBookedDoctorId(queueItem?.assignedDoctorId ?? null);
     } catch {
       setQueueVisitId(null);
-      setConsultationSessionId(null);
+      setBookedDoctorId(null);
     }
   }, [screeningId]);
 
@@ -567,48 +531,6 @@ export default function ClinicStaffScreeningResultPage() {
     translateResultText,
   ]);
 
-  const handleDownloadPdf = useCallback(async () => {
-    if (downloadingPdf || !screeningId) return;
-    if (!canDownloadPdf) {
-      toast.info(
-        t(
-          'ClinicStaff.screeningResult.toast.saveBeforePdf',
-          'Please wait for AI result before exporting PDF.'
-        )
-      );
-      return;
-    }
-
-    setDownloadingPdf(true);
-    try {
-      const { blob, contentDisposition } =
-        await clinicScreeningApi.downloadSessionReportPdf(screeningId);
-      const fileName =
-        getFileNameFromContentDisposition(contentDisposition) ||
-        `clinic-screening-${screeningId.slice(0, 8)}.pdf`;
-
-      downloadBlobFile(blob, fileName);
-      toast.success(
-        t(
-          'ClinicStaff.screeningResult.toast.downloadPdfSuccess',
-          'PDF report downloaded successfully.'
-        )
-      );
-    } catch (error) {
-      toast.error(
-        getErrorMessage(
-          error,
-          t(
-            'ClinicStaff.screeningResult.toast.downloadPdfFailed',
-            'Unable to download PDF report.'
-          )
-        )
-      );
-    } finally {
-      setDownloadingPdf(false);
-    }
-  }, [canDownloadPdf, downloadingPdf, screeningId, t]);
-
   const handleShareEmail = useCallback(async () => {
     if (!screeningId || !sessionData || sharingEmail) return;
 
@@ -762,7 +684,7 @@ export default function ClinicStaffScreeningResultPage() {
     user?.roles,
   ]);
 
-  const handleOpenSendToDoctor = useCallback(async () => {
+  const handleSendToBookedDoctor = useCallback(async () => {
     if (!screeningId) return;
     if (!sessionData?.latestResult) {
       toast.info(
@@ -773,43 +695,22 @@ export default function ClinicStaffScreeningResultPage() {
       );
       return;
     }
-    if (!queueVisitId) {
+    if (!queueVisitId || !bookedDoctorId) {
       toast.error(
         t(
-          'ClinicStaff.screeningResult.toast.queueVisitMissing',
-          'This screening is not linked to an active clinic queue visit. Open it from Queue or check the patient in again.'
+          'ClinicStaff.screeningResult.toast.bookedDoctorMissing',
+          'Bệnh nhân chưa có bác sĩ trong booking. Vui lòng kiểm tra lại lịch hẹn.'
         )
       );
       return;
     }
-    setSendDoctorModalOpen(true);
-    setLoadingDoctors(true);
-    setSelectedDoctorId('');
-    try {
-      const doctors = await clinicQueueApi.getAvailableDoctors();
-      setAvailableDoctors(doctors);
-      if (doctors.length > 0) {
-        setSelectedDoctorId(doctors[0].id);
-      }
-    } catch {
-      toast.error('Failed to load available doctors');
-    } finally {
-      setLoadingDoctors(false);
-    }
-  }, [screeningId, queueVisitId, sessionData?.latestResult, t]);
-
-  const handleConfirmSendToDoctor = useCallback(async () => {
-    if (!screeningId || !queueVisitId || !selectedDoctorId) return;
 
     setSendingToDoctor(true);
     try {
-      const response = await clinicQueueApi.sendToDoctor(queueVisitId, {
+      await clinicQueueApi.sendToDoctor(queueVisitId, {
         screeningId,
-        doctorId: selectedDoctorId,
-        notes: sendDoctorNotes,
+        doctorId: bookedDoctorId,
       });
-
-      setConsultationSessionId(response.consultationSessionId ?? null);
       toast.success(
         t(
           'ClinicStaff.screeningResult.toast.sendToDoctorSuccess',
@@ -817,7 +718,6 @@ export default function ClinicStaffScreeningResultPage() {
         )
       );
       await hydrateQueueContext();
-      setSendDoctorModalOpen(false);
     } catch (error) {
       toast.error(
         getErrorMessage(
@@ -832,70 +732,13 @@ export default function ClinicStaffScreeningResultPage() {
       setSendingToDoctor(false);
     }
   }, [
+    bookedDoctorId,
     hydrateQueueContext,
     queueVisitId,
     screeningId,
-    selectedDoctorId,
-    sendDoctorNotes,
+    sessionData?.latestResult,
     t,
   ]);
-
-  const handleCreateMedicalRecord = useCallback(() => {
-    if (!sessionData) return;
-
-    if (sessionData.medicalRecordId) {
-      navigate(
-        resolvePathWithLocale(`/medical-records/${sessionData.medicalRecordId}`)
-      );
-      return;
-    }
-
-    const findingsText = draft?.findings || '';
-    const summaryText = draft?.summary || '';
-
-    // Map patient info but DO NOT pre-fill clinical diagnosis from AI
-    const formData = {
-      fullName: sessionData.patientName || '',
-      maYT: sessionData.patientId?.slice(0, 8).toUpperCase() || '',
-      admissionReason: t(
-        'ClinicStaff.screeningResult.emr.admissionReasonPrefix',
-        'Khám mắt sàng lọc AI. '
-      ),
-      medicalHistory: '', // Strictly empty for doctor to fill
-      finalDiagnosisMain: '', // Strictly empty for doctor to fill
-      screeningId: sessionData.screeningId,
-      patientId: sessionData.patientId,
-    };
-
-    navigate(resolvePathWithLocale('/medical-records/new'), {
-      state: {
-        formData,
-        source: 'screening',
-        screeningId: sessionData.screeningId,
-      },
-    });
-  }, [sessionData, draft, navigate, t]);
-
-  const handleCopyDoctorReviewLink = useCallback(async () => {
-    if (!doctorReviewPath) return;
-    const reviewUrl = `${window.location.origin}${doctorReviewPath}`;
-    try {
-      await navigator.clipboard.writeText(reviewUrl);
-      toast.success(
-        t(
-          'ClinicStaff.screeningResult.toast.copyDoctorLinkSuccess',
-          'Doctor review link copied to clipboard.'
-        )
-      );
-    } catch {
-      toast.error(
-        t(
-          'ClinicStaff.screeningResult.toast.copyDoctorLinkFailed',
-          'Failed to copy doctor review link.'
-        )
-      );
-    }
-  }, [doctorReviewPath, t]);
 
   useEffect(() => {
     autoAnalyzeTriggeredRef.current = false;
@@ -1039,46 +882,6 @@ export default function ClinicStaffScreeningResultPage() {
             <div className="flex flex-wrap items-center gap-2.5">
               <button
                 type="button"
-                onClick={handleCreateMedicalRecord}
-                disabled={!canShareResult}
-                className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <FilePlus className="h-4 w-4" />
-                {sessionData.medicalRecordId
-                  ? t(
-                      'ClinicStaff.screeningResult.actions.viewMedicalRecord',
-                      'Xem Hồ sơ bệnh án'
-                    )
-                  : t(
-                      'ClinicStaff.screeningResult.actions.createMedicalRecord',
-                      'Tạo Hồ sơ bệnh án'
-                    )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => void handleDownloadPdf()}
-                disabled={downloadingPdf || !canDownloadPdf}
-                className="flex items-center gap-2 rounded-xl border border-(--border-primary) bg-(--bg-primary) px-4 py-2.5 text-sm font-medium text-(--text-secondary) transition hover:bg-(--bg-tertiary) disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {downloadingPdf ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Printer className="h-4 w-4" />
-                )}
-                {downloadingPdf
-                  ? t(
-                      'ClinicStaff.screeningResult.actions.generatingPdf',
-                      'Generating PDF...'
-                    )
-                  : t(
-                      'ClinicStaff.screeningResult.actions.downloadPdf',
-                      'Download PDF'
-                    )}
-              </button>
-
-              <button
-                type="button"
                 onClick={() => void runAiAnalysis()}
                 disabled={analyzing || enhancingAnalysis || !selectedImage}
                 className="inline-flex min-w-[148px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-(--border-primary) bg-(--bg-primary) px-4 py-2.5 text-sm font-medium text-(--text-secondary) transition hover:bg-(--bg-tertiary) disabled:cursor-not-allowed disabled:opacity-60"
@@ -1106,8 +909,8 @@ export default function ClinicStaffScreeningResultPage() {
 
               <button
                 type="button"
-                onClick={() => void handleOpenSendToDoctor()}
-                disabled={!canOpenSendToDoctor}
+                onClick={() => void handleSendToBookedDoctor()}
+                disabled={!canSendToDoctor}
                 className="inline-flex min-w-[164px] items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Stethoscope className="h-4 w-4" />
@@ -1120,30 +923,6 @@ export default function ClinicStaffScreeningResultPage() {
                       'ClinicStaff.screeningResult.actions.sendToDoctor',
                       'Send to Doctor'
                     )}
-              </button>
-
-              {consultationSessionId && doctorReviewPath && (
-                <button
-                  type="button"
-                  onClick={() => void handleCopyDoctorReviewLink()}
-                  className="inline-flex min-w-[170px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-(--border-primary) bg-(--bg-primary) px-4 py-2.5 text-sm font-medium text-(--text-secondary) transition hover:bg-(--bg-tertiary)"
-                >
-                  <LinkIcon className="h-4 w-4" />
-                  {t(
-                    'ClinicStaff.screeningResult.actions.copyDoctorReviewLink',
-                    'Copy Doctor Review Link'
-                  )}
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() =>
-                  navigate(resolvePathWithLocale('/clinic-staff/screenings'))
-                }
-                className="rounded-xl border border-(--border-primary) bg-(--bg-primary) px-4 py-2.5 text-sm font-semibold text-(--text-primary) transition hover:bg-(--bg-tertiary)"
-              >
-                {t('ClinicStaff.common.back', 'Back')}
               </button>
 
               <span className="inline-flex items-center rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
@@ -1296,146 +1075,6 @@ export default function ClinicStaffScreeningResultPage() {
                     rows={5}
                     className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
                   />
-                </div>
-
-                <div className="space-y-3 rounded-2xl border border-(--border-primary) bg-(--bg-secondary) p-5">
-                  <h3 className="flex items-center gap-2 text-sm font-semibold text-(--text-primary)">
-                    <Stethoscope className="h-4 w-4 text-primary" />
-                    {t(
-                      'ClinicStaff.screeningResult.cards.doctorDiagnosisTitle',
-                      'Doctor diagnosis & prescription'
-                    )}
-                  </h3>
-
-                  {paymentContextQuery.isLoading ? (
-                    <p className="text-sm text-(--text-secondary)">
-                      {t(
-                        'ClinicStaff.screeningResult.cards.loadingDoctorDiagnosis',
-                        'Loading finalized doctor report...'
-                      )}
-                    </p>
-                  ) : paymentContextQuery.data?.diagnosis ? (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-                        <div className="rounded-xl border border-(--border-primary) bg-(--bg-primary) px-3 py-2">
-                          <p className="text-xs text-(--text-tertiary)">
-                            {t(
-                              'ClinicStaff.screeningResult.cards.diagnosisCode',
-                              'Diagnosis code'
-                            )}
-                          </p>
-                          <p className="font-semibold text-(--text-primary)">
-                            {paymentContextQuery.data.diagnosis.diagnosisCode ||
-                              '—'}
-                          </p>
-                        </div>
-                        <div className="rounded-xl border border-(--border-primary) bg-(--bg-primary) px-3 py-2">
-                          <p className="text-xs text-(--text-tertiary)">
-                            {t(
-                              'ClinicStaff.screeningResult.cards.diagnosedBy',
-                              'Diagnosed by'
-                            )}
-                          </p>
-                          <p className="font-semibold text-(--text-primary)">
-                            {paymentContextQuery.data.diagnosis.diagnosedBy
-                              .doctorName || '—'}
-                          </p>
-                        </div>
-                      </div>
-
-                      <textarea
-                        value={
-                          paymentContextQuery.data.diagnosis.clinicalFindings ||
-                          ''
-                        }
-                        readOnly
-                        rows={3}
-                        placeholder={t(
-                          'ClinicStaff.screeningResult.cards.noClinicalFindings',
-                          'No clinical findings were provided.'
-                        )}
-                        className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
-                      />
-
-                      <div className="space-y-2 rounded-xl border border-(--border-primary) bg-(--bg-primary) p-3">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-(--text-tertiary)">
-                          {t(
-                            'ClinicStaff.screeningResult.cards.prescriptionForCashier',
-                            'Prescription for cashier pricing'
-                          )}
-                        </p>
-
-                        {paymentContextQuery.data.diagnosis
-                          .noMedicationPrescribed ? (
-                          <p className="text-sm text-(--text-secondary)">
-                            {t(
-                              'ClinicStaff.screeningResult.cards.noMedicationPrescribed',
-                              'Doctor marked no medication prescribed.'
-                            )}
-                          </p>
-                        ) : paymentContextQuery.data.diagnosis.prescriptionItems
-                            ?.length ? (
-                          <div className="space-y-1">
-                            {paymentContextQuery.data.diagnosis.prescriptionItems.map(
-                              (item, index) => (
-                                <div
-                                  key={`${item.medicineName}-${index.toString()}`}
-                                  className="rounded-lg border border-(--border-primary) px-3 py-2 text-sm"
-                                >
-                                  <p className="font-semibold text-(--text-primary)">
-                                    {item.medicineName}
-                                  </p>
-                                  <p className="text-xs text-(--text-secondary)">
-                                    {item.dosage} {item.unit || ''} ·{' '}
-                                    {item.frequency}
-                                    {' · '}
-                                    {item.duration}
-                                  </p>
-                                  {item.instruction && (
-                                    <p className="mt-1 text-xs text-(--text-tertiary)">
-                                      {item.instruction}
-                                    </p>
-                                  )}
-                                </div>
-                              )
-                            )}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-(--text-secondary)">
-                            {t(
-                              'ClinicStaff.screeningResult.cards.noPrescriptionData',
-                              'No prescription data available yet.'
-                            )}
-                          </p>
-                        )}
-
-                        {paymentContextQuery.data.diagnosis
-                          .prescriptionNote && (
-                          <div className="rounded-lg border border-(--border-primary) bg-(--bg-secondary) px-3 py-2">
-                            <p className="text-xs text-(--text-tertiary)">
-                              {t(
-                                'ClinicStaff.screeningResult.cards.prescriptionNote',
-                                'Doctor note'
-                              )}
-                            </p>
-                            <p className="text-sm text-(--text-primary)">
-                              {
-                                paymentContextQuery.data.diagnosis
-                                  .prescriptionNote
-                              }
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-(--text-secondary)">
-                      {t(
-                        'ClinicStaff.screeningResult.cards.doctorDiagnosisNotReady',
-                        'Doctor finalized report is not available yet.'
-                      )}
-                    </p>
-                  )}
                 </div>
               </>
             ) : (
@@ -1750,154 +1389,6 @@ export default function ClinicStaffScreeningResultPage() {
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-        )}
-
-        {sendDoctorModalOpen && (
-          <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/45 px-4">
-            <div className="w-full max-w-xl rounded-2xl border border-(--border-primary) bg-(--bg-secondary) p-5 shadow-2xl">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-(--text-primary)">
-                    {t(
-                      'ClinicStaff.screeningResult.sendDoctorModal.title',
-                      'Send Case to Doctor'
-                    )}
-                  </h3>
-                  <p className="mt-1 text-sm text-(--text-secondary)">
-                    {t(
-                      'ClinicStaff.screeningResult.sendDoctorModal.subtitle',
-                      'Assign this AI screening result to an ophthalmologist for clinical review.'
-                    )}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  aria-label={t('ClinicStaff.common.close', 'Close')}
-                  onClick={() => {
-                    if (!sendingToDoctor) setSendDoctorModalOpen(false);
-                  }}
-                  className="rounded-lg p-2 text-(--text-tertiary) transition hover:bg-(--bg-primary) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-                >
-                  <X className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </div>
-
-              <div className="mt-5 space-y-4">
-                <div>
-                  <label
-                    htmlFor="send-doctor-select"
-                    className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-(--text-tertiary)"
-                  >
-                    {t(
-                      'ClinicStaff.screeningResult.sendDoctorModal.doctorLabel',
-                      'Available Doctor'
-                    )}
-                  </label>
-                  {loadingDoctors ? (
-                    <div className="flex items-center gap-2 rounded-xl border border-(--border-primary) bg-(--bg-primary) px-3 py-3 text-sm text-(--text-secondary)">
-                      <Loader2
-                        className="h-4 w-4 animate-spin"
-                        aria-hidden="true"
-                      />
-                      {t(
-                        'ClinicStaff.screeningResult.sendDoctorModal.loadingDoctors',
-                        'Loading doctors…'
-                      )}
-                    </div>
-                  ) : availableDoctors.length > 0 ? (
-                    <select
-                      id="send-doctor-select"
-                      name="doctorId"
-                      value={selectedDoctorId}
-                      onChange={(event) =>
-                        setSelectedDoctorId(event.target.value)
-                      }
-                      className="w-full rounded-xl border border-(--border-primary) bg-(--bg-primary) px-3 py-2.5 text-sm text-(--text-primary) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-                    >
-                      {availableDoctors.map((doctor) => (
-                        <option key={doctor.id} value={doctor.id}>
-                          {doctor.fullName}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-700">
-                      {t(
-                        'ClinicStaff.screeningResult.sendDoctorModal.noDoctors',
-                        'No available ophthalmologists were found. Please create or verify a doctor account first.'
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="send-doctor-notes"
-                    className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-(--text-tertiary)"
-                  >
-                    {t(
-                      'ClinicStaff.screeningResult.sendDoctorModal.notesLabel',
-                      'Coordinator Notes'
-                    )}
-                  </label>
-                  <textarea
-                    id="send-doctor-notes"
-                    name="notes"
-                    rows={4}
-                    value={sendDoctorNotes}
-                    onChange={(event) => setSendDoctorNotes(event.target.value)}
-                    placeholder={t(
-                      'ClinicStaff.screeningResult.sendDoctorModal.notesPlaceholder',
-                      'Add symptoms, visit context, or handoff notes…'
-                    )}
-                    className="w-full resize-none rounded-xl border border-(--border-primary) bg-(--bg-primary) px-3 py-2.5 text-sm text-(--text-primary) placeholder:text-(--text-tertiary) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!sendingToDoctor) setSendDoctorModalOpen(false);
-                  }}
-                  disabled={sendingToDoctor}
-                  className="rounded-xl border border-(--border-primary) bg-(--bg-primary) px-4 py-2 text-sm font-medium text-(--text-secondary) transition hover:bg-(--bg-tertiary) disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-                >
-                  {t('ClinicStaff.common.cancel', 'Cancel')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleConfirmSendToDoctor()}
-                  disabled={
-                    sendingToDoctor ||
-                    loadingDoctors ||
-                    availableDoctors.length === 0 ||
-                    !selectedDoctorId
-                  }
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-                >
-                  {sendingToDoctor ? (
-                    <Loader2
-                      className="h-4 w-4 animate-spin"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <Stethoscope className="h-4 w-4" aria-hidden="true" />
-                  )}
-                  {sendingToDoctor
-                    ? t(
-                        'ClinicStaff.screeningResult.actions.sendingToDoctor',
-                        'Sending…'
-                      )
-                    : t(
-                        'ClinicStaff.screeningResult.sendDoctorModal.confirm',
-                        'Confirm Assignment'
-                      )}
-                </button>
-              </div>
             </div>
           </div>
         )}

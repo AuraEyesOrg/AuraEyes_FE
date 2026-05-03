@@ -7,6 +7,7 @@ import {
   ChangeEvent,
 } from 'react';
 import { PlusSquare, X, AlertCircle } from 'lucide-react';
+import type { PrescriptionItemRequest } from '@/types/consultation';
 import { DrugEntry, RxItem } from '../types/drug.type';
 
 export interface PrescriptionTableProps {
@@ -365,9 +366,9 @@ function RxRow({
   );
 
   return (
-    <div className="flex items-start gap-1 py-1 border-b border-gray-100 dark:border-white/5 last:border-0">
+    <div className="flex items-start gap-1 py-1.5 border-b border-slate-200 dark:border-white/5 last:border-0">
       {/* Row number */}
-      <span className="w-5 shrink-0 pt-2 text-[11px] font-bold text-gray-400 dark:text-gray-500 text-right select-none">
+      <span className="w-5 shrink-0 pt-2 text-[11px] font-bold text-slate-500 dark:text-gray-500 text-right select-none">
         {index + 1}.
       </span>
 
@@ -399,12 +400,12 @@ function RxRow({
                 onBlur={() => setTimeout(() => setDropdownOpen(false), 160)}
                 onKeyDown={(e) => handleFieldKeyDown(e, col.field)}
                 className={[
-                  'w-full rounded-md px-2 py-1.5 text-xs border transition-colors',
-                  'placeholder-gray-300 dark:placeholder-white/20 text-gray-900 dark:text-white',
-                  'focus:outline-none focus:ring-1 disabled:opacity-60 disabled:cursor-default bg-gray-50 dark:bg-white/5',
+                  'w-full rounded-lg px-2.5 py-2 text-xs border shadow-sm transition-colors',
+                  'placeholder-slate-400 dark:placeholder-white/20 text-slate-900 dark:text-white',
+                  'focus:outline-none focus:ring-2 focus:ring-cyan-500/25 disabled:opacity-65 disabled:cursor-default bg-white dark:bg-white/5',
                   err
                     ? 'border-red-400 focus:ring-red-400 bg-red-50 dark:bg-red-900/20'
-                    : 'border-gray-200 dark:border-white/10 focus:ring-cyan-500/60 focus:border-cyan-400',
+                    : 'border-slate-300 dark:border-white/10 focus:border-cyan-500',
                 ].join(' ')}
               />
               {err && (
@@ -576,7 +577,7 @@ export function PrescriptionTable({
     <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+        <h4 className="text-sm font-semibold text-slate-900 dark:text-gray-100">
           Đơn thuốc
         </h4>
         {!locked && !noMedicationPrescribed && (
@@ -600,7 +601,7 @@ export function PrescriptionTable({
           disabled={locked}
           className="h-3.5 w-3.5 accent-cyan-600 cursor-pointer disabled:cursor-default"
         />
-        <span className="text-xs text-gray-600 dark:text-gray-300">
+        <span className="text-xs font-medium text-slate-700 dark:text-gray-300">
           Không kê thuốc (chỉ tư vấn / lifestyle)
         </span>
       </label>
@@ -617,7 +618,7 @@ export function PrescriptionTable({
             {COLUMNS.map((col) => (
               <span
                 key={col.field}
-                className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 truncate"
+                className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-gray-500 truncate"
               >
                 {col.label}
                 {col.required && <span className="ml-0.5 text-red-400">*</span>}
@@ -626,7 +627,7 @@ export function PrescriptionTable({
             <span />
           </div>
 
-          <div className="rounded-xl border border-gray-200 dark:border-white/8 bg-white dark:bg-[#0a1f44] px-2 py-0.5">
+          <div className="rounded-xl border border-slate-300 dark:border-white/8 bg-slate-50 dark:bg-[#0a1f44] px-2 py-1 shadow-inner shadow-slate-200/50">
             {items.length === 0 ? (
               <p className="py-4 text-center text-xs text-gray-400 dark:text-gray-500 italic">
                 Chưa có thuốc. Nhấn "Thêm thuốc" hoặc bắt đầu nhập.
@@ -666,7 +667,7 @@ export function PrescriptionTable({
 
       {/* Note */}
       <div>
-        <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
+        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-gray-500 mb-1">
           Ghi chú cho dược sĩ / bệnh nhân
         </label>
         <textarea
@@ -675,12 +676,12 @@ export function PrescriptionTable({
           disabled={locked}
           placeholder="Ví dụ: Bệnh nhân dị ứng Penicillin. Lưu ý bảo quản thuốc ở nhiệt độ thường…"
           rows={2}
-          className="w-full px-4 py-2.5 text-xs bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none disabled:opacity-60 disabled:cursor-default"
+          className="w-full px-4 py-2.5 text-xs bg-white dark:bg-[#1e3a5f]/50 border border-slate-300 dark:border-[#1e3a5f] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500 resize-none disabled:opacity-60 disabled:cursor-default disabled:bg-slate-100"
         />
       </div>
 
       {locked && (
-        <p className="rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20 px-3 py-2 text-xs font-medium text-amber-800 dark:text-amber-300">
+        <p className="rounded-lg border border-amber-400 bg-amber-100/90 dark:border-amber-700 dark:bg-amber-900/20 px-3 py-2 text-xs font-semibold text-amber-950 dark:text-amber-300">
           Đơn thuốc đã finalize — không thể chỉnh sửa.
         </p>
       )}
@@ -705,4 +706,28 @@ export function validatePrescriptionItems(
     if (missing.length) errors[item.id] = missing;
   }
   return { valid: Object.keys(errors).length === 0, errors };
+}
+
+/** Strips UI row ids; trims fields; drops fully empty rows (ERM + consultation report). */
+export function normalizePrescriptionItemsForPersistence(
+  items: RxItem[]
+): PrescriptionItemRequest[] {
+  return items
+    .map((item) => ({
+      medicineName: item.medicineName.trim(),
+      unit: item.unit.trim() || undefined,
+      dosage: item.dosage.trim(),
+      frequency: item.frequency.trim(),
+      duration: item.duration.trim(),
+      instruction: item.instruction.trim() || undefined,
+    }))
+    .filter(
+      (row) =>
+        row.medicineName ||
+        row.unit ||
+        row.dosage ||
+        row.frequency ||
+        row.duration ||
+        row.instruction
+    );
 }

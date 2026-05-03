@@ -78,6 +78,7 @@ const STATUS_STEP_INDEX: Record<string, number> = {
 
 /** Backend clinic-queue FlowState → progress segment (matches PIPELINE_STEPS indices). */
 const FLOW_STATE_STEP_INDEX: Record<string, number> = {
+  ErmPending: 2,
   CheckedIn: 2,
   ScreeningPending: 2,
   AICompleted: 2,
