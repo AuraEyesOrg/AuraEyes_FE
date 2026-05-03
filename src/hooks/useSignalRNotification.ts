@@ -16,6 +16,7 @@ import {
   getNotificationRoute,
 } from '@/types/notification';
 import { router } from '@/lib/router';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 
 /**
  * SignalR Hub URL - configured via environment variable
@@ -160,11 +161,16 @@ export function useSignalRNotification(): {
         userRolesRef.current.includes('Patient')
       ) {
         console.log('[SignalR] Record finalized, redirecting patient to chat');
-        router.navigate('/patient/chat');
+        router.navigate(resolvePathWithLocale('/patient/chat'));
       }
 
       // Show toast notification with navigation action
+      // Use unique toastId based on notification content to prevent duplicates
+      const toastId =
+        notification.id || `noti-${notification.type}-${notification.message}`;
+
       toast.info(notification.title + '\n' + notification.message, {
+        toastId,
         onClick: () => {
           const route = getNotificationRoute(
             {
@@ -175,7 +181,7 @@ export function useSignalRNotification(): {
             userRolesRef.current
           );
           if (route !== '#') {
-            router.navigate(route);
+            router.navigate(resolvePathWithLocale(route));
           }
         },
         autoClose: 5000,

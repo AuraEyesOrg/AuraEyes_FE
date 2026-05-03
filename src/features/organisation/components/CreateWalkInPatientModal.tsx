@@ -90,7 +90,7 @@ export default function CreateWalkInPatientModal({
       );
 
       scanner.render(
-        (result) => {
+        (result: string) => {
           scanner.clear();
           setIsScanning(false);
           // VNeID format: CCCD|CMND|FullName|DOB(DDMMYYYY)|Gender|Address|Date of Issue
@@ -135,7 +135,7 @@ export default function CreateWalkInPatientModal({
             );
           }
         },
-        (error) => {
+        (error: any) => {
           // ignore scan errors (happens every frame with no QR)
         }
       );
@@ -143,7 +143,7 @@ export default function CreateWalkInPatientModal({
       return () => {
         scanner
           .clear()
-          .catch((e) => console.error('Failed to clear scanner', e));
+          .catch((e: any) => console.error('Failed to clear scanner', e));
       };
     }
   }, [isScanning, t]);

@@ -4,10 +4,10 @@ export interface GuestTourMessages {
   logo: string;
   navAbout: string;
   navHowItWorks: string;
-  aboutMission: string;
-  contactOrganisation: string;
-  getStartedPatient: string;
-  getStartedDoctor: string;
+  navEthics: string;
+  navContact: string;
+  bookAppointment: string;
+  patientPortalLogin: string;
 }
 
 export const buildGuestTourSteps = (messages: GuestTourMessages): Step[] => [
@@ -28,23 +28,23 @@ export const buildGuestTourSteps = (messages: GuestTourMessages): Step[] => [
     placement: 'bottom',
   },
   {
-    target: '[data-tour="guest-home-mission"]',
-    content: messages.aboutMission,
+    target: '[data-tour="guest-nav-ethics"]',
+    content: messages.navEthics,
+    placement: 'bottom',
+  },
+  {
+    target: '[data-tour="guest-nav-contact"]',
+    content: messages.navContact,
+    placement: 'bottom',
+  },
+  {
+    target: '[data-tour="guest-book-appointment"]',
+    content: messages.bookAppointment,
     placement: 'top',
   },
   {
-    target: '[data-tour="guest-nav-contact-orga"]',
-    content: messages.contactOrganisation,
-    placement: 'bottom',
-  },
-  {
-    target: '[data-tour="guest-cta-get-started"]',
-    content: messages.getStartedPatient,
-    placement: 'bottom',
-  },
-  {
-    target: '[data-tour="guest-cta-get-started"]',
-    content: messages.getStartedDoctor,
+    target: '[data-tour="guest-patient-portal-login"]',
+    content: messages.patientPortalLogin,
     placement: 'bottom',
   },
 ];

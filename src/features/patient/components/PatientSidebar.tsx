@@ -63,7 +63,7 @@ export default function PatientSidebar() {
     },
     {
       icon: FileText,
-      label: t('PatientSidebar.nav.medicalHistory', 'Medical History'),
+      label: t('PatientSidebar.nav.medicalHistory', 'Digital Medical Records'),
       path: '/patient/medical-history',
       requiredPermission: Permissions.ScreeningRead,
     },

@@ -22,6 +22,7 @@ import type {
   AuthResponse,
   TwoFactorRequiredResponse,
   UserInfoResponse,
+  ForceUpdateProfileRequest,
 } from '../types';
 
 // ==================== Type Guards ====================
@@ -371,4 +372,13 @@ export const getCurrentUser = async (): Promise<UserInfoResponse> => {
     `${AUTH_BASE_URL}/me`
   );
   return normalizeUserAvatar(unwrapApiData<UserInfoResponse>(response.data));
+};
+
+/**
+ * Force update profile for staff
+ */
+export const forceUpdateProfile = async (
+  data: ForceUpdateProfileRequest
+): Promise<void> => {
+  await api.put(`/users/force-update-profile`, data);
 };

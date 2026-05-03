@@ -47,40 +47,18 @@ export const GuestTourProvider = ({ children }: GuestTourProviderProps) => {
   const [joyrideDisabled, setJoyrideDisabled] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
 
-  const steps = useMemo(
-    () =>
-      buildGuestTourSteps({
-        logo: t('GuestTour.steps.logo', {
-          defaultValue:
-            'Nhấn vào logo để quay về Trang chủ bất cứ lúc nào trong hành trình sử dụng AURA.',
-        }),
-        navAbout: t('GuestTour.steps.navAbout', {
-          defaultValue:
-            'Mục Về chúng tôi giới thiệu sứ mệnh của AURA và giá trị cốt lõi trong sàng lọc bệnh lý nhãn khoa bằng AI.',
-        }),
-        navHowItWorks: t('GuestTour.steps.navHowItWorks', {
-          defaultValue:
-            'Tại Cách hoạt động, bạn có thể xem quy trình từ tải ảnh đáy mắt đến báo cáo kết quả AI.',
-        }),
-        aboutMission: t('GuestTour.steps.aboutMission', {
-          defaultValue:
-            'Đây là khu vực tóm tắt sứ mệnh và chức năng chính của nền tảng AURA: sàng lọc nhanh, chính xác và an toàn.',
-        }),
-        contactOrganisation: t('GuestTour.steps.contactOrganisation', {
-          defaultValue:
-            'Mục Liên hệ là nơi các phòng khám và tổ chức y tế đăng ký hợp tác hoặc nhận tư vấn onboarding.',
-        }),
-        getStartedPatient: t('GuestTour.steps.getStartedPatient', {
-          defaultValue:
-            'Nút Get Started dẫn đến trang đăng nhập/đăng ký, nơi bệnh nhân có thể tạo tài khoản Patient mới.',
-        }),
-        getStartedDoctor: t('GuestTour.steps.getStartedDoctor', {
-          defaultValue:
-            'Cũng từ Get Started, bác sĩ có thể đi đến nhanh luồng đăng ký Ophthalmologist để tham gia nền tảng.',
-        }),
-      }),
-    [t]
-  );
+  const steps = useMemo(() => {
+    const messages = {
+      logo: t('GuestTour.steps.logo'),
+      navAbout: t('GuestTour.steps.navAbout'),
+      navHowItWorks: t('GuestTour.steps.navHowItWorks'),
+      navEthics: t('GuestTour.steps.navEthics'),
+      navContact: t('GuestTour.steps.navContact'),
+      bookAppointment: t('GuestTour.steps.bookAppointment'),
+      patientPortalLogin: t('GuestTour.steps.patientPortalLogin'),
+    };
+    return buildGuestTourSteps(messages);
+  }, [t]);
 
   const markTourSeen = useCallback(() => {
     if (typeof window === 'undefined') return;

@@ -20,14 +20,16 @@ export interface AuthUser {
   contractStatus?: string | null;
   permissions?: string[];
   subRoles?: string[];
+  mustUpdateProfile: boolean;
 }
 
 type AuthState = {
   isAuthenticated: boolean;
   user: AuthUser | null;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
-  setUser: (user: AuthUser | null) => void;
-  login: (user: AuthUser) => void;
+  setUser: (user: any) => void;
+  setStoredUser: (user: any) => void;
+  login: (user: any) => void;
   logout: () => void;
 };
 
@@ -60,18 +62,19 @@ const isSameAuthUser = (a: AuthUser, b: AuthUser): boolean => {
     a.contractStatus === b.contractStatus &&
     areStringArraysEqual(a.roles, b.roles) &&
     areStringArraysEqual(a.permissions ?? [], b.permissions ?? []) &&
-    areStringArraysEqual(a.subRoles ?? [], b.subRoles ?? [])
+    areStringArraysEqual(a.subRoles ?? [], b.subRoles ?? []) &&
+    a.mustUpdateProfile === b.mustUpdateProfile
   );
 };
 
 const AUTH_USER_KEY = 'user';
 
-const normalizeAuthUser = (user: AuthUser): AuthUser => {
+const normalizeAuthUser = (user: any): AuthUser => {
   const uploadedAvatarUrl = resolveAvatarUrl(user.uploadedAvatarUrl) ?? null;
   const providerAvatarUrl = resolveAvatarUrl(user.providerAvatarUrl) ?? null;
 
   // Normalize roles to match frontend expectations (PascalCase)
-  const normalizedRoles = (user.roles ?? []).map((role) => {
+  const normalizedRoles = (user.roles ?? []).map((role: any) => {
     const r = role.toLowerCase().replace(/[\s_-]/g, '');
     if (r === 'systemadmin' || r === 'admin') return 'SystemAdmin';
     if (r === 'ophthalmologist' || r === 'doctor') return 'Ophthalmologist';
@@ -97,6 +100,7 @@ const normalizeAuthUser = (user: AuthUser): AuthUser => {
         providerAvatarUrl,
         avatarUrl: user.avatarUrl,
       }) ?? null,
+    mustUpdateProfile: !!user.mustUpdateProfile,
   };
 };
 
@@ -146,6 +150,8 @@ const useAuthStore = create<AuthState>()(
           set({ user: null, isAuthenticated: false });
         }
       },
+
+      setStoredUser: (user) => get().setUser(user),
 
       login: (user) => {
         const normalizedUser = normalizeAuthUser(user);

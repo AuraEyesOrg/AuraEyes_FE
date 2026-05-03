@@ -24,6 +24,7 @@ import {
   Pencil,
   Trash2,
   ShieldCheck,
+  X,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
@@ -165,6 +166,14 @@ export default function OphthalmologistsPage() {
     useState<Ophthalmologist | null>(null);
   const [selectedPolicyId, setSelectedPolicyId] = useState<string>('');
   const [applyingPolicy, setApplyingPolicy] = useState(false);
+
+  // Rejection state
+  const [rejectingDoctor, setRejectingDoctor] =
+    useState<Ophthalmologist | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectError, setRejectError] = useState('');
+  const [rejectSubmitting, setRejectSubmitting] = useState(false);
+  const [pendingTotalCount, setPendingTotalCount] = useState(0);
 
   // Load data from real API
   const loadData = useCallback(async () => {
@@ -419,7 +428,7 @@ export default function OphthalmologistsPage() {
         rejectReason.trim()
       );
       setRejectingDoctor(null);
-      setPendingTotalCount((c) => Math.max(0, c - 1));
+      setPendingTotalCount((c: number) => Math.max(0, c - 1));
       loadData();
     } catch (error) {
       setRejectError(
@@ -1426,6 +1435,86 @@ export default function OphthalmologistsPage() {
         onCancel={() => setDeleteTargetDoctor(null)}
         onConfirm={handleDeleteDoctor}
       />
+
+      {/* Rejection Modal */}
+      {rejectingDoctor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                {t(
+                  'SystemAdmin.ophthalmologists.rejectModal.title',
+                  'Reject Verification'
+                )}
+              </h3>
+              <button
+                onClick={handleRejectCancel}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-xl">
+                <p className="text-sm text-red-700 dark:text-red-400">
+                  {t(
+                    'SystemAdmin.ophthalmologists.rejectModal.warning',
+                    'You are about to reject the verification for {{name}}. This will notify the user.',
+                    { name: rejectingDoctor.fullName }
+                  )}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                  {t(
+                    'SystemAdmin.ophthalmologists.rejectModal.labels.reason',
+                    'Reason for Rejection'
+                  )}
+                </label>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder={t(
+                    'SystemAdmin.ophthalmologists.rejectModal.placeholders.reason',
+                    'Provide details on why the verification is being rejected...'
+                  )}
+                  className="w-full h-32 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all dark:text-white resize-none"
+                />
+                {rejectError && (
+                  <p className="mt-2 text-xs text-red-600 dark:text-red-400 font-medium">
+                    {rejectError}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3">
+              <button
+                onClick={handleRejectCancel}
+                disabled={rejectSubmitting}
+                className="px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
+              >
+                {t('SystemAdmin.common.cancel', 'Cancel')}
+              </button>
+              <button
+                onClick={handleRejectSubmit}
+                disabled={rejectSubmitting || !rejectReason.trim()}
+                className="px-6 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/20"
+              >
+                {rejectSubmitting && (
+                  <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                )}
+                {t(
+                  'SystemAdmin.ophthalmologists.rejectModal.buttons.reject',
+                  'Confirm Rejection'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Apply Leave Policy Modal */}
       {applyingPolicyDoctor && (

@@ -23,7 +23,6 @@ import {
   Trash2,
   Undo2,
   Users,
-  Lock,
   Check,
   Send,
 } from 'lucide-react';
@@ -1875,51 +1874,6 @@ export default function ScreeningReviewPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  {detail.medicalRecordId &&
-                    detail.medicalRecordId !==
-                      '00000000-0000-0000-0000-000000000000' && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          navigate(
-                            `/medical-records/${detail.medicalRecordId}`,
-                            {
-                              state: { screeningId: detail.screeningId },
-                            }
-                          )
-                        }
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                      >
-                        <FileText className="w-4 h-4" />
-                        Mở Bệnh án (EMR)
-                      </button>
-                    )}
-
-                  <button
-                    type="button"
-                    onClick={() => setShowConsiliumModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    <Users className="w-4 h-4" />
-                    {t(
-                      'Ophthalmologist.screeningReview.requestConsilium',
-                      '🤝 Yêu cầu Hội chẩn'
-                    )}
-                  </button>
-
-                  {detail.medicalRecordId &&
-                    detail.medicalRecordId !==
-                      '00000000-0000-0000-0000-000000000000' && (
-                      <button
-                        type="button"
-                        onClick={() => setShowLockConfirm(true)}
-                        disabled={isFinalizedDiagnosis || isFinalizing}
-                        className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:bg-slate-400 text-white rounded-xl text-sm font-bold shadow-lg shadow-rose-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                      >
-                        <Lock className="w-4 h-4" />
-                        {isFinalizing ? 'Đang khóa...' : 'Khóa hồ sơ'}
-                      </button>
-                    )}
                   <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded-full text-xs font-medium">
                     {t('Ophthalmologist.screeningReview.aiModel', 'AI Model')}:{' '}
                     {detail.modelVersion?.trim()

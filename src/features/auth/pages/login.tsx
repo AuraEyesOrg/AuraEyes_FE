@@ -263,8 +263,11 @@ const LoginPage = () => {
             return;
           }
 
-          if (roles.includes('OrgAdmin')) {
-            navigate('/force-change-password');
+          if (
+            roles.includes('Ophthalmologist') ||
+            roles.includes('ClinicStaff')
+          ) {
+            navigate('/welcome/onboarding');
             return;
           }
         }
@@ -277,8 +280,6 @@ const LoginPage = () => {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
           navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
-        } else if (roles.includes('OrgAdmin')) {
-          navigate('/organisation/dashboard');
         } else if (roles.includes('ClinicStaff')) {
           navigate('/clinic-staff/dashboard');
         } else {
@@ -429,6 +430,22 @@ const LoginPage = () => {
 
         if (loggedInUser) {
           authLogin(loggedInUser);
+        }
+
+        if (loggedInUser?.mustUpdateProfile) {
+          const roles = loggedInUser.roles || [];
+          if (roles.includes('Patient')) {
+            navigate('/patient/security');
+            return;
+          }
+
+          if (
+            roles.includes('Ophthalmologist') ||
+            roles.includes('ClinicStaff')
+          ) {
+            navigate('/welcome/onboarding');
+            return;
+          }
         }
 
         const roles = loggedInUser?.roles || [];

@@ -19,6 +19,20 @@
       "Mismatch": "Passwords do not match"
     }
   },
+  "Shared": {
+    "buttons": {
+      "back": "Back",
+      "next": "Continue",
+      "submit": "Submit",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    }
+  },
   "Navigation": {
     "home": "Home",
     "about": "About Us",
@@ -334,13 +348,10 @@
       "skip": "Skip"
     },
     "steps": {
-      "logo": "Click the logo anytime to return to the home page.",
-      "navAbout": "About Us explains AURA's mission and how the platform supports AI-powered retinal screening.",
-      "navHowItWorks": "How It Works shows the journey from retinal image upload to AI screening report.",
-      "aboutMission": "This section highlights AURA's mission and core value: fast, accurate, and safe ophthalmology screening.",
-      "contactOrganisation": "Use Contact if your clinic or organization wants onboarding support or partnership registration.",
-      "getStartedPatient": "Get Started leads to login/register, where a new Patient account can be created.",
-      "getStartedDoctor": "From Get Started, ophthalmologists can continue to the dedicated doctor registration flow."
+      "logo": "Click the logo anytime to return to the AURA Digital Clinic home page.",
+      "navAiScreening": "Learn about our frontline AI Retinal Screening technology that helps detect ophthalmic risks early.",
+      "bookAppointment": "Experience Online Booking. You can select a specialist, time slot, and pay your deposit right here.",
+      "patientPortalLogin": "Log in to the Patient Portal to search your medical history, track treatment plans, and download your EMR (PDF)."
     }
   },
   "Auth": {
@@ -351,9 +362,40 @@
   "AuthPages": {
     "shared": {
       "copyright": "© {{year}} Aura Medical Systems.",
-      "backToLogin": "Back to Login",
+      "backToLogin": "Back to login",
       "termsOfService": "Terms of Service",
       "privacyPolicy": "Privacy Policy"
+    },
+    "onboarding": {
+      "title": "Welcome to AURA Digital Clinic",
+      "subtitle": "Complete your professional profile to start working in our digital ecosystem.",
+      "success": "Setup completed! Welcome to AURA.",
+      "error": "Failed to complete setup. Please try again.",
+      "submit": "Complete Setup",
+      "security": {
+        "tipTitle": "Security Check",
+        "tipDesc": "For your protection, please change your temporary password provided by the administrator."
+      },
+      "form": {
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm New Password",
+        "fullName": "Full Name",
+        "phone": "Phone Number",
+        "dob": "Date of Birth",
+        "gender": "Gender",
+        "citizenId": "Citizen ID (CCCD)",
+        "address": "Primary Address",
+        "licenseNumber": "Medical License Number",
+        "licenseImage": "Certificate Image",
+        "uploadText": "Click to upload or drag and drop"
+      },
+      "validation": {
+        "passwordRequired": "Password is required",
+        "passwordMin": "Password must be at least 8 characters",
+        "passwordPattern": "Password must contain uppercase, lowercase, and number",
+        "confirmPasswordRequired": "Please confirm your password",
+        "passwordMismatch": "Passwords do not match"
+      }
     },
     "login": {
       "leftPanel": {
@@ -655,10 +697,10 @@
     "sidebar": {
       "dashboard": "Dashboard",
       "patients": "Patients",
-      "screenings": "Screenings",
+      "screenings": "Review Queue",
+      "leaveRequests": "Leave Requests",
       "appointments": "Appointments",
       "schedules": "Schedules",
-      "leaveRequests": "Leave Requests",
       "employmentTypeChangeRequests": "Employment Type Changes",
       "consultations": "Consultations",
       "contract": "Contract",
@@ -2458,88 +2500,6 @@
       "submitLabel": "Submit clinic feedback"
     }
   },
-  "PatientDashboard": {
-    "greeting": {
-      "morning": "Good Morning",
-      "afternoon": "Good Afternoon",
-      "evening": "Good Evening"
-    },
-    "header": {
-      "retinalOverview": "Retinal Health Overview"
-    },
-    "stats": {
-      "latestAiRiskStatus": "Latest AI Risk",
-      "noScans": "No Scans",
-      "nextAppointment": "Next Appointment",
-      "noneScheduled": "None Scheduled"
-    },
-    "hero": {
-      "title": {
-        "aiScreening": "Latest AI Analysis",
-        "specialistVerified": "Specialist Verified"
-      },
-      "awaitingAnalysis": "Awaiting Analysis",
-      "latestRetinalScanAlt": "Latest retinal scan",
-      "scanId": "Scan ID: {{id}}",
-      "latestAnalysisResult": "Latest Analysis Result",
-      "dateScanned": "Date Scanned",
-      "nextScreening": "Next Screening",
-      "processingTitle": "Processing...",
-      "processingDescription": "Your images are being analyzed by our AI system.",
-      "noResultsTitle": "No Data",
-      "noResultsDescription": "You haven't performed any retinal scans yet."
-    },
-    "actions": {
-      "viewFullReport": "View Full Report",
-      "openLatestSession": "Open Latest Session"
-    },
-    "history": {
-      "title": "Recent Screening History",
-      "viewAll": "View All",
-      "sessionLabel": "Clinic Session",
-      "imagesSingle": "{{count}} image",
-      "imagesMultiple": "{{count}} images",
-      "recentScreeningAlt": "Screening image",
-      "empty": "No screening history yet."
-    },
-    "quickActions": {
-      "title": "Quick Actions",
-      "messageSpecialist": "Message Specialist",
-      "bookAppointment": "Book Clinic Appointment",
-      "bookFollowUp": "Book Follow-up"
-    }
-  },
-  "PatientCarePlan": {
-    "page": {
-      "title": "Care Plan",
-      "subtitle": "Your doctor's structured timeline of upcoming care steps. Items are sorted by date so you can plan ahead."
-    },
-    "stats": {
-      "upcoming": "Upcoming",
-      "overdue": "Overdue",
-      "completed": "Completed"
-    },
-    "loading": "Loading your care plan...",
-    "error": "Unable to load your healthcare roadmap. Please refresh and try again.",
-    "empty": {
-      "title": "No care plan steps yet.",
-      "subtitle": "Your doctor will add steps here after your next visit."
-    }
-  },
-  "PatientHelpFeedback": {
-    "page": {
-      "title": "Help & Feedback",
-      "subtitle": "Share your website experience to help us make retinal care journeys better."
-    },
-    "whyFeedbackMatters": {
-      "title": "Why your feedback matters",
-      "items": {
-        "bookingAndConsultation": "Help us improve booking and consultation usability.",
-        "bugReporting": "Highlight bug issues before they impact more patients.",
-        "featureSuggestions": "Suggest features that make your care journey smoother."
-      }
-    }
-  },
   "PatientDashboard_Legacy": {
     "risk": {
       "low": "Low Risk",
@@ -2644,63 +2604,6 @@
     "language": {
       "title": "Language & Region",
       "subtitle": "Choose your preferred display language"
-    }
-  },
-  "PatientHelpFeedback": {
-    "page": {
-      "title": "Help & Feedback",
-      "subtitle": "Share your website experience to help us make retinal care journeys better."
-    },
-    "whyFeedbackMatters": {
-      "title": "Why your feedback matters",
-      "items": {
-        "bookingAndConsultation": "Help us improve booking and consultation usability.",
-        "bugReporting": "Highlight bug issues before they impact more patients.",
-        "featureSuggestions": "Suggest features that make your care journey smoother."
-      }
-    },
-    "form": {
-      "title": "Help & Feedback",
-      "subtitle": "Takes less than 30 seconds. Your feedback helps us improve the platform.",
-      "unlockHint": "Complete at least one analysis, report, or appointment to unlock website feedback.",
-      "success": {
-        "title": "Feedback submitted",
-        "message": "Thanks for helping us improve your care journey."
-      },
-      "actions": {
-        "leaveFeedback": "Leave website feedback"
-      }
-    },
-    "modal": {
-      "title": "Website feedback",
-      "subtitle": "Tell us what worked well and what can be improved.",
-      "submitLabel": "Submit website feedback",
-      "labels": {
-        "rating": "Rating",
-        "ratingValidation": "Please select a rating from 1 to 5.",
-        "category": "Category",
-        "commentOptional": "Comment (optional)",
-        "commentPlaceholder": "Tell us more about your experience"
-      },
-      "categories": {
-        "BUG": "Bug",
-        "UX": "User Experience",
-        "SUGGESTION": "Suggestion",
-        "OTHER": "Other"
-      },
-      "actions": {
-        "notNow": "Not now",
-        "submitting": "Submitting..."
-      },
-      "discard": {
-        "title": "Discard draft?",
-        "description": "Your current feedback has not been submitted yet. If you leave now, the draft will be lost.",
-        "keepEditing": "Keep editing",
-        "discardDraft": "Discard draft"
-      }
-    },
-    "toast": {
-      "feedbackSubmitted": "Feedback submitted"
     }
   },
   "PatientRoadmap": {
@@ -3742,12 +3645,6 @@
       "title": "Scan QR Check-in"
     },
     "calendar": {
-      "actions": {
-        "completeVisit": "Complete visit",
-        "noShow": "No-show",
-        "scanQrCheckIn": "Scan QR check-in",
-        "startConsultation": "Start consultation"
-      },
       "pageName": "Calendar",
       "patient": {
         "fallback": "Patient {{id}}"
@@ -3755,15 +3652,6 @@
       "qrModal": {
         "subtitle": "Point the camera at the patient appointment QR code.",
         "title": "Scan QR for check-in"
-      },
-      "states": {
-        "loadingAppointments": "Loading appointments...",
-        "noAppointments": "No appointments on this day.",
-        "terminal": {
-          "cancelled": "Appointment cancelled",
-          "completed": "Visit completed",
-          "noShow": "Marked as no-show"
-        }
       },
       "stats": {
         "checkedIn": "Checked in",
@@ -5446,36 +5334,6 @@
       }
     }
   },
-  "ClinicStaffDashboard": {
-    "greeting": "Good morning",
-    "greetingAfternoon": "Good afternoon",
-    "greetingEvening": "Good evening",
-    "subtitle": "Real-time operational overview",
-    "stats": {
-      "todayAppointments": "TODAY'S APPOINTMENTS",
-      "checkedIn": "CHECKED IN",
-      "pendingWork": "PENDING TASKS",
-      "completed": "COMPLETED",
-      "today": "Today",
-      "needsAction": "Require action"
-    },
-    "recentActivity": {
-      "title": "Recent Activity",
-      "subtitle": "Live patient check-ins and appointment updates"
-    },
-    "quickActions": {
-      "title": "Quick Actions",
-      "subtitle": "Common tasks for today",
-      "newAppointment": "New Appointment",
-      "newAppointmentDesc": "Schedule a new patient appointment",
-      "registerPatient": "Register Patient",
-      "registerPatientDesc": "Add a new patient to the system",
-      "viewSchedule": "View Schedule",
-      "viewScheduleDesc": "See today's full schedule",
-      "cashier": "Cashier",
-      "cashierDesc": "Review finalized visits and collect payment"
-    }
-  },
   "ClinicStaffQueue": {
     "page": {
       "title": "Queue Management",
@@ -5594,59 +5452,6 @@
         "success": "PayOS payment link created successfully!",
         "error": "Unable to create PayOS payment request."
       }
-    }
-  },
-  "Cashier": {
-    "header": {
-      "badge": "Cashier workspace",
-      "title": "Manual cashier for finalized visits",
-      "description": "Select a finalized visit to input medication prices and service fees."
-    },
-    "stats": {
-      "finalizedCount": "Finalized visits",
-      "currentlySelecting": "Currently selecting",
-      "noVisitSelected": "No visit selected"
-    },
-    "queue": {
-      "title": "Pending Cashier List",
-      "loadError": "Could not load cashier list.",
-      "empty": "No visits ready",
-      "emptySub": "Updates automatically after doctor finalizes.",
-      "selectedBadge": "Selecting",
-      "doctorName": "Doctor"
-    },
-    "pricingPanel": {
-      "title": "Manual Pricing Panel",
-      "description": "Enter costs for medications and services.",
-      "noVisitSelectedBadge": "No visit selected",
-      "selectPrompt": "Select a visit to start",
-      "selectPromptSub": "Visit list is on the left.",
-      "contextLoadError": "Could not load payment context.",
-      "paymentSuccessTitle": "Payment Successful!",
-      "paymentSuccessDescription": "Visit for <0>{{name}}</0> finalized.",
-      "backToList": "Back to list",
-      "patientLabel": "Patient",
-      "doctorLabel": "Doctor",
-      "noMedication": "No medication prescribed.",
-      "medicationCount": "{{count}} medications",
-      "medicinePriceLabel": "Medicine Price (VND)",
-      "manualPricePlaceholder": "Enter price",
-      "estimated": "Estimated",
-      "serviceFeeLabel": "Service fee",
-      "serviceFeeDescription": "Other fees if applicable.",
-      "serviceFeeInputLabel": "Service Fee (VND)",
-      "totalManual": "Total Amount",
-      "payButton": "Pay via PayOS"
-    },
-    "confirmModal": {
-      "title": "Confirm Payment",
-      "message": "Create PayOS payment for {{name}} with amount {{amount}}?",
-      "confirm": "Proceed",
-      "cancel": "Back"
-    },
-    "toast": {
-      "createSuccess": "Link created!",
-      "createError": "Error creating link."
     }
   },
   "ClinicStaffBilling": {
@@ -6298,6 +6103,61 @@
       "yearsAbbr": "yrs",
       "idLabel": "ID",
       "close": "Close"
+    },
+    "latePatientModal": {
+      "actions": {
+        "cancelAndDiscount": "Cancel & Grant Discount",
+        "createAndRebook": "Create Slot & Rebook",
+        "rebook": "Rebook Patient"
+      },
+      "adhoc": {
+        "cost": "Cost (VND)",
+        "costPlaceholder": "Optional",
+        "description": "Create a custom time slot for this patient.",
+        "doctor": "Assign Doctor",
+        "endTime": "End Time",
+        "loadingDoctors": "Loading doctors...",
+        "maxCapacity": "Capacity",
+        "noDoctor": "Auto-assign / No preference",
+        "startTime": "Start Time"
+      },
+      "cancel": {
+        "description": "The current appointment will be cancelled and the slot released.",
+        "discountDescription": "A 20% discount will be applied automatically when the patient books their next appointment online. Valid for 30 days.",
+        "discountTitle": "Patient receives 20% discount",
+        "title": "Cancel this appointment"
+      },
+      "checking": "Checking appointment status...",
+      "checkError": "Unable to check status. Please try again.",
+      "error": {
+        "selectSlot": "Please select a slot",
+        "timesRequired": "Start and end times are required"
+      },
+      "existing": {
+        "anyDoctor": "Any available doctor",
+        "anyDoctorDesc": "System will auto-assign a doctor",
+        "autoAssign": "Auto-assign: system will pick an available doctor.",
+        "description": "Select an available slot, then choose a doctor.",
+        "loadingDoctors": "Loading doctors...",
+        "noDoctors": "No doctors available for this slot.",
+        "noSlots": "No available slots on this day.",
+        "selectDoctor": "Select Doctor"
+      },
+      "header": {
+        "subtitle": "Arrived {{minutes}} min past the {{threshold}} min threshold",
+        "title": "Patient Arrived Late"
+      },
+      "notLate": "Patient is not late or the appointment time has not yet arrived.",
+      "success": {
+        "adHocCreated": "Ad-hoc slot created and patient rebooked",
+        "cancelledWithDiscount": "Appointment cancelled. Patient received {{rate}}% discount for next booking.",
+        "rebooked": "Rebooked to new slot successfully"
+      },
+      "tabs": {
+        "adhoc": "Create Ad-hoc Slot",
+        "cancel": "Cancel & Discount",
+        "existing": "Book Another Slot"
+      }
     },
     "walkInPatientModal": {
       "actions": {

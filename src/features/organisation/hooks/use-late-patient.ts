@@ -3,6 +3,7 @@ import {
   checkLateArrival,
   rebookToExistingSlot,
   rebookToAdHocSlot,
+  cancelLateAndGrantDiscount,
   getAvailableDoctorsForSlot,
 } from '../api/late-patient.api';
 import type {
@@ -50,6 +51,19 @@ export const useRebookToExistingSlot = () => {
       appointmentId: string;
       payload: RebookExistingPayload;
     }) => rebookToExistingSlot(appointmentId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: organisationClinicBookingKeys.all,
+      });
+    },
+  });
+};
+
+export const useCancelLateAndGrantDiscount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (appointmentId: string) =>
+      cancelLateAndGrantDiscount(appointmentId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: organisationClinicBookingKeys.all,
