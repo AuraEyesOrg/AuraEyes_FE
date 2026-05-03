@@ -17,6 +17,7 @@ import {
   getOrganisations,
   getPatientClinicAppointments,
   markNoShowClinicAppointment,
+  requestClinicCancellation,
   startClinicAppointment,
 } from '../api/clinic-booking.api';
 import type {
@@ -24,6 +25,7 @@ import type {
   CreateClinicAppointmentRequest,
   PatientAppointmentTab,
   PatientClinicAppointmentsQuery,
+  RequestCancellationRequest,
 } from '../types/clinic-booking.types';
 
 export const clinicBookingKeys = {
@@ -215,6 +217,24 @@ export const useMarkNoShowClinicAppointment = () => {
   return useMutation({
     mutationFn: (appointmentId: string) =>
       markNoShowClinicAppointment(appointmentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: clinicBookingKeys.all });
+    },
+  });
+};
+
+export const useRequestClinicCancellation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      patientId,
+      appointmentId,
+      request,
+    }: {
+      patientId: string;
+      appointmentId: string;
+      request: RequestCancellationRequest;
+    }) => requestClinicCancellation(patientId, appointmentId, request),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: clinicBookingKeys.all });
     },
