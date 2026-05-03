@@ -100,7 +100,7 @@ const normalizeAuthUser = (user: any): AuthUser => {
         providerAvatarUrl,
         avatarUrl: user.avatarUrl,
       }) ?? null,
-    mustUpdateProfile: !!user.mustUpdateProfile,
+    mustUpdateProfile: !!(user.mustUpdateProfile || user.MustUpdateProfile),
   };
 };
 
