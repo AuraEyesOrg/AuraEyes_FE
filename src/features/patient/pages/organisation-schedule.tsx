@@ -89,6 +89,8 @@ export default function OrganisationSchedulePage() {
     (_, i) => i
   );
 
+  const MIN_ADVANCE_MS = 30 * 60 * 1000; // 30 minutes
+
   // 3. Filter expired slots client-side (belt-and-suspenders)
   const upcomingAggregatedSlots = useMemo(() => {
     if (!schedule?.aggregatedSlots) return [];
@@ -98,7 +100,7 @@ export default function OrganisationSchedulePage() {
         slot.startTime.length === 5 ? `${slot.startTime}:00` : slot.startTime;
       const startAt = new Date(`${dateKey}T${normalizedTime}+07:00`).getTime();
       if (Number.isNaN(startAt)) return false; // hide broken
-      return startAt >= Date.now();
+      return startAt >= Date.now() + MIN_ADVANCE_MS;
     });
   }, [schedule, selectedDate]);
 
@@ -122,6 +124,21 @@ export default function OrganisationSchedulePage() {
     if (!selectedDoctorSlot) {
       toast.warn('Vui lòng chọn bác sĩ để tiếp tục.');
       return;
+    }
+
+    if (selectedAggregatedSlot) {
+      const dateKey = format(selectedDate, 'yyyy-MM-dd');
+      const normalizedTime =
+        selectedAggregatedSlot.startTime.length === 5
+          ? `${selectedAggregatedSlot.startTime}:00`
+          : selectedAggregatedSlot.startTime;
+      const startAt = new Date(`${dateKey}T${normalizedTime}+07:00`).getTime();
+      if (!Number.isNaN(startAt) && startAt < Date.now() + MIN_ADVANCE_MS) {
+        toast.error(
+          'Slot này đã quá gần giờ bắt đầu. Vui lòng chọn slot khác cách ít nhất 30 phút.'
+        );
+        return;
+      }
     }
 
     createBooking(
