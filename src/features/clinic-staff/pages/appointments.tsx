@@ -16,6 +16,7 @@ import {
   CheckCircle,
   AlertCircle,
   RefreshCw,
+  AlertTriangle,
 } from 'lucide-react';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +26,7 @@ import useAuthStore from '@/store/auth-store';
 import PaymentConfirmationModal from '../components/PaymentConfirmationModal';
 import CreateWalkInPatientModal from '../components/CreateWalkInPatientModal';
 import QrScannerModal from '../components/QrScannerModal'; // <-- NEW IMPORT
+import LatePatientModal from '@/features/organisation/components/LatePatientModal';
 import { getClinicPatients, type ClinicPatientDto } from '../api/patients.api';
 import { getCurrentClinicAppointments } from '@/features/organisation/api/organisation-clinic-booking.api';
 import {
@@ -630,6 +632,12 @@ export default function ClinicStaffAppointmentsPage() {
     }
     return null;
   };
+
+  const [isLatePatientModalOpen, setIsLatePatientModalOpen] = useState(false);
+  const [
+    selectedLatePatientAppointmentId,
+    setSelectedLatePatientAppointmentId,
+  ] = useState('');
 
   return (
     <ClinicStaffLayout>
@@ -1278,26 +1286,42 @@ export default function ClinicStaffAppointmentsPage() {
                             </span>
                           </div>
                         ) : (
-                          <button
-                            type="button"
-                            disabled={isMutating}
-                            onClick={() =>
-                              void runAction(
-                                () => noShowMutation.mutateAsync(appt.id),
-                                t(
-                                  'Organisation.calendar.toast.noShowMarked',
-                                  'Marked as no-show.'
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              disabled={isMutating}
+                              onClick={() =>
+                                void runAction(
+                                  () => noShowMutation.mutateAsync(appt.id),
+                                  t(
+                                    'Organisation.calendar.toast.noShowMarked',
+                                    'Marked as no-show.'
+                                  )
                                 )
-                              )
-                            }
-                            className="inline-flex h-11 items-center gap-2 rounded-2xl px-4 text-[10px] font-black uppercase tracking-widest text-rose-500 transition-all hover:bg-rose-500/10 disabled:opacity-50"
-                          >
-                            <UserX className="h-4 w-4" />
-                            {t(
-                              'Organisation.calendar.actions.markNoShow',
-                              'No-show'
+                              }
+                              className="inline-flex h-11 items-center gap-2 rounded-2xl px-4 text-[10px] font-black uppercase tracking-widest text-rose-500 transition-all hover:bg-rose-500/10 disabled:opacity-50"
+                            >
+                              <UserX className="h-4 w-4" />
+                              {t(
+                                'Organisation.calendar.actions.markNoShow',
+                                'No-show'
+                              )}
+                            </button>
+                            {selectedDate <= todayKey && (
+                              <button
+                                type="button"
+                                disabled={isMutating}
+                                onClick={() => {
+                                  setSelectedLatePatientAppointmentId(appt.id);
+                                  setIsLatePatientModalOpen(true);
+                                }}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wider border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition"
+                              >
+                                <AlertTriangle size={12} />
+                                ĐẾN MUỘN
+                              </button>
                             )}
-                          </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1608,6 +1632,21 @@ export default function ClinicStaffAppointmentsPage() {
           onScan={handleQrScanResult}
         />
       )}
+
+      {/* ── Late Patient Rebooking Modal ───────────────────────────────────── */}
+      <LatePatientModal
+        isOpen={isLatePatientModalOpen}
+        appointmentId={selectedLatePatientAppointmentId}
+        onClose={() => {
+          setIsLatePatientModalOpen(false);
+          setSelectedLatePatientAppointmentId('');
+        }}
+        onSuccess={() => {
+          queryClient.invalidateQueries({
+            queryKey: organisationClinicBookingKeys.all,
+          });
+        }}
+      />
 
       {/* ── Payment Confirmation Modal ──────────────────────────────────────── */}
       <PaymentConfirmationModal
