@@ -22,7 +22,6 @@ import type {
   AuthResponse,
   TwoFactorRequiredResponse,
   UserInfoResponse,
-  ForceUpdateProfileRequest,
 } from '../types';
 
 // ==================== Type Guards ====================
@@ -375,10 +374,29 @@ export const getCurrentUser = async (): Promise<UserInfoResponse> => {
 };
 
 /**
- * Force update profile for staff
+ * Change password for the current user
  */
-export const forceUpdateProfile = async (
-  data: ForceUpdateProfileRequest
-): Promise<void> => {
-  await api.put(`/users/force-update-profile`, data);
+export const changePassword = async (data: {
+  currentPassword: string;
+  newPassword: string;
+}): Promise<void> => {
+  await api.post(`/users/change-password`, data);
+};
+
+/**
+ * Onboard ophthalmologist
+ */
+export const onboardOphthalmologist = async (data: FormData): Promise<void> => {
+  await api.post(`/users/onboard-ophthalmologist`, data, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+/**
+ * Onboard clinic staff
+ */
+export const onboardClinicStaff = async (data: any): Promise<void> => {
+  await api.post(`/users/onboard-clinic-staff`, data);
 };

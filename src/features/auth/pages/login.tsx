@@ -256,10 +256,13 @@ const LoginPage = () => {
           authLogin(response.user);
         }
 
-        if (response.user?.mustUpdateProfile) {
-          const roles = response.user.roles || [];
+        const mustUpdate =
+          response.user?.mustUpdateProfile ||
+          (response.user as any)?.MustUpdateProfile;
+        if (mustUpdate) {
+          const roles = response.user?.roles || [];
           if (roles.includes('Patient')) {
-            navigate('/patient/security');
+            navigate(toLocalizedAuthPath('/patient/security'));
             return;
           }
 
@@ -267,7 +270,7 @@ const LoginPage = () => {
             roles.includes('Ophthalmologist') ||
             roles.includes('ClinicStaff')
           ) {
-            navigate('/welcome/onboarding');
+            navigate(toLocalizedAuthPath('/welcome/onboarding'));
             return;
           }
         }
@@ -432,10 +435,13 @@ const LoginPage = () => {
           authLogin(loggedInUser);
         }
 
-        if (loggedInUser?.mustUpdateProfile) {
-          const roles = loggedInUser.roles || [];
+        const mustUpdate =
+          loggedInUser?.mustUpdateProfile ||
+          (loggedInUser as any)?.MustUpdateProfile;
+        if (mustUpdate) {
+          const roles = loggedInUser?.roles || [];
           if (roles.includes('Patient')) {
-            navigate('/patient/security');
+            navigate(toLocalizedAuthPath('/patient/security'));
             return;
           }
 
@@ -443,20 +449,20 @@ const LoginPage = () => {
             roles.includes('Ophthalmologist') ||
             roles.includes('ClinicStaff')
           ) {
-            navigate('/welcome/onboarding');
+            navigate(toLocalizedAuthPath('/welcome/onboarding'));
             return;
           }
         }
 
         const roles = loggedInUser?.roles || [];
         if (roles.includes('SystemAdmin')) {
-          navigate('/system-admin/dashboard');
+          navigate(toLocalizedAuthPath('/system-admin/dashboard'));
         } else if (roles.includes('Patient')) {
-          navigate('/patient/dashboard');
+          navigate(toLocalizedAuthPath('/patient/dashboard'));
         } else if (roles.includes('Ophthalmologist')) {
           navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
         } else if (roles.includes('ClinicStaff')) {
-          navigate('/clinic-staff/dashboard');
+          navigate(toLocalizedAuthPath('/clinic-staff/dashboard'));
         } else {
           navigate(toLocalizedAuthPath('/'));
         }
