@@ -43,6 +43,12 @@ const FLOW_STATE_CONFIG: Record<
     icon: typeof Clock;
   }
 > = {
+  ErmPending: {
+    label: 'ERM Required',
+    color: 'text-orange-600 dark:text-orange-400',
+    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
+    icon: FileText,
+  },
   CheckedIn: {
     label: 'Checked In',
     color: 'text-blue-600 dark:text-blue-400',
@@ -245,6 +251,7 @@ export default function ClinicStaffQueuePage() {
 
   const stats = useMemo(() => {
     const counts: Record<ClinicFlowState, number> = {
+      ErmPending: 0,
       CheckedIn: 0,
       ScreeningPending: 0,
       AICompleted: 0,
@@ -619,13 +626,18 @@ export default function ClinicStaffQueuePage() {
                           )}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          {item.flowState === 'CheckedIn' &&
+                          {item.flowState === 'ErmPending' &&
                             (() => {
-                              const isErmReady = item.isAdminCompleted;
                               const navigateToErm = () => {
-                                // Always open ERM flow from current queue context.
-                                // Do not gate by existing medicalRecordId because it may belong to an older visit.
-                                navigate('/erm-patient', {
+                                // ErmPending: record chưa tồn tại, tạo mới
+                                const path = item.medicalRecordId
+                                  ? resolvePathWithLocale(
+                                      `/medical-records/${item.medicalRecordId}`
+                                    )
+                                  : resolvePathWithLocale(
+                                      '/medical-records/new'
+                                    );
+                                navigate(path, {
                                   state: {
                                     formData: {
                                       patientId: item.patientId,
@@ -642,28 +654,55 @@ export default function ClinicStaffQueuePage() {
                                   },
                                 });
                               };
-
-                              if (!isErmReady) {
-                                return (
-                                  <div className="flex items-center justify-end gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={navigateToErm}
-                                      title={t(
-                                        'ClinicStaff.queue.actions.fillErmRequired',
-                                        'Phải hoàn tất ERM trước khi screening'
-                                      )}
-                                      className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3.5 py-1.5 text-xs font-semibold text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-100"
-                                    >
-                                      <FileText className="h-3.5 w-3.5" />
-                                      {t(
-                                        'ClinicStaff.queue.actions.fillErm',
-                                        'Fill ERM'
-                                      )}
-                                    </button>
-                                  </div>
-                                );
-                              }
+                              return (
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={navigateToErm}
+                                    title={t(
+                                      'ClinicStaff.queue.actions.fillErmRequired',
+                                      'Phải hoàn tất ERM trước khi screening'
+                                    )}
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-orange-50 px-3.5 py-1.5 text-xs font-semibold text-orange-600 ring-1 ring-orange-200 transition hover:bg-orange-100"
+                                  >
+                                    <FileText className="h-3.5 w-3.5" />
+                                    {t(
+                                      'ClinicStaff.queue.actions.fillErm',
+                                      'Điền ERM'
+                                    )}
+                                  </button>
+                                </div>
+                              );
+                            })()}
+                          {item.flowState === 'CheckedIn' &&
+                            (() => {
+                              const isErmReady = item.isAdminCompleted;
+                              const navigateToErm = () => {
+                                // CheckedIn (ERM đã điền): mở record hiện có để sửa
+                                const path = item.medicalRecordId
+                                  ? resolvePathWithLocale(
+                                      `/medical-records/${item.medicalRecordId}`
+                                    )
+                                  : resolvePathWithLocale(
+                                      '/medical-records/new'
+                                    );
+                                navigate(path, {
+                                  state: {
+                                    formData: {
+                                      patientId: item.patientId,
+                                      fullName: item.patientName,
+                                      maYT: item.visitId
+                                        .substring(0, 8)
+                                        .toUpperCase(),
+                                      gender: item.patientGender,
+                                      age: item.patientAge?.toString() || '',
+                                      citizenId: item.citizenId,
+                                      visitId: item.visitId,
+                                      appointmentId: item.appointmentId,
+                                    },
+                                  },
+                                });
+                              };
 
                               return (
                                 <div className="flex items-center justify-end gap-2">

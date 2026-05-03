@@ -1,5 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import {
+  PrescriptionTable,
+  validatePrescriptionItems,
+} from '@/features/ophthalmologist/components/PrescriptionTable';
+import type { RxItem } from '@/features/ophthalmologist/types/drug.type';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import {
   Save,
@@ -363,6 +368,14 @@ export default function ErmForm() {
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
   const hasInitiatedConsultation = useRef(false);
 
+  // ─── Prescription state ────────────────────────────────────────────────────
+  const [prescriptionItems, setPrescriptionItems] = useState<RxItem[]>([]);
+  const [prescriptionNote, setPrescriptionNote] = useState('');
+  const [noMedicationPrescribed, setNoMedicationPrescribed] = useState(false);
+  const [prescriptionErrors, setPrescriptionErrors] = useState<
+    Record<string, (keyof Omit<RxItem, 'id'>)[]>
+  >({});
+
   // Custom Hooks
   const { data: record, isLoading: isLoadingRecord } = useMedicalRecord(
     id || ''
@@ -547,6 +560,37 @@ export default function ErmForm() {
         finalDiagnosisMain: record.finalDiagnosis,
         finalDiagnosisExtra: record.treatmentPlan,
       });
+
+      // Hydrate prescription from clinicalDataJson (safe fallback for old records)
+      try {
+        const savedItems = clinicalData?.prescriptionItems;
+        if (Array.isArray(savedItems) && savedItems.length > 0) {
+          setPrescriptionItems(
+            savedItems.map((item: Partial<RxItem>) => ({
+              id:
+                item.id ??
+                `rx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              medicineName: item.medicineName ?? '',
+              dosage: item.dosage ?? '',
+              unit: item.unit ?? '',
+              frequency: item.frequency ?? '',
+              duration: item.duration ?? '',
+              instruction: item.instruction ?? '',
+            }))
+          );
+        } else {
+          setPrescriptionItems([]);
+        }
+        setPrescriptionNote(clinicalData?.prescriptionNote ?? '');
+        setNoMedicationPrescribed(
+          clinicalData?.noMedicationPrescribed ?? false
+        );
+      } catch {
+        // silently ignore malformed prescription data from old records
+        setPrescriptionItems([]);
+        setPrescriptionNote('');
+        setNoMedicationPrescribed(false);
+      }
 
       // Explicitly load geographic data and set values to ensure they aren't lost
       const loadLocations = async () => {
@@ -889,6 +933,28 @@ export default function ErmForm() {
             ? JSON.parse(record.clinicalDataJson).screeningId
             : null);
 
+        // Normalize and persist prescription (strip empty rows)
+        const normalizedPrescriptionItems = prescriptionItems
+          .map((item) => ({
+            ...item,
+            medicineName: item.medicineName.trim(),
+            dosage: item.dosage.trim(),
+            unit: item.unit.trim(),
+            frequency: item.frequency.trim(),
+            duration: item.duration.trim(),
+            instruction: item.instruction.trim(),
+          }))
+          .filter(
+            (item) =>
+              item.medicineName ||
+              item.dosage ||
+              item.frequency ||
+              item.duration
+          );
+        clinicalData.prescriptionItems = normalizedPrescriptionItems;
+        clinicalData.prescriptionNote = prescriptionNote.trim();
+        clinicalData.noMedicationPrescribed = noMedicationPrescribed;
+
         await updateDiagnosisMutation.mutateAsync({
           id,
           data: {
@@ -914,7 +980,23 @@ export default function ErmForm() {
     if (!id) return;
     try {
       if (isOphthalmologist) {
-        // If doctor, save latest clinical state first
+        // Validate prescription before finalizing
+        if (!noMedicationPrescribed) {
+          const { valid, errors: rxErrors } = validatePrescriptionItems(
+            prescriptionItems,
+            noMedicationPrescribed
+          );
+          if (!valid) {
+            setPrescriptionErrors(rxErrors);
+            toast.error(
+              'Mỗi dòng thuốc cần điền đủ: Tên thuốc, Liều, Tần suất và Số ngày. Hoặc tick "Không kê thuốc".'
+            );
+            setShowFinalizeModal(false);
+            return;
+          }
+        }
+
+        // Save latest clinical state (including prescription) before finalizing
         const currentValues = getValues();
         const clinicalFields = [
           'medicalHistory',
@@ -942,6 +1024,28 @@ export default function ErmForm() {
           return acc;
         }, {} as any);
 
+        // Persist prescription into clinicalDataJson
+        const normalizedPrescriptionItems = prescriptionItems
+          .map((item) => ({
+            ...item,
+            medicineName: item.medicineName.trim(),
+            dosage: item.dosage.trim(),
+            unit: item.unit.trim(),
+            frequency: item.frequency.trim(),
+            duration: item.duration.trim(),
+            instruction: item.instruction.trim(),
+          }))
+          .filter(
+            (item) =>
+              item.medicineName ||
+              item.dosage ||
+              item.frequency ||
+              item.duration
+          );
+        clinicalData.prescriptionItems = normalizedPrescriptionItems;
+        clinicalData.prescriptionNote = prescriptionNote.trim();
+        clinicalData.noMedicationPrescribed = noMedicationPrescribed;
+
         await updateDiagnosisMutation.mutateAsync({
           id,
           data: {
@@ -952,8 +1056,10 @@ export default function ErmForm() {
         });
       }
 
-      // Finalize the record
+      // Finalize the record → sends to Cashier
       await finalizeMutation.mutateAsync(id);
+
+      toast.success('Hồ sơ đã được khóa và gửi tới Thu ngân thành công!');
 
       if (isOphthalmologist) {
         navigate('/ophthalmologist/consultations');
@@ -962,6 +1068,7 @@ export default function ErmForm() {
       }
     } catch (error) {
       console.error(error);
+      toast.error('Lỗi khi khóa hồ sơ. Vui lòng thử lại.');
     } finally {
       setShowFinalizeModal(false);
     }
@@ -2197,6 +2304,33 @@ export default function ErmForm() {
                     </div>
                   </div>
 
+                  {/* ─── Prescription Section ──────────────────────────────── */}
+                  {isOphthalmologist && (
+                    <div className="mt-8 p-6 bg-white/8 border border-white/10 rounded-2xl space-y-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-7 h-7 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                          <Stethoscope className="w-4 h-4 text-cyan-400" />
+                        </div>
+                        <h3 className="text-xs font-black uppercase tracking-widest text-white">
+                          Đơn thuốc
+                        </h3>
+                      </div>
+                      <PrescriptionTable
+                        items={prescriptionItems}
+                        onChange={(items) => {
+                          setPrescriptionItems(items);
+                          setPrescriptionErrors({});
+                        }}
+                        noMedicationPrescribed={noMedicationPrescribed}
+                        onNoMedicationChange={setNoMedicationPrescribed}
+                        prescriptionNote={prescriptionNote}
+                        onNoteChange={setPrescriptionNote}
+                        locked={recordStatus === MedicalRecordStatus.Finalized}
+                        validationErrors={prescriptionErrors}
+                      />
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
@@ -2250,9 +2384,9 @@ export default function ErmForm() {
 
       <ConfirmModal
         open={showFinalizeModal}
-        title="Khóa hồ sơ bệnh án"
-        message="Khóa hồ sơ sẽ chuyển bệnh nhân sang quầy Thu ngân và không thể chỉnh sửa thêm. Bạn có chắc chắn muốn thực hiện?"
-        confirmLabel="Khóa hồ sơ"
+        title="Khóa hồ sơ & Gửi tới Thu ngân"
+        message="Thao tác này sẽ: (1) Lưu chẩn đoán và đơn thuốc, (2) Khóa hồ sơ bệnh án, (3) Gửi bệnh nhân đến quầy Thu ngân. Sau khi khóa sẽ không thể chỉnh sửa. Bạn có chắc chắn?"
+        confirmLabel="Xác nhận Finalize & Gửi Thu ngân"
         cancelLabel="Hủy"
         isLoading={
           finalizeMutation.isPending || updateDiagnosisMutation.isPending

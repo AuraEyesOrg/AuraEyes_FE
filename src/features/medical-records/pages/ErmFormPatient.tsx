@@ -1416,6 +1416,92 @@ export default function ErmFormPatient() {
                 </table>
               </div>
             </div>
+
+            {/* PRESCRIPTION SECTION */}
+            {(() => {
+              const rxItems: Array<{
+                id?: string;
+                medicineName?: string;
+                dosage?: string;
+                unit?: string;
+                frequency?: string;
+                duration?: string;
+                instruction?: string;
+              }> = Array.isArray(data.prescriptionItems)
+                ? data.prescriptionItems
+                : [];
+              const rxNote: string = data.prescriptionNote ?? '';
+              const noMed: boolean = data.noMedicationPrescribed ?? false;
+
+              return (
+                <div className="space-y-4 mt-6 px-2">
+                  <p className="font-bold uppercase">IV. ĐƠN THUỐC</p>
+                  {noMed ? (
+                    <p className="ml-4 italic text-[13px]">
+                      Không kê thuốc (chỉ tư vấn / lifestyle).
+                    </p>
+                  ) : rxItems.length === 0 ? (
+                    <p className="ml-4 italic text-[13px] text-slate-400">
+                      Chưa có đơn thuốc.
+                    </p>
+                  ) : (
+                    <div className="border border-black mx-4 overflow-hidden">
+                      <table className="w-full border-collapse text-[11.5px]">
+                        <thead>
+                          <tr className="divide-x divide-black border-b border-black bg-white font-bold text-center h-8">
+                            <th className="w-6 px-1">STT</th>
+                            <th className="text-left px-2">Tên thuốc</th>
+                            <th className="px-2 whitespace-nowrap">
+                              Liều dùng
+                            </th>
+                            <th className="px-2 whitespace-nowrap">Đơn vị</th>
+                            <th className="px-2 whitespace-nowrap">Tần suất</th>
+                            <th className="px-2 whitespace-nowrap">Số ngày</th>
+                            <th className="text-left px-2">Hướng dẫn</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-black">
+                          {rxItems.map((item, idx) => (
+                            <tr
+                              key={item.id ?? idx}
+                              className="divide-x divide-black h-8 align-middle"
+                            >
+                              <td className="text-center px-1 font-bold">
+                                {idx + 1}
+                              </td>
+                              <td className="px-2 font-bold">
+                                {item.medicineName ?? ''}
+                              </td>
+                              <td className="px-2 text-center">
+                                {item.dosage ?? ''}
+                              </td>
+                              <td className="px-2 text-center">
+                                {item.unit ?? ''}
+                              </td>
+                              <td className="px-2 text-center">
+                                {item.frequency ?? ''}
+                              </td>
+                              <td className="px-2 text-center">
+                                {item.duration ?? ''}
+                              </td>
+                              <td className="px-2 italic">
+                                {item.instruction ?? ''}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                  {rxNote && (
+                    <p className="ml-4 text-[12px] italic">
+                      <span className="font-bold not-italic">Ghi chú:</span>{' '}
+                      {rxNote}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
 
