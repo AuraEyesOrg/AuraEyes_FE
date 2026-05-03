@@ -251,6 +251,22 @@ export default function ClinicStaffAppointmentsPage() {
   const [selectedWalkInSlotId, setSelectedWalkInSlotId] = useState('');
   const [walkInVisitReason, setWalkInVisitReason] = useState('');
 
+  // ── Late patient modal ─────────────────────────────────────────────────────
+  const [isLatePatientModalOpen, setIsLatePatientModalOpen] = useState(false);
+  const [
+    selectedLatePatientAppointmentId,
+    setSelectedLatePatientAppointmentId,
+  ] = useState('');
+
+  const isPastOneThirdDuration = (appt: OrganisationClinicAppointmentDto) => {
+    if (!appt.date || !appt.startTime || !appt.endTime) return false;
+    const start = new Date(`${appt.date}T${appt.startTime}`);
+    const end = new Date(`${appt.date}T${appt.endTime}`);
+    const duration = end.getTime() - start.getTime();
+    const oneThirdPoint = new Date(start.getTime() + duration / 3);
+    return new Date() > oneThirdPoint;
+  };
+
   // ── Week window ────────────────────────────────────────────────────────────
   const weekWindow = useMemo(() => {
     const weekStart = getStartOfWeekMonday(new Date());
@@ -899,14 +915,40 @@ export default function ClinicStaffAppointmentsPage() {
                             />
                             {i === stepIdx && (
                               <span className="absolute -top-4 text-[8px] font-black uppercase tracking-tighter text-brand">
-                                {appt.flowState
-                                  ? t(
-                                      getFlowStateTranslationKey(
-                                        appt.flowState
-                                      ),
-                                      appt.flowState
-                                    )
-                                  : getStatusDisplay(appt)}
+                                {status === 'Pending' &&
+                                  (isPastOneThirdDuration(appt) ? (
+                                    <button
+                                      onClick={() => {
+                                        setSelectedLatePatientAppointmentId(
+                                          appt.id
+                                        );
+                                        setIsLatePatientModalOpen(true);
+                                      }}
+                                      disabled={isMutating}
+                                      className="px-3 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold flex items-center gap-1.5 transition"
+                                    >
+                                      <AlertTriangle className="w-3.5 h-3.5" />
+                                      {t(
+                                        'Appointments.lateArrival',
+                                        'ĐẾN MUỘN'
+                                      )}
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() =>
+                                        setScanTargetAppointmentId(
+                                          appt.id === scanTargetAppointmentId
+                                            ? null
+                                            : appt.id
+                                        )
+                                      }
+                                      disabled={isMutating}
+                                      className="px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 transition"
+                                    >
+                                      <QrCode className="w-3.5 h-3.5" />
+                                      {t('Appointments.scanQrCheckIn')}
+                                    </button>
+                                  ))}
                               </span>
                             )}
                           </div>
@@ -1182,43 +1224,61 @@ export default function ClinicStaffAppointmentsPage() {
                                 )}
                               </button>
                             ) : null}
-                            <button
-                              type="button"
-                              disabled={
-                                isMutating ||
-                                selectedDate > todayKey ||
-                                (!appt.isPaidDeposit && !!appt.orderId)
-                              }
-                              onClick={() => {
-                                if (selectedDate > todayKey) {
-                                  toast.error(
-                                    t(
-                                      'Organisation.calendar.toast.qrBeforeAppointmentDate',
-                                      'Cannot check in before the appointment date.'
-                                    )
-                                  );
-                                  return;
+                            {isPastOneThirdDuration(appt) ? (
+                              <button
+                                type="button"
+                                disabled={isMutating}
+                                onClick={() => {
+                                  setSelectedLatePatientAppointmentId(appt.id);
+                                  setIsLatePatientModalOpen(true);
+                                }}
+                                className="inline-flex h-11 items-center gap-2 rounded-2xl bg-amber-500 px-6 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-amber-600 hover:shadow-lg hover:shadow-amber-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                <AlertTriangle className="h-4 w-4" />
+                                {t(
+                                  'Organisation.calendar.actions.lateArrival',
+                                  'ĐẾN MUỘN'
+                                )}
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={
+                                  isMutating ||
+                                  selectedDate > todayKey ||
+                                  (!appt.isPaidDeposit && !!appt.orderId)
                                 }
-                                if (!appt.isPaidDeposit && appt.orderId) {
-                                  toast.warning(
-                                    t(
-                                      'Organisation.calendar.toast.depositRequiredBeforeCheckIn',
-                                      'Collect the deposit before check-in.'
-                                    )
-                                  );
-                                  return;
-                                }
-                                setScanTargetAppointmentId(appt.id);
-                                setIsQrScannerOpen(true);
-                              }}
-                              className="inline-flex h-11 items-center gap-2 rounded-2xl bg-emerald-600 px-6 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              <QrCode className="h-4 w-4" />
-                              {t(
-                                'Organisation.calendar.actions.scanQrCheckIn',
-                                'Scan QR check-in'
-                              )}
-                            </button>
+                                onClick={() => {
+                                  if (selectedDate > todayKey) {
+                                    toast.error(
+                                      t(
+                                        'Organisation.calendar.toast.qrBeforeAppointmentDate',
+                                        'Cannot check in before the appointment date.'
+                                      )
+                                    );
+                                    return;
+                                  }
+                                  if (!appt.isPaidDeposit && appt.orderId) {
+                                    toast.warning(
+                                      t(
+                                        'Organisation.calendar.toast.depositRequiredBeforeCheckIn',
+                                        'Collect the deposit before check-in.'
+                                      )
+                                    );
+                                    return;
+                                  }
+                                  setScanTargetAppointmentId(appt.id);
+                                  setIsQrScannerOpen(true);
+                                }}
+                                className="inline-flex h-11 items-center gap-2 rounded-2xl bg-emerald-600 px-6 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                <QrCode className="h-4 w-4" />
+                                {t(
+                                  'Organisation.calendar.actions.scanQrCheckIn',
+                                  'Scan QR check-in'
+                                )}
+                              </button>
+                            )}
                           </div>
                         ) : !isTerminal && appt.flowState ? (
                           <div className="inline-flex h-11 max-w-full items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-5 dark:border-slate-700 dark:bg-slate-800/80">
@@ -1335,20 +1395,6 @@ export default function ClinicStaffAppointmentsPage() {
                                 'No-show'
                               )}
                             </button>
-                            {selectedDate <= todayKey && (
-                              <button
-                                type="button"
-                                disabled={isMutating}
-                                onClick={() => {
-                                  setSelectedLatePatientAppointmentId(appt.id);
-                                  setIsLatePatientModalOpen(true);
-                                }}
-                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wider border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition"
-                              >
-                                <AlertTriangle size={12} />
-                                ĐẾN MUỘN
-                              </button>
-                            )}
                           </div>
                         )}
                       </div>

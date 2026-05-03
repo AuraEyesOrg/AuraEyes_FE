@@ -373,13 +373,13 @@ export default function LatePatientModal({
                     <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
                       {t(
                         'Organisation.latePatientModal.cancel.discountTitle',
-                        'Patient receives 20% discount'
+                        'Patient receives 10% discount'
                       )}
                     </p>
                     <p className="text-xs text-emerald-700 dark:text-emerald-300">
                       {t(
                         'Organisation.latePatientModal.cancel.discountDescription',
-                        'A 20% discount will be applied automatically when the patient books their next appointment online. Valid for 30 days.'
+                        'A 10% discount will be applied automatically when the patient books their next appointment online. Valid for 30 days.'
                       )}
                     </p>
                   </div>
