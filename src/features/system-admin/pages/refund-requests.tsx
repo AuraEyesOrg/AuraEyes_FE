@@ -20,8 +20,9 @@ import { extractApiErrorMessage } from '@/lib/api-error';
 const formatMoney = (value: number, locale: string) =>
   value.toLocaleString(locale, { style: 'currency', currency: 'VND' });
 
-const formatDate = (value: string, locale: string) => {
-  return new Date(value).toLocaleString(locale);
+const formatDate = (value: string | Date, locale: string) => {
+  const date = typeof value === 'string' ? new Date(value) : value;
+  return date.toLocaleString(locale);
 };
 
 export default function RefundRequestsPage() {
