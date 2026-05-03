@@ -28,8 +28,8 @@ import {
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import { collaborationApi } from '@/features/professional-network/api/collaboration.api';
+import type { AvailableDoctorForConsiliumDto } from '@/features/professional-network/api/collaboration.api';
 import { medicalRecordApi } from '@/features/medical-records/api/medical-record.api';
-import { type InternalChatCandidateUser } from '@/features/professional-network/api/internal-chat.api';
 import ConfirmModal from '@/components/ui/confirm-modal';
 import {
   getOphthalmologistScreeningDetail,
@@ -379,10 +379,11 @@ export default function ScreeningReviewPage() {
   // Consilium states
   const [showConsiliumModal, setShowConsiliumModal] = useState(false);
   const [candidateDoctors, setCandidateDoctors] = useState<
-    InternalChatCandidateUser[]
+    AvailableDoctorForConsiliumDto[]
   >([]);
   const [selectedDoctors, setSelectedDoctors] = useState<string[]>([]);
   const [consiliumReason, setConsiliumReason] = useState('');
+  const [isEmergencyConsilium, setIsEmergencyConsilium] = useState(false);
   const [requestingConsilium, setRequestingConsilium] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [showLockConfirm, setShowLockConfirm] = useState(false);
@@ -1170,21 +1171,33 @@ export default function ScreeningReviewPage() {
     if (!screeningId || selectedDoctors.length === 0) return;
     setRequestingConsilium(true);
     try {
-      const patientName = detail?.patientFullName || 'Unknown Patient';
+      const patientName = detail?.patientFullName || 'BN';
+      const recordSuffix = detail?.medicalRecordId
+        ? ` - ${detail.medicalRecordId.slice(0, 8).toUpperCase()}`
+        : '';
+      const groupName = `[Hội chẩn] - ${patientName}${recordSuffix}`;
+
       const groupId = await collaborationApi.createClinicalGroup({
-        name: `Hội chẩn: ${patientName}`,
+        name: groupName,
         consultationSessionId: reportableSessionId || undefined,
         invitedDoctorIds: selectedDoctors,
         reason: consiliumReason,
+        isEmergency: isEmergencyConsilium,
+        medicalRecordId: detail?.medicalRecordId ?? undefined,
       });
 
       ophthalToast.success(
-        t(
-          'Ophthalmologist.screeningReview.toast.consiliumRequested',
-          'Yêu cầu hội chẩn đã được gửi!'
-        )
+        isEmergencyConsilium
+          ? '🚨 Yêu cầu hội chẩn KHẨN CẤP đã được gửi!'
+          : t(
+              'Ophthalmologist.screeningReview.toast.consiliumRequested',
+              'Yêu cầu hội chẩn đã được gửi!'
+            )
       );
       setShowConsiliumModal(false);
+      setIsEmergencyConsilium(false);
+      setSelectedDoctors([]);
+      setConsiliumReason('');
 
       // Navigate to chat
       navigate(`/professional-network/collaboration?groupId=${groupId}`);
@@ -1242,21 +1255,36 @@ export default function ScreeningReviewPage() {
     }
   };
 
+  // Degree order for sorting available doctors from highest to lowest
+  const DEGREE_ORDER = ['GS', 'PGS', 'TS', 'ThS', 'BS'];
+
   useEffect(() => {
     if (showConsiliumModal) {
       void (async () => {
         try {
-          // Chỉ hiển thị bác sĩ "On-call" hoặc Available
-          const users = await collaborationApi.getAvailableDoctors();
-          // Filter out current user if backend doesn't
-          const doctors = users.filter((u) => u.id !== user?.id);
-          setCandidateDoctors(doctors);
+          const doctors = await collaborationApi.getAvailableDoctors();
+          // Filter out the currently logged-in doctor (roleId = ophthalmologistId)
+          const filtered = doctors.filter((d) => d.id !== user?.roleId);
+          // Sort by academic/clinical degree — highest first
+          const sorted = filtered.sort((a, b) => {
+            const ai = DEGREE_ORDER.findIndex(
+              (deg) => a.degreeLevel?.startsWith(deg) ?? false
+            );
+            const bi = DEGREE_ORDER.findIndex(
+              (deg) => b.degreeLevel?.startsWith(deg) ?? false
+            );
+            return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+          });
+          setCandidateDoctors(sorted);
         } catch (e) {
-          console.error('Failed to load candidate doctors', e);
+          console.error('Failed to load available doctors for consilium', e);
         }
       })();
+    } else {
+      // Reset selection when modal closes
+      setCandidateDoctors([]);
     }
-  }, [showConsiliumModal, user?.id]);
+  }, [showConsiliumModal, user?.roleId]);
 
   const aiFindingsNarrative = useMemo(() => {
     if (sidebarFindings.length === 0) return '';
@@ -1874,6 +1902,20 @@ export default function ScreeningReviewPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                  <button
+                    id="btn-request-consilium"
+                    type="button"
+                    onClick={() => {
+                      setSelectedDoctors([]);
+                      setConsiliumReason('');
+                      setIsEmergencyConsilium(false);
+                      setShowConsiliumModal(true);
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-amber-500/30 transition-all hover:-translate-y-0.5 hover:bg-amber-600 active:translate-y-0"
+                  >
+                    <Stethoscope className="h-4 w-4" />
+                    Yêu cầu Hội chẩn
+                  </button>
                   <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded-full text-xs font-medium">
                     {t('Ophthalmologist.screeningReview.aiModel', 'AI Model')}:{' '}
                     {detail.modelVersion?.trim()
@@ -3668,22 +3710,28 @@ export default function ScreeningReviewPage() {
                       >
                         <div className="relative">
                           <UserAvatar
-                            fullName={doc.fullName}
+                            fullName={doc.name}
+                            avatar={doc.avatar ?? undefined}
                             size="md"
                             className="shrink-0"
                           />
                           <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-[#0a1f44] rounded-full" />
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p className="font-bold text-gray-900 dark:text-white truncate">
-                            {doc.fullName}
+                            {doc.name}
                           </p>
-                          <p className="text-xs text-gray-500 truncate">
-                            {doc.roles.join(', ')}
+                          {doc.degreeLevel && (
+                            <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                              {doc.degreeLevel}
+                            </p>
+                          )}
+                          <p className="text-xs text-green-600 dark:text-green-400">
+                            ● Đang rảnh
                           </p>
                         </div>
                         {selectedDoctors.includes(doc.id) && (
-                          <div className="ml-auto">
+                          <div className="ml-auto shrink-0">
                             <Check className="w-5 h-5 text-amber-600" />
                           </div>
                         )}
@@ -3704,6 +3752,26 @@ export default function ScreeningReviewPage() {
                   className="w-full h-24 px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/30 border border-gray-200 dark:border-[#1e3a5f] rounded-2xl text-sm focus:ring-2 focus:ring-amber-500/50 outline-none transition-all resize-none"
                 />
               </div>
+
+              {/* Emergency Checkbox */}
+              <label
+                htmlFor="emergency-consilium-check"
+                className="flex cursor-pointer items-center gap-3 rounded-2xl border-2 border-red-200 bg-red-50/60 p-4 transition-colors hover:bg-red-50 dark:border-red-900/40 dark:bg-red-900/10 dark:hover:bg-red-900/20"
+              >
+                <input
+                  id="emergency-consilium-check"
+                  type="checkbox"
+                  checked={isEmergencyConsilium}
+                  onChange={(e) => setIsEmergencyConsilium(e.target.checked)}
+                  className="h-5 w-5 cursor-pointer accent-red-600"
+                />
+                <span className="text-sm font-bold text-red-700 dark:text-red-400">
+                  🚨 Ca Khẩn Cấp (Emergency) —{' '}
+                  <span className="font-normal">
+                    Thông báo ưu tiên cao tới bác sĩ được mời
+                  </span>
+                </span>
+              </label>
             </div>
 
             <div className="p-6 border-t border-gray-200 dark:border-[#1e3a5f] flex justify-end gap-3 bg-gray-50/50 dark:bg-slate-900/30">
