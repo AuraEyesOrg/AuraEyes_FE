@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { api } from '@/lib/api';
+import { ophthalmologistProfileKeys } from '../hooks/useOphthalmologistProfile';
 
 type DegreeLevel =
   | 'Bachelor'
@@ -45,15 +46,27 @@ interface UploadCredentialsModalProps {
   isOpen: boolean;
   onClose: () => void;
   ophthalmologistId: string;
+  editingCredential?: {
+    id: string;
+    type: 'Degree' | 'License';
+    name: string;
+    degreeLevel?: string;
+    issuingAuthority?: string;
+    issuedDate: string;
+    expiryDate?: string;
+    certificateUrl?: string;
+  };
 }
 
 export default function UploadCredentialsModal({
   isOpen,
   onClose,
   ophthalmologistId,
+  editingCredential,
 }: UploadCredentialsModalProps) {
   const queryClient = useQueryClient();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const isEditMode = !!editingCredential;
 
   const createDefaultDegree = (): DegreeFormItem => ({
     name: '',
@@ -69,13 +82,55 @@ export default function UploadCredentialsModal({
     expiryDate: '',
   });
 
-  const { register, control, handleSubmit } =
+  const { register, control, handleSubmit, reset } =
     useForm<UploadCredentialsFormData>({
       defaultValues: {
         degrees: [createDefaultDegree()],
         certificates: [createDefaultCertificate()],
       },
     });
+
+  useEffect(() => {
+    if (editingCredential) {
+      if (editingCredential.type === 'Degree') {
+        reset({
+          degrees: [
+            {
+              name: editingCredential.name,
+              degreeLevel:
+                (editingCredential.degreeLevel as DegreeLevel) || 'Bachelor',
+              issuingAuthority: editingCredential.issuingAuthority || '',
+              issuedDate: editingCredential.issuedDate
+                ? editingCredential.issuedDate.split('T')[0]
+                : '',
+            },
+          ],
+          certificates: [],
+        });
+      } else {
+        reset({
+          degrees: [],
+          certificates: [
+            {
+              name: editingCredential.name,
+              issuingAuthority: editingCredential.issuingAuthority || '',
+              issuedDate: editingCredential.issuedDate
+                ? editingCredential.issuedDate.split('T')[0]
+                : '',
+              expiryDate: editingCredential.expiryDate
+                ? editingCredential.expiryDate.split('T')[0]
+                : '',
+            },
+          ],
+        });
+      }
+    } else {
+      reset({
+        degrees: [createDefaultDegree()],
+        certificates: [createDefaultCertificate()],
+      });
+    }
+  }, [editingCredential, reset, isOpen]);
 
   const {
     fields: degreeFields,
@@ -99,6 +154,41 @@ export default function UploadCredentialsModal({
     mutationFn: async (data: UploadCredentialsFormData) => {
       const formData = new FormData();
       let credentialIndex = 0;
+
+      if (isEditMode && editingCredential) {
+        const item = data.degrees[0] || data.certificates[0];
+        formData.append('name', item.name);
+        if ('degreeLevel' in item && item.degreeLevel) {
+          formData.append('degreeLevel', item.degreeLevel);
+        }
+        if (item.issuingAuthority) {
+          formData.append('issuingAuthority', item.issuingAuthority);
+        }
+        if (item.issuedDate) {
+          formData.append(
+            'issuedDate',
+            new Date(item.issuedDate as string).toISOString()
+          );
+        }
+        if ('expiryDate' in item && item.expiryDate) {
+          formData.append(
+            'expiryDate',
+            new Date(item.expiryDate as string).toISOString()
+          );
+        }
+        if (item.file && item.file.length > 0) {
+          formData.append('file', item.file[0]);
+        }
+
+        await api.put(
+          `/ophthalmologist/profile/certificates/${editingCredential.id}`,
+          formData,
+          {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          }
+        );
+        return;
+      }
 
       data.degrees.forEach((item) => {
         if (!item.file || item.file.length === 0) return;
@@ -164,9 +254,13 @@ export default function UploadCredentialsModal({
       return response.data;
     },
     onSuccess: () => {
-      toast.success('Credentials uploaded successfully.');
+      toast.success(
+        isEditMode
+          ? 'Credential updated successfully.'
+          : 'Credentials uploaded successfully.'
+      );
       queryClient.invalidateQueries({
-        queryKey: ['ophthalmologist', 'detail', ophthalmologistId],
+        queryKey: ophthalmologistProfileKeys.all,
       });
       onClose();
     },
@@ -176,9 +270,16 @@ export default function UploadCredentialsModal({
         response?: { data?: { message?: string } };
       };
       setSubmitError(
-        apiError?.response?.data?.message || 'Failed to upload credentials'
+        apiError?.response?.data?.message ||
+          (isEditMode
+            ? 'Failed to update credential'
+            : 'Failed to upload credentials')
       );
-      toast.error('Failed to upload credentials');
+      toast.error(
+        isEditMode
+          ? 'Failed to update credential'
+          : 'Failed to upload credentials'
+      );
     },
   });
 
@@ -190,7 +291,7 @@ export default function UploadCredentialsModal({
     for (const c of data.certificates)
       if (c.file && c.file.length > 0) hasOneFile = true;
 
-    if (!hasOneFile) {
+    if (!isEditMode && !hasOneFile) {
       setSubmitError(
         'Please attach at least one file (Degree or License/Certificate).'
       );
@@ -207,7 +308,7 @@ export default function UploadCredentialsModal({
       <div className="bg-white dark:bg-[#0a1f44] w-full max-w-2xl rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-[#1e3a5f]">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            Upload Additional Credentials
+            {isEditMode ? 'Update Credential' : 'Upload Additional Credentials'}
           </h2>
           <button
             onClick={onClose}
@@ -230,193 +331,210 @@ export default function UploadCredentialsModal({
             )}
 
             {/* Degrees Section */}
-            <section className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-[#1e3a5f] w-full pb-2">
-                  Medical Degrees
-                </h3>
-              </div>
-              {degreeFields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="relative bg-gray-50 dark:bg-[#1e3a5f]/30 p-4 rounded-xl border border-gray-200 dark:border-[#2d4a6f] space-y-4"
-                >
-                  <div className="absolute right-3 top-3">
-                    <button
-                      type="button"
-                      onClick={() => removeDegree(index)}
-                      className="text-red-500 hover:text-red-700 bg-white shadow-xs p-1.5 rounded-full"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Degree Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        {...register(`degrees.${index}.name`, {
-                          required: 'Required',
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Degree Level <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        {...register(`degrees.${index}.degreeLevel`, {
-                          required: 'Required',
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
-                      >
-                        {DEGREE_LEVEL_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Issuing Authority
-                      </label>
-                      <input
-                        type="text"
-                        {...register(`degrees.${index}.issuingAuthority`)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Issued Date <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        {...register(`degrees.${index}.issuedDate`, {
-                          required: 'Required',
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Upload Document <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="file"
-                      {...register(`degrees.${index}.file`)}
-                      accept=".pdf,.jpg,.jpeg,.png,.webp"
-                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 dark:file:bg-cyan-900/30 dark:file:text-cyan-400"
-                    />
-                  </div>
+            {(!isEditMode || editingCredential?.type === 'Degree') && (
+              <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-[#1e3a5f] w-full pb-2">
+                    Medical Degrees
+                  </h3>
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => appendDegree(createDefaultDegree())}
-                className="flex items-center gap-2 text-cyan-600 hover:text-cyan-700 text-sm font-medium"
-              >
-                <Plus className="w-4 h-4" /> Add Another Degree
-              </button>
-            </section>
+                {degreeFields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="relative bg-gray-50 dark:bg-[#1e3a5f]/30 p-4 rounded-xl border border-gray-200 dark:border-[#2d4a6f] space-y-4"
+                  >
+                    {!isEditMode && (
+                      <div className="absolute right-3 top-3">
+                        <button
+                          type="button"
+                          onClick={() => removeDegree(index)}
+                          className="text-red-500 hover:text-red-700 bg-white shadow-xs p-1.5 rounded-full"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Degree Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          {...register(`degrees.${index}.name`, {
+                            required: 'Required',
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Degree Level <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          {...register(`degrees.${index}.degreeLevel`, {
+                            required: 'Required',
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
+                        >
+                          {DEGREE_LEVEL_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Issuing Authority
+                        </label>
+                        <input
+                          type="text"
+                          {...register(`degrees.${index}.issuingAuthority`)}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Issued Date <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          {...register(`degrees.${index}.issuedDate`, {
+                            required: 'Required',
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Upload Document <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="file"
+                        {...register(`degrees.${index}.file`)}
+                        accept=".pdf,.jpg,.jpeg,.png,.webp"
+                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 dark:file:bg-cyan-900/30 dark:file:text-cyan-400"
+                      />
+                    </div>
+                  </div>
+                ))}
+                {!isEditMode && (
+                  <button
+                    type="button"
+                    onClick={() => appendDegree(createDefaultDegree())}
+                    className="flex items-center gap-2 text-cyan-600 hover:text-cyan-700 text-sm font-medium"
+                  >
+                    <Plus className="w-4 h-4" /> Add Another Degree
+                  </button>
+                )}
+              </section>
+            )}
 
             {/* Certificates Section */}
-            <section className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-[#1e3a5f] w-full pb-2">
-                  Licenses & Certificates
-                </h3>
-              </div>
-              {certificateFields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="relative bg-gray-50 dark:bg-[#1e3a5f]/30 p-4 rounded-xl border border-gray-200 dark:border-[#2d4a6f] space-y-4"
-                >
-                  <div className="absolute right-3 top-3">
-                    <button
-                      type="button"
-                      onClick={() => removeCertificate(index)}
-                      className="text-red-500 hover:text-red-700 bg-white shadow-xs p-1.5 rounded-full"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Certificate Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        {...register(`certificates.${index}.name`, {
-                          required: 'Required',
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Issuing Authority
-                      </label>
-                      <input
-                        type="text"
-                        {...register(`certificates.${index}.issuingAuthority`)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Issued Date <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        {...register(`certificates.${index}.issuedDate`, {
-                          required: 'Required',
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Expiry Date
-                      </label>
-                      <input
-                        type="date"
-                        {...register(`certificates.${index}.expiryDate`)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Upload Document <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="file"
-                      {...register(`certificates.${index}.file`)}
-                      accept=".pdf,.jpg,.jpeg,.png,.webp"
-                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 dark:file:bg-cyan-900/30 dark:file:text-cyan-400"
-                    />
-                  </div>
+            {(!isEditMode || editingCredential?.type === 'License') && (
+              <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-[#1e3a5f] w-full pb-2">
+                    Licenses & Certificates
+                  </h3>
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => appendCertificate(createDefaultCertificate())}
-                className="flex items-center gap-2 text-cyan-600 hover:text-cyan-700 text-sm font-medium"
-              >
-                <Plus className="w-4 h-4" /> Add Another Certificate
-              </button>
-            </section>
+                {certificateFields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="relative bg-gray-50 dark:bg-[#1e3a5f]/30 p-4 rounded-xl border border-gray-200 dark:border-[#2d4a6f] space-y-4"
+                  >
+                    {!isEditMode && (
+                      <div className="absolute right-3 top-3">
+                        <button
+                          type="button"
+                          onClick={() => removeCertificate(index)}
+                          className="text-red-500 hover:text-red-700 bg-white shadow-xs p-1.5 rounded-full"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Certificate Name{' '}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          {...register(`certificates.${index}.name`, {
+                            required: 'Required',
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Issuing Authority
+                        </label>
+                        <input
+                          type="text"
+                          {...register(
+                            `certificates.${index}.issuingAuthority`
+                          )}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Issued Date <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          {...register(`certificates.${index}.issuedDate`, {
+                            required: 'Required',
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Expiry Date
+                        </label>
+                        <input
+                          type="date"
+                          {...register(`certificates.${index}.expiryDate`)}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Upload Document <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="file"
+                        {...register(`certificates.${index}.file`)}
+                        accept=".pdf,.jpg,.jpeg,.png,.webp"
+                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 dark:file:bg-cyan-900/30 dark:file:text-cyan-400"
+                      />
+                    </div>
+                  </div>
+                ))}
+                {!isEditMode && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      appendCertificate(createDefaultCertificate())
+                    }
+                    className="flex items-center gap-2 text-cyan-600 hover:text-cyan-700 text-sm font-medium"
+                  >
+                    <Plus className="w-4 h-4" /> Add Another Certificate
+                  </button>
+                )}
+              </section>
+            )}
           </form>
         </div>
 
@@ -457,7 +575,7 @@ export default function UploadCredentialsModal({
                   />
                 </svg>
               )}
-              Upload Credentials
+              {isEditMode ? 'Update Credential' : 'Upload Credentials'}
             </button>
           </div>
         </div>
