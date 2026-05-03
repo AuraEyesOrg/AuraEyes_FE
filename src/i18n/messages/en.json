@@ -6123,8 +6123,8 @@
       },
       "cancel": {
         "description": "The current appointment will be cancelled and the slot released.",
-        "discountDescription": "A 20% discount will be applied automatically when the patient books their next appointment online. Valid for 30 days.",
-        "discountTitle": "Patient receives 20% discount",
+        "discountDescription": "A 10% discount will be applied automatically when the patient books their next appointment online. Valid for 30 days.",
+        "discountTitle": "Patient receives 10% discount",
         "title": "Cancel this appointment"
       },
       "checking": "Checking appointment status...",
