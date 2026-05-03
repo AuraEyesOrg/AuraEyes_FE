@@ -6337,8 +6337,8 @@
       },
       "cancel": {
         "description": "Lịch hẹn hiện tại sẽ bị hủy và khung giờ được giải phóng.",
-        "discountDescription": "Giảm giá 20% sẽ tự động được áp dụng khi bệnh nhân đặt lịch khám online tiếp theo. Hiệu lực trong 30 ngày.",
-        "discountTitle": "Bệnh nhân nhận giảm giá 20%",
+        "discountDescription": "Giảm giá 10% sẽ tự động được áp dụng khi bệnh nhân đặt lịch khám online tiếp theo. Hiệu lực trong 30 ngày.",
+        "discountTitle": "Bệnh nhân nhận giảm giá 10%",
         "title": "Hủy lịch hẹn này"
       },
       "checking": "Đang kiểm tra trạng thái lịch hẹn...",

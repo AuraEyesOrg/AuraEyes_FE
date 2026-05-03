@@ -63,6 +63,7 @@ export interface ConfirmEmailRequest {
 }
 
 export interface ForceUpdateProfileRequest {
+  currentPassword?: string;
   newPassword?: string;
   fullName: string;
   phone: string;
@@ -72,10 +73,8 @@ export interface ForceUpdateProfileRequest {
   address?: string;
   citizenId?: string;
   bio?: string;
-  consultationFee?: number;
   department?: string;
-  medicalLicenseNumber?: string;
-  licenseImageUrl?: string;
+  employeeCode?: string;
 }
 
 export interface UserInfoResponse {

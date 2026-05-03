@@ -4,19 +4,28 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import {
   AlertCircle,
+  Award,
+  Calendar,
   Camera,
+  Edit2,
+  Eye,
+  FileText,
+  GraduationCap,
   Mail,
   MapPin,
   Phone,
+  Plus,
   Save,
+  Trash2,
   User,
   X,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
-import { formatMonthYear } from '@/lib/date-utils';
+import { formatMonthYear, formatShortDate } from '@/lib/date-utils';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { resolveAvatarUrl } from '@/lib/user-avatar';
+import useAuthStore from '@/store/auth-store';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import {
   useOphthalmologistProfile,
@@ -42,8 +51,17 @@ const profileSchema = yup.object({
   bio: yup
     .string()
     .optional()
+    .nullable()
     .default('')
     .max(1000, 'Validation.MaxLength.Bio'),
+  citizenId: yup
+    .string()
+    .optional()
+    .nullable()
+    .default('')
+    .max(20, 'Validation.MaxLength.CitizenId'),
+  gender: yup.number().optional().nullable().default(1),
+  dateOfBirth: yup.string().optional().nullable().default(''),
 });
 
 type ProfileFormData = yup.InferType<typeof profileSchema>;
@@ -67,7 +85,7 @@ export default function OphthalmologistProfilePage() {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<ProfileFormData>({
     resolver: yupResolver(profileSchema),
     defaultValues: {
@@ -75,6 +93,9 @@ export default function OphthalmologistProfilePage() {
       phone: '',
       address: '',
       bio: '',
+      citizenId: '',
+      gender: 1,
+      dateOfBirth: '',
     },
   });
 
@@ -86,6 +107,11 @@ export default function OphthalmologistProfilePage() {
       phone: profileData.userPhoneNumber ?? '',
       address: profileData.userAddress ?? '',
       bio: profileData.bio ?? '',
+      citizenId: profileData.userCitizenId ?? '',
+      gender: profileData.userGender ?? 1,
+      dateOfBirth: profileData.userDateOfBirth
+        ? profileData.userDateOfBirth.split('T')[0]
+        : '',
     });
   }, [profileData, reset]);
 
@@ -93,21 +119,44 @@ export default function OphthalmologistProfilePage() {
     setAvatarImageError(false);
   }, [profileData?.userAvatarUrl]);
 
-  const resolvedAvatarUrl = resolveAvatarUrl(profileData?.userAvatarUrl);
-  const displayName = profileData?.userFullName ?? '';
+  const { user } = useAuthStore();
+  const resolvedAvatarUrl = resolveAvatarUrl(
+    profileData?.userAvatarUrl,
+    user?.avatarUrl
+  );
+  const displayName = profileData?.userFullName ?? user?.fullName ?? '';
+
+  const [showAllDegrees, setShowAllDegrees] = useState(false);
+  const [showAllCertificates, setShowAllCertificates] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const getDocumentThumbnail = (url: string | null | undefined) => {
+    if (!url) return null;
+    const lowerUrl = url.toLowerCase();
+    // Cloudinary PDF to JPG thumbnail trick
+    if (lowerUrl.endsWith('.pdf')) {
+      return url.replace(/\.pdf$/i, '.jpg');
+    }
+    return url;
+  };
 
   const onSubmit = (formData: ProfileFormData) => {
     updateMutation.mutate(
       {
         fullName: formData.fullName,
-        phone: formData.phone || undefined,
-        address: formData.address || undefined,
-        bio: formData.bio || undefined,
+        phone: formData.phone,
+        address: formData.address,
+        bio: formData.bio,
+        citizenId: formData.citizenId,
+        gender: formData.gender,
+        dateOfBirth: formData.dateOfBirth,
       },
       {
-        onSuccess: () => {
-          toast.success('Profile updated successfully');
-          setIsEditing(false);
+        onSuccess: (data) => {
+          if (data) {
+            toast.success('Profile updated successfully');
+            setIsEditing(false);
+          }
         },
         onError: (err) => {
           toast.error(extractApiErrorMessage(err, 'Failed to update profile'));
@@ -290,6 +339,11 @@ export default function OphthalmologistProfilePage() {
                             phone: profileData.userPhoneNumber ?? '',
                             address: profileData.userAddress ?? '',
                             bio: profileData.bio ?? '',
+                            citizenId: profileData.userCitizenId ?? '',
+                            gender: profileData.userGender ?? 1,
+                            dateOfBirth: profileData.userDateOfBirth
+                              ? profileData.userDateOfBirth.split('T')[0]
+                              : '',
                           });
                         }}
                         className="px-3 py-2 text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
@@ -298,7 +352,7 @@ export default function OphthalmologistProfilePage() {
                       </button>
                       <button
                         type="submit"
-                        disabled={updateMutation.isPending}
+                        disabled={updateMutation.isPending || !isDirty}
                         className="btn-primary flex items-center gap-2 disabled:opacity-50"
                       >
                         {updateMutation.isPending ? (
@@ -350,6 +404,64 @@ export default function OphthalmologistProfilePage() {
                     value={profileData.userPhoneNumber || '—'}
                   />
 
+                  <ProfileField
+                    label="Citizen ID"
+                    icon={<FileText className="h-4 w-4" />}
+                    isEditing={isEditing}
+                    error={errors.citizenId?.message}
+                    input={
+                      <input
+                        {...register('citizenId')}
+                        className={fieldInputClass}
+                        type="text"
+                      />
+                    }
+                    value={profileData.userCitizenId || '—'}
+                  />
+
+                  <ProfileField
+                    label="Gender"
+                    icon={<User className="h-4 w-4" />}
+                    isEditing={isEditing}
+                    error={errors.gender?.message}
+                    input={
+                      <select
+                        {...register('gender')}
+                        className={fieldInputClass}
+                      >
+                        <option value={1}>Male</option>
+                        <option value={2}>Female</option>
+                        <option value={3}>Other</option>
+                      </select>
+                    }
+                    value={
+                      profileData.userGender === 1
+                        ? 'Male'
+                        : profileData.userGender === 2
+                          ? 'Female'
+                          : 'Other'
+                    }
+                  />
+
+                  <ProfileField
+                    label="Date of Birth"
+                    icon={<Calendar className="h-4 w-4" />}
+                    isEditing={isEditing}
+                    error={errors.dateOfBirth?.message}
+                    input={
+                      <input
+                        {...register('dateOfBirth')}
+                        className={fieldInputClass}
+                        type="date"
+                      />
+                    }
+                    value={
+                      profileData.userDateOfBirth
+                        ? formatShortDate(profileData.userDateOfBirth)
+                        : '—'
+                    }
+                  />
+
                   <div className="md:col-span-2">
                     <ProfileField
                       label="Address"
@@ -384,6 +496,270 @@ export default function OphthalmologistProfilePage() {
                   </div>
                 </div>
               </form>
+
+              {/* Professional Credentials Section */}
+              <div className="lg:col-span-3">
+                <div className="mb-4 mt-8 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="h-6 w-6 text-brand" />
+                    <h2 className="text-xl font-bold text-[var(--text-primary)]">
+                      Professional Credentials
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 text-sm font-medium text-brand transition hover:text-brand/80"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add New
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  {/* Degrees */}
+                  <div className="medical-card">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="flex items-center gap-2 font-semibold text-[var(--text-primary)]">
+                        <Award className="h-4 w-4 text-brand" />
+                        Medical Degrees
+                      </h3>
+                      {profileData.degrees &&
+                        profileData.degrees.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => setShowAllDegrees(!showAllDegrees)}
+                            className="text-xs font-medium text-brand transition hover:underline"
+                          >
+                            {showAllDegrees ? 'Show Less' : 'See All'}
+                          </button>
+                        )}
+                    </div>
+
+                    <div className="space-y-4">
+                      {profileData.degrees && profileData.degrees.length > 0 ? (
+                        (showAllDegrees
+                          ? profileData.degrees
+                          : profileData.degrees.slice(0, 1)
+                        ).map((degree) => (
+                          <div
+                            key={degree.id}
+                            className="group relative overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] transition hover:border-brand/30"
+                          >
+                            <div className="flex flex-col sm:flex-row">
+                              {degree.degreeUrl && (
+                                <a
+                                  href={degree.degreeUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="h-32 w-full shrink-0 sm:h-auto sm:w-24 group/img relative overflow-hidden"
+                                  onClick={(e) => {
+                                    if (
+                                      !degree.degreeUrl
+                                        ?.toLowerCase()
+                                        .endsWith('.pdf')
+                                    ) {
+                                      e.preventDefault();
+                                      setSelectedImage(
+                                        degree.degreeUrl ?? null
+                                      );
+                                    }
+                                  }}
+                                >
+                                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                                    <FileText className="h-8 w-8 text-gray-400 opacity-20" />
+                                  </div>
+                                  <img
+                                    src={
+                                      getDocumentThumbnail(degree.degreeUrl) ??
+                                      ''
+                                    }
+                                    alt={degree.name}
+                                    className="relative z-10 h-full w-full object-cover opacity-90 transition group-hover/img:opacity-100 group-hover/img:scale-105"
+                                    onError={(e) => {
+                                      (
+                                        e.target as HTMLImageElement
+                                      ).style.display = 'none';
+                                    }}
+                                  />
+                                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/20 opacity-0 transition group-hover/img:opacity-100">
+                                    <Eye className="h-5 w-5 text-white" />
+                                  </div>
+                                </a>
+                              )}
+                              <div className="flex flex-1 items-start justify-between p-4">
+                                <div className="flex-1">
+                                  <p className="font-bold text-[var(--text-primary)]">
+                                    {degree.name}
+                                  </p>
+                                  <p className="text-sm text-brand">
+                                    {degree.issuingAuthority}
+                                  </p>
+                                  <div className="mt-2 flex items-center gap-4 text-xs text-[var(--text-secondary)]">
+                                    <span className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      Issued:{' '}
+                                      {formatShortDate(degree.issuedDate)}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 opacity-0 transition group-hover:opacity-100">
+                                  <button
+                                    title="Edit"
+                                    className="rounded-lg p-1.5 text-[var(--text-secondary)] transition hover:bg-brand/10 hover:text-brand"
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    title="Delete"
+                                    className="rounded-lg p-1.5 text-[var(--text-secondary)] transition hover:bg-red-50 hover:text-red-500"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-8 text-center text-[var(--text-secondary)]">
+                          <GraduationCap className="mb-2 h-8 w-8 opacity-20" />
+                          <p className="text-sm italic">No degrees listed</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Licenses & Certificates */}
+                  <div className="medical-card">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="flex items-center gap-2 font-semibold text-[var(--text-primary)]">
+                        <FileText className="h-4 w-4 text-brand" />
+                        Professional Licenses
+                      </h3>
+                      {profileData.certificates &&
+                        profileData.certificates.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowAllCertificates(!showAllCertificates)
+                            }
+                            className="text-xs font-medium text-brand transition hover:underline"
+                          >
+                            {showAllCertificates ? 'Show Less' : 'See All'}
+                          </button>
+                        )}
+                    </div>
+
+                    <div className="space-y-4">
+                      {profileData.certificates &&
+                      profileData.certificates.length > 0 ? (
+                        (showAllCertificates
+                          ? profileData.certificates
+                          : profileData.certificates.slice(0, 1)
+                        ).map((cert) => (
+                          <div
+                            key={cert.id}
+                            className="group relative overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] transition hover:border-brand/30"
+                          >
+                            <div className="flex flex-col sm:flex-row">
+                              {cert.certificateUrl && (
+                                <a
+                                  href={cert.certificateUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="h-32 w-full shrink-0 sm:h-auto sm:w-24 group/img relative overflow-hidden"
+                                  onClick={(e) => {
+                                    if (
+                                      !cert.certificateUrl
+                                        ?.toLowerCase()
+                                        .endsWith('.pdf')
+                                    ) {
+                                      e.preventDefault();
+                                      setSelectedImage(
+                                        cert.certificateUrl ?? null
+                                      );
+                                    }
+                                  }}
+                                >
+                                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                                    <FileText className="h-8 w-8 text-gray-400 opacity-20" />
+                                  </div>
+                                  <img
+                                    src={
+                                      getDocumentThumbnail(
+                                        cert.certificateUrl
+                                      ) ?? ''
+                                    }
+                                    alt={cert.name}
+                                    className="relative z-10 h-full w-full object-cover opacity-90 transition group-hover/img:opacity-100 group-hover/img:scale-105"
+                                    onError={(e) => {
+                                      (
+                                        e.target as HTMLImageElement
+                                      ).style.display = 'none';
+                                    }}
+                                  />
+                                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/20 opacity-0 transition group-hover/img:opacity-100">
+                                    <Eye className="h-5 w-5 text-white" />
+                                  </div>
+                                </a>
+                              )}
+                              <div className="flex flex-1 items-start justify-between p-4">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-bold text-[var(--text-primary)]">
+                                      {cert.name}
+                                    </p>
+                                    {cert.isExpired && (
+                                      <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-600">
+                                        EXPIRED
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-brand">
+                                    {cert.issuingAuthority}
+                                  </p>
+                                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--text-secondary)]">
+                                    <span className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      Issued: {formatShortDate(cert.issuedDate)}
+                                    </span>
+                                    {cert.expiryDate && (
+                                      <span className="flex items-center gap-1">
+                                        <Calendar className="h-3 w-3" />
+                                        Expires:{' '}
+                                        {formatShortDate(cert.expiryDate)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 opacity-0 transition group-hover:opacity-100">
+                                  <button
+                                    title="Edit"
+                                    className="rounded-lg p-1.5 text-[var(--text-secondary)] transition hover:bg-brand/10 hover:text-brand"
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    title="Delete"
+                                    className="rounded-lg p-1.5 text-[var(--text-secondary)] transition hover:bg-red-50 hover:text-red-500"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-8 text-center text-[var(--text-secondary)]">
+                          <Award className="mb-2 h-8 w-8 opacity-20" />
+                          <p className="text-sm italic">No licenses listed</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </main>
@@ -409,13 +785,13 @@ export default function OphthalmologistProfilePage() {
               <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-brand/20">
                 {previewUrl ? (
                   <img
-                    src={previewUrl}
+                    src={previewUrl ?? undefined}
                     alt="avatar-preview"
                     className="h-full w-full object-cover"
                   />
                 ) : resolvedAvatarUrl && !avatarImageError ? (
                   <img
-                    src={resolvedAvatarUrl}
+                    src={resolvedAvatarUrl ?? undefined}
                     alt="current-avatar"
                     className="h-full w-full object-cover"
                   />
@@ -471,6 +847,27 @@ export default function OphthalmologistProfilePage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Image Lightbox */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4 transition-all"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button
+            className="absolute right-6 top-6 text-white/70 hover:text-white"
+            onClick={() => setSelectedImage(null)}
+          >
+            <X className="h-8 w-8" />
+          </button>
+          <img
+            src={selectedImage}
+            alt="Credential"
+            className="max-h-[90vh] max-w-full rounded-lg shadow-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>

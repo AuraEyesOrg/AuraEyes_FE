@@ -10,6 +10,9 @@ export interface OphthalmologistProfileData {
   userAvatarUrl?: string | null;
   userPhoneNumber?: string | null;
   userAddress?: string | null;
+  userCitizenId?: string | null;
+  userGender?: number | null;
+  userDateOfBirth?: string | null;
   bio?: string | null;
   employmentType?: string | null;
   createdAt: string;
@@ -27,15 +30,19 @@ export interface OphthalmologistProfileData {
     issuingAuthority?: string | null;
     issuedDate: string;
     expiryDate?: string | null;
+    certificateUrl?: string | null;
     isExpired: boolean;
   }>;
 }
 
 export interface UpdateOphthalmologistProfileData {
   fullName: string;
-  phone?: string;
-  address?: string;
-  bio?: string;
+  phone?: string | null;
+  address?: string | null;
+  bio?: string | null;
+  citizenId?: string | null;
+  gender?: number | null;
+  dateOfBirth?: string | null;
 }
 
 const ENDPOINTS = {
