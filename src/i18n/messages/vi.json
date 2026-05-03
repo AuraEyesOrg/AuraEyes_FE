@@ -6325,6 +6325,61 @@
       "idLabel": "ID BN",
       "close": "Đóng"
     },
+    "latePatientModal": {
+      "actions": {
+        "cancelAndDiscount": "Hủy & Cấp giảm giá",
+        "createAndRebook": "Tạo slot & Đặt lại",
+        "rebook": "Đặt lại bệnh nhân"
+      },
+      "adhoc": {
+        "cost": "Chi phí (VND)",
+        "costPlaceholder": "Không bắt buộc",
+        "description": "Tạo một khung giờ tùy chỉnh cho bệnh nhân này.",
+        "doctor": "Chỉ định bác sĩ",
+        "endTime": "Giờ kết thúc",
+        "loadingDoctors": "Đang tải danh sách bác sĩ...",
+        "maxCapacity": "Sức chứa",
+        "noDoctor": "Tự động chỉ định / Không ưu tiên",
+        "startTime": "Giờ bắt đầu"
+      },
+      "cancel": {
+        "description": "Lịch hẹn hiện tại sẽ bị hủy và khung giờ được giải phóng.",
+        "discountDescription": "Giảm giá 20% sẽ tự động được áp dụng khi bệnh nhân đặt lịch khám online tiếp theo. Hiệu lực trong 30 ngày.",
+        "discountTitle": "Bệnh nhân nhận giảm giá 20%",
+        "title": "Hủy lịch hẹn này"
+      },
+      "checking": "Đang kiểm tra trạng thái lịch hẹn...",
+      "checkError": "Không thể kiểm tra trạng thái. Vui lòng thử lại.",
+      "error": {
+        "selectSlot": "Vui lòng chọn một khung giờ",
+        "timesRequired": "Giờ bắt đầu và giờ kết thúc là bắt buộc"
+      },
+      "existing": {
+        "anyDoctor": "Bất kỳ bác sĩ nào",
+        "anyDoctorDesc": "Hệ thống sẽ tự động chỉ định bác sĩ",
+        "autoAssign": "Tự động chỉ định: hệ thống sẽ chọn một bác sĩ khả dụng.",
+        "description": "Chọn một khung giờ khả dụng, sau đó chọn bác sĩ.",
+        "loadingDoctors": "Đang tải danh sách bác sĩ...",
+        "noDoctors": "Không có bác sĩ khả dụng cho khung giờ này.",
+        "noSlots": "Không có khung giờ khả dụng trong ngày này.",
+        "selectDoctor": "Chọn bác sĩ"
+      },
+      "header": {
+        "subtitle": "Đến muộn {{minutes}} phút so với ngưỡng {{threshold}} phút",
+        "title": "Bệnh nhân đến muộn"
+      },
+      "notLate": "Bệnh nhân chưa đến muộn hoặc lịch hẹn chưa đến giờ.",
+      "success": {
+        "adHocCreated": "Đã tạo slot ad-hoc và đặt lại bệnh nhân",
+        "cancelledWithDiscount": "Đã hủy lịch hẹn. Bệnh nhân nhận giảm giá {{rate}}% cho lần đặt tiếp theo.",
+        "rebooked": "Đã đặt lại bệnh nhân sang slot mới thành công"
+      },
+      "tabs": {
+        "adhoc": "Tạo Slot Tùy chỉnh",
+        "cancel": "Hủy & Giảm giá",
+        "existing": "Đặt Slot Khác"
+      }
+    },
     "walkInPatientModal": {
       "actions": {
         "createPatient": "Tạo bệnh nhân"

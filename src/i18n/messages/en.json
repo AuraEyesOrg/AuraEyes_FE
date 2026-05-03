@@ -6295,6 +6295,61 @@
       "idLabel": "ID",
       "close": "Close"
     },
+    "latePatientModal": {
+      "actions": {
+        "cancelAndDiscount": "Cancel & Grant Discount",
+        "createAndRebook": "Create Slot & Rebook",
+        "rebook": "Rebook Patient"
+      },
+      "adhoc": {
+        "cost": "Cost (VND)",
+        "costPlaceholder": "Optional",
+        "description": "Create a custom time slot for this patient.",
+        "doctor": "Assign Doctor",
+        "endTime": "End Time",
+        "loadingDoctors": "Loading doctors...",
+        "maxCapacity": "Capacity",
+        "noDoctor": "Auto-assign / No preference",
+        "startTime": "Start Time"
+      },
+      "cancel": {
+        "description": "The current appointment will be cancelled and the slot released.",
+        "discountDescription": "A 20% discount will be applied automatically when the patient books their next appointment online. Valid for 30 days.",
+        "discountTitle": "Patient receives 20% discount",
+        "title": "Cancel this appointment"
+      },
+      "checking": "Checking appointment status...",
+      "checkError": "Unable to check status. Please try again.",
+      "error": {
+        "selectSlot": "Please select a slot",
+        "timesRequired": "Start and end times are required"
+      },
+      "existing": {
+        "anyDoctor": "Any available doctor",
+        "anyDoctorDesc": "System will auto-assign a doctor",
+        "autoAssign": "Auto-assign: system will pick an available doctor.",
+        "description": "Select an available slot, then choose a doctor.",
+        "loadingDoctors": "Loading doctors...",
+        "noDoctors": "No doctors available for this slot.",
+        "noSlots": "No available slots on this day.",
+        "selectDoctor": "Select Doctor"
+      },
+      "header": {
+        "subtitle": "Arrived {{minutes}} min past the {{threshold}} min threshold",
+        "title": "Patient Arrived Late"
+      },
+      "notLate": "Patient is not late or the appointment time has not yet arrived.",
+      "success": {
+        "adHocCreated": "Ad-hoc slot created and patient rebooked",
+        "cancelledWithDiscount": "Appointment cancelled. Patient received {{rate}}% discount for next booking.",
+        "rebooked": "Rebooked to new slot successfully"
+      },
+      "tabs": {
+        "adhoc": "Create Ad-hoc Slot",
+        "cancel": "Cancel & Discount",
+        "existing": "Book Another Slot"
+      }
+    },
     "walkInPatientModal": {
       "actions": {
         "createPatient": "Create Patient"
