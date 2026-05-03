@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
   AlertCircle,
-  Building2,
   Calendar,
   Camera,
   Mail,
@@ -59,8 +58,6 @@ export default function ClinicStaffProfilePage() {
       gender: '',
       address: '',
       citizenId: '',
-      department: '',
-      employeeCode: '',
     },
   });
 
@@ -74,8 +71,6 @@ export default function ClinicStaffProfilePage() {
       gender: profile.gender ?? '',
       address: profile.address ?? '',
       citizenId: profile.citizenId ?? '',
-      department: profile.department ?? '',
-      employeeCode: profile.employeeCode ?? '',
     });
   }, [profile, reset]);
 
@@ -100,8 +95,6 @@ export default function ClinicStaffProfilePage() {
             | undefined) || undefined,
         address: formData.address || undefined,
         citizenId: formData.citizenId || undefined,
-        department: formData.department || undefined,
-        employeeCode: formData.employeeCode || undefined,
       },
       {
         onSuccess: () => {
@@ -241,22 +234,6 @@ export default function ClinicStaffProfilePage() {
               <div className="w-full space-y-3 text-left">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[var(--text-secondary)]">
-                    Staff Code
-                  </span>
-                  <span className="font-medium text-[var(--text-primary)]">
-                    {profile.employeeCode || '—'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-[var(--text-secondary)]">
-                    Department
-                  </span>
-                  <span className="font-medium text-[var(--text-primary)]">
-                    {profile.department || '—'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-[var(--text-secondary)]">
                     Member Since
                   </span>
                   <span className="font-medium text-[var(--text-primary)]">
@@ -298,8 +275,6 @@ export default function ClinicStaffProfilePage() {
                         gender: profile.gender ?? '',
                         address: profile.address ?? '',
                         citizenId: profile.citizenId ?? '',
-                        department: profile.department ?? '',
-                        employeeCode: profile.employeeCode ?? '',
                       });
                     }}
                     className="px-3 py-2 text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
@@ -403,35 +378,6 @@ export default function ClinicStaffProfilePage() {
                   />
                 }
                 value={profile.citizenId || '—'}
-              />
-
-              <ProfileField
-                label="Department"
-                icon={<Building2 className="h-4 w-4" />}
-                isEditing={isEditing}
-                error={errors.department?.message}
-                input={
-                  <input
-                    {...register('department')}
-                    className={fieldInputClass}
-                    type="text"
-                  />
-                }
-                value={profile.department || '—'}
-              />
-
-              <ProfileField
-                label="Staff Code"
-                isEditing={isEditing}
-                error={errors.employeeCode?.message}
-                input={
-                  <input
-                    {...register('employeeCode')}
-                    className={fieldInputClass}
-                    type="text"
-                  />
-                }
-                value={profile.employeeCode || '—'}
               />
 
               <div className="md:col-span-2">

@@ -5,6 +5,8 @@ import {
   getOphthalmologistProfile,
   updateOphthalmologistProfile,
   uploadOphthalmologistAvatar,
+  deleteCertificate,
+  updateCertificate,
   type OphthalmologistProfileData,
   type UpdateOphthalmologistProfileData,
 } from '../api/profile.api';
@@ -81,6 +83,32 @@ export const useUploadOphthalmologistAvatar = () => {
       if (currentUser) {
         setUser({ ...currentUser, avatarUrl });
       }
+    },
+  });
+};
+
+export const useDeleteCertificate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: deleteCertificate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ophthalmologistProfileKeys.detail(),
+      });
+    },
+  });
+};
+
+export const useUpdateCertificateMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, { id: string; data: FormData }>({
+    mutationFn: ({ id, data }) => updateCertificate(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ophthalmologistProfileKeys.detail(),
+      });
     },
   });
 };

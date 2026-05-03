@@ -49,6 +49,7 @@
     "learnMore": "Learn More",
     "helpTour": "Guide",
     "language": "Language",
+    "toggleLanguage": "Toggle Language",
     "toggleMenu": "Toggle menu",
     "switchToDark": "Switch to dark mode",
     "switchToLight": "Switch to light mode",
@@ -695,17 +696,18 @@
       "toggleTheme": "Toggle theme"
     },
     "sidebar": {
-      "dashboard": "Dashboard",
-      "patients": "Patients",
-      "screenings": "Review Queue",
-      "leaveRequests": "Leave Requests",
-      "appointments": "Appointments",
-      "schedules": "Schedules",
-      "employmentTypeChangeRequests": "Employment Type Changes",
-      "consultations": "Consultations",
-      "contract": "Contract",
-      "settings": "Settings",
-      "wallet": "Wallet"
+      "Dashboard": "Dashboard",
+      "Patients": "Patients",
+      "Screenings": "Review Queue",
+      "LeaveRequests": "Leave Requests",
+      "Appointments": "Appointments",
+      "Schedules": "Schedules",
+      "EmploymentRequests": "Employment Type Changes",
+      "Consultations": "Consultations",
+      "AuraNetwork": "Aura Network",
+      "Contract": "Contract",
+      "Settings": "Settings",
+      "Wallet": "Wallet"
     },
     "leaveRequests": {
       "pageTitle": "Leave Requests",
@@ -785,7 +787,11 @@
         "title": "Review Queue Snapshot",
         "description": "Live metrics from consultation sessions and screening risk analyses.",
         "pendingReviews": "Pending Reviews",
-        "urgentCases": "Urgent Cases"
+        "urgentCases": "Urgent Cases",
+        "viewAll": "View all screenings"
+      },
+      "queue": {
+        "updating": "Updating..."
       },
       "capacity": {
         "title": "Today's Capacity",
@@ -4719,6 +4725,7 @@
     "common": {
       "systemAdmin": "System Admin"
     },
+
     "sidebar": {
       "dashboard": "Dashboard",
       "groups": {
@@ -5807,212 +5814,6 @@
     },
     "toast": {
       "feedbackSubmitted": "Feedback submitted"
-    }
-  },
-  "Ophthalmologist": {
-    "dashboard": {
-      "greeting": {
-        "morning": "Good Morning",
-        "afternoon": "Good Afternoon",
-        "evening": "Good Evening"
-      },
-      "loadError": "Unable to load the live ophthalmologist dashboard.",
-      "subtitle": "Your workspace — review queue and patient cases",
-      "reviewQueue": {
-        "title": "Review Queue",
-        "description": "Cases sorted by risk level and waiting time",
-        "viewAll": "View all screenings"
-      },
-      "queue": {
-        "updating": "Updating..."
-      }
-    },
-    "common": {
-      "doctor": "Doctor",
-      "retry": "Retry"
-    }
-  },
-  "SystemAdmin": {
-    "dashboard": {
-      "title": "Clinic Operations",
-      "subtitle": "Real-time overview of today's patient flow",
-      "refresh": "Refresh",
-      "error": "Failed to load dashboard data.",
-      "stats": {
-        "totalAppointments": "Today's Appointments",
-        "checkedIn": "Checked In",
-        "completed": "Completed",
-        "noShow": "No-Show"
-      },
-      "bottleneckLongWait": "{{count}} patient(s) waiting over {{minutes}} min",
-      "bottleneckFullCapacity": "Slots at full capacity for today",
-      "bottleneckOverloaded": "{{count}} doctor(s) overloaded (>3 active)",
-      "statusBadge": {
-        "waiting": "Waiting",
-        "inProgress": "In Progress",
-        "payment": "Payment"
-      },
-      "liveQueue": "Live Queue",
-      "active": "active",
-      "queueEmpty": "No patients in queue.",
-      "patient": "Patient",
-      "status": "Status",
-      "doctor": "Doctor",
-      "waitTime": "Wait",
-      "doctorStatus": "Doctor Status",
-      "busy": "busy",
-      "noDoctors": "No doctors on duty.",
-      "handled": "handled",
-      "activeLoad": "active",
-      "slotUtilization": "Slot Utilization",
-      "booked": "booked",
-      "remaining": "Remaining",
-      "bottlenecks": "Bottleneck Alerts",
-      "noBottlenecks": "No bottlenecks detected. Operations running smoothly.",
-      "quickActions": "Quick Actions",
-      "actions": {
-        "createSlot": "Create Slot",
-        "createSlotDesc": "Add a new appointment slot",
-        "assignDoctor": "Assign Doctor",
-        "assignDoctorDesc": "Manage doctor assignments",
-        "viewSchedule": "View Schedule",
-        "viewScheduleDesc": "See today's full schedule",
-        "addWalkIn": "Add Walk-in",
-        "addWalkInDesc": "Register a new walk-in patient"
-      }
-    }
-  },
-  "PatientScreening": {
-    "diagnosis": {
-      "notAvailable": "N/A",
-      "type": {
-        "aiScreening": "Retinal Screening",
-        "verifiedResult": "Verified Result"
-      },
-      "status": {
-        "verified": "Verified"
-      },
-      "loading": "Loading medical diagnosis details...",
-      "title": "Medical Diagnosis",
-      "fields": {
-        "createdAt": "Created At",
-        "diagnosisCode": "Diagnosis Code",
-        "codingSystem": "Coding System",
-        "severityLevel": "Severity Level",
-        "clinicalStatus": "Clinical Status",
-        "urgentCase": "Urgent Case",
-        "referralNeeded": "Referral Needed"
-      },
-      "detailsTitle": "Medical Diagnosis Details",
-      "yes": "Yes",
-      "no": "No"
-    },
-    "risk": {
-      "low": "Low risk",
-      "medium": "Medium risk",
-      "high": "High risk",
-      "critical": "Critical risk"
-    },
-    "status": {
-      "pending": "Pending",
-      "completed": "Completed",
-      "processing": "Processing",
-      "failed": "Failed"
-    },
-    "labels": {
-      "bothEyes": "Both Eyes",
-      "finding": "finding",
-      "findings": "findings"
-    },
-    "page": {
-      "title": "My Scans",
-      "subtitle": "View and manage your retinal screening history"
-    },
-    "stats": {
-      "totalScans": "Total Scans",
-      "completed": "Completed",
-      "processing": "Processing",
-      "findings": "Findings"
-    },
-    "search": {
-      "placeholder": "Search scans..."
-    },
-    "actions": {
-      "filter": "Filter",
-      "viewReview": "View Review",
-      "viewDiagnosis": "Medical Diagnosis",
-      "downloadReport": "Download Report",
-      "shareWithDoctor": "Share with Doctor",
-      "delete": "Delete"
-    },
-    "list": {
-      "recentScans": "Recent scans ({{count}})"
-    },
-    "empty": {
-      "title": "No scans yet",
-      "description": "Start your first retinal screening to detect potential issues early"
-    },
-    "badge": {
-      "looksHealthy": "Looks Healthy",
-      "needsAttention": "Needs Attention"
-    }
-  },
-  "PatientReview": {
-    "page": {
-      "title": "Review & Next Steps",
-      "subtitle": "Analysis results from AuraEyes AI system"
-    },
-    "sessionLabel": "Session",
-    "labels": {
-      "retinalImage": "Retinal image",
-      "retinalScanAlt": "Retinal scan",
-      "noImage": "No image",
-      "scanId": "Scan ID: {{id}}",
-      "capturedAt": "Captured at",
-      "aiAssessment": "AI Assessment",
-      "primaryRecommendation": "Primary Recommendation",
-      "pdfFormat": "PDF Format"
-    },
-    "status": {
-      "healthy": "Looks Healthy",
-      "high": "Needs Attention"
-    },
-    "summary": {
-      "healthy": "Your scan looks healthy. No significant concerns were found - keep up with regular eye check-ups.",
-      "high": "We found areas worth discussing with an eye specialist. Early attention is the best path to protecting your vision.",
-      "moderate": "Findings were detected and should be reviewed by an eye specialist for confirmation and next steps.",
-      "low": "Low-risk findings were detected. Keep regular follow-up with your eye specialist."
-    },
-    "findingsDetected": "Detected findings include:",
-    "findingsMore": " and {{count}} more findings",
-    "actions": {
-      "zoomImage": "Zoom image",
-      "viewFullAnalysisDetails": "View full analysis details",
-      "bookConsultation": "Book Consultation",
-      "findSpecialist": "Find Specialist",
-      "askAuraAssistant": "Ask Aura Assistant",
-      "downloadingReport": "Downloading report...",
-      "downloadReport": "Download Report",
-      "newScan": "New Scan",
-      "viewAllResources": "View all resources",
-      "startNewScreening": "Start new screening"
-    },
-    "sections": {
-      "recommendedActions": "Recommended Actions",
-      "learnMore": "Learn More"
-    },
-    "descriptions": {
-      "bookConsultation": "Discuss these results with a specialist to get a professional assessment and a personalized care plan.",
-      "startNewAnalysis": "Start a new analysis for another eye or re-check."
-    },
-    "consultation": {
-      "alreadyBookedTitle": "You already submitted this case for consultation",
-      "alreadyBookedDescription": "To avoid duplicate bookings, specialist booking and AI chat are locked for this case.",
-      "statusLabel": "Status",
-      "createdAtLabel": "Booked at"
-    },
-    "empty": {
-      "description": "Please perform a screening to view results."
     }
   },
   "ClinicStaff": {

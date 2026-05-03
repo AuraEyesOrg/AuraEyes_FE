@@ -1,7 +1,5 @@
-import { useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard,
   Users,
@@ -16,11 +14,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import useAuthStore from '@/store/auth-store';
-import { api } from '@/lib/api';
-import { API_ENDPOINTS } from '@/lib/endpoints';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import UserAvatar from '@/components/ui/UserAvatar';
-import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { getUserAvatarMeta } from '@/lib/user-avatar';
 import {
   DEFAULT_LOCALE,
@@ -32,146 +27,76 @@ import { persistLocale } from '@/i18n/middleware';
 import usePermissions from '@/hooks/use-permissions';
 import { Permissions } from '@/constants/permissions';
 
-interface DoctorSidebarProps {
-  pendingCount?: number;
-}
-
-interface AuthMeApiResponse {
-  success: boolean;
-  data?: {
-    employmentType?: string | null;
-  };
-}
-
-const normalizeEmploymentType = (
-  value: string | null | undefined
-): 'FullTime' | 'PartTime' | null => {
-  if (!value) {
-    return null;
-  }
-
-  const normalized = value.replace(/[\s_-]/g, '').toLowerCase();
-  if (normalized === 'fulltime') {
-    return 'FullTime';
-  }
-
-  if (normalized === 'parttime') {
-    return 'PartTime';
-  }
-
-  return null;
-};
-
-const navItems = [
-  {
-    labelKey: 'Ophthalmologist.sidebar.dashboard',
-    icon: LayoutDashboard,
-    path: '/ophthalmologist/dashboard',
-    requiredPermission: Permissions.DashboardRead,
-  },
-  {
-    labelKey: 'Ophthalmologist.sidebar.patients',
-    icon: Users,
-    path: '/ophthalmologist/patients',
-    requiredPermission: Permissions.PatientsRead,
-  },
-  {
-    labelKey: 'Ophthalmologist.sidebar.screenings',
-    icon: Eye,
-    path: '/ophthalmologist/screenings',
-    hasBadge: true,
-    requiredPermission: Permissions.ScreeningRead,
-  },
-  {
-    labelKey: 'Ophthalmologist.sidebar.leaveRequests',
-    icon: CalendarX,
-    path: '/ophthalmologist/leave-requests',
-    requiredPermission: Permissions.SchedulesManage,
-  },
-  {
-    labelKey: 'Ophthalmologist.sidebar.consultations',
-    icon: MessagesSquare,
-    path: '/ophthalmologist/consultations',
-    hasBadge: true,
-    requiredPermission: Permissions.ConsultationsRead,
-  },
-  {
-    labelKey: 'Common.sidebar.auraNetwork',
-    icon: Globe,
-    path: '/network',
-  },
-  {
-    labelKey: 'Ophthalmologist.sidebar.wallet',
-    icon: Wallet,
-    path: '/ophthalmologist/wallet',
-    requiredPermission: Permissions.WalletsRead,
-  },
-  {
-    labelKey: 'Ophthalmologist.sidebar.settings',
-    icon: Settings,
-    path: '/ophthalmologist/settings',
-    requiredPermission: Permissions.SettingsRead,
-  },
-];
-
 export default function DoctorSidebar({
   pendingCount = 0,
-}: DoctorSidebarProps) {
-  const { t } = useSafeTranslation();
+}: {
+  pendingCount?: number;
+}) {
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuthStore();
   const { hasPermission } = usePermissions();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
+
+  const navItems = [
+    {
+      labelKey: 'Ophthalmologist.sidebar.Dashboard',
+      icon: LayoutDashboard,
+      path: '/ophthalmologist/dashboard',
+      requiredPermission: Permissions.DashboardRead,
+    },
+    {
+      labelKey: 'Ophthalmologist.sidebar.Patients',
+      icon: Users,
+      path: '/ophthalmologist/patients',
+      requiredPermission: Permissions.PatientsRead,
+    },
+    {
+      labelKey: 'Ophthalmologist.sidebar.Screenings',
+      icon: Eye,
+      path: '/ophthalmologist/screenings',
+      hasBadge: true,
+      requiredPermission: Permissions.ScreeningRead,
+    },
+    {
+      labelKey: 'Ophthalmologist.sidebar.LeaveRequests',
+      icon: CalendarX,
+      path: '/ophthalmologist/leave-requests',
+      requiredPermission: Permissions.SchedulesManage,
+    },
+    {
+      labelKey: 'Ophthalmologist.sidebar.Consultations',
+      icon: MessagesSquare,
+      path: '/ophthalmologist/consultations',
+      hasBadge: true,
+      requiredPermission: Permissions.ConsultationsRead,
+    },
+    {
+      labelKey: 'Ophthalmologist.sidebar.AuraNetwork',
+      icon: Globe,
+      path: '/network',
+    },
+    {
+      labelKey: 'Ophthalmologist.sidebar.Wallet',
+      icon: Wallet,
+      path: '/ophthalmologist/wallet',
+      requiredPermission: Permissions.WalletsRead,
+    },
+    {
+      labelKey: 'Ophthalmologist.sidebar.Settings',
+      icon: Settings,
+      path: '/ophthalmologist/settings',
+      requiredPermission: Permissions.SettingsRead,
+    },
+  ];
 
   const avatarMeta = getUserAvatarMeta(user?.fullName, 'Doctor');
   const displayName = avatarMeta.displayName;
   const displayEmail = user?.email ?? '';
-  const authEmploymentType = normalizeEmploymentType(user?.employmentType);
-
-  const { data: latestAuthSnapshot } = useQuery({
-    queryKey: ['auth', 'me', 'ophthalmologist-sidebar'],
-    queryFn: async () => {
-      const response = await api.get<AuthMeApiResponse>(API_ENDPOINTS.AUTH.ME);
-
-      return response.data?.data;
-    },
-    enabled: !!user?.roles?.includes('Ophthalmologist'),
-    staleTime: 0,
-    refetchOnMount: 'always',
-  });
-
-  useEffect(() => {
-    if (!user || !latestAuthSnapshot) {
-      return;
-    }
-
-    const latestEmploymentType = normalizeEmploymentType(
-      latestAuthSnapshot.employmentType
-    );
-    const currentEmploymentType = normalizeEmploymentType(user.employmentType);
-    const nextEmploymentType = latestEmploymentType ?? currentEmploymentType;
-
-    const hasAuthDrift = nextEmploymentType !== currentEmploymentType;
-
-    if (!hasAuthDrift) {
-      return;
-    }
-
-    setUser({
-      ...user,
-      employmentType: nextEmploymentType,
-    });
-  }, [latestAuthSnapshot, setUser, user]);
-
-  const latestEmploymentType = normalizeEmploymentType(
-    latestAuthSnapshot?.employmentType
-  );
-
-  const isFullTimeDoctor =
-    (latestEmploymentType ?? authEmploymentType) === 'FullTime';
 
   const handleNavClick = (
     e: React.MouseEvent,
@@ -184,17 +109,11 @@ export default function DoctorSidebar({
     }
   };
 
-  const visibleNavItems = navItems.filter(
-    (item) =>
-      item.path !== '/ophthalmologist/leave-requests' || isFullTimeDoctor
-  );
-
   const handleLogout = () => {
     logout();
     navigate(toLocalizedPath('/login'));
   };
 
-  const { i18n } = useTranslation();
   const handleToggleLanguage = () => {
     const newLocale: AppLocale = locale === 'en' ? 'vi' : 'en';
     persistLocale(newLocale);
@@ -204,107 +123,93 @@ export default function DoctorSidebar({
   };
 
   return (
-    <aside className="w-64 bg-(--bg-secondary) flex flex-col justify-between shrink-0 transition-colors duration-300 z-50 h-screen">
+    <aside className="w-64 bg-(--bg-secondary) flex flex-col justify-between shrink-0 transition-colors duration-300 z-50 h-screen sticky top-0">
       <div className="p-6 flex flex-col h-full">
         {/* Logo */}
         <div className="mb-10 px-2">
           <AuraLogo
             size="md"
             subtitle={t('Ophthalmologist.common.role', 'Ophthalmologist')}
-            to={toLocalizedPath('/ophthalmologist/dashboard')}
+            to="/ophthalmologist/dashboard"
           />
         </div>
 
         {/* Navigation */}
         <nav className="flex flex-col space-y-1 flex-1 overflow-y-auto">
-          {visibleNavItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={toLocalizedPath(item.path)}
-              onClick={(e) => handleNavClick(e, item)}
-              className={({ isActive }) => {
-                const isLocked =
-                  item.requiredPermission &&
-                  !hasPermission(item.requiredPermission);
-                return `flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all ${
-                  isActive
-                    ? 'bg-primary/10 text-primary font-semibold'
-                    : isLocked
-                      ? 'text-slate-400 opacity-60 cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800/50'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
-                }`;
-              }}
-            >
-              {({ isActive }) => {
-                const isLocked =
-                  item.requiredPermission &&
-                  !hasPermission(item.requiredPermission);
-                return (
-                  <>
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={
-                          isActive
-                            ? 'text-primary'
-                            : isLocked
-                              ? 'text-slate-400'
-                              : ''
-                        }
-                      >
-                        <item.icon className="w-5 h-5" />
-                      </span>
-                      <span className="text-sm font-medium">
-                        {t(
-                          item.labelKey,
-                          item.path === '/network'
-                            ? 'Aura Network'
-                            : (item.labelKey.split('.').pop() ?? 'Item')
-                        )}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {isLocked && (
-                        <Lock className="w-3.5 h-3.5 text-slate-400" />
+          {navItems.map((item) => {
+            const isRestricted =
+              item.requiredPermission &&
+              !hasPermission(item.requiredPermission);
+
+            return (
+              <NavLink
+                key={item.path}
+                to={toLocalizedPath(item.path)}
+                onClick={(e) => handleNavClick(e, item)}
+                className={({ isActive }) =>
+                  `flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all ${
+                    isActive
+                      ? 'bg-primary/10 text-primary font-semibold'
+                      : isRestricted
+                        ? 'text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-70 grayscale'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <div className="flex items-center gap-3 w-full">
+                    <span
+                      className={isActive ? 'text-primary' : 'text-slate-400'}
+                    >
+                      <item.icon className="w-5 h-5" />
+                    </span>
+                    <span className="text-sm font-medium">
+                      {t(
+                        item.labelKey,
+                        item.labelKey.split('.').pop() || 'Item'
                       )}
-                      {item.hasBadge && pendingCount > 0 && !isLocked && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                          {pendingCount}
-                        </span>
-                      )}
-                    </div>
-                  </>
-                );
-              }}
-            </NavLink>
-          ))}
+                    </span>
+                    {isRestricted && (
+                      <Lock className="w-3.5 h-3.5 ml-auto opacity-40" />
+                    )}
+                    {item.hasBadge && pendingCount > 0 && !isRestricted && (
+                      <span className="ml-auto bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[1.2rem] text-center">
+                        {pendingCount}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
 
-        {/* Doctor Profile Footer */}
+        {/* User Profile Footer */}
         <div className="mt-auto pt-6 border-t border-gray-700">
-          <div className="flex items-center gap-3 px-2">
+          <div className="flex items-center gap-2 px-1">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <UserAvatar
-                fullName={user?.fullName}
-                avatarUrl={user?.avatarUrl}
-                fallbackName="Doctor"
-                size="md"
-                className="shrink-0 border-2 border-brand/30 shadow-sm"
-                fallbackClassName="bg-brand text-white"
-              />
+              <div className="relative shrink-0">
+                <UserAvatar
+                  fullName={displayName}
+                  avatarUrl={user?.avatarUrl}
+                  fallbackName="Doctor"
+                  size="md"
+                  className="border-2 border-brand/30 shadow-sm"
+                  fallbackClassName="bg-brand text-white"
+                />
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-(--bg-secondary)" />
+              </div>
               <div className="flex flex-col overflow-hidden">
                 <p className="text-sm font-bold text-(--text-primary) truncate">
                   {displayName}
                 </p>
-                <p className="text-xs text-gray-400 truncate">
-                  {displayEmail ||
-                    t('Ophthalmologist.common.role', 'Ophthalmologist')}
-                </p>
+                <p className="text-xs text-gray-400 truncate">{displayEmail}</p>
               </div>
             </div>
             <button
               onClick={handleToggleLanguage}
               className="text-gray-500 hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-cyan-500/10"
-              title={t('Common.language', 'Language')}
+              title={t('Common.language')}
             >
               <Globe className="w-5 h-5" />
             </button>
