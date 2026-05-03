@@ -51,6 +51,12 @@ export interface RebookAdHocResult {
   newSlotId: string;
 }
 
+export interface CancelLateDiscountResult {
+  cancelledAppointmentId: string;
+  discountRate: number;
+  discountExpiryDate: string;
+}
+
 export interface AvailableDoctorDto {
   id: string;
   fullName: string;
@@ -61,7 +67,7 @@ export async function checkLateArrival(
   appointmentId: string
 ): Promise<LateArrivalCheckResult> {
   const response = await api.get<ApiResponse<LateArrivalCheckResult>>(
-    `/api/clinic-appointments/${appointmentId}/late-arrival-check`
+    `/clinic-appointments/${appointmentId}/late-arrival-check`
   );
   return unwrapApiData(response.data);
 }
@@ -71,7 +77,7 @@ export async function rebookToExistingSlot(
   payload: RebookExistingPayload
 ): Promise<RebookExistingResult> {
   const response = await api.post<ApiResponse<RebookExistingResult>>(
-    `/api/clinic-appointments/${appointmentId}/rebook-existing`,
+    `/clinic-appointments/${appointmentId}/rebook-existing`,
     payload
   );
   return unwrapApiData(response.data);
@@ -82,8 +88,17 @@ export async function rebookToAdHocSlot(
   payload: RebookAdHocPayload
 ): Promise<RebookAdHocResult> {
   const response = await api.post<ApiResponse<RebookAdHocResult>>(
-    `/api/clinic-appointments/${appointmentId}/rebook-adhoc`,
+    `/clinic-appointments/${appointmentId}/rebook-adhoc`,
     payload
+  );
+  return unwrapApiData(response.data);
+}
+
+export async function cancelLateAndGrantDiscount(
+  appointmentId: string
+): Promise<CancelLateDiscountResult> {
+  const response = await api.post<ApiResponse<CancelLateDiscountResult>>(
+    `/clinic-appointments/${appointmentId}/cancel-late-discount`
   );
   return unwrapApiData(response.data);
 }
@@ -94,7 +109,7 @@ export async function getAvailableDoctorsForSlot(
   endTime: string
 ): Promise<AvailableDoctorDto[]> {
   const response = await api.get<ApiResponse<AvailableDoctorDto[]>>(
-    '/api/ophthalmologists/available-for-slot',
+    '/ophthalmologists/available-for-slot',
     { params: { date, startTime, endTime } }
   );
   return unwrapApiData(response.data);

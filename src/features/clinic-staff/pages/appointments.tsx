@@ -1307,18 +1307,20 @@ export default function ClinicStaffAppointmentsPage() {
                                 'No-show'
                               )}
                             </button>
-                            <button
-                              type="button"
-                              disabled={isMutating}
-                              onClick={() => {
-                                setSelectedLatePatientAppointmentId(appt.id);
-                                setIsLatePatientModalOpen(true);
-                              }}
-                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wider border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition"
-                            >
-                              <AlertTriangle size={12} />
-                              ĐẾN MUỘN
-                            </button>
+                            {selectedDate <= todayKey && (
+                              <button
+                                type="button"
+                                disabled={isMutating}
+                                onClick={() => {
+                                  setSelectedLatePatientAppointmentId(appt.id);
+                                  setIsLatePatientModalOpen(true);
+                                }}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wider border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition"
+                              >
+                                <AlertTriangle size={12} />
+                                ĐẾN MUỘN
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
