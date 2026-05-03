@@ -22,6 +22,20 @@ declare module 'i18next' {
         Mismatch: string;
       };
     };
+    Shared: {
+      buttons: {
+        back: string;
+        next: string;
+        submit: string;
+        save: string;
+        cancel: string;
+      };
+      gender: {
+        male: string;
+        female: string;
+        other: string;
+      };
+    };
     Navigation: {
       home: string;
       about: string;
@@ -340,10 +354,10 @@ declare module 'i18next' {
         logo: string;
         navAbout: string;
         navHowItWorks: string;
-        navEthics: string;
-        navContact: string;
-        bookAppointment: string;
-        patientPortalLogin: string;
+        aboutMission: string;
+        contactOrganisation: string;
+        getStartedPatient: string;
+        getStartedDoctor: string;
       };
     };
     Auth: {
@@ -357,6 +371,37 @@ declare module 'i18next' {
         backToLogin: string;
         termsOfService: string;
         privacyPolicy: string;
+      };
+      onboarding: {
+        title: string;
+        subtitle: string;
+        success: string;
+        error: string;
+        submit: string;
+        security: {
+          tipTitle: string;
+          tipDesc: string;
+        };
+        form: {
+          newPassword: string;
+          confirmPassword: string;
+          fullName: string;
+          phone: string;
+          dob: string;
+          gender: string;
+          citizenId: string;
+          address: string;
+          licenseNumber: string;
+          licenseImage: string;
+          uploadText: string;
+        };
+        validation: {
+          passwordRequired: string;
+          passwordMin: string;
+          passwordPattern: string;
+          confirmPasswordRequired: string;
+          passwordMismatch: string;
+        };
       };
       login: {
         leftPanel: {
@@ -647,6 +692,12 @@ declare module 'i18next' {
       description: string;
       primaryCta: string;
       secondaryCta: string;
+      recruitmentPopup: {
+        title: string;
+        description: string;
+        cta: string;
+        close: string;
+      };
     };
     GuestMaintenance: {
       badge: string;
@@ -1426,14 +1477,6 @@ declare module 'i18next' {
         title: string;
         subtitle: string;
       };
-      stats: {
-        upcoming: string;
-        completed: string;
-        total: string;
-        cancelled: string;
-        slots: string;
-        awaitingPayment: string;
-      };
       pagination: {
         prev: string;
         next: string;
@@ -1442,6 +1485,14 @@ declare module 'i18next' {
       loading: {
         appointments: string;
         clinicAppointments: string;
+      };
+      stats: {
+        upcoming: string;
+        completed: string;
+        total: string;
+        cancelled: string;
+        slots: string;
+        awaitingPayment: string;
       };
       filters: {
         label: string;
@@ -1496,6 +1547,7 @@ declare module 'i18next' {
         completed: string;
         cancelled: string;
         noShow: string;
+        cancellationRequested: string;
       };
       empty: {
         clinicAll: string;
@@ -1529,6 +1581,20 @@ declare module 'i18next' {
         targetStaff: string;
         ratingLabel: string;
         commentPlaceholder: string;
+      };
+      cancellation: {
+        modalTitle: string;
+        modalSubtitle: string;
+        bankName: string;
+        accountName: string;
+        bankNumber: string;
+        reason: string;
+        successToast: string;
+        errorToast: string;
+        ruleNotice: string;
+        ruleViolated: string;
+        confirmLabel: string;
+        cancelling: string;
       };
     };
     PatientDashboard: {
@@ -2812,6 +2878,7 @@ declare module 'i18next' {
       };
       calendar: {
         actions: {
+          collectCashDeposit: string;
           completeVisit: string;
           newWalkIn: string;
           noShow: string;
@@ -2857,11 +2924,13 @@ declare module 'i18next' {
           inProgress: string;
           noShow: string;
           pending: string;
+          waitingForPayment: string;
         };
         summary: {
           records: string;
         };
         toast: {
+          depositRequiredBeforeCheckIn: string;
           consultationStarted: string;
           invalidQr: string;
           markedNoShow: string;
@@ -4513,64 +4582,6 @@ declare module 'i18next' {
       actions: {
         toggleTheme: string;
       };
-      Cashier: {
-        header: {
-          workspace: string;
-          title: string;
-          description: string;
-        };
-        stats: {
-          finalizedVisits: string;
-          selectedVisit: string;
-          noVisitSelected: string;
-        };
-        queue: {
-          title: string;
-          loading: string;
-          error: string;
-          empty: string;
-          emptyDesc: string;
-          selected: string;
-          doctor: string;
-        };
-        pricingPanel: {
-          title: string;
-          subtitle: string;
-          selectedVisitId: string;
-          noVisitSelected: string;
-          selectToStart: string;
-          selectToStartDesc: string;
-          loading: string;
-          error: string;
-          success: {
-            title: string;
-            message: string;
-            backToList: string;
-          };
-          patient: string;
-          doctor: string;
-          noMedication: string;
-          medicationCount: string;
-          medicationPrice: string;
-          manualPricePlaceholder: string;
-          subtotal: string;
-          serviceFee: string;
-          serviceFeeDesc: string;
-          serviceFeeLabel: string;
-          totalManual: string;
-          payButton: string;
-        };
-        confirmModal: {
-          title: string;
-          message: string;
-          confirm: string;
-          cancel: string;
-        };
-        toast: {
-          success: string;
-          error: string;
-        };
-      };
     };
     Cashier: {
       toast: {
@@ -4747,6 +4758,58 @@ declare module 'i18next' {
         };
       };
       queue: {
+        toast: {
+          sentToDoctorSuccess: string;
+          sentToDoctorFailed: string;
+          missingBasicInfo: string;
+          screeningRequired: string;
+          loadDoctorsFailed: string;
+          copyDoctorConsultationLinkSuccess: string;
+          copyDoctorConsultationLinkFailed: string;
+        };
+        error: {
+          title: string;
+          message: string;
+        };
+        actions: {
+          retry: string;
+          refresh: string;
+          fillErm: string;
+          createScreening: string;
+          viewScreening: string;
+          sending: string;
+          sendToDoctor: string;
+          copyDoctorLink: string;
+        };
+        page: {
+          title: string;
+          subtitle: string;
+        };
+        tabs: {
+          all: string;
+        };
+        empty: {
+          title: string;
+          message: string;
+        };
+        table: {
+          patient: string;
+          checkedIn: string;
+          status: string;
+          screening: string;
+          doctor: string;
+          action: string;
+        };
+        sendDoctorModal: {
+          title: string;
+          doctorLabel: string;
+          loadingDoctors: string;
+          selectDoctor: string;
+          noDoctors: string;
+          notesLabel: string;
+          notesPlaceholder: string;
+          confirm: string;
+        };
         doctor: {
           yearsExp: string;
           notAssigned: string;
@@ -4762,6 +4825,9 @@ declare module 'i18next' {
           sentToDoctor: string;
           consultationInProgress: string;
           finalized: string;
+          awaitingDoctor: string;
+          inConsultation: string;
+          completed: string;
         };
       };
       patients: {
@@ -4784,6 +4850,61 @@ declare module 'i18next' {
         yearsAbbr: string;
         idLabel: string;
         close: string;
+      };
+      latePatientModal: {
+        actions: {
+          cancelAndDiscount: string;
+          createAndRebook: string;
+          rebook: string;
+        };
+        adhoc: {
+          cost: string;
+          costPlaceholder: string;
+          description: string;
+          doctor: string;
+          endTime: string;
+          loadingDoctors: string;
+          maxCapacity: string;
+          noDoctor: string;
+          startTime: string;
+        };
+        cancel: {
+          description: string;
+          discountDescription: string;
+          discountTitle: string;
+          title: string;
+        };
+        checking: string;
+        checkError: string;
+        error: {
+          selectSlot: string;
+          timesRequired: string;
+        };
+        existing: {
+          anyDoctor: string;
+          anyDoctorDesc: string;
+          autoAssign: string;
+          description: string;
+          loadingDoctors: string;
+          noDoctors: string;
+          noSlots: string;
+          selectDoctor: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        notLate: string;
+        success: {
+          adHocCreated: string;
+          cancelledWithDiscount: string;
+          rebooked: string;
+        };
+        tabs: {
+          adhoc: string;
+          cancel: string;
+          existing: string;
+        };
       };
       walkInPatientModal: {
         actions: {
@@ -4864,79 +4985,6 @@ declare module 'i18next' {
           success: string;
         };
         title: string;
-      };
-      HowItWorks: {
-        hero: {
-          badge: string;
-          titlePrefix: string;
-          titleSuffix: string;
-          description: string;
-          processingStatus: string;
-          analyzing: string;
-        };
-        process: {
-          badge: string;
-          title: string;
-          description: string;
-        };
-        steps: {
-          capture: {
-            title: string;
-            description: string;
-          };
-          upload: {
-            title: string;
-            description: string;
-          };
-          analysis: {
-            title: string;
-            description: string;
-          };
-          assessment: {
-            title: string;
-            description: string;
-          };
-        };
-        ai: {
-          badge: string;
-          titleLine1: string;
-          titleLine2: string;
-          description: string;
-          tags: {
-            deepLearning: string;
-            computerVision: string;
-            accuracy: string;
-          };
-        };
-        features: {
-          tortuosity: {
-            title: string;
-            description: string;
-          };
-          avr: {
-            title: string;
-            description: string;
-          };
-          microaneurysm: {
-            title: string;
-            description: string;
-          };
-        };
-        trust: {
-          title: string;
-          description: string;
-          badges: {
-            hipaa: string;
-            gdpr: string;
-            bias: string;
-          };
-        };
-        cta: {
-          title: string;
-          description: string;
-          primary: string;
-          secondary: string;
-        };
       };
     };
   }
