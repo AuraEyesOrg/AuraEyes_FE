@@ -1642,7 +1642,9 @@ export default function ClinicStaffAppointmentsPage() {
           setSelectedLatePatientAppointmentId('');
         }}
         onSuccess={() => {
-          appointmentsQuery.refetch();
+          queryClient.invalidateQueries({
+            queryKey: organisationClinicBookingKeys.all,
+          });
         }}
       />
 

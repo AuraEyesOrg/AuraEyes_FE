@@ -60,8 +60,6 @@ export default function LatePatientModal({
   const [adHocForm, setAdHocForm] = useState({
     startTime: '',
     endTime: '',
-    maxCapacity: 1,
-    cost: '',
     doctorId: '',
   });
 
@@ -126,8 +124,6 @@ export default function LatePatientModal({
       setAdHocForm({
         startTime: lateCheck.adHocDefaults?.suggestedStartTime ?? '',
         endTime: '',
-        maxCapacity: lateCheck.adHocDefaults?.defaultCapacity ?? 1,
-        cost: lateCheck.adHocDefaults?.defaultCost?.toString() ?? '',
         doctorId: '',
       });
     }
@@ -241,8 +237,8 @@ export default function LatePatientModal({
           date: lateCheck.slotDate,
           startTime: adHocForm.startTime,
           endTime: adHocForm.endTime,
-          maxCapacity: Number(adHocForm.maxCapacity) || 1,
-          cost: adHocForm.cost ? Number(adHocForm.cost) : null,
+          maxCapacity: 1,
+          cost: null,
           doctorId: adHocForm.doctorId || null,
         },
       });
@@ -696,49 +692,6 @@ export default function LatePatientModal({
                     onChange={(e) =>
                       setAdHocForm({ ...adHocForm, endTime: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary outline-none transition text-sm"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-(--text-secondary)">
-                    {t(
-                      'Organisation.latePatientModal.adhoc.capacity',
-                      'Capacity'
-                    )}
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={adHocForm.maxCapacity}
-                    onChange={(e) =>
-                      setAdHocForm({
-                        ...adHocForm,
-                        maxCapacity: Number(e.target.value),
-                      })
-                    }
-                    className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary outline-none transition text-sm"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-(--text-secondary)">
-                    {t(
-                      'Organisation.latePatientModal.adhoc.cost',
-                      'Cost (VND)'
-                    )}
-                  </label>
-                  <input
-                    type="number"
-                    value={adHocForm.cost}
-                    onChange={(e) =>
-                      setAdHocForm({ ...adHocForm, cost: e.target.value })
-                    }
-                    placeholder={t(
-                      'Organisation.latePatientModal.adhoc.costPlaceholder',
-                      'Optional'
-                    )}
                     className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary outline-none transition text-sm"
                   />
                 </div>
