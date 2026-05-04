@@ -2519,6 +2519,11 @@
       "ruleViolated": "Cannot cancel appointment as it is less than 6 hours before the start time.",
       "confirmLabel": "Submit Request",
       "cancelling": "Submitting..."
+    },
+    "clinicBooking": {
+      "page": {
+        "title": "Organisation Schedule"
+      }
     }
   },
   "PatientDashboard_Legacy": {
@@ -4725,7 +4730,6 @@
     "common": {
       "systemAdmin": "System Admin"
     },
-
     "sidebar": {
       "dashboard": "Dashboard",
       "groups": {

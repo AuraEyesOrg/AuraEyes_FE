@@ -2527,6 +2527,11 @@
       "ruleViolated": "Không thể hủy lịch hẹn vì đã quá hạn (ít hơn 6 tiếng trước giờ khám).",
       "confirmLabel": "Gửi yêu cầu hủy",
       "cancelling": "Đang gửi yêu cầu..."
+    },
+    "clinicBooking": {
+      "page": {
+        "title": "Lịch hẹn phòng khám"
+      }
     }
   },
   "PatientDashboard": {
