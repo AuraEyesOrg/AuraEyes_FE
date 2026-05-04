@@ -5470,6 +5470,7 @@ declare module 'i18next' {
           delete: string;
           exportExcel: string;
           exporting: string;
+          viewJsonDetails: string;
         };
         pagination: {
           previous: string;

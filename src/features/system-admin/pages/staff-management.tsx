@@ -46,6 +46,10 @@ const roleColors: Record<string, string> = {
     'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
 };
 
+// Cooldown to prevent re-fetch on locale-switch remount
+let staffCacheTimestamp = 0;
+const STAFF_CACHE_TTL = 10_000;
+
 type StaffUser = BaseUser & {
   phoneNumber?: string | null;
   isActive?: boolean;
@@ -131,6 +135,9 @@ export default function StaffManagementPage() {
   };
 
   const loadData = useCallback(async () => {
+    const now = Date.now();
+    if (now - staffCacheTimestamp < STAFF_CACHE_TTL) return;
+    staffCacheTimestamp = now;
     try {
       setLoading(true);
       const usersData = await userApi.getUsers(1, 1000);
@@ -151,6 +158,11 @@ export default function StaffManagementPage() {
       setLoading(false);
     }
   }, []);
+
+  const reloadData = useCallback(async () => {
+    staffCacheTimestamp = 0;
+    await loadData();
+  }, [loadData]);
 
   useEffect(() => {
     loadData();
@@ -200,7 +212,7 @@ export default function StaffManagementPage() {
           )
         );
       }
-      await loadData();
+      await reloadData();
       if (selectedUser && selectedUser.id === userId) {
         setSelectedUser((prev) =>
           prev
@@ -238,7 +250,7 @@ export default function StaffManagementPage() {
         )
       );
       setEditingFee(false);
-      await loadData();
+      await reloadData();
       setSelectedUser((prev) =>
         prev ? { ...prev, consultationFee: feeValue } : null
       );
@@ -269,7 +281,7 @@ export default function StaffManagementPage() {
         )
       );
       setEditingSubRoles(false);
-      await loadData();
+      await reloadData();
       setSelectedUser((prev) =>
         prev ? { ...prev, subRoles: subRolesValue } : null
       );
@@ -500,7 +512,7 @@ export default function StaffManagementPage() {
       <CreateStaffModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={loadData}
+        onSuccess={reloadData}
       />
 
       {/* Detail Modal */}

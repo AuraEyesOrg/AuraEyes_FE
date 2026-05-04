@@ -4823,6 +4823,76 @@
       }
     },
     "auditLogs": {
+      "title": "Audit Logs & Compliance",
+      "description": "Track system activities and user actions for auditing purposes.",
+      "summary": {
+        "totalEntries": "Total Entries"
+      },
+      "actions": {
+        "insert": "Insert",
+        "update": "Update",
+        "delete": "Delete",
+        "exportExcel": "Export Excel",
+        "exporting": "Exporting...",
+        "viewJsonDetails": "View JSON"
+      },
+      "time": {
+        "justNow": "Just now",
+        "minutesAgo": "{{count}}m ago",
+        "hoursAgo": "{{count}}h ago",
+        "daysAgo": "{{count}}d ago"
+      },
+      "filters": {
+        "searchPlaceholder": "Search action, entity...",
+        "actionLabel": "Action:",
+        "actionOptions": {
+          "all": "All Actions",
+          "insert": "Insert",
+          "update": "Update",
+          "delete": "Delete"
+        },
+        "entityLabel": "Entity:",
+        "entityPlaceholder": "All Entities",
+        "updating": "Updating..."
+      },
+      "table": {
+        "columns": {
+          "timestamp": "Timestamp",
+          "user": "User",
+          "action": "Action",
+          "entity": "Entity",
+          "details": "Details",
+          "ipAddress": "IP Address"
+        }
+      },
+      "states": {
+        "empty": "No audit logs found.",
+        "loadFailedTitle": "Failed to load logs",
+        "loadFailedDescription": "An error occurred while loading audit logs."
+      },
+      "values": {
+        "system": "System"
+      },
+      "pagination": {
+        "summary": "Page {{page}} / {{total}}",
+        "previous": "Previous",
+        "next": "Next"
+      },
+      "export": {
+        "columns": {
+          "timestamp": "Timestamp",
+          "userId": "User ID",
+          "userName": "User Name",
+          "action": "Action",
+          "entityName": "Entity Name",
+          "entityId": "Entity ID",
+          "ipAddress": "IP Address"
+        },
+        "sheetName": "Audit Logs",
+        "noData": "No data available for export.",
+        "success": "Export successful",
+        "failed": "Export failed"
+      },
       "detail": {
         "title": "Audit Log Detail",
         "noData": "No data",

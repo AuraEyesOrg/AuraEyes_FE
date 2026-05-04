@@ -5466,7 +5466,8 @@
         "update": "Cập nhật",
         "delete": "Xóa",
         "exportExcel": "Xuất Excel",
-        "exporting": "Đang xuất..."
+        "exporting": "Đang xuất...",
+        "viewJsonDetails": "Xem JSON"
       },
       "pagination": {
         "previous": "Trước",
