@@ -2546,6 +2546,10 @@
     },
     "empty": {
       "description": "Vui lòng thực hiện một ca sàng lọc để xem kết quả."
+    },
+    "footer": {
+      "importantDisclaimer": "Quan trọng: Phân tích này được hỗ trợ bởi AI và không thay thế cho việc khám chữa bệnh chuyên nghiệp.",
+      "copyright": "© {{year}} AuraEyes. Đã đăng ký bản quyền."
     }
   },
   "PatientAppointments": {
@@ -3073,7 +3077,9 @@
   "PatientWallet": {
     "page": {
       "title": "Ví điện tử",
-      "subtitle": "Quản lý số dư và xem lịch sử giao dịch"
+      "subtitle": "Quản lý số dư và xem lịch sử giao dịch",
+      "paymentOrdersTitle": "Đơn thanh toán",
+      "paymentOrdersSubtitle": "Theo dõi tất cả đơn thanh toán phòng khám liên kết với tài khoản của bạn"
     },
     "loading": {
       "wallet": "Đang tải ví..."
@@ -3088,13 +3094,17 @@
     },
     "actions": {
       "topUpWallet": "Nạp tiền vào ví",
-      "cancel": "Hủy"
+      "cancel": "Hủy",
+      "syncing": "Đang đồng bộ...",
+      "syncAll": "Đồng bộ tất cả"
     },
     "stats": {
       "thisMonth": "Tháng này",
       "totalDeposits": "Tổng nạp",
       "totalSpent": "Tổng chi",
-      "transactions": "Giao dịch"
+      "transactions": "Giao dịch",
+      "totalPaid": "Tổng đã thanh toán",
+      "totalRefund": "Tổng đã hoàn"
     },
     "paymentMethods": {
       "title": "Phương thức thanh toán",
@@ -3107,7 +3117,20 @@
       "totalCount": "Tổng {{count}}",
       "loadFailed": "Tải danh sách giao dịch thất bại",
       "emptyTitle": "Chưa có giao dịch",
-      "emptyDescription": "Hãy nạp tiền vào ví để bắt đầu"
+      "emptyDescription": "Hãy nạp tiền vào ví để bắt đầu",
+      "paymentOrderTitle": "Đơn thanh toán",
+      "emptyPaymentOrdersTitle": "Không có đơn thanh toán",
+      "emptyByFilterTitle": "Không có kết quả cho bộ lọc này",
+      "emptyByFilterDescription": "Hãy điều chỉnh bộ lọc hoặc kiểm tra lại sau",
+      "medicalAppt": "Khám chữa bệnh",
+      "ref": "Mã: {{id}}",
+      "payNow": "Thanh toán ngay"
+    },
+    "filters": {
+      "all": "Tất cả",
+      "payment": "Thanh toán",
+      "pending": "Đang chờ",
+      "refund": "Hoàn tiền"
     },
     "transactionStatus": {
       "completed": "Hoàn tất"
@@ -3123,7 +3146,9 @@
     "pagination": {
       "previous": "Trước",
       "next": "Sau",
-      "pageOf": "Trang {{page}} / {{total}}"
+      "pageOf": "Trang {{page}} / {{total}}",
+      "page": "Trang",
+      "of": "của"
     },
     "deposit": {
       "title": "Nạp tiền vào ví",

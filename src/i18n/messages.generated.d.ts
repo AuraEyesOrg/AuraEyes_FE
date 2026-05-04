@@ -2550,6 +2550,10 @@ declare module 'i18next' {
       empty: {
         description: string;
       };
+      footer: {
+        importantDisclaimer: string;
+        copyright: string;
+      };
     };
     PatientAppointments: {
       page: {
@@ -3077,6 +3081,8 @@ declare module 'i18next' {
       page: {
         title: string;
         subtitle: string;
+        paymentOrdersTitle: string;
+        paymentOrdersSubtitle: string;
       };
       loading: {
         wallet: string;
@@ -3092,12 +3098,16 @@ declare module 'i18next' {
       actions: {
         topUpWallet: string;
         cancel: string;
+        syncing: string;
+        syncAll: string;
       };
       stats: {
         thisMonth: string;
         totalDeposits: string;
         totalSpent: string;
         transactions: string;
+        totalPaid: string;
+        totalRefund: string;
       };
       paymentMethods: {
         title: string;
@@ -3111,6 +3121,19 @@ declare module 'i18next' {
         loadFailed: string;
         emptyTitle: string;
         emptyDescription: string;
+        paymentOrderTitle: string;
+        emptyPaymentOrdersTitle: string;
+        emptyByFilterTitle: string;
+        emptyByFilterDescription: string;
+        medicalAppt: string;
+        ref: string;
+        payNow: string;
+      };
+      filters: {
+        all: string;
+        payment: string;
+        pending: string;
+        refund: string;
       };
       transactionStatus: {
         completed: string;
@@ -3127,6 +3150,8 @@ declare module 'i18next' {
         previous: string;
         next: string;
         pageOf: string;
+        page: string;
+        of: string;
       };
       deposit: {
         title: string;

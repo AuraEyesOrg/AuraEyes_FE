@@ -2270,6 +2270,10 @@
     },
     "empty": {
       "description": "Please perform a screening to view results."
+    },
+    "footer": {
+      "importantDisclaimer": "Important: This analysis is AI-assisted and does not replace a professional medical examination.",
+      "copyright": "© {{year}} AuraEyes. All rights reserved."
     }
   },
   "PatientAppointments": {
@@ -2649,7 +2653,9 @@
   "PatientWallet": {
     "page": {
       "title": "Digital Wallet",
-      "subtitle": "Manage your balance and view transaction history"
+      "subtitle": "Manage your balance and view transaction history",
+      "paymentOrdersTitle": "Payment Orders",
+      "paymentOrdersSubtitle": "Track all clinic payment orders linked to your account"
     },
     "loading": {
       "wallet": "Loading wallet..."
@@ -2664,13 +2670,17 @@
     },
     "actions": {
       "topUpWallet": "Top Up Wallet",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "syncing": "Syncing...",
+      "syncAll": "Sync All"
     },
     "stats": {
       "thisMonth": "This Month",
       "totalDeposits": "Total Deposits",
       "totalSpent": "Total Spent",
-      "transactions": "Transactions"
+      "transactions": "Transactions",
+      "totalPaid": "Total Paid",
+      "totalRefund": "Total Refunded"
     },
     "paymentMethods": {
       "title": "Payment Methods",
@@ -2683,7 +2693,20 @@
       "totalCount": "{{count}} total",
       "loadFailed": "Failed to load transactions",
       "emptyTitle": "No transactions yet",
-      "emptyDescription": "Top up your wallet to get started"
+      "emptyDescription": "Top up your wallet to get started",
+      "paymentOrderTitle": "Payment Orders",
+      "emptyPaymentOrdersTitle": "No payment orders",
+      "emptyByFilterTitle": "No results for this filter",
+      "emptyByFilterDescription": "Try adjusting your filter or check back later",
+      "medicalAppt": "Medical Appointment",
+      "ref": "Ref: {{id}}",
+      "payNow": "Pay Now"
+    },
+    "filters": {
+      "all": "All",
+      "payment": "Payment",
+      "pending": "Pending",
+      "refund": "Refund"
     },
     "transactionStatus": {
       "completed": "Completed"
@@ -2699,7 +2722,9 @@
     "pagination": {
       "previous": "Previous",
       "next": "Next",
-      "pageOf": "Page {{page}} of {{total}}"
+      "pageOf": "Page {{page}} of {{total}}",
+      "page": "Page",
+      "of": "of"
     },
     "deposit": {
       "title": "Top Up Your Wallet",
@@ -3373,6 +3398,9 @@
       "description": "Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes help your ophthalmologist triage faster.",
       "sidebarDescription": "Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes make it easier for your ophthalmologist to triage quickly."
     }
+  },
+  "Appointments": {
+    "scanQrCheckIn": "Scan QR check-in"
   },
   "FocusModeLayout": {
     "steps": {
@@ -7178,6 +7206,22 @@
         "low": "low",
         "medium": "medium",
         "high": "high"
+      },
+      "types": {
+        "walkIn": "Walk-in"
+      }
+    },
+    "updatePatientModal": {
+      "form": {
+        "address": "Address",
+        "bmi": "BMI",
+        "gender": "Gender"
+      },
+      "readOnly": {
+        "age": "Age"
+      },
+      "actions": {
+        "save": "Save record"
       }
     },
     "common": {
@@ -7187,7 +7231,9 @@
       },
       "yearsAbbr": "yrs",
       "idLabel": "ID",
-      "close": "Close"
+      "close": "Close",
+      "notAvailable": "N/A",
+      "cancel": "Cancel"
     },
     "latePatientModal": {
       "actions": {
