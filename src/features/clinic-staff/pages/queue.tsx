@@ -281,7 +281,7 @@ export default function ClinicStaffQueuePage() {
 
     navigate(
       resolvePathWithLocale(
-        `/clinic-staff/screenings/new?patientId=${item.patientId}`
+        `/clinic-staff/screenings/new?patientId=${encodeURIComponent(item.patientId)}&visitId=${encodeURIComponent(item.visitId)}`
       )
     );
   };

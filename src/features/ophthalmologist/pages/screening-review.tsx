@@ -2711,7 +2711,7 @@ export default function ScreeningReviewPage() {
                       <p className="mt-2 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
                         {t(
                           'Ophthalmologist.screeningReview.ermWorkflowHint',
-                          'Chẩn đoán cuối, đơn thuốc và gửi Thu ngân được thực hiện trong bệnh án điện tử (ERM), không còn màn hình Complete Diagnosis cũ.'
+                          'Chẩn đoán cuối, đơn thuốc và gửi Thu ngân'
                         )}
                       </p>
                     ) : null}
