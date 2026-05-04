@@ -893,21 +893,8 @@
         "languageVi": "Tiếng Việt (VN)",
         "languageEn": "Tiếng Anh (Hoa Kỳ)"
       },
-      "appearance": {
-        "title": "Giao diện",
-        "darkMode": "Chế độ tối",
-        "currentlyOn": "Đang bật",
-        "currentlyOff": "Đang tắt"
-      },
-      "notifications": {
-        "title": "Thông báo",
-        "email": "Email",
-        "emailHint": "Nhận qua email",
-        "push": "Thông báo",
-        "pushHint": "Thông báo trình duyệt",
-        "reminders": "Nhắc lịch",
-        "remindersHint": "Nhắc lịch hẹn"
-      },
+      "appearance": "Giao diện",
+      "notifications": "Thông báo",
       "dangerZone": {
         "title": "Vùng nguy hiểm",
         "deactivate": "Vô hiệu hóa tài khoản",
@@ -925,12 +912,28 @@
         "avatarUploadFailed": "Không thể tải lên avatar ngay bây giờ. Vui lòng thử lại.",
         "fullNameRequired": "Bắt buộc phải nhập họ và tên.",
         "profileUpdated": "Hồ sơ đã cập nhật thành công.",
-        "profileUpdateFailed": "Không thể cập nhật hồ sơ ngay bây giờ. Vui lòng thử lại."
+        "profileUpdateFailed": "Không thể cập nhật hồ sơ ngay bây giờ. Vui lòng thử lại.",
+        "updateSuccess": "Cập nhật cài đặt thành công",
+        "updateFailed": "Cập nhật cài đặt thất bại"
       },
       "validation": {
         "avatarFileSize": "Tệp phải nhỏ hơn 5MB",
         "avatarFileType": "Loại tệp không hợp lệ. Hỗ trợ: JPG, PNG, GIF, WebP"
-      }
+      },
+      "title": "Cài đặt",
+      "displayOptions": "Tùy chọn hiển thị",
+      "language": "Ngôn ngữ",
+      "theme": "Chủ đề",
+      "autoSaveDraft": "Tự động lưu bản nháp",
+      "compactMode": "Chế độ thu gọn",
+      "showTooltips": "Hiển thị chú thích",
+      "darkMode": "Chế độ tối",
+      "lightMode": "Chế độ sáng",
+      "accentColor": "Màu nhấn",
+      "emailNotifications": "Thông báo email",
+      "pushNotifications": "Thông báo đẩy",
+      "appointmentReminders": "Nhắc lịch hẹn",
+      "weeklyDigest": "Tóm tắt hàng tuần"
     },
     "appointments": {
       "title": "Lịch hẹn",
@@ -993,7 +996,10 @@
       "joinCall": "Tham gia cuộc gọi",
       "now": "Bây giờ",
       "openPatientConversation": "Trò chuyện bệnh nhân",
-      "todayTimeline": "Hôm nay"
+      "todayTimeline": "Hôm nay",
+      "toggleView": "Chuyển đổi chế độ xem",
+      "print": "In",
+      "export": "Xuất"
     },
     "schedules": {
       "title": "Quản lý lịch làm việc",
@@ -1172,7 +1178,7 @@
       "moreFilters": "Bộ lọc nâng cao",
       "empty": "Không tìm thấy bệnh nhân cho bác sĩ này.",
       "sessionsSuffix": "phiên",
-      "nextAppointment": "Lịch hẹn kế tiếp",
+      "nextAppointment": "Lịch hẹn tiếp theo",
       "lastCompletedVisit": "Lần khám hoàn tất gần nhất",
       "upcoming": "Sắp tới",
       "completed": "Hoàn thành",
@@ -1202,7 +1208,11 @@
         "twoMonthsAgo": "2 tháng"
       },
       "emptySearch": "Không có bệnh nhân nào phù hợp. Hãy thử các từ khóa khác.",
-      "lastDiagnosis": "Chẩn đoán cuối cùng:"
+      "lastDiagnosis": "Chẩn đoán cuối cùng:",
+      "noPatients": "Không có bệnh nhân",
+      "noSearchResults": "Không tìm thấy kết quả cho \"{{query}}\"",
+      "carePlan": "Kế hoạch chăm sóc",
+      "latestVisit": "Lần khám gần nhất"
     },
     "slotManagement": {
       "title": "Slot lịch hẹn",
@@ -1623,6 +1633,54 @@
         "title": "Tạo yêu cầu rút tiền"
       },
       "withdrawRequestsTitle": "Yêu cầu rút tiền"
+    },
+    "caseSnapshot": {
+      "alt": "Hình ảnh võng mạc được AI chú thích",
+      "noImage": "Không có hình ảnh AI",
+      "openReview": "Mở đánh giá AI sàng lọc đầy đủ"
+    },
+    "urgentAIAlerts": {
+      "title": "Cảnh báo AI khẩn cấp",
+      "viewAll": "Xem tất cả",
+      "aiConfidence": "Độ tin cậy AI",
+      "reviewNow": "Đánh giá ngay",
+      "verify": "Xác minh"
+    },
+    "screeningQueue": {
+      "title": "Hàng đợi sàng lọc",
+      "filter": "Lọc",
+      "sort": "Sắp xếp",
+      "patientDetails": "Chi tiết bệnh nhân",
+      "scanDate": "Ngày quét",
+      "aiPrediction": "Dự đoán AI",
+      "confidence": "Độ tin cậy",
+      "status": "Trạng thái",
+      "action": "Hành động",
+      "aiAnalyzed": "AI đã phân tích",
+      "flaggedForReview": "Đánh dấu để xem xét",
+      "reviewed": "Đã xem xét",
+      "pending": "Đang chờ",
+      "check": "Kiểm tra",
+      "quickApprove": "Phê duyệt nhanh",
+      "startReview": "Bắt đầu xem xét",
+      "pagination": "Hiển thị {{showing}} trong {{total}} đánh giá đang chờ",
+      "previous": "Trước",
+      "next": "Tiếp"
+    },
+    "profile": {
+      "toast": {
+        "profileUpdated": "Cập nhật hồ sơ thành công",
+        "profileUpdateFailed": "Cập nhật hồ sơ thất bại",
+        "chooseImage": "Vui lòng chọn tệp hình ảnh",
+        "imageSize": "Hình ảnh phải nhỏ hơn 5MB",
+        "avatarUpdated": "Cập nhật ảnh đại diện thành công",
+        "avatarUploadFailed": "Tải ảnh đại diện thất bại",
+        "certificateDeleted": "Đã xóa chứng chỉ thành công",
+        "certificateDeleteFailed": "Xóa chứng chỉ thất bại"
+      },
+      "confirm": {
+        "deleteCertificate": "Bạn có chắc muốn xóa \"{{certName}}\"?"
+      }
     }
   },
   "MedicalTerms": {
@@ -3333,15 +3391,7 @@
           "records": "{{count}} hồ sơ"
         },
         "toast": {
-          "depositRequiredBeforeCheckIn": "Vui lòng thu tiền cọc trước khi check-in.",
-          "consultationStarted": "Đã bắt đầu tư vấn.",
-          "invalidQr": "Mã QR check-in không hợp lệ.",
-          "markedNoShow": "Đã đánh dấu vắng mặt.",
-          "qrCheckInSuccess": "Check-in qua QR thành công.",
-          "qrNotBelongOrganisation": "Mã QR này không thuộc tổ chức của bạn.",
-          "qrNotMatchAppointment": "Mã QR này không khớp lịch hẹn đã chọn.",
-          "visitCompleted": "Đã hoàn tất lượt khám.",
-          "noShowMarked": "Đã đánh dấu vắng mặt."
+          "bookSuccess": "Bạn đã đặt lịch thành công!"
         },
         "messages": {
           "bookSuccess": "Đặt lịch thành công. Vui lòng theo dõi trạng thái tại trang Lịch hẹn."
@@ -3363,9 +3413,6 @@
           "confirm": "Xác nhận & Thanh toán",
           "processing": "Đang xử lý...",
           "close": "Đóng"
-        },
-        "toast": {
-          "bookSuccess": "Bạn đã đặt lịch thành công!"
         }
       },
       "PatientRetinalAnalysis": {
@@ -3830,12 +3877,13 @@
         },
         "calendar": {
           "actions": {
+            "collectCashDeposit": "Thu cọc tiền mặt",
             "completeVisit": "Hoàn tất khám",
+            "newWalkIn": "Bệnh nhân mới",
             "noShow": "Vắng mặt",
+            "payRemaining": "Thanh toán",
             "scanQrCheckIn": "Quét QR check-in",
             "startConsultation": "Bắt đầu tư vấn",
-            "newWalkIn": "Bệnh nhân mới",
-            "payRemaining": "Thanh toán",
             "markNoShow": "Vắng mặt"
           },
           "pageName": "Lịch",
@@ -3847,17 +3895,17 @@
             "title": "Quét QR để check-in"
           },
           "states": {
+            "billing": {
+              "pending": "Chờ thanh toán",
+              "partiallyPaid": "Đã cọc",
+              "fullyPaid": "Đã tất toán"
+            },
             "loadingAppointments": "Đang tải lịch hẹn...",
             "noAppointments": "Không có lịch hẹn trong ngày này.",
             "terminal": {
               "cancelled": "Lịch hẹn đã hủy",
               "completed": "Đã hoàn tất lượt khám",
               "noShow": "Đã đánh dấu vắng mặt"
-            },
-            "billing": {
-              "pending": "Chờ thanh toán",
-              "partiallyPaid": "Đã cọc",
-              "fullyPaid": "Đã tất toán"
             }
           },
           "stats": {
@@ -3890,30 +3938,6 @@
             "qrNotMatchAppointment": "Mã QR này không khớp lịch hẹn đã chọn.",
             "visitCompleted": "Đã hoàn tất lượt khám.",
             "noShowMarked": "Đã đánh dấu vắng mặt."
-          },
-          "actions": {
-            "collectCashDeposit": "Thu cọc tiền mặt",
-            "completeVisit": "Hoàn tất khám",
-            "newWalkIn": "Bệnh nhân mới",
-            "noShow": "Vắng mặt",
-            "payRemaining": "Thanh toán",
-            "scanQrCheckIn": "Quét QR check-in",
-            "startConsultation": "Bắt đầu tư vấn",
-            "markNoShow": "Vắng mặt"
-          },
-          "states": {
-            "billing": {
-              "pending": "Chờ thanh toán",
-              "partiallyPaid": "Đã cọc",
-              "fullyPaid": "Đã tất toán"
-            },
-            "loadingAppointments": "Đang tải lịch hẹn...",
-            "noAppointments": "Không có lịch hẹn trong ngày này.",
-            "terminal": {
-              "cancelled": "Lịch hẹn đã hủy",
-              "completed": "Đã hoàn tất lượt khám",
-              "noShow": "Đã đánh dấu vắng mặt"
-            }
           },
           "bento": {
             "totalBill": "Tổng hóa đơn",
@@ -4908,231 +4932,26 @@
         }
       },
       "SystemAdmin": {
-        "common": {
-          "systemAdmin": "Quản trị hệ thống"
-        },
-        "sidebar": {
-          "dashboard": "Bảng điều khiển",
-          "groups": {
-            "user-directory": {
-              "label": "Danh bạ người dùng",
-              "description": "Quản lý người dùng và nhân viên"
-            }
-          },
-          "items": {
-            "dashboard": "Bảng điều khiển",
-            "staff-management": "Quản lý nhân viên",
-            "leave-requests": "Yêu cầu nghỉ phép",
-            "patients": "Bệnh nhân",
-            "transaction-ledger": "Sổ giao dịch",
-            "refund-requests": "Yêu cầu hoàn tiền",
-            "scheduling": "Lịch trình",
-            "permissions": "Quyền hạn",
-            "audit-logs": "Nhật ký kiểm tra",
-            "settings": "Cài đặt",
-            "aura-network": "Mạng lưới Aura"
-          }
-        },
-        "staff": {
-          "modal": {
-            "title": "Thêm nhân viên mới"
-          },
-          "fields": {
-            "fullName": "Họ và tên",
-            "email": "Địa chỉ Email",
-            "phone": "Số điện thoại",
-            "role": "Vai trò nhân viên",
-            "subRoles": "Vai trò chức năng",
-            "consultationFee": "Phí khám (VND)"
-          },
-          "validation": {
-            "fullNameRequired": "Vui lòng nhập họ và tên",
-            "nameTooShort": "Tên quá ngắn",
-            "emailRequired": "Vui lòng nhập email",
-            "invalidEmail": "Email không hợp lệ",
-            "phoneRequired": "Vui lòng nhập số điện thoại",
-            "invalidPhone": "Số điện thoại không hợp lệ",
-            "roleRequired": "Vui lòng chọn vai trò",
-            "feeNegative": "Phí không thể âm",
-            "feeRequired": "Vui lòng nhập phí khám",
-            "subRoleRequired": "Cần ít nhất một vai trò chức năng"
-          },
-          "placeholders": {
-            "fullName": "Nguyễn Văn A",
-            "email": "nhanvien@auraeyes.com",
-            "phone": "+84 123 456 789",
-            "consultationFee": "500000"
-          },
-          "roles": {
-            "clinicStaff": "Nhân viên phòng khám",
-            "ophthalmologist": "Bác sĩ nhãn khoa"
-          },
-          "subRoles": {
-            "receptionist": "Lễ tân",
-            "coordinator": "Điều phối viên",
-            "cashier": "Thu ngân"
-          },
-          "labels": {
-            "preview": "Xem trước:"
-          },
-          "actions": {
-            "create": "Tạo nhân viên"
-          },
-          "toasts": {
-            "createSuccess": "Đã tạo nhân viên thành công. Mật khẩu tạm thời đã được gửi.",
-            "createError": "Không thể tạo nhân viên"
-          }
-        },
-        "leavePolicies": {
-          "title": "Chính sách nghỉ phép",
-          "description": "Thiết lập quy tắc bù ngày nghỉ phép tự động cho nhân viên.",
-          "activeRule": "QUY TẮC ĐANG ÁP DỤNG",
-          "days": "ngày",
-          "empty": "Chưa có chính sách nghỉ phép",
-          "emptyDesc": "Bắt đầu bằng cách thêm chính sách để xác định cách nhân viên nhận thêm ngày nghỉ phép.",
-          "noDescription": "Chưa có mô tả",
-          "fields": {
-            "name": "Tên chính sách",
-            "days": "Ngày bổ sung",
-            "daysUnit": "Ngày",
-            "daysHint": "Số này sẽ được thêm vào quỹ nghỉ phép của nhân viên khi chính sách được áp dụng.",
-            "description": "Mô tả"
-          },
-          "placeholders": {
-            "name": "ví dụ: Làm thêm ngày lễ nhỏ",
-            "description": "Mô tả điều kiện áp dụng chính sách này..."
-          },
-          "actions": {
-            "add": "Thêm chính sách"
-          },
-          "toasts": {
-            "createSuccess": "Đã tạo chính sách thành công",
-            "createError": "Không thể tạo chính sách",
-            "updateSuccess": "Đã cập nhật chính sách thành công",
-            "updateError": "Không thể cập nhật chính sách",
-            "deleteSuccess": "Đã xóa chính sách thành công",
-            "deleteError": "Không thể xóa chính sách"
-          }
-        },
-        "staffManagement": {
-          "title": "Quản lý nhân viên",
-          "description": "Quản lý quyền truy cập và cài đặt chuyên môn cho đội ngũ phòng khám",
-          "actions": {
-            "addStaff": "Thêm nhân viên"
-          },
-          "stats": {
-            "totalStaff": "Tổng nhân viên",
-            "doctors": "Bác sĩ",
-            "locked": "Bị khóa"
-          },
-          "searchPlaceholder": "Tìm kiếm nhân viên...",
-          "toasts": {
-            "loadError": "Không thể tải dữ liệu nhân viên"
-          }
-        },
-        "scheduling": {
-          "records": "bản ghi",
-          "status": {
-            "available": "Còn trống",
-            "partial": "Một phần đã đặt",
-            "full": "Đã đầy",
-            "blocked": "Bị chặn",
-            "attended": "Đã khám (Quá khứ)",
-            "expired": "Hết hạn (Quá khứ)"
-          }
-        },
-        "auditLogs": {
-          "detail": {
-            "title": "Chi tiết nhật ký kiểm tra",
-            "noData": "Không có dữ liệu",
-            "before": "Trước (Giá trị cũ)",
-            "after": "Sau (Giá trị mới)",
-            "createdData": "Dữ liệu đã tạo",
-            "deletedData": "Dữ liệu đã xóa",
-            "actionLabel": "Hành động:",
-            "entityLabel": "Thực thể:",
-            "entityIdLabel": "ID thực thể:",
-            "userLabel": "Người dùng:",
-            "ipLabel": "IP:"
-          }
-        },
-        "settings": {
-          "general": {
-            "sections": {
-              "platformLocale": {
-                "title": "Nền tảng & ngôn ngữ",
-                "description": "Thiết lập cơ bản về danh tính, kênh liên hệ, múi giờ và ngôn ngữ mặc định."
-              }
-            },
-            "timezoneOptions": {
-              "utc": "UTC"
-            }
-          }
-        },
-        "refundRequests": {
-          "placeholders": {
-            "transactionId": "ví dụ: REF123456789"
-          }
-        },
-        "cashflow": {
-          "title": "Giao dịch thanh toán",
-          "description": "Quản lý dòng tiền và các giao dịch trong hệ thống",
-          "stats": {
-            "totalVolume": "Tổng doanh thu",
-            "pendingAmount": "Đang chờ xử lý",
-            "completedOrders": "Đơn hàng hoàn tất",
-            "avgOrderValue": "Giá trị đơn hàng TB"
-          },
-          "filters": {
-            "all": "Tất cả giao dịch",
-            "pending": "Chờ xử lý",
-            "completed": "Đã hoàn tất",
-            "failed": "Thất bại"
-          },
-          "table": {
-            "orderId": "Mã đơn hàng",
-            "customer": "Khách hàng",
-            "amount": "Số tiền",
-            "status": "Trạng thái",
-            "date": "Ngày tạo",
-            "actions": "Thao tác",
-            "list": "Danh sách đơn hàng",
-            "defaultDescription": "Thanh toán phòng khám",
-            "deposited": "Đã cọc",
-            "remaining": "Còn lại",
-            "onlineDeposit": "Đặt cọc trực tuyến",
-            "fullPayment": "Thanh toán toàn bộ",
-            "patientFallback": "Bệnh nhân"
-          },
-          "status": {
-            "pending": "Chờ thanh toán",
-            "confirmed": "Đã xác nhận",
-            "processing": "Đang xử lý",
-            "completed": "Hoàn tất",
-            "cancelled": "Đã hủy",
-            "failed": "Thất bại",
-            "refunded": "Hoàn tiền"
-          },
-          "pagination": {
-            "previous": "Trước",
-            "next": "Sau",
-            "page": "Trang"
-          },
-          "noData": "Không tìm thấy giao dịch nào",
-          "error": "Đã có lỗi xảy ra khi tải dữ liệu"
-        },
         "dashboard": {
-          "title": "Vận hành phòng khám",
-          "subtitle": "Tổng quan thời gian thực về luồng bệnh nhân hôm nay",
+          "title": "Hoạt động phòng khám",
+          "subtitle": "Tổng quan luồng bệnh nhân thời gian thực trong ngày",
           "refresh": "Làm mới",
           "error": "Không thể tải dữ liệu bảng điều khiển.",
           "stats": {
             "totalAppointments": "Lịch hẹn hôm nay",
             "checkedIn": "Đã check-in",
-            "completed": "Hoàn thành",
+            "completed": "Đã hoàn tất",
             "noShow": "Vắng mặt"
           },
-          "liveQueue": "Hàng đợi",
+          "bottleneckLongWait": "{{count}} bệnh nhân chờ trên {{minutes}} phút",
+          "bottleneckFullCapacity": "Số lượt khám đã đạt tối đa trong ngày",
+          "bottleneckOverloaded": "{{count}} bác sĩ đang quá tải (>3 ca trực tiếp)",
+          "statusBadge": {
+            "waiting": "Đang chờ",
+            "inProgress": "Đang khám",
+            "payment": "Thanh toán"
+          },
+          "liveQueue": "Hàng đợi trực tiếp",
           "active": "đang hoạt động",
           "queueEmpty": "Không có bệnh nhân trong hàng đợi.",
           "patient": "Bệnh nhân",
@@ -5140,33 +4959,25 @@
           "doctor": "Bác sĩ",
           "waitTime": "Chờ",
           "doctorStatus": "Trạng thái bác sĩ",
-          "busy": "bận",
-          "noDoctors": "Không có bác sĩ trực.",
-          "handled": "đã khám",
+          "busy": "đang bận",
+          "noDoctors": "Không có bác sĩ nào đang trực.",
+          "handled": "đã xử lý",
           "activeLoad": "đang khám",
-          "slotUtilization": "Sử dụng slot",
+          "slotUtilization": "Sử dụng lượt khám",
           "booked": "đã đặt",
           "remaining": "Còn lại",
-          "bottlenecks": "Cảnh báo tắc nghẽn",
-          "noBottlenecks": "Không phát hiện tắc nghẽn. Vận hành trơn tru.",
-          "bottleneckLongWait": "{{count}} bệnh nhân chờ quá {{minutes}} phút",
-          "bottleneckFullCapacity": "Slot đã đầy cho hôm nay",
-          "bottleneckOverloaded": "{{count}} bác sĩ quá tải (>3 đang khám)",
+          "bottlenecks": "Cảnh báo điểm nghẽn",
+          "noBottlenecks": "Không phát hiện điểm nghẽn. Hoạt động diễn ra bình thường.",
           "quickActions": "Thao tác nhanh",
           "actions": {
-            "createSlot": "Tạo slot",
-            "createSlotDesc": "Thêm slot lịch hẹn mới",
+            "createSlot": "Tạo lượt khám",
+            "createSlotDesc": "Thêm một lượt hẹn mới",
             "assignDoctor": "Phân công bác sĩ",
             "assignDoctorDesc": "Quản lý phân công bác sĩ",
-            "viewSchedule": "Xem lịch",
-            "viewScheduleDesc": "Xem lịch trình hôm nay",
-            "addWalkIn": "Thêm khách vãng lai",
-            "addWalkInDesc": "Đăng ký bệnh nhân vãng lai"
-          },
-          "statusBadge": {
-            "waiting": "Đang chờ",
-            "inProgress": "Đang khám",
-            "payment": "Thanh toán"
+            "viewSchedule": "Xem lịch biểu",
+            "viewScheduleDesc": "Xem toàn bộ lịch trình hôm nay",
+            "addWalkIn": "Thêm bệnh nhân vãng lai",
+            "addWalkInDesc": "Đăng ký bệnh nhân vãng lai mới"
           }
         }
       },
@@ -5692,7 +5503,7 @@
         "subtitle": "Cổng AURA Clinic • Tổng quan hoạt động thời gian thực",
         "activity": {
           "title": "Hoạt động gần đây",
-          "subtitle": "Thông tin bệnh nhân tiếp nhận và cập nhật lịch hẹn trực tiếp",
+          "subtitle": "Check-in bệnh nhân và cập nhật lịch hẹn trực tiếp",
           "empty": "Chưa có hoạt động nào. Chúc bạn một ngày làm việc hiệu quả!"
         },
         "quickActions": {
@@ -5787,56 +5598,56 @@
         }
       },
       "Cashier": {
+        "toast": {
+          "createSuccess": "Đã tạo yêu cầu thanh toán.",
+          "createError": "Lỗi tạo yêu cầu thanh toán."
+        },
         "header": {
-          "badge": "Cashier workspace",
-          "title": "Thu ngân thủ công cho ca khám đã hoàn tất",
-          "description": "Chọn ca đã finalize để nhập giá thuốc và phí dịch vụ."
+          "badge": "Quầy thu ngân",
+          "title": "Quy trình thanh toán",
+          "description": "Nhập chi phí thuốc và phí dịch vụ để tạo liên kết thanh toán qua PayOS."
         },
         "stats": {
-          "finalizedCount": "Ca finalized",
+          "finalizedCount": "Ca hoàn tất",
           "currentlySelecting": "Đang chọn",
-          "noVisitSelected": "Chưa chọn ca"
+          "noVisitSelected": "Chưa chọn lượt khám"
         },
         "queue": {
-          "title": "Danh sách ca chờ thu ngân",
-          "loadError": "Không thể tải danh sách ca thu ngân. Vui lòng thử lại sau.",
-          "empty": "Chưa có ca nào sẵn sàng thu ngân",
-          "emptySub": "Hệ thống sẽ tự cập nhật ngay khi bác sĩ finalize ca khám.",
+          "title": "Hàng đợi chờ thanh toán",
+          "loadError": "Không thể tải danh sách chờ thanh toán.",
+          "empty": "Không có ca chờ thanh toán",
+          "emptySub": "Các ca khám sẽ hiện ở đây sau khi bác sĩ kết luận",
           "selectedBadge": "Đang chọn",
           "doctorName": "Bác sĩ"
         },
         "pricingPanel": {
-          "title": "Bảng giá thủ công",
-          "description": "Nhập chi phí theo từng thuốc và dịch vụ trong ca khám đã chọn.",
-          "noVisitSelectedBadge": "Chưa chọn ca",
-          "selectPrompt": "Chọn một ca khám để bắt đầu nhập giá",
-          "selectPromptSub": "Danh sách ca nằm ở cột bên trái.",
-          "contextLoadError": "Không thể tải payment context cho visit này.",
+          "title": "Chi tiết thanh toán",
+          "description": "Vui lòng kiểm tra kỹ chi phí trước khi tạo yêu cầu",
+          "noVisitSelectedBadge": "Chưa chọn ca khám",
+          "selectPrompt": "Chọn một bệnh nhân từ danh sách",
+          "selectPromptSub": "Để bắt đầu quy trình thanh toán và kê đơn",
+          "contextLoadError": "Không thể tải ngữ cảnh thanh toán.",
           "paymentSuccessTitle": "Thanh toán thành công!",
-          "paymentSuccessDescription": "Ca khám của bệnh nhân <0>{{name}}</0> đã được hoàn tất.",
+          "paymentSuccessDescription": "Ca khám của bệnh nhân <0>{{name}}</0> đã được hoàn tất và chuyển trạng thái thành công.",
           "backToList": "Quay lại danh sách",
           "patientLabel": "Bệnh nhân",
-          "doctorLabel": "Bác sĩ phụ trách",
-          "noMedication": "Bác sĩ đánh dấu không kê thuốc cho ca này.",
-          "medicationCount": "Có {{count}} thuốc trong đơn",
-          "medicinePriceLabel": "Giá thuốc (VND)",
-          "manualPricePlaceholder": "Nhập giá thủ công",
-          "estimated": "Tạm tính",
-          "serviceFeeLabel": "Phí khám / dịch vụ khác",
-          "serviceFeeDescription": "Nhập khoản phí ngoài giá thuốc nếu có.",
-          "serviceFeeInputLabel": "Phí dịch vụ (VND)",
-          "totalManual": "Tổng tiền thủ công",
-          "payButton": "Thanh toán PayOS"
+          "doctorLabel": "Bác sĩ chẩn đoán",
+          "noMedication": "Không có thuốc nào được kê trong ca này.",
+          "medicationCount": "Đơn thuốc ({{count}} loại)",
+          "medicinePriceLabel": "Đơn giá (VND)",
+          "manualPricePlaceholder": "Nhập giá...",
+          "estimated": "Thành tiền",
+          "serviceFeeLabel": "Phí dịch vụ",
+          "serviceFeeDescription": "Bao gồm phí khám và các dịch vụ phòng khám đi kèm",
+          "serviceFeeInputLabel": "Tổng phí dịch vụ (VND)",
+          "totalManual": "Tổng cộng",
+          "payButton": "Thanh toán ngay"
         },
         "confirmModal": {
-          "title": "Xác nhận thanh toán PayOS",
-          "message": "Bạn có chắc chắn muốn tạo lệnh thanh toán cho bệnh nhân {{name}} với số tiền {{amount}}?",
-          "confirm": "Thanh toán",
-          "cancel": "Quay lại"
-        },
-        "toast": {
-          "createSuccess": "Đã tạo link thanh toán!",
-          "createError": "Lỗi tạo link thanh toán."
+          "title": "Xác nhận thanh toán",
+          "message": "Tạo yêu cầu thanh toán {{amount}} cho bệnh nhân {{name}}?",
+          "confirm": "Xác nhận",
+          "cancel": "Hủy"
         }
       },
       "ClinicStaffBilling": {
@@ -5917,93 +5728,6 @@
         "language": {
           "title": "Ngôn ngữ",
           "subtitle": "Chọn ngôn ngữ ưu tiên cho cổng thông tin"
-        }
-      },
-      "ClinicStaffDashboard": {
-        "greetings": {
-          "morning": "Chào buổi sáng",
-          "afternoon": "Chào buổi chiều",
-          "evening": "Chào buổi tối"
-        },
-        "stats": {
-          "todayAppointments": "Lịch hẹn hôm nay",
-          "scheduled": "Đã lên lịch",
-          "patientsCheckedIn": "Đã check-in",
-          "today": "Hôm nay",
-          "pendingTasks": "Việc cần làm",
-          "requiresAction": "Cần xử lý",
-          "completedToday": "Đã hoàn tất"
-        },
-        "subtitle": "Cổng AURA Clinic • Tổng quan hoạt động thời gian thực",
-        "activity": {
-          "title": "Hoạt động gần đây",
-          "subtitle": "Check-in bệnh nhân và cập nhật lịch hẹn trực tiếp",
-          "empty": "Chưa có hoạt động nào. Chúc bạn một ngày làm việc hiệu quả!"
-        },
-        "quickActions": {
-          "title": "Thao tác nhanh",
-          "subtitle": "Các tác vụ phổ biến trong ngày",
-          "newAppointment": "Tạo lịch hẹn",
-          "newAppointmentDesc": "Lên lịch hẹn cho bệnh nhân mới",
-          "registerPatient": "Đăng ký bệnh nhân",
-          "registerPatientDesc": "Thêm bệnh nhân mới vào hệ thống",
-          "viewSchedule": "Xem lịch biểu",
-          "viewScheduleDesc": "Xem toàn bộ lịch trình hôm nay",
-          "cashierDesk": "Quầy thu ngân",
-          "cashierDeskDesc": "Kiểm tra các lượt khám đã hoàn tất và thu phí"
-        }
-      },
-      "Cashier": {
-        "toast": {
-          "createSuccess": "Đã tạo yêu cầu thanh toán.",
-          "createError": "Lỗi tạo yêu cầu thanh toán."
-        },
-        "header": {
-          "badge": "Quầy thu ngân",
-          "title": "Quy trình thanh toán",
-          "description": "Nhập chi phí thuốc và phí dịch vụ để tạo liên kết thanh toán qua PayOS."
-        },
-        "stats": {
-          "finalizedCount": "Ca hoàn tất",
-          "currentlySelecting": "Đang chọn",
-          "noVisitSelected": "Chưa chọn lượt khám"
-        },
-        "queue": {
-          "title": "Hàng đợi chờ thanh toán",
-          "loadError": "Không thể tải danh sách chờ thanh toán.",
-          "empty": "Không có ca chờ thanh toán",
-          "emptySub": "Các ca khám sẽ hiện ở đây sau khi bác sĩ kết luận",
-          "selectedBadge": "Đang chọn",
-          "doctorName": "Bác sĩ"
-        },
-        "pricingPanel": {
-          "title": "Chi tiết thanh toán",
-          "description": "Vui lòng kiểm tra kỹ chi phí trước khi tạo yêu cầu",
-          "noVisitSelectedBadge": "Chưa chọn ca khám",
-          "selectPrompt": "Chọn một bệnh nhân từ danh sách",
-          "selectPromptSub": "Để bắt đầu quy trình thanh toán và kê đơn",
-          "contextLoadError": "Không thể tải ngữ cảnh thanh toán.",
-          "paymentSuccessTitle": "Thanh toán thành công!",
-          "paymentSuccessDescription": "Ca khám của bệnh nhân <0>{{name}}</0> đã được hoàn tất và chuyển trạng thái thành công.",
-          "backToList": "Quay lại danh sách",
-          "patientLabel": "Bệnh nhân",
-          "doctorLabel": "Bác sĩ chẩn đoán",
-          "noMedication": "Không có thuốc nào được kê trong ca này.",
-          "medicationCount": "Đơn thuốc ({{count}} loại)",
-          "medicinePriceLabel": "Đơn giá (VND)",
-          "manualPricePlaceholder": "Nhập giá...",
-          "estimated": "Thành tiền",
-          "serviceFeeLabel": "Phí dịch vụ",
-          "serviceFeeDescription": "Bao gồm phí khám và các dịch vụ phòng khám đi kèm",
-          "serviceFeeInputLabel": "Tổng phí dịch vụ (VND)",
-          "totalManual": "Tổng cộng",
-          "payButton": "Thanh toán ngay"
-        },
-        "confirmModal": {
-          "title": "Xác nhận thanh toán",
-          "message": "Tạo yêu cầu thanh toán {{amount}} cho bệnh nhân {{name}}?",
-          "confirm": "Xác nhận",
-          "cancel": "Hủy"
         }
       },
       "PatientDashboard": {
@@ -6146,56 +5870,6 @@
         },
         "toast": {
           "feedbackSubmitted": "Đã gửi phản hồi thành công"
-        }
-      },
-      "SystemAdmin": {
-        "dashboard": {
-          "title": "Hoạt động phòng khám",
-          "subtitle": "Tổng quan luồng bệnh nhân thời gian thực trong ngày",
-          "refresh": "Làm mới",
-          "error": "Không thể tải dữ liệu bảng điều khiển.",
-          "stats": {
-            "totalAppointments": "Lịch hẹn hôm nay",
-            "checkedIn": "Đã check-in",
-            "completed": "Đã hoàn tất",
-            "noShow": "Vắng mặt"
-          },
-          "bottleneckLongWait": "{{count}} bệnh nhân chờ trên {{minutes}} phút",
-          "bottleneckFullCapacity": "Số lượt khám đã đạt tối đa trong ngày",
-          "bottleneckOverloaded": "{{count}} bác sĩ đang quá tải (>3 ca trực tiếp)",
-          "statusBadge": {
-            "waiting": "Đang chờ",
-            "inProgress": "Đang khám",
-            "payment": "Thanh toán"
-          },
-          "liveQueue": "Hàng đợi trực tiếp",
-          "active": "đang hoạt động",
-          "queueEmpty": "Không có bệnh nhân trong hàng đợi.",
-          "patient": "Bệnh nhân",
-          "status": "Trạng thái",
-          "doctor": "Bác sĩ",
-          "waitTime": "Chờ",
-          "doctorStatus": "Trạng thái bác sĩ",
-          "busy": "đang bận",
-          "noDoctors": "Không có bác sĩ nào đang trực.",
-          "handled": "đã xử lý",
-          "activeLoad": "đang khám",
-          "slotUtilization": "Sử dụng lượt khám",
-          "booked": "đã đặt",
-          "remaining": "Còn lại",
-          "bottlenecks": "Cảnh báo điểm nghẽn",
-          "noBottlenecks": "Không phát hiện điểm nghẽn. Hoạt động diễn ra bình thường.",
-          "quickActions": "Thao tác nhanh",
-          "actions": {
-            "createSlot": "Tạo lượt khám",
-            "createSlotDesc": "Thêm một lượt hẹn mới",
-            "assignDoctor": "Phân công bác sĩ",
-            "assignDoctorDesc": "Quản lý phân công bác sĩ",
-            "viewSchedule": "Xem lịch biểu",
-            "viewScheduleDesc": "Xem toàn bộ lịch trình hôm nay",
-            "addWalkIn": "Thêm bệnh nhân vãng lai",
-            "addWalkInDesc": "Đăng ký bệnh nhân vãng lai mới"
-          }
         }
       },
       "PatientScreening": {
