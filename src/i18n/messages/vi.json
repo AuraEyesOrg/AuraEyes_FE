@@ -354,10 +354,14 @@
       "logo": "Nhấn vào logo để quay về Trang chủ bất cứ lúc nào.",
       "navAbout": "Mục Về chúng tôi giới thiệu tầm nhìn Aura và các giá trị cốt lõi của Bệnh viện số.",
       "navHowItWorks": "Mục Cách hoạt động mô tả quy trình hiện đại từ khi đặt lịch đến lúc nhận tư vấn chuyên môn.",
+      "navEthics": "Xem lại cam kết của chúng tôi về quyền riêng tư, AI đạo đức và minh bạch trong y tế.",
+      "navContact": "Liên hệ với nhóm đối tác của chúng tôi để hợp tác chiến lược hoặc gia nhập mạng lưới bác sĩ.",
       "aboutMission": "Khu vực này tóm tắt sứ mệnh của Aura: Mang công nghệ y tế tiên tiến nhất đến gần hơn với bệnh nhân.",
       "contactOrganisation": "Mục Liên hệ dành cho các đối tác chiến lược hoặc bác sĩ muốn gia nhập mạng lưới.",
       "getStartedPatient": "Nút Bắt đầu dẫn tới cổng bệnh nhân, nơi bạn có thể quản lý hồ sơ sức khỏe và đặt lịch khám.",
-      "getStartedDoctor": "Từ nút Bắt đầu, bác sĩ có thể đăng ký gia nhập đội ngũ chuyên gia của Bệnh viện Aura."
+      "getStartedDoctor": "Từ nút Bắt đầu, bác sĩ có thể đăng ký gia nhập đội ngũ chuyên gia của Bệnh viện Aura.",
+      "bookAppointment": "Trải nghiệm đặt lịch trực tuyến. Bạn có thể chọn chuyên gia, khung giờ và thanh toán đặt cọc ngay tại đây.",
+      "patientPortalLogin": "Đăng nhập Cổng bệnh nhân để tra cứu hồ sơ y tế, theo dõi phác đồ điều trị và tải EMR (PDF)."
     }
   },
   "Auth": {

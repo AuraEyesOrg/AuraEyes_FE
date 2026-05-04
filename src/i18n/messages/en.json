@@ -352,7 +352,11 @@
     },
     "steps": {
       "logo": "Click the logo anytime to return to the AURA Digital Clinic home page.",
+      "navAbout": "Learn about Aura's vision and core values for digital healthcare.",
+      "navHowItWorks": "Explore how our AI-powered retinal screening works from upload to diagnosis.",
       "navAiScreening": "Learn about our frontline AI Retinal Screening technology that helps detect ophthalmic risks early.",
+      "navEthics": "Review our commitment to privacy, ethical AI, and transparency in healthcare.",
+      "navContact": "Contact our partnership team for strategic collaborations or doctor network inquiries.",
       "bookAppointment": "Experience Online Booking. You can select a specialist, time slot, and pay your deposit right here.",
       "patientPortalLogin": "Log in to the Patient Portal to search your medical history, track treatment plans, and download your EMR (PDF)."
     }

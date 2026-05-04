@@ -357,10 +357,14 @@ declare module 'i18next' {
         logo: string;
         navAbout: string;
         navHowItWorks: string;
+        navEthics: string;
+        navContact: string;
         aboutMission: string;
         contactOrganisation: string;
         getStartedPatient: string;
         getStartedDoctor: string;
+        bookAppointment: string;
+        patientPortalLogin: string;
       };
     };
     Auth: {
