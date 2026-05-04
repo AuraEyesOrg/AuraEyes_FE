@@ -466,7 +466,7 @@ export default function ErmFormPatient() {
       {/* LOADING OVERLAY */}
       {isLoading && (
         <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-[100] flex flex-col items-center justify-center gap-4">
-          <AuraLogo size="lg" className="animate-pulse" />
+          <AuraLogo size="lg" variant="dark" className="animate-pulse" />
           <p className="text-sm font-bold text-slate-500 animate-bounce">
             ĐANG TẢI THÔNG TIN BỆNH ÁN...
           </p>
