@@ -703,6 +703,20 @@
       "confirm": {
         "delete": "Xóa bước \"{{title}}\"? Hành động này không thể hoàn tác."
       }
+    },
+    "consultations": {
+      "chat": {
+        "shareCase": {
+          "error": "Không thể chia sẻ ca tư vấn"
+        },
+        "image": {
+          "invalidType": "Vui lòng chọn tệp hình ảnh hợp lệ.",
+          "sizeExceeded": "Kích thước ảnh phải nhỏ hơn hoặc bằng 10MB.",
+          "uploadFailed": "Tải lên thất bại. Vui lòng thử lại.",
+          "attached": "Đã đính kèm ảnh.",
+          "uploadError": "Không thể tải ảnh lên. Vui lòng thử lại."
+        }
+      }
     }
   },
   "MedicalTerms": {

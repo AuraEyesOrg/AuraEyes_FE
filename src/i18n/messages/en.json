@@ -701,6 +701,20 @@
       "confirm": {
         "delete": "Delete step \"{{title}}\"? This cannot be undone."
       }
+    },
+    "consultations": {
+      "chat": {
+        "shareCase": {
+          "error": "Failed to share consultation case"
+        },
+        "image": {
+          "invalidType": "Please select a valid image file.",
+          "sizeExceeded": "Image size must be 10MB or less.",
+          "uploadFailed": "Upload failed. Please try again.",
+          "attached": "Image attached.",
+          "uploadError": "Unable to upload image. Please try again."
+        }
+      }
     }
   },
   "MedicalTerms": {

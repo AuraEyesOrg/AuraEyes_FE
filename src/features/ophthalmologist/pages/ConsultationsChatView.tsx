@@ -818,7 +818,13 @@ export default function ConsultationsChatView({
     },
     onError: (error) => {
       ophthalToast.error(
-        extractApiErrorMessage(error, 'Failed to share consultation case')
+        extractApiErrorMessage(
+          error,
+          t(
+            'Ophthalmologist.consultations.chat.shareCase.error',
+            'Failed to share consultation case'
+          )
+        )
       );
     },
   });
@@ -1312,12 +1318,22 @@ export default function ConsultationsChatView({
     }
 
     if (!file.type.startsWith('image/')) {
-      ophthalToast.error('Please select a valid image file.');
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.consultations.chat.image.invalidType',
+          'Please select a valid image file.'
+        )
+      );
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      ophthalToast.error('Image size must be 10MB or less.');
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.consultations.chat.image.sizeExceeded',
+          'Image size must be 10MB or less.'
+        )
+      );
       return;
     }
 
@@ -1326,17 +1342,30 @@ export default function ConsultationsChatView({
       const uploadedUrl = result.uploadedUrls[0];
 
       if (!uploadedUrl) {
-        ophthalToast.error('Upload failed. Please try again.');
+        ophthalToast.error(
+          t(
+            'Ophthalmologist.consultations.chat.image.uploadFailed',
+            'Upload failed. Please try again.'
+          )
+        );
         return;
       }
 
       setPendingImageUrl(uploadedUrl);
       setPendingImageName(file.name);
-      ophthalToast.success('Image attached.');
+      ophthalToast.success(
+        t(
+          'Ophthalmologist.consultations.chat.image.attached',
+          'Image attached.'
+        )
+      );
     } catch (error) {
       const raw = extractApiErrorMessage(
         error,
-        'Unable to upload image. Please try again.'
+        t(
+          'Ophthalmologist.consultations.chat.image.uploadError',
+          'Unable to upload image. Please try again.'
+        )
       );
       ophthalToast.error(raw);
     }
