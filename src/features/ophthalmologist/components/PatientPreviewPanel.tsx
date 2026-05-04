@@ -67,7 +67,10 @@ export default function PatientPreviewPanel({
         {item.thumbnailUrl ? (
           <img
             src={item.thumbnailUrl}
-            alt="Retinal scan"
+            alt={t(
+              'Ophthalmologist.dashboard.preview.retinalScanAlt',
+              'Retinal scan'
+            )}
             className="h-full w-full object-cover"
           />
         ) : (

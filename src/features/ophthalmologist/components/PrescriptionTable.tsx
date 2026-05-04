@@ -6,6 +6,7 @@ import {
   KeyboardEvent,
   ChangeEvent,
 } from 'react';
+import type { TFunction } from 'i18next';
 import { PlusSquare, X, AlertCircle } from 'lucide-react';
 import type { PrescriptionItemRequest } from '@/types/consultation';
 import { DrugEntry, RxItem } from '../types/drug.type';
@@ -19,7 +20,7 @@ export interface PrescriptionTableProps {
   onNoteChange: (val: string) => void;
   locked?: boolean;
   validationErrors?: Record<string, (keyof Omit<RxItem, 'id'>)[]>;
-  t: (key: string, fallback?: string) => string;
+  t: TFunction;
 }
 
 // ─── Drug catalogue ───────────────────────────────────────────────────────────
@@ -173,9 +174,7 @@ const slugify = (str: string) =>
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
 
-const getTranslatedDrugCatalogue = (
-  t: (key: string, fallback?: string) => string
-): DrugEntry[] =>
+const getTranslatedDrugCatalogue = (t: TFunction): DrugEntry[] =>
   DRUG_CATALOGUE.map((drug) => {
     const key = `Ophthalmologist.drug.${slugify(drug.label)}`;
     return {
@@ -288,7 +287,7 @@ interface RowProps {
     field: keyof Omit<RxItem, 'id'>,
     el: HTMLInputElement | null
   ) => void;
-  t: (key: string, fallback?: string) => string;
+  t: TFunction;
 }
 
 function RxRow({
@@ -307,12 +306,17 @@ function RxRow({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
 
-  const openSuggestions = useCallback((query: string) => {
-    const results = getTranslatedDrugCatalogue(t).filter((d) => fuzzyMatch(d.label, query));
-    setSuggestions(results);
-    setDropdownOpen(results.length > 0);
-    setActiveIdx(-1);
-  }, [t]);
+  const openSuggestions = useCallback(
+    (query: string) => {
+      const results = getTranslatedDrugCatalogue(t).filter((d) =>
+        fuzzyMatch(d.label, query)
+      );
+      setSuggestions(results);
+      setDropdownOpen(results.length > 0);
+      setActiveIdx(-1);
+    },
+    [t]
+  );
 
   const applyDrug = useCallback(
     (drug: DrugEntry) => {
@@ -709,7 +713,10 @@ export function PrescriptionTable({
       {/* Note */}
       <div>
         <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-gray-500 mb-1">
-          {t('Ophthalmologist.prescriptionTable.note', 'Ghi chú cho dược sĩ / bệnh nhân')}
+          {t(
+            'Ophthalmologist.prescriptionTable.note',
+            'Ghi chú cho dược sĩ / bệnh nhân'
+          )}
         </label>
         <textarea
           value={prescriptionNote}

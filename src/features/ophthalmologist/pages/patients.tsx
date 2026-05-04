@@ -23,6 +23,7 @@ import { DEFAULT_LOCALE, getLocaleFromPathname } from '@/i18n/locales';
 
 type PatientCardStatus = 'active' | 'urgent' | 'past';
 const PATIENTS_PAGE_SIZE = 8;
+type TranslateFn = ReturnType<typeof useSafeTranslation>['t'];
 
 /* ────────────────────── helpers ────────────────────── */
 
@@ -39,6 +40,7 @@ interface PatientCardItem {
   nextAppointment: string;
   lastVisit: string;
   lastDiagnosis: string;
+  latestFinding?: string;
   visitHistory: [number, number, number];
 }
 
@@ -145,6 +147,29 @@ const getLastDiagnosisFromSessions = (
   }
 
   return fallback;
+};
+
+const getPatientFindingsOrSummary = (
+  finding: string | undefined,
+  lastVisit: string,
+  t: TranslateFn
+) => {
+  const trimmedFinding = finding?.trim();
+  if (trimmedFinding) {
+    return trimmedFinding;
+  }
+
+  if (lastVisit) {
+    return t(
+      'Ophthalmologist.patients.lastVisitSummary',
+      'Last visit: {{date}}',
+      {
+        date: lastVisit,
+      }
+    );
+  }
+
+  return t('Ophthalmologist.patients.noRecentFindings', 'No recent findings');
 };
 
 const getStatusMeta = (status: PatientCardStatus) => {
@@ -310,6 +335,7 @@ export default function PatientsPage() {
           t('Ophthalmologist.patients.notAvailable', 'N/A')
         ),
         lastDiagnosis,
+        latestFinding: lastDiagnosis,
         visitHistory: getVisitHistoryFromSessions(patientSessions),
       });
     });
@@ -610,10 +636,10 @@ export default function PatientsPage() {
                                 <span className="flex items-center gap-1">
                                   <Clock className="w-3.5 h-3.5" />
                                   {getPatientFindingsOrSummary(
-                            patient.latestFinding,
-                            patient.lastVisit,
-                            t
-                          )}
+                                    patient.latestFinding,
+                                    patient.lastVisit,
+                                    t
+                                  )}
                                 </span>
                                 <span className="text-xs text-gray-400 dark:text-gray-500">
                                   {patient.id.slice(0, 8)}
@@ -656,7 +682,10 @@ export default function PatientsPage() {
                               className="inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium transition-all hover:shadow-md"
                             >
                               <Stethoscope className="w-4 h-4" />
-                              {t('Ophthalmologist.patients.carePlan', 'Care plan')}
+                              {t(
+                                'Ophthalmologist.patients.carePlan',
+                                'Care plan'
+                              )}
                               <ArrowRight className="w-3.5 h-3.5" />
                             </button>
                           </div>
