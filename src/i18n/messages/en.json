@@ -4060,7 +4060,10 @@
   },
   "SystemAdmin": {
     "common": {
-      "systemAdmin": "System Admin"
+      "systemAdmin": "System Admin",
+      "active": "Active",
+      "initialStaff": "S",
+      "notAvailable": "N/A"
     },
 
     "sidebar": {
@@ -4203,7 +4206,12 @@
       "title": "Staff Management",
       "description": "Control access and professional settings for your clinic team",
       "actions": {
-        "addStaff": "Add Staff"
+        "addStaff": "Add Staff",
+        "cancel": "Cancel",
+        "save": "Save",
+        "apply": "Apply",
+        "update": "Update",
+        "closeProfile": "Close Profile"
       },
       "stats": {
         "totalStaff": "Total Staff",
@@ -4211,8 +4219,47 @@
         "locked": "Locked"
       },
       "searchPlaceholder": "Search staff...",
+      "table": {
+        "staffMember": "Staff Member",
+        "role": "Role",
+        "status": "Status",
+        "actions": "Actions"
+      },
       "toasts": {
-        "loadError": "Failed to load staff data"
+        "loadError": "Failed to load staff data",
+        "accountUnlocked": "Account unlocked successfully.",
+        "accountLocked": "Account locked successfully.",
+        "updateStatusError": "Failed to update account status.",
+        "feeUpdated": "Consultation fee updated.",
+        "updateFeeError": "Failed to update fee.",
+        "rolesUpdated": "Functional roles updated.",
+        "updateRolesError": "Failed to update roles.",
+        "policyApplied": "Policy applied: Leave fund increased.",
+        "applyPolicyError": "Failed to apply policy."
+      },
+      "modal": {
+        "title": "Staff Details",
+        "subtitle": "Management Overview",
+        "contactInfo": "Contact Info",
+        "email": "Email",
+        "security": "Security",
+        "lastActivity": "Last Activity",
+        "unlockAccount": "Unlock Account",
+        "lockAccount": "Lock Account",
+        "professionalSettings": "Professional Settings",
+        "consultationFee": "Consultation Fee",
+        "leaveFund": "Leave Fund",
+        "days": "Days",
+        "applyPolicyPlaceholder": "Apply Policy...",
+        "applying": "Applying...",
+        "functionalRoles": "Functional Roles",
+        "subRolesLabel": "Sub-roles",
+        "subRoles": {
+          "Registration": "Registration",
+          "Screening": "Screening",
+          "Payment": "Payment",
+          "ConsultationSupport": "ConsultationSupport"
+        }
       }
     },
     "scheduling": {

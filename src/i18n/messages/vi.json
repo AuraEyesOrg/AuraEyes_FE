@@ -4823,6 +4823,71 @@
         "addWalkIn": "Thêm bệnh nhân vãng lai",
         "addWalkInDesc": "Đăng ký bệnh nhân vãng lai mới"
       }
+    },
+    "common": {
+      "active": "Đang hoạt động",
+      "initialStaff": "N",
+      "notAvailable": "N/A"
+    },
+    "staffManagement": {
+      "title": "Quản lý nhân sự",
+      "description": "Quản lý quyền truy cập và cài đặt chuyên môn cho đội ngũ phòng khám",
+      "actions": {
+        "addStaff": "Thêm nhân sự",
+        "cancel": "Hủy",
+        "save": "Lưu",
+        "apply": "Áp dụng",
+        "update": "Cập nhật",
+        "closeProfile": "Đóng hồ sơ"
+      },
+      "stats": {
+        "totalStaff": "Tổng nhân sự",
+        "doctors": "Bác sĩ",
+        "locked": "Đã khóa"
+      },
+      "searchPlaceholder": "Tìm kiếm nhân sự...",
+      "table": {
+        "staffMember": "Nhân sự",
+        "role": "Vai trò",
+        "status": "Trạng thái",
+        "actions": "Thao tác"
+      },
+      "toasts": {
+        "loadError": "Không thể tải dữ liệu nhân sự",
+        "accountUnlocked": "Mở khóa tài khoản thành công.",
+        "accountLocked": "Khóa tài khoản thành công.",
+        "updateStatusError": "Cập nhật trạng thái tài khoản thất bại.",
+        "feeUpdated": "Cập nhật phí tư vấn thành công.",
+        "updateFeeError": "Cập nhật phí tư vấn thất bại.",
+        "rolesUpdated": "Cập nhật vai trò chức năng thành công.",
+        "updateRolesError": "Cập nhật vai trò thất bại.",
+        "policyApplied": "Áp dụng chính sách thành công: Quỹ nghỉ phép đã tăng.",
+        "applyPolicyError": "Áp dụng chính sách thất bại."
+      },
+      "modal": {
+        "title": "Chi tiết nhân sự",
+        "subtitle": "Tổng quan quản lý",
+        "contactInfo": "Thông tin liên hệ",
+        "email": "Email",
+        "security": "Bảo mật",
+        "lastActivity": "Hoạt động gần nhất",
+        "unlockAccount": "Mở khóa tài khoản",
+        "lockAccount": "Khóa tài khoản",
+        "professionalSettings": "Cài đặt chuyên môn",
+        "consultationFee": "Phí tư vấn",
+        "leaveFund": "Quỹ nghỉ phép",
+        "days": "Ngày",
+        "applyPolicyPlaceholder": "Chọn chính sách...",
+        "applying": "Đang áp dụng...",
+        "functionalRoles": "Vai trò chức năng",
+        "subRolesLabel": "Vai trò phụ",
+        "subRoles": {
+          "Registration": "Đăng ký",
+          "Screening": "Sàng lọc",
+          "Payment": "Thanh toán",
+          "ConsultationSupport": "Hỗ trợ tư vấn"
+        }
+      }
     }
   },
   "ProfessionalNetwork": {
