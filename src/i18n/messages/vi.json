@@ -795,8 +795,49 @@
       "queue": {
         "updating": "Đang cập nhật..."
       },
+      "stats": {
+        "pending": "Ca chờ duyệt",
+        "completed": "Hoàn thành hôm nay"
+      },
       "preview": {
-        "retinalScanAlt": "Ảnh chụp đáy mắt"
+        "empty": "Chọn một bệnh nhân từ hàng đợi để xem chi tiết",
+        "inProgress": "Đang xử lý",
+        "retinalScanAlt": "Ảnh chụp đáy mắt",
+        "idPrefix": "ID",
+        "riskLevel": "Mức độ rủi ro",
+        "confidence": "Độ tin cậy AI",
+        "waiting": "Đang chờ",
+        "session": "Phiên",
+        "aiSummary": "Tóm tắt AI",
+        "continueReview": "Tiếp tục duyệt",
+        "startReview": "Bắt đầu duyệt",
+        "waitingLessThanMinute": "<1 phút",
+        "minuteShort": "phút",
+        "hourShort": "giờ"
+      }
+    },
+    "credentials": {
+      "updateTitle": "Cập nhật chứng chỉ",
+      "uploadTitle": "Tải lên chứng chỉ bổ sung",
+      "medicalDegrees": "Bằng cấp y khoa",
+      "degreeName": "Tên bằng cấp",
+      "degreeLevel": "Trình độ bằng cấp",
+      "issuingAuthority": "Cơ quan cấp",
+      "issuedDate": "Ngày cấp",
+      "expiryDate": "Ngày hết hạn",
+      "licensesCertificates": "Giấy phép & Chứng chỉ",
+      "certificateName": "Tên chứng chỉ",
+      "uploadDocument": "Tải tài liệu lên",
+      "addAnotherDegree": "Thêm bằng cấp khác",
+      "addAnotherCertificate": "Thêm chứng chỉ khác",
+      "toast": {
+        "updateSuccess": "Cập nhật chứng chỉ thành công.",
+        "uploadSuccess": "Tải chứng chỉ lên thành công.",
+        "updateFailed": "Cập nhật chứng chỉ thất bại",
+        "uploadFailed": "Tải chứng chỉ lên thất bại"
+      },
+      "validation": {
+        "atLeastOneFile": "Vui lòng đính kèm ít nhất một tệp (Bằng cấp hoặc Giấy phép/Chứng chỉ)."
       }
     },
     "settings": {
@@ -946,8 +987,68 @@
         "delete": "Xóa bước \"{{title}}\"? Hành động này không thể hoàn tác."
       }
     },
+    "appointments": {
+      "title": "Lịch hẹn",
+      "subtitle": "Quản lý các cuộc hẹn tư vấn theo thời gian thực",
+      "manageSlots": "Quản lý slot",
+      "loading": "Đang tải lịch hẹn...",
+      "searchPlaceholder": "Tìm bệnh nhân, mã phiên, loại...",
+      "toggleView": "Chuyển chế độ xem",
+      "todayTimeline": "Dòng thời gian hôm nay",
+      "unknownPatient": "Bệnh nhân chưa xác định",
+      "notScheduled": "Chưa lên lịch",
+      "invalidDate": "Ngày không hợp lệ",
+      "now": "Ngay bây giờ",
+      "view": "Xem",
+      "open": "Mở",
+      "openPatientConversation": "Mở cuộc trò chuyện của bệnh nhân",
+      "joinCall": "Tham gia cuộc gọi",
+      "stats": {
+        "today": "Hôm nay",
+        "upcoming": "Sắp tới",
+        "completed": "Hoàn thành",
+        "cancelled": "Đã hủy"
+      },
+      "tab": {
+        "today": "Hôm nay",
+        "upcoming": "Sắp tới",
+        "past": "Đã qua",
+        "cancelled": "Đã hủy"
+      },
+      "status": {
+        "pending": "Đang chờ",
+        "confirmed": "Đã xác nhận",
+        "completed": "Hoàn thành",
+        "cancelled": "Đã hủy"
+      },
+      "countdown": {
+        "startsIn": "Bắt đầu sau",
+        "in": "Trong",
+        "hoursShort": "g",
+        "minutesShort": "p",
+        "daysShort": "n"
+      },
+      "emptyTitle": "Không tìm thấy lịch hẹn",
+      "emptySearch": "Không có lịch hẹn nào khớp với tìm kiếm của bạn.",
+      "emptyTab": "Không có lịch hẹn trong tab này.",
+      "toast": {
+        "missingDoctorIdentity": "Không xác định được danh tính bác sĩ hiện tại.",
+        "cancelReason": "Hủy bởi bác sĩ nhãn khoa",
+        "cancelSuccess": "Đã hủy lịch hẹn thành công.",
+        "cancelError": "Không thể hủy lịch hẹn. Vui lòng thử lại."
+      }
+    },
     "consultations": {
       "chat": {
+        "phase": {
+          "preVisit": "Trước khám",
+          "preVisitDescription": "Bệnh nhân có thể để lại ghi chú trước khi phiên tư vấn bắt đầu. Chat mở vào thời gian cuộc hẹn.",
+          "inProgress": "Đang diễn ra",
+          "inProgressDescription": "Phiên tư vấn đang hoạt động. Bạn có thể chat và tham gia cuộc gọi video.",
+          "completed": "Đã hoàn thành",
+          "completedDescription": "Phiên tư vấn đã hoàn thành. Chat ở chế độ chỉ đọc."
+        },
+        "schedulePending": "Đang chờ lên lịch",
         "shareCase": {
           "error": "Không thể chia sẻ ca tư vấn"
         },

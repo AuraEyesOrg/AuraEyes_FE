@@ -22,12 +22,22 @@ const riskColorMap: Record<string, string> = {
   none: 'text-gray-500 dark:text-gray-400',
 };
 
-function formatWaiting(minutes: number): string {
-  if (minutes < 1) return '<1 min';
-  if (minutes < 60) return `${minutes} min`;
+type TranslateFn = ReturnType<typeof useSafeTranslation>['t'];
+
+function formatWaiting(minutes: number, t: TranslateFn): string {
+  if (minutes < 1)
+    return t(
+      'Ophthalmologist.dashboard.preview.waitingLessThanMinute',
+      '<1 min'
+    );
+  if (minutes < 60) {
+    return `${minutes}${t('Ophthalmologist.dashboard.preview.minuteShort', 'm')}`;
+  }
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  const hourUnit = t('Ophthalmologist.dashboard.preview.hourShort', 'h');
+  const minuteUnit = t('Ophthalmologist.dashboard.preview.minuteShort', 'm');
+  return m > 0 ? `${h}${hourUnit} ${m}${minuteUnit}` : `${h}${hourUnit}`;
 }
 
 export default function PatientPreviewPanel({
@@ -97,7 +107,8 @@ export default function PatientPreviewPanel({
               {item.patientName}
             </p>
             <p className="text-xs text-gray-400 dark:text-gray-500">
-              ID: {item.patientId.slice(0, 8).toUpperCase()}
+              {t('Ophthalmologist.dashboard.preview.idPrefix', 'ID')}:{' '}
+              {item.patientId.slice(0, 8).toUpperCase()}
             </p>
           </div>
         </div>
@@ -134,7 +145,7 @@ export default function PatientPreviewPanel({
               {t('Ophthalmologist.dashboard.preview.waiting', 'Waiting')}
             </p>
             <p className="text-sm font-semibold text-gray-900 dark:text-white">
-              {formatWaiting(item.waitingMinutes)}
+              {formatWaiting(item.waitingMinutes, t)}
             </p>
           </div>
           <div>

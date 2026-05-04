@@ -798,8 +798,49 @@ declare module 'i18next' {
         queue: {
           updating: string;
         };
+        stats: {
+          pending: string;
+          completed: string;
+        };
         preview: {
+          empty: string;
+          inProgress: string;
           retinalScanAlt: string;
+          idPrefix: string;
+          riskLevel: string;
+          confidence: string;
+          waiting: string;
+          session: string;
+          aiSummary: string;
+          continueReview: string;
+          startReview: string;
+          waitingLessThanMinute: string;
+          minuteShort: string;
+          hourShort: string;
+        };
+      };
+      credentials: {
+        updateTitle: string;
+        uploadTitle: string;
+        medicalDegrees: string;
+        degreeName: string;
+        degreeLevel: string;
+        issuingAuthority: string;
+        issuedDate: string;
+        expiryDate: string;
+        licensesCertificates: string;
+        certificateName: string;
+        uploadDocument: string;
+        addAnotherDegree: string;
+        addAnotherCertificate: string;
+        toast: {
+          updateSuccess: string;
+          uploadSuccess: string;
+          updateFailed: string;
+          uploadFailed: string;
+        };
+        validation: {
+          atLeastOneFile: string;
         };
       };
       settings: {
@@ -949,8 +990,68 @@ declare module 'i18next' {
           delete: string;
         };
       };
+      appointments: {
+        title: string;
+        subtitle: string;
+        manageSlots: string;
+        loading: string;
+        searchPlaceholder: string;
+        toggleView: string;
+        todayTimeline: string;
+        unknownPatient: string;
+        notScheduled: string;
+        invalidDate: string;
+        now: string;
+        view: string;
+        open: string;
+        openPatientConversation: string;
+        joinCall: string;
+        stats: {
+          today: string;
+          upcoming: string;
+          completed: string;
+          cancelled: string;
+        };
+        tab: {
+          today: string;
+          upcoming: string;
+          past: string;
+          cancelled: string;
+        };
+        status: {
+          pending: string;
+          confirmed: string;
+          completed: string;
+          cancelled: string;
+        };
+        countdown: {
+          startsIn: string;
+          in: string;
+          hoursShort: string;
+          minutesShort: string;
+          daysShort: string;
+        };
+        emptyTitle: string;
+        emptySearch: string;
+        emptyTab: string;
+        toast: {
+          missingDoctorIdentity: string;
+          cancelReason: string;
+          cancelSuccess: string;
+          cancelError: string;
+        };
+      };
       consultations: {
         chat: {
+          phase: {
+            preVisit: string;
+            preVisitDescription: string;
+            inProgress: string;
+            inProgressDescription: string;
+            completed: string;
+            completedDescription: string;
+          };
+          schedulePending: string;
           shareCase: {
             error: string;
           };

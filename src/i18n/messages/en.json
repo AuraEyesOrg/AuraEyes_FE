@@ -793,8 +793,49 @@
       "queue": {
         "updating": "Updating..."
       },
+      "stats": {
+        "pending": "Pending Reviews",
+        "completed": "Completed Today"
+      },
       "preview": {
-        "retinalScanAlt": "Retinal scan"
+        "empty": "Select a patient from the queue to see details",
+        "inProgress": "In Progress",
+        "retinalScanAlt": "Retinal scan",
+        "idPrefix": "ID",
+        "riskLevel": "Risk Level",
+        "confidence": "AI Confidence",
+        "waiting": "Waiting",
+        "session": "Session",
+        "aiSummary": "AI Summary",
+        "continueReview": "Continue Review",
+        "startReview": "Start Review",
+        "waitingLessThanMinute": "<1 min",
+        "minuteShort": "m",
+        "hourShort": "h"
+      }
+    },
+    "credentials": {
+      "updateTitle": "Update Credential",
+      "uploadTitle": "Upload Additional Credentials",
+      "medicalDegrees": "Medical Degrees",
+      "degreeName": "Degree Name",
+      "degreeLevel": "Degree Level",
+      "issuingAuthority": "Issuing Authority",
+      "issuedDate": "Issued Date",
+      "expiryDate": "Expiry Date",
+      "licensesCertificates": "Licenses & Certificates",
+      "certificateName": "Certificate Name",
+      "uploadDocument": "Upload Document",
+      "addAnotherDegree": "Add Another Degree",
+      "addAnotherCertificate": "Add Another Certificate",
+      "toast": {
+        "updateSuccess": "Credential updated successfully.",
+        "uploadSuccess": "Credentials uploaded successfully.",
+        "updateFailed": "Failed to update credential",
+        "uploadFailed": "Failed to upload credentials"
+      },
+      "validation": {
+        "atLeastOneFile": "Please attach at least one file (Degree or License/Certificate)."
       }
     },
     "settings": {
@@ -954,8 +995,72 @@
         "delete": "Delete step \"{{title}}\"? This cannot be undone."
       }
     },
+    "appointments": {
+      "title": "Appointments",
+      "subtitle": "Manage your real-time consultation appointments",
+      "manageSlots": "Manage Slots",
+      "loading": "Loading appointments...",
+      "searchPlaceholder": "Search patient, session ID, type...",
+      "toggleView": "Toggle View",
+      "todayTimeline": "Today's Timeline",
+      "unknownPatient": "Unknown Patient",
+      "notScheduled": "Not scheduled",
+      "invalidDate": "Invalid date",
+      "now": "Now",
+      "view": "View",
+      "open": "Open",
+      "openPatientConversation": "Open patient conversation",
+      "joinCall": "Join Call",
+      "stats": {
+        "today": "Today",
+        "upcoming": "Upcoming",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "tab": {
+        "today": "Today",
+        "upcoming": "Upcoming",
+        "past": "Past",
+        "cancelled": "Cancelled"
+      },
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "countdown": {
+        "startsIn": "Starts in",
+        "in": "In",
+        "hoursShort": "h",
+        "minutesShort": "m",
+        "daysShort": "d"
+      },
+      "emptyTitle": "No appointments found",
+      "emptySearch": "No appointments match your search.",
+      "emptyTab": "No appointments in this tab.",
+      "toast": {
+        "missingDoctorIdentity": "Cannot determine current doctor identity.",
+        "cancelReason": "Cancelled by ophthalmologist",
+        "cancelSuccess": "Appointment cancelled successfully.",
+        "cancelError": "Unable to cancel appointment. Please try again."
+      }
+    },
     "consultations": {
       "chat": {
+        "phase": {
+          "preVisit": "Pre-visit",
+          "preVisitDescription": "Patient can leave notes before the consultation starts. Chat opens at appointment time.",
+          "inProgress": "In Progress",
+          "inProgressDescription": "Consultation is active. You can chat and join the video call.",
+          "completed": "Completed",
+          "completedDescription": "Consultation has been completed. Chat is now read-only."
+        },
+        "previewPreVisitEmpty": "Awaiting patient pre-visit notes…",
+        "previewCompletedEmpty": "Session completed — no messages",
+        "previewLocked": "Chat opens at appointment time",
+        "previewUnavailable": "No messages yet",
+        "schedulePending": "Schedule pending",
         "shareCase": {
           "error": "Failed to share consultation case"
         },
