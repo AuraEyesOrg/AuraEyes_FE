@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import Spinner from '@/components/ui/spinner';
 import { formatMonthYear, formatShortDate } from '@/lib/date-utils';
 import { extractApiErrorMessage } from '@/lib/api-error';
@@ -75,6 +76,7 @@ const fieldInputClass =
   'w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] px-4 py-3 text-[var(--text-primary)] outline-none transition focus:border-brand/60 focus:ring-2 focus:ring-brand/30';
 
 export default function OphthalmologistProfilePage() {
+  const { t } = useSafeTranslation();
   const { data: profileData, isLoading, error } = useOphthalmologistProfile();
   const updateMutation = useUpdateOphthalmologistProfile();
   const uploadAvatarMutation = useUploadOphthalmologistAvatar();
@@ -163,12 +165,12 @@ export default function OphthalmologistProfilePage() {
       {
         onSuccess: (data) => {
           if (data) {
-            toast.success('Profile updated successfully');
+            toast.success(t('Ophthalmologist.profile.toast.profileUpdated', 'Profile updated successfully'));
             setIsEditing(false);
           }
         },
         onError: (err) => {
-          toast.error(extractApiErrorMessage(err, 'Failed to update profile'));
+          toast.error(extractApiErrorMessage(err, t('Ophthalmologist.profile.toast.profileUpdateFailed', 'Failed to update profile')));
         },
       }
     );
@@ -177,11 +179,11 @@ export default function OphthalmologistProfilePage() {
   const onAvatarFileChange = (file: File | null) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      toast.error('Please choose an image file');
+      toast.error(t('Ophthalmologist.profile.toast.chooseImage', 'Please choose an image file'));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be smaller than 5MB');
+      toast.error(t('Ophthalmologist.profile.toast.imageSize', 'Image must be smaller than 5MB'));
       return;
     }
 
@@ -194,13 +196,13 @@ export default function OphthalmologistProfilePage() {
 
     uploadAvatarMutation.mutate(avatarFile, {
       onSuccess: () => {
-        toast.success('Avatar updated successfully');
+        toast.success(t('Ophthalmologist.profile.toast.avatarUpdated', 'Avatar updated successfully'));
         setShowAvatarModal(false);
         setAvatarFile(null);
         setPreviewUrl(null);
       },
       onError: (err) => {
-        toast.error(extractApiErrorMessage(err, 'Failed to upload avatar'));
+        toast.error(extractApiErrorMessage(err, t('Ophthalmologist.profile.toast.avatarUploadFailed', 'Failed to upload avatar')));
       },
     });
   };
@@ -212,15 +214,13 @@ export default function OphthalmologistProfilePage() {
   };
 
   const handleDeleteCertificate = (certId: string, certName: string) => {
-    if (window.confirm(`Are you sure you want to delete "${certName}"?`)) {
+    if (window.confirm(t('Ophthalmologist.profile.confirm.deleteCertificate', `Are you sure you want to delete "${certName}"?`))) {
       deleteCertMutation.mutate(certId, {
         onSuccess: () => {
-          toast.success('Certificate deleted successfully');
+          toast.success(t('Ophthalmologist.profile.toast.certificateDeleted', 'Certificate deleted successfully'));
         },
         onError: (err) => {
-          toast.error(
-            extractApiErrorMessage(err, 'Failed to delete certificate')
-          );
+          toast.error(t('Ophthalmologist.profile.toast.certificateDeleteFailed', 'Failed to delete certificate'));
         },
       });
     }

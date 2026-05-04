@@ -1044,22 +1044,34 @@ export default function ScreeningReviewPage() {
       const recordSuffix = detail?.medicalRecordId
         ? ` - ${detail.medicalRecordId.slice(0, 8).toUpperCase()}`
         : '';
-      const groupName = `[Hội chẩn] - ${patientName}${recordSuffix}`;
-
+      const isUrgent = consiliumUrgency === 'urgent';
+      const groupName = `[${t(
+        'Ophthalmologist.screeningReview.consilium.groupName',
+        'Hội chẩn'
+      )}] - ${patientName}${recordSuffix}`;
+      const title = `${t(
+        'Ophthalmologist.screeningReview.consilium.requestTitle',
+        'Yêu cầu hội chẩn'
+      )}${isUrgent ? ` (${t('Ophthalmologist.common.urgent', 'KHẨN CẤP')})` : ''} — ${
+        detail?.screeningTitle || detail?.patientFullName || 'Unknown'
+      }`;
       const groupId = await collaborationApi.createClinicalGroup({
         name: groupName,
         consultationSessionId: reportableSessionId || undefined,
         invitedDoctorIds: selectedDoctors,
         reason: consiliumReason,
-        isEmergency: isEmergencyConsilium,
+        isEmergency: isUrgent,
         medicalRecordId: detail?.medicalRecordId ?? undefined,
       });
 
       ophthalToast.success(
-        isEmergencyConsilium
-          ? '🚨 Yêu cầu hội chẩn KHẨN CẤP đã được gửi!'
+        isUrgent
+          ? `🚨 ${t(
+              'Ophthalmologist.screeningReview.consilium.urgentSent',
+              'Yêu cầu hội chẩn KHẨN CẤP đã được gửi!'
+            )}`
           : t(
-              'Ophthalmologist.screeningReview.toast.consiliumRequested',
+              'Ophthalmologist.screeningReview.consilium.sent',
               'Yêu cầu hội chẩn đã được gửi!'
             )
       );
@@ -1513,7 +1525,7 @@ export default function ScreeningReviewPage() {
                     className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-amber-500/30 transition-all hover:-translate-y-0.5 hover:bg-amber-600 active:translate-y-0"
                   >
                     <Stethoscope className="h-4 w-4" />
-                    Yêu cầu Hội chẩn
+                    {t('Ophthalmologist.screeningReview.consiliumButton', 'Yêu cầu Hội chẩn')}
                   </button>
                   <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded-full text-xs font-medium">
                     {t('Ophthalmologist.screeningReview.aiModel', 'AI Model')}:{' '}
@@ -1862,7 +1874,7 @@ export default function ScreeningReviewPage() {
                             type="button"
                             onClick={() => handleChangeFocusedBoxColor('high')}
                             className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                            title="Change to Red (High)"
+                            title={t('Ophthalmologist.screeningReview.toolbox.changeRed', 'Change to Red (High)')}
                           >
                             <div className="w-4 h-4 rounded-full bg-red-400 border border-red-500" />
                           </button>
@@ -1872,7 +1884,7 @@ export default function ScreeningReviewPage() {
                               handleChangeFocusedBoxColor('moderate')
                             }
                             className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                            title="Change to Orange (Moderate)"
+                            title={t('Ophthalmologist.screeningReview.toolbox.changeOrange', 'Change to Orange (Moderate)')}
                           >
                             <div className="w-4 h-4 rounded-full bg-orange-400 border border-orange-500" />
                           </button>
@@ -1880,7 +1892,7 @@ export default function ScreeningReviewPage() {
                             type="button"
                             onClick={() => handleChangeFocusedBoxColor('low')}
                             className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                            title="Change to Yellow (Low)"
+                            title={t('Ophthalmologist.screeningReview.toolbox.changeYellow', 'Change to Yellow (Low)')}
                           >
                             <div className="w-4 h-4 rounded-full bg-yellow-400 border border-yellow-500" />
                           </button>
@@ -2188,16 +2200,16 @@ export default function ScreeningReviewPage() {
                                 ? 'bg-orange-500 text-white'
                                 : 'bg-gray-800 text-gray-400 hover:text-white'
                             }`}
-                            title="Toggle AI heatmap (Grad-CAM)"
+                            title={t('Ophthalmologist.screeningReview.toolbox.toggleHeatmap', 'Toggle AI heatmap (Grad-CAM)')}
                           >
-                            Heatmap
+                            {t('Ophthalmologist.screeningReview.toolbox.heatmap', 'Heatmap')}
                           </button>
                           {showHeatmap && (
                             <div className="flex items-center gap-4 flex-wrap border-l border-gray-700 pl-4 relative">
                               <div className="flex items-center gap-1.5">
                                 <span
                                   className="text-xs text-gray-500"
-                                  title="Opacity"
+                                  title={t('Ophthalmologist.screeningReview.toolbox.opacity', 'Opacity')}
                                 >
                                   Opa
                                 </span>
@@ -2217,7 +2229,7 @@ export default function ScreeningReviewPage() {
                               <div className="flex items-center gap-1.5">
                                 <span
                                   className="text-xs text-gray-500"
-                                  title="Heat Threshold"
+                                  title={t('Ophthalmologist.screeningReview.toolbox.heatThreshold', 'Heat Threshold')}
                                 >
                                   Thr
                                 </span>
@@ -2246,7 +2258,7 @@ export default function ScreeningReviewPage() {
                                       ? 'bg-cyan-600 text-white shadow-inner'
                                       : 'bg-gray-800 text-gray-400 hover:text-white'
                                   }`}
-                                  title="Mở bộ công cụ vẽ Heatmap"
+                                  title={t('Ophthalmologist.screeningReview.toolbox.clearNewTool', 'Tắt công cụ mới')}
                                 >
                                   <svg
                                     className="w-3.5 h-3.5"
@@ -2262,8 +2274,8 @@ export default function ScreeningReviewPage() {
                                     />
                                   </svg>
                                   {heatmapEditMode !== null
-                                    ? 'Đóng Tool'
-                                    : 'Bộ Vẽ Heatmap'}
+                                    ? t('Ophthalmologist.screeningReview.toolbox.closeTool', 'Đóng Tool')
+                                    : t('Ophthalmologist.screeningReview.toolbox.openTool', 'Bộ Vẽ Heatmap')}
                                 </button>
 
                                 {heatmapEditMode !== null && (
@@ -2290,7 +2302,7 @@ export default function ScreeningReviewPage() {
                                         ).setPointerCapture(e.pointerId);
                                       }}
                                       className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-gray-500 hover:text-cyan-400 transition-colors"
-                                      title="Kéo để di chuyển bộ công cụ"
+                                      title={t('Ophthalmologist.screeningReview.toolbox.dragToolbox', 'Kéo để di chuyển bộ công cụ')}
                                     >
                                       <svg
                                         width="12"
@@ -2338,7 +2350,7 @@ export default function ScreeningReviewPage() {
                                           setBrushTargetHeat(1.0);
                                         }}
                                         className={`w-5 h-5 rounded-full bg-red-600 transition-transform shadow-sm ${brushTargetHeat === 1.0 && heatmapEditMode === 'draw' ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-110' : 'opacity-60 hover:opacity-100 hover:scale-110'}`}
-                                        title="Lõi đỏ (Nhiệt cao nhất)"
+                                        title={t('Ophthalmologist.screeningReview.toolbox.resetOverlay', 'Lấy lại đường viền ban đầu')}
                                       />
                                       <button
                                         onClick={() => {
@@ -2346,7 +2358,7 @@ export default function ScreeningReviewPage() {
                                           setBrushTargetHeat(0.7);
                                         }}
                                         className={`w-5 h-5 rounded-full bg-orange-500 transition-transform shadow-sm ${brushTargetHeat === 0.7 && heatmapEditMode === 'draw' ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-110' : 'opacity-60 hover:opacity-100 hover:scale-110'}`}
-                                        title="Tỏa cam"
+                                        title={t('Ophthalmologist.screeningReview.toolbox.orangeSpread', 'Tỏa cam')}
                                       />
                                       <button
                                         onClick={() => {
@@ -2354,7 +2366,7 @@ export default function ScreeningReviewPage() {
                                           setBrushTargetHeat(0.4);
                                         }}
                                         className={`w-5 h-5 rounded-full bg-yellow-400 transition-transform shadow-sm ${brushTargetHeat === 0.4 && heatmapEditMode === 'draw' ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-110' : 'opacity-60 hover:opacity-100 hover:scale-110'}`}
-                                        title="Lan vàng"
+                                        title={t('Ophthalmologist.screeningReview.toolbox.yellowSpread', 'Lan vàng')}
                                       />
                                     </div>
                                     <div className="w-px h-5 bg-gray-700 mx-1" />
@@ -2364,7 +2376,7 @@ export default function ScreeningReviewPage() {
                                           setHeatmapEditMode('erase')
                                         }
                                         className={`flex items-center justify-center p-1.5 rounded w-max bg-gray-800 text-gray-200 transition-all shadow-sm ${heatmapEditMode === 'erase' ? 'ring-2 ring-cyan-400 text-white bg-gray-600' : 'hover:bg-gray-600 hover:text-white'}`}
-                                        title="Cục Tẩy"
+                                        title={t('Ophthalmologist.screeningReview.toolbox.eraser', 'Cục Tẩy')}
                                       >
                                         <Eraser className="w-4 h-4" />
                                       </button>
@@ -2376,7 +2388,7 @@ export default function ScreeningReviewPage() {
                                             ? 'bg-gray-700 text-cyan-400 hover:text-white hover:bg-gray-600'
                                             : 'bg-gray-800 text-gray-600 cursor-not-allowed opacity-40'
                                         }`}
-                                        title="Hoàn tác"
+                                        title={t('Ophthalmologist.screeningReview.toolbox.undo', 'Hoàn tác')}
                                       >
                                         <Undo2 className="w-4 h-4" />
                                       </button>
@@ -2390,7 +2402,7 @@ export default function ScreeningReviewPage() {
                                           setHasHeatmapEdits(true);
                                         }}
                                         className="ml-1 flex items-center gap-1 px-2 py-1 rounded border border-red-500/50 text-red-400 hover:bg-red-500/20 transition-all text-[9px] uppercase font-bold tracking-wider"
-                                        title="Xóa toàn bộ bản đồ nhiệt"
+                                        title={t('Ophthalmologist.screeningReview.toolbox.clearHeatmap', 'Xóa toàn bộ bản đồ nhiệt')}
                                       >
                                         Clear
                                       </button>
@@ -2411,20 +2423,16 @@ export default function ScreeningReviewPage() {
                   {/* Detected Findings */}
                   <div className="flex-1 overflow-y-auto p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        {t(
-                          'Ophthalmologist.screeningReview.detectedFindings',
-                          'Detected Findings'
-                        )}{' '}
-                        ({sidebarFindings.length})
-                      </p>
+                      <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                        {t('Ophthalmologist.screeningReview.findings.heading', 'Detected Findings')}
+                      </h3>
                       <button
                         onClick={() => {
                           if (!isFinalizedDiagnosis) setIsAddingFinding(true);
                         }}
                         disabled={isFinalizedDiagnosis}
                         className="p-1 text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors disabled:opacity-50"
-                        title="Thêm thẻ (Add finding)"
+                        title={t('Ophthalmologist.screeningReview.toolbox.addFinding', 'Thêm thẻ (Add finding)')}
                       >
                         <PlusSquare className="w-4 h-4" />
                       </button>
@@ -2434,7 +2442,7 @@ export default function ScreeningReviewPage() {
                       <div className="mb-4 space-y-3 p-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-sm">
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold uppercase text-gray-400">
-                            Tên bệnh / Dấu hiệu
+                            {t('Ophthalmologist.screeningReview.findings.nameLabel', 'Tên bệnh / Dấu hiệu')}
                           </label>
                           <input
                             type="text"
@@ -2442,7 +2450,7 @@ export default function ScreeningReviewPage() {
                             value={newFindingName}
                             onChange={(e) => setNewFindingName(e.target.value)}
                             list="finding-name-suggestions"
-                            placeholder="Nhập tên..."
+                            placeholder={t('Ophthalmologist.screeningReview.findings.namePlaceholder', 'Nhập tên...')}
                             className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
                           />
                           <datalist id="finding-name-suggestions">
@@ -2459,14 +2467,14 @@ export default function ScreeningReviewPage() {
 
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold uppercase text-gray-400">
-                            Mô tả chi tiết
+                            {t('Ophthalmologist.screeningReview.findings.descriptionLabel', 'Mô tả chi tiết')}
                           </label>
                           <textarea
                             value={newFindingDescription}
                             onChange={(e) =>
                               setNewFindingDescription(e.target.value)
                             }
-                            placeholder="Nhập mô tả..."
+                            placeholder={t('Ophthalmologist.screeningReview.findings.descriptionPlaceholder', 'Nhập mô tả...')}
                             rows={2}
                             className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none"
                           />
@@ -2475,25 +2483,25 @@ export default function ScreeningReviewPage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <label className="text-[10px] font-bold uppercase text-gray-400 mr-1">
-                              Rủi ro:
+                              {t('Ophthalmologist.screeningReview.findings.severityLabel', 'Rủi ro:')}
                             </label>
                             <button
                               type="button"
                               onClick={() => setNewFindingSeverity('low')}
                               className={`w-6 h-6 rounded-full bg-yellow-400 border-2 transition-all ${newFindingSeverity === 'low' ? 'border-white ring-2 ring-yellow-400 scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                              title="Low (Yellow)"
+                              title={t('Ophthalmologist.screeningReview.findings.severity.low', 'Low (Yellow)')}
                             />
                             <button
                               type="button"
                               onClick={() => setNewFindingSeverity('moderate')}
                               className={`w-6 h-6 rounded-full bg-orange-500 border-2 transition-all ${newFindingSeverity === 'moderate' ? 'border-white ring-2 ring-orange-500 scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                              title="Moderate (Orange)"
+                              title={t('Ophthalmologist.screeningReview.findings.severity.moderate', 'Moderate (Orange)')}
                             />
                             <button
                               type="button"
                               onClick={() => setNewFindingSeverity('high')}
                               className={`w-6 h-6 rounded-full bg-red-600 border-2 transition-all ${newFindingSeverity === 'high' ? 'border-white ring-2 ring-red-600 scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                              title="High (Red)"
+                              title={t('Ophthalmologist.screeningReview.findings.severity.high', 'High (Red)')}
                             />
                           </div>
                           <div className="flex items-center gap-2">
@@ -2501,7 +2509,7 @@ export default function ScreeningReviewPage() {
                               onClick={() => setIsAddingFinding(false)}
                               className="px-3 py-1.5 text-[11px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
                             >
-                              Hủy
+                              {t('Ophthalmologist.common.cancel', 'Hủy')}
                             </button>
                             <button
                               onClick={() => {
@@ -2585,7 +2593,7 @@ export default function ScreeningReviewPage() {
                               }}
                               disabled={isFinalizedDiagnosis}
                               className="p-1 text-gray-400 hover:text-red-500 transition-colors ml-2"
-                              title="Delete Finding"
+                              title={t('Ophthalmologist.screeningReview.findings.deleteFinding', 'Delete Finding')}
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
@@ -2787,7 +2795,7 @@ export default function ScreeningReviewPage() {
                     )}
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Mời đồng nghiệp hỗ trợ chẩn đoán ca bệnh khẩn cấp
+                    {t('Ophthalmologist.screeningReview.consiliumModal.subtitle', 'Mời đồng nghiệp hỗ trợ chẩn đoán ca bệnh khẩn cấp')}
                   </p>
                 </div>
               </div>
@@ -2802,12 +2810,12 @@ export default function ScreeningReviewPage() {
             <div className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Chọn bác sĩ đang trực (Available)
+                  {t('Ophthalmologist.screeningReview.consiliumModal.selectDoctorLabel', 'Chọn bác sĩ đang trực (Available)')}
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
                   {candidateDoctors.length === 0 ? (
                     <div className="col-span-2 py-8 text-center text-gray-500">
-                      Không tìm thấy bác sĩ nào đang sẵn sàng.
+                      {t('Ophthalmologist.screeningReview.consiliumModal.noDoctorsAvailable', 'Không tìm thấy bác sĩ nào đang sẵn sàng.')}
                     </div>
                   ) : (
                     candidateDoctors.map((doc) => (
@@ -2823,7 +2831,7 @@ export default function ScreeningReviewPage() {
                               setSelectedDoctors([...selectedDoctors, doc.id]);
                             } else {
                               ophthalToast.info(
-                                'Tối đa mời 3 bác sĩ hội chẩn.'
+                                t('Ophthalmologist.screeningReview.consiliumModal.maxDoctorsToast', 'Tối đa mời 3 bác sĩ hội chẩn.')
                               );
                             }
                           }
@@ -2853,7 +2861,7 @@ export default function ScreeningReviewPage() {
                             </p>
                           )}
                           <p className="text-xs text-green-600 dark:text-green-400">
-                            ● Đang rảnh
+                            ● {t('Ophthalmologist.screeningReview.consiliumModal.doctorAvailable', 'Đang rảnh')}
                           </p>
                         </div>
                         {selectedDoctors.includes(doc.id) && (
@@ -2869,12 +2877,12 @@ export default function ScreeningReviewPage() {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Lý do hội chẩn
+                  {t('Ophthalmologist.screeningReview.consiliumModal.reasonLabel', 'Lý do hội chẩn')}
                 </label>
                 <textarea
                   value={consiliumReason}
                   onChange={(e) => setConsiliumReason(e.target.value)}
-                  placeholder="Nhập lý do cần hỗ trợ (ví dụ: Hình ảnh đáy mắt không rõ ràng, nghi ngờ glôcôm...)"
+                  placeholder={t('Ophthalmologist.screeningReview.consiliumModal.reasonPlaceholder', 'Nhập lý do cần hỗ trợ (ví dụ: Hình ảnh đáy mắt không rõ ràng, nghi ngờ glôcôm...)')}
                   className="w-full h-24 px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/30 border border-gray-200 dark:border-[#1e3a5f] rounded-2xl text-sm focus:ring-2 focus:ring-amber-500/50 outline-none transition-all resize-none"
                 />
               </div>
@@ -2894,7 +2902,7 @@ export default function ScreeningReviewPage() {
                 <span className="text-sm font-bold text-red-700 dark:text-red-400">
                   🚨 Ca Khẩn Cấp (Emergency) —{' '}
                   <span className="font-normal">
-                    Thông báo ưu tiên cao tới bác sĩ được mời
+                    {t('Ophthalmologist.screeningReview.consiliumModal.emergencyDescription', 'Thông báo ưu tiên cao tới bác sĩ được mời')}
                   </span>
                 </span>
               </label>
@@ -2905,7 +2913,7 @@ export default function ScreeningReviewPage() {
                 onClick={() => setShowConsiliumModal(false)}
                 className="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               >
-                Hủy
+                {t('Ophthalmologist.common.cancel', 'Hủy')}
               </button>
               <button
                 onClick={() => void handleRequestConsilium()}
@@ -2917,7 +2925,7 @@ export default function ScreeningReviewPage() {
                 ) : (
                   <Send className="w-4 h-4" />
                 )}
-                Gửi yêu cầu khẩn cấp
+                {t('Ophthalmologist.screeningReview.consiliumModal.sendEmergencyRequest', 'Gửi yêu cầu khẩn cấp')}
               </button>
             </div>
           </div>

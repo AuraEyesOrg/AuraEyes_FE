@@ -857,7 +857,20 @@
           "verified": "Verified",
           "pending": "Pending",
           "expired": "Expired"
-        }
+        },
+        "medicalDegrees": "Medical Degrees",
+        "licensesCertificates": "Licenses & Certificates",
+        "degreeName": "Degree Name",
+        "degreeLevel": "Degree Level",
+        "issuingAuthority": "Issuing Authority",
+        "issuedDate": "Issued Date",
+        "expiryDate": "Expiry Date",
+        "uploadDocument": "Upload Document",
+        "certificateName": "Certificate Name",
+        "addAnotherDegree": "Add Another Degree",
+        "addAnotherCertificate": "Add Another Certificate",
+        "updateTitle": "Update Credential",
+        "uploadTitle": "Upload Credentials"
       },
       "wallet": {
         "title": "Wallet",
@@ -5352,24 +5365,27 @@
           "title": "Image Acquisition",
           "subtitle": "Select or drag retinal scan files for processing.",
           "dropzone": {
-            "title": "Drag files or click to browse",
-            "supportedFormats": "Supported formats: JPG, PNG, TIFF (Max 50MB per file)"
-          },
-          "analyzingQuality": "Analyzing image quality..."
         },
-        "quality": {
-          "notFundus": "Not a clear retinal scan.",
-          "croppedEdges": "Image appears cropped.",
-          "blurry": "Image appears blurry.",
-          "tooDark": "Image appears too dark.",
-          "overexposed": "Image appears overexposed.",
-          "optimal": "Optimal quality",
-          "acceptable": "Acceptable quality",
-          "poor": "Poor quality",
-          "validationServiceError": "Validation service error."
+        "findings": {
+          "namePlaceholder": "Enter name...",
+          "descriptionLabel": "Detailed description",
+          "descriptionPlaceholder": "Enter description...",
+          "detectedFindings": "Detected Findings",
+          "finding": "Finding",
+          "nameLabel": "Disease Name / Sign",
+          "riskLabel": "Risk:",
+          "severityLow": "Low (Yellow)",
+          "severityModerate": "Moderate (Orange)",
+          "severityHigh": "High (Red)"
         },
-        "launch": {
-          "title": "Launch Diagnostic Model",
+        "consiliumButton": "Request Consilium",
+        "consiliumModal": {
+          "subtitle": "Invite colleagues to support urgent case diagnosis",
+          "noDoctorsAvailable": "No doctors currently available.",
+          "maxDoctorsToast": "Maximum 3 doctors can be invited for consilium.",
+          "availableStatus": "Available",
+          "emergencyDescription": "High priority notification will be sent to invited doctors",
+          "sendEmergencyRequest": "Send Emergency Request",
           "readyDescription": "System is ready to process {{count}} scan(s). This will consume 1 AI screening credit.",
           "clinicalAdvisory": {
             "title": "Clinical Advisory",
@@ -6216,6 +6232,39 @@
         "success": "Detected!"
       },
       "title": "Scan QR Check-in"
+    },
+    "caseSnapshot": {
+      "alt": "AI annotated retinal image",
+      "noImage": "No AI image",
+      "openReview": "Open full AI screening review"
+    },
+    "urgentAIAlerts": {
+      "title": "Urgent AI Alerts",
+      "viewAll": "View all",
+      "aiConfidence": "AI Confidence",
+      "reviewNow": "Review Now",
+      "verify": "Verify"
+    },
+    "screeningQueue": {
+      "title": "Screening Queue",
+      "filter": "Filter",
+      "sort": "Sort",
+      "patientDetails": "Patient Details",
+      "scanDate": "Scan Date",
+      "aiPrediction": "AI Prediction",
+      "confidence": "Confidence",
+      "status": "Status",
+      "action": "Action",
+      "aiAnalyzed": "AI Analyzed",
+      "flaggedForReview": "Flagged for Review",
+      "reviewed": "Reviewed",
+      "pending": "Pending",
+      "check": "Check",
+      "quickApprove": "Quick Approve",
+      "startReview": "Start Review",
+      "pagination": "Showing {{showing}} of {{total}} pending reviews",
+      "previous": "Previous",
+      "next": "Next"
     }
   }
 }
