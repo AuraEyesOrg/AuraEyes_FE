@@ -4829,6 +4829,63 @@
         "addWalkIn": "Thêm bệnh nhân vãng lai",
         "addWalkInDesc": "Đăng ký bệnh nhân vãng lai mới"
       }
+    },
+    "sidebar": {
+      "items": {
+        "dashboard": "Bảng điều khiển",
+        "staff-management": "Quản lý nhân viên",
+        "leave-requests": "Yêu cầu nghỉ phép",
+        "patients": "Bệnh nhân",
+        "transaction-ledger": "Sổ cái thanh toán",
+        "refund-requests": "Yêu cầu hoàn tiền",
+        "scheduling": "Lập lịch",
+        "permissions": "Phân quyền",
+        "audit-logs": "Nhật ký hệ thống",
+        "settings": "Cài đặt",
+        "aura-network": "Aura Network"
+      }
+    },
+    "cashflow": {
+      "title": "Quản lý thanh toán",
+      "description": "Theo dõi tất cả đơn thanh toán khám chữa bệnh của bệnh nhân trên toàn hệ thống.",
+      "stats": {
+        "totalVolume": "Tổng doanh thu",
+        "pendingAmount": "Tổng chờ thanh toán",
+        "completedOrders": "Tổng số đơn hàng"
+      },
+      "filterOptions": {
+        "all": "Tất cả",
+        "completed": "Hoàn thành",
+        "pending": "Chờ",
+        "cancelled": "Đã hủy/Hoàn"
+      },
+      "status": {
+        "pending": "Chờ thanh toán",
+        "confirmed": "Đã xác nhận",
+        "processing": "Đang xử lý",
+        "completed": "Hoàn thành",
+        "cancelled": "Đã hủy",
+        "refunded": "Hoàn tiền",
+        "partiallyPaid": "Thanh toán cọc",
+        "fullyPaid": "Đã tất toán",
+        "cancellationRequested": "Chờ hoàn tiền"
+      },
+      "table": {
+        "list": "Danh sách đơn hàng",
+        "patientFallback": "Bệnh nhân",
+        "defaultDescription": "Thanh toán dịch vụ y tế",
+        "onlineDeposit": "Đặt cọc Online",
+        "fullPayment": "Tất toán đơn hàng",
+        "refundedDeposit": "Đã hoàn tiền",
+        "paidLabel": "Đã nhận",
+        "deposited": "Đã cọc",
+        "remaining": "Còn lại"
+      },
+      "pagination": {
+        "previous": "Trước",
+        "next": "Sau",
+        "page": "Trang"
+      }
     }
   },
   "ProfessionalNetwork": {
@@ -8234,7 +8291,13 @@
     "description": {
       "medicationAndService": "Thanh toán thuốc & dịch vụ",
       "deposit": "Đặt cọc khám",
-      "finalPayment": "Thanh toán nốt khám"
+      "finalPayment": "Thanh toán nốt khám",
+      "refund": "Hoàn tiền:",
+      "methods": {
+        "Cash": "Tiền mặt",
+        "PayOS": "PayOS QR",
+        "BankTransfer": "Chuyển khoản"
+      }
     },
     "orderDetails": {
       "patientLabel": "BỆNH NHÂN",

@@ -4090,6 +4090,48 @@
         "aura-network": "Aura Network"
       }
     },
+    "cashflow": {
+      "title": "Payment Transactions",
+      "description": "Monitor all patient clinic payments across the entire system.",
+      "stats": {
+        "totalVolume": "Total Revenue",
+        "pendingAmount": "Total Pending",
+        "completedOrders": "Total Orders"
+      },
+      "filterOptions": {
+        "all": "All",
+        "completed": "Completed",
+        "pending": "Pending",
+        "cancelled": "Cancelled/Refund"
+      },
+      "status": {
+        "pending": "Pending Payment",
+        "confirmed": "Confirmed",
+        "processing": "Processing",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded",
+        "partiallyPaid": "Deposit Paid",
+        "fullyPaid": "Fully Paid",
+        "cancellationRequested": "Refund Pending"
+      },
+      "table": {
+        "list": "Order List",
+        "patientFallback": "Patient",
+        "defaultDescription": "Medical Service Payment",
+        "onlineDeposit": "Online Deposit",
+        "fullPayment": "Full Payment",
+        "refundedDeposit": "Refunded Deposit",
+        "paidLabel": "Received",
+        "deposited": "Deposited",
+        "remaining": "Remaining"
+      },
+      "pagination": {
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page"
+      }
+    },
     "refundRequests": {
       "title": "Refund Requests",
       "description": "Process refunds for cancelled appointments",
@@ -5587,7 +5629,13 @@
     "description": {
       "medicationAndService": "Medication & Service Payment",
       "deposit": "Online Deposit",
-      "finalPayment": "Final Payment"
+      "finalPayment": "Final Payment",
+      "refund": "Refund:",
+      "methods": {
+        "Cash": "Cash",
+        "PayOS": "PayOS",
+        "BankTransfer": "Bank Transfer"
+      }
     },
     "orderDetails": {
       "patientLabel": "PATIENT",
