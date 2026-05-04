@@ -15,6 +15,7 @@ import {
   X,
   Loader2,
   CreditCard,
+  Search,
 } from 'lucide-react';
 import ClinicStaffLayout from '../components/ClinicStaffLayout';
 import { formatCurrency } from '@/lib/helper';
@@ -48,18 +49,6 @@ export default function CashierPage() {
     queryFn: () => clinicQueueApi.getPaymentContext(effectiveVisitId!),
     enabled: Boolean(effectiveVisitId),
   });
-
-  const finalizedVisits = useMemo(
-    () =>
-      (queueQuery.data ?? []).filter((item) => item.flowState === 'Finalized'),
-    [queueQuery.data]
-  );
-
-  const activeVisit = useMemo(
-    () =>
-      finalizedVisits.find((item) => item.visitId === effectiveVisitId) ?? null,
-    [effectiveVisitId, finalizedVisits]
-  );
 
   useEffect(() => {
     if (visitIdFromQuery && visitIdFromQuery !== selectedVisitId) {
@@ -106,6 +95,7 @@ export default function CashierPage() {
   ]);
 
   const paymentContext = paymentContextQuery.data;
+  const [searchQuery, setSearchQuery] = useState('');
   const [medicinePriceInputs, setMedicinePriceInputs] = useState<
     Record<string, string>
   >({});
@@ -141,20 +131,34 @@ export default function CashierPage() {
     'PayOS'
   );
 
+  const [showCashSuccess, setShowCashSuccess] = useState(false);
+  const [lastPaidVisitName, setLastPaidVisitName] = useState<string | null>(
+    null
+  );
+
   const paymentMutation = useMutation({
     mutationFn: (payload: any) =>
       clinicQueueApi.createClinicPayment(effectiveVisitId!, payload),
     onSuccess: (data, variables) => {
+      // Capture name for success screen before it disappears from queue
+      setLastPaidVisitName(activeVisit?.patientName || null);
+
       if (variables.method === 'Cash') {
         toast.success(
           translate('Cashier.toast.cashSuccess', {
             defaultValue: 'Thanh toán tiền mặt thành công',
           })
         );
+
+        // Show local success state for Cash
+        setShowCashSuccess(true);
+
+        // Clear inputs
+        setMedicinePriceInputs({});
+        setServiceFeeInput('');
+
+        // Refetch to update the queue list
         queueQuery.refetch();
-        paymentContextQuery.refetch();
-        setSelectedVisitId(null);
-        setSearchParams(new URLSearchParams());
       } else {
         toast.success(translate('Cashier.toast.createSuccess'));
         window.location.href = data.paymentUrl;
@@ -168,6 +172,36 @@ export default function CashierPage() {
       toast.error(message);
     },
   });
+
+  const finalizedVisits = useMemo(() => {
+    let visits = (queueQuery.data ?? []).filter(
+      (item) => item.flowState === 'Finalized'
+    );
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      visits = visits.filter(
+        (v) =>
+          v.patientName.toLowerCase().includes(query) ||
+          v.visitId.toLowerCase().includes(query)
+      );
+    }
+
+    return visits;
+  }, [queueQuery.data, searchQuery]);
+
+  // Sync selectedVisitId with URL but also handle filtering
+  const activeVisit = useMemo(
+    () => finalizedVisits.find((v) => v.visitId === effectiveVisitId),
+    [finalizedVisits, effectiveVisitId]
+  );
+
+  // Reset success state when selecting a new visit
+  useEffect(() => {
+    if (selectedVisitId && !showCashSuccess) {
+      setLastPaidVisitName(null);
+    }
+  }, [selectedVisitId, showCashSuccess]);
 
   const handlePayment = () => {
     if (!effectiveVisitId || !paymentContext) return;
@@ -242,11 +276,27 @@ export default function CashierPage() {
 
         <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
           <aside className="h-fit rounded-3xl border border-(--border-color) bg-(--bg-primary) p-5 md:p-6 xl:sticky xl:top-24">
-            <div className="flex items-start justify-between gap-3">
-              <div>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-start justify-between gap-3">
                 <h2 className="text-lg font-semibold text-(--text-primary)">
                   {translate('Cashier.queue.title')}
                 </h2>
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                  <Search className="h-4 w-4 text-(--text-muted) transition-colors group-focus-within:text-brand" />
+                </div>
+                <input
+                  type="text"
+                  placeholder={translate('Cashier.queue.searchPlaceholder', {
+                    defaultValue: 'Tìm bệnh nhân, ID...',
+                  })}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full h-11 pl-10 pr-4 text-sm bg-(--bg-secondary) border border-(--border-color) rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all placeholder:text-(--text-muted)"
+                />
               </div>
             </div>
 
@@ -379,20 +429,25 @@ export default function CashierPage() {
               </div>
             )}
 
-            {isPaidSuccess && effectiveVisitId && (
+            {(isPaidSuccess || showCashSuccess) && effectiveVisitId && (
               <div className="mt-5 flex flex-col items-center justify-center rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-10 text-center animate-in fade-in zoom-in duration-500">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-600">
                   <CheckCircle2 className="h-10 w-10" />
                 </div>
                 <h3 className="mt-5 text-xl font-bold text-(--text-primary)">
-                  {translate('Cashier.pricingPanel.paymentSuccessTitle')}
+                  {translate('Cashier.pricingPanel.paymentSuccessTitle', {
+                    defaultValue: 'Thanh toán thành công',
+                  })}
                 </h3>
                 <p className="mt-2 max-w-[30ch] text-sm text-(--text-secondary)">
                   <Trans
                     i18nKey={
                       'Cashier.pricingPanel.paymentSuccessDescription' as any
                     }
-                    values={{ name: activeVisit?.patientName || 'này' }}
+                    values={{
+                      name:
+                        lastPaidVisitName || activeVisit?.patientName || 'này',
+                    }}
                   >
                     Ca khám của bệnh nhân{' '}
                     <span className="font-semibold text-emerald-600">
@@ -402,23 +457,38 @@ export default function CashierPage() {
                   </Trans>
                 </p>
 
-                <div className="mt-8 flex gap-3">
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedVisitId(null);
-                      setSearchParams(new URLSearchParams());
+                      setSearchParams({}, { replace: true });
+                      setShowCashSuccess(false);
+                      setLastPaidVisitName(null);
                     }}
-                    className="inline-flex items-center gap-2 rounded-xl border border-(--border-color) bg-(--bg-primary) px-5 py-2.5 text-sm font-semibold text-(--text-primary) transition hover:bg-(--bg-secondary)"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-500 bg-emerald-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-600 hover:-translate-y-0.5 active:scale-95"
+                  >
+                    {translate('Cashier.pricingPanel.backToList', {
+                      defaultValue: 'Tiếp tục thu ngân',
+                    })}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.location.href = '/clinic-staff/dashboard';
+                    }}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-(--border-color) bg-(--bg-primary) px-6 py-3 text-sm font-semibold text-(--text-primary) transition hover:bg-(--bg-secondary) hover:-translate-y-0.5 active:scale-95"
                   >
                     <ArrowLeft className="h-4 w-4" />
-                    {translate('Cashier.pricingPanel.backToList')}
+                    {translate('Cashier.pricingPanel.backToDashboard', {
+                      defaultValue: 'Về trang chủ',
+                    })}
                   </button>
                 </div>
               </div>
             )}
 
-            {!isPaidSuccess && paymentContext && (
+            {!(isPaidSuccess || showCashSuccess) && paymentContext && (
               <CashierPricingPanel
                 context={paymentContext}
                 fallbackDoctorName={activeVisit?.assignedDoctorName}
