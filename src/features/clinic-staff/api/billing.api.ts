@@ -9,6 +9,8 @@ export interface PaginatedOrdersResponse {
   totalPages: number;
   hasPrevious: boolean;
   hasNext: boolean;
+  totalRevenue: number;
+  totalPending: number;
 }
 
 export const getAllOrders = async (
