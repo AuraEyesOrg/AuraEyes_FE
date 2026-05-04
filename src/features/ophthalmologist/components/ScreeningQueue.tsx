@@ -77,7 +77,10 @@ function getPredictionStyle(type: ConditionType): {
   }
 }
 
-function getStatusStyle(status: PatientStatus): {
+function getStatusStyle(
+  status: PatientStatus,
+  t: (key: string, fallback?: string) => string
+): {
   icon: string;
   text: string;
   color: string;
@@ -176,7 +179,7 @@ export default function ScreeningQueue({ queue }: ScreeningQueueProps) {
               const predictionStyle = getPredictionStyle(
                 patient.predictionType
               );
-              const statusStyle = getStatusStyle(patient.status);
+              const statusStyle = getStatusStyle(patient.status, t);
               const confidenceColor = getConfidenceColor(patient.confidence);
 
               return (
