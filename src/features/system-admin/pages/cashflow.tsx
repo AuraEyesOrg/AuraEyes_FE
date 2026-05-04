@@ -11,22 +11,21 @@ import {
   AlertCircle,
   X,
   Wallet,
-  ArrowUp,
-  ArrowDown,
-  BarChart3,
-  DollarSign,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import { getAllOrders } from '@/features/clinic-staff/api/billing.api';
-import type {
+import { formatDateTimeWithYear } from '@/lib/date-utils';
+import {
   OrderStatus,
   PaymentStatus,
 } from '@/features/patient/types/financial.types';
-import { formatCurrency } from '@/lib/helper';
+import { formatCurrency, cleanDescription } from '@/lib/helper';
 import { useQuery } from '@tanstack/react-query';
 
 type FilterType = 'all' | 'completed' | 'pending' | 'cancelled';
+
+type TransactionRow = any;
 
 // We move the labels inside the component to use the 't' function reactively
 const PAYMENT_STATUS_COLOR: Record<PaymentStatus, string> = {
@@ -41,47 +40,103 @@ const PAYMENT_STATUS_COLOR: Record<PaymentStatus, string> = {
 export default function CashflowPage() {
   const { t } = useTranslation();
 
-  const ORDER_STATUS_LABEL: Record<OrderStatus, string> = useMemo(
+  const translateDescription = (description: string) => {
+    if (!description) return '';
+
+    // 1. Clean metadata
+    let result = cleanDescription(description);
+
+    // 2. Map of common phrases to translate
+    const phraseMap = [
+      {
+        vi: 'Thanh toán thuốc & dịch vụ',
+        key: 'description.medicationAndService',
+        def: 'Medication & Service Payment',
+      },
+      { vi: 'Đặt cọc khám', key: 'description.deposit', def: 'Online Deposit' },
+      {
+        vi: 'Thanh toán nốt khám',
+        key: 'description.finalPayment',
+        def: 'Final Payment',
+      },
+      {
+        vi: 'Hoàn tiền:',
+        key: 'description.refund',
+        def: 'Refund:',
+      },
+      {
+        vi: 'Refund:',
+        key: 'description.refund',
+        def: 'Refund:',
+      },
+    ];
+
+    phraseMap.forEach(({ vi, key, def }) => {
+      const regex = new RegExp(vi, 'gi'); // Case-insensitive
+      if (regex.test(result)) {
+        result = result.replace(
+          regex,
+          t(`ClinicStaffBilling.${key}`, { defaultValue: def })
+        );
+      }
+    });
+
+    // 3. Map of labels to translate
+    const labelMap = [
+      {
+        vi: 'BN:',
+        en: `${t('ClinicStaffBilling.orderDetails.patientLabelShort', { defaultValue: 'PT' })}:`,
+      },
+      {
+        vi: 'BS:',
+        en: `${t('ClinicStaffBilling.orderDetails.doctorLabelShort', { defaultValue: 'DR' })}:`,
+      },
+      {
+        vi: 'Đơn',
+        en: t('ClinicStaffBilling.orderDetails.orderLabel', {
+          defaultValue: 'Order',
+        }),
+      },
+    ];
+
+    labelMap.forEach(({ vi, en }) => {
+      const regex = new RegExp(vi, 'g');
+      result = result.replace(regex, en);
+    });
+
+    return result;
+  };
+
+  const ORDER_STATUS_LABEL: Record<string, string> = useMemo(
     () => ({
-      Pending: t('SystemAdmin.cashflow.status.pending', {
-        defaultValue: 'Chờ thanh toán',
+      Pending: t('ClinicStaffBilling.filters.pending', {
+        defaultValue: 'Pending',
       }),
-      Confirmed: t('SystemAdmin.cashflow.status.confirmed', {
-        defaultValue: 'Đã xác nhận',
+      PartiallyPaid: t('ClinicStaffBilling.status.partiallyPaid', {
+        defaultValue: 'Deposit Paid',
       }),
-      Processing: t('SystemAdmin.cashflow.status.processing', {
-        defaultValue: 'Đang xử lý',
+      Confirmed: t('ClinicStaffBilling.status.partiallyPaid', {
+        defaultValue: 'Deposit Paid',
       }),
-      Completed: t('SystemAdmin.cashflow.status.completed', {
-        defaultValue: 'Hoàn thành',
+      FullyPaid: t('ClinicStaffBilling.status.fullyPaid', {
+        defaultValue: 'Fully Paid',
       }),
-      Cancelled: t('SystemAdmin.cashflow.status.cancelled', {
-        defaultValue: 'Đã hủy',
+      Completed: t('ClinicStaffBilling.status.fullyPaid', {
+        defaultValue: 'Fully Paid',
       }),
-      Refunded: t('SystemAdmin.cashflow.status.refunded', {
-        defaultValue: 'Hoàn tiền',
+      Cancelled: t('ClinicStaffBilling.filters.cancelled', {
+        defaultValue: 'Cancelled',
       }),
-      PartiallyPaid: t('SystemAdmin.cashflow.status.partiallyPaid', {
-        defaultValue: 'Thanh toán cọc',
+      Refunded: t('ClinicStaffBilling.description.refund', {
+        defaultValue: 'Refunded',
       }),
-      FullyPaid: t('SystemAdmin.cashflow.status.fullyPaid', {
-        defaultValue: 'Đã tất toán',
-      }),
-      CancellationRequested: t(
-        'SystemAdmin.cashflow.status.cancellationRequested',
-        {
-          defaultValue: 'Chờ hoàn tiền',
-        }
-      ),
     }),
     [t]
   );
+
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 15;
-
-  const [sortBy, setSortBy] = useState<string>('createdAt');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const query = useQuery({
     queryKey: ['system-admin', 'orders', page, activeFilter],
@@ -91,82 +146,71 @@ export default function CashflowPage() {
 
   const orders = query.data?.items ?? [];
 
+  // ── Filter ──────────────────────────────────────────────────────────────────
   const visibleOrders = useMemo(() => {
-    let result = [...orders];
-    if (activeFilter === 'completed') {
-      result = result.filter(
-        (o) => o.status === 'Completed' || o.status === 'Confirmed'
+    if (activeFilter === 'all') return orders;
+    if (activeFilter === 'completed')
+      return orders.filter(
+        (o) =>
+          o.status === 'Completed' ||
+          o.status === 'Confirmed' ||
+          o.status === 'PartiallyPaid' ||
+          o.status === 'FullyPaid'
       );
-    } else if (activeFilter === 'pending') {
-      result = result.filter(
+    if (activeFilter === 'pending')
+      return orders.filter(
         (o) => o.status === 'Pending' || o.status === 'Processing'
       );
-    } else if (activeFilter === 'cancelled') {
-      result = result.filter(
+    if (activeFilter === 'cancelled')
+      return orders.filter(
         (o) => o.status === 'Cancelled' || o.status === 'Refunded'
       );
-    }
+    return orders;
+  }, [activeFilter, orders]);
 
-    // Sort
-    result.sort((a, b) => {
-      const valA = a[sortBy as keyof typeof a];
-      const valB = b[sortBy as keyof typeof b];
-
-      if (valA === valB) return 0;
-      if (valA === null || valA === undefined) return 1;
-      if (valB === null || valB === undefined) return -1;
-
-      const factor = sortDirection === 'asc' ? 1 : -1;
-      return valA < valB ? -factor : factor;
-    });
-
-    return result;
-  }, [activeFilter, orders, sortBy, sortDirection]);
+  // ── Flatten Orders to Transactions ──────────────────────────────────────────
+  const visibleTransactions = useMemo<any[]>(() => {
+    return visibleOrders.flatMap((order) => {
+      if (!order.payments || order.payments.length === 0) {
+        return [{ ...order, currentPayment: null, paymentIndex: 0 }] as any[];
+      }
+      // Sort payments by date to keep history chronological
+      const sortedPayments = [...order.payments].sort(
+        (a, b) =>
+          new Date(a.paidAt || order.createdAt).getTime() -
+          new Date(b.paidAt || order.createdAt).getTime()
+      );
+      return sortedPayments.map((p, index) => ({
+        ...order,
+        currentPayment: p,
+        paymentIndex: index,
+      }));
+    }) as any[];
+  }, [visibleOrders]);
 
   const summary = useMemo(() => {
-    const completedOrders = orders.filter(
-      (o) => o.status === 'Completed' || o.status === 'Confirmed'
-    );
-    const pendingOrders = orders.filter(
-      (o) => o.status === 'Pending' || o.status === 'Processing'
-    );
-    const totalRevenue = completedOrders.reduce((s, o) => s + o.totalAmount, 0);
-    const totalPending = pendingOrders.reduce((s, o) => s + o.totalAmount, 0);
-
     return {
-      totalRevenue,
-      totalPending,
+      totalRevenue: query.data?.totalRevenue ?? 0,
+      totalPending: query.data?.totalPending ?? 0,
       orderCount: query.data?.totalCount ?? 0,
     };
-  }, [orders, query.data?.totalCount]);
+  }, [query.data]);
 
   const getOrderStatusIcon = (status: OrderStatus) => {
-    if (status === 'Completed' || status === 'Confirmed')
+    if (
+      status === 'Completed' ||
+      status === 'Confirmed' ||
+      status === 'FullyPaid'
+    )
       return (
         <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
       );
-    if (status === 'Refunded' || status === 'CancellationRequested')
-      return <X className="w-5 h-5 text-purple-600 dark:text-purple-400" />;
+    if (status === 'Refunded')
+      return (
+        <History className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+      );
     if (status === 'Cancelled') return <X className="w-5 h-5 text-slate-400" />;
     return <ShoppingCart className="w-5 h-5 text-amber-500" />;
-  };
-
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortDirection('desc');
-    }
-  };
-
-  const renderSortIcon = (column: string) => {
-    if (sortBy !== column) return null;
-    return sortDirection === 'asc' ? (
-      <ArrowUp className="w-3.5 h-3.5 ml-1 inline-block text-slate-500" />
-    ) : (
-      <ArrowDown className="w-3.5 h-3.5 ml-1 inline-block text-slate-500" />
-    );
   };
 
   return (
@@ -189,15 +233,15 @@ export default function CashflowPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <SummaryCard
               title={t('SystemAdmin.cashflow.stats.totalVolume', {
-                defaultValue: 'Tổng doanh thu (Trang này)',
+                defaultValue: 'Tổng doanh thu',
               })}
               value={formatCurrency(summary.totalRevenue, { absolute: true })}
               tone="emerald"
-              icon={DollarSign}
+              icon={Wallet}
             />
             <SummaryCard
               title={t('SystemAdmin.cashflow.stats.pendingAmount', {
-                defaultValue: 'Tổng chờ (Trang này)',
+                defaultValue: 'Tổng chờ thanh toán',
               })}
               value={formatCurrency(summary.totalPending, { absolute: true })}
               tone="amber"
@@ -209,7 +253,7 @@ export default function CashflowPage() {
               })}
               value={summary.orderCount.toString()}
               tone="violet"
-              icon={BarChart3}
+              icon={ShoppingCart}
             />
           </div>
 
@@ -223,38 +267,46 @@ export default function CashflowPage() {
                 })}
               </h2>
 
-              {/* Filter tabs */}
-              <div className="inline-flex rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-1">
-                {(
-                  ['all', 'completed', 'pending', 'cancelled'] as FilterType[]
-                ).map((option) => (
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                {[
+                  {
+                    id: 'all',
+                    label: t('ClinicStaffBilling.filters.all', {
+                      defaultValue: 'All',
+                    }),
+                  },
+                  {
+                    id: 'completed',
+                    label: t('ClinicStaffBilling.filters.completed', {
+                      defaultValue: 'Completed',
+                    }),
+                  },
+                  {
+                    id: 'pending',
+                    label: t('ClinicStaffBilling.filters.pending', {
+                      defaultValue: 'Pending',
+                    }),
+                  },
+                  {
+                    id: 'cancelled',
+                    label: t('ClinicStaffBilling.filters.cancelled', {
+                      defaultValue: 'Cancelled',
+                    }),
+                  },
+                ].map((f) => (
                   <button
-                    key={option}
+                    key={f.id}
                     onClick={() => {
-                      setActiveFilter(option);
+                      setActiveFilter(f.id as FilterType);
                       setPage(1);
                     }}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                      activeFilter === option
+                    className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                      activeFilter === f.id
                         ? 'bg-white dark:bg-slate-700 text-brand shadow-sm'
                         : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                     }`}
                   >
-                    {option === 'all'
-                      ? t('SystemAdmin.cashflow.filters.all', {
-                          defaultValue: 'Tất cả',
-                        })
-                      : option === 'completed'
-                        ? t('SystemAdmin.cashflow.filters.completed', {
-                            defaultValue: 'Hoàn thành',
-                          })
-                        : option === 'pending'
-                          ? t('SystemAdmin.cashflow.filters.pending', {
-                              defaultValue: 'Chờ',
-                            })
-                          : t('SystemAdmin.cashflow.filters.failed', {
-                              defaultValue: 'Đã hủy/Hoàn',
-                            })}
+                    {f.label}
                   </button>
                 ))}
               </div>
@@ -284,7 +336,7 @@ export default function CashflowPage() {
                 <AlertCircle className="w-10 h-10 mx-auto mb-3" />
                 <p>
                   {t('SystemAdmin.cashflow.error', {
-                    defaultValue: 'Lỗi khi tải dữ liệu đơn hàng',
+                    defaultValue: 'Error loading order data',
                   })}
                 </p>
               </div>
@@ -295,146 +347,196 @@ export default function CashflowPage() {
                 <History className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <p className="text-slate-500 font-medium">
                   {t('SystemAdmin.cashflow.noData', {
-                    defaultValue: 'Không tìm thấy đơn hàng nào',
+                    defaultValue: 'No orders found',
                   })}
                 </p>
               </div>
             )}
 
-            {!query.isLoading && !query.error && visibleOrders.length > 0 && (
-              <div className="space-y-3">
-                {visibleOrders.map((order) => {
-                  const isCompleted =
-                    order.status === 'Completed' ||
-                    order.status === 'Confirmed';
-                  const isRefunded = order.status === 'Refunded';
-                  const isCancelled = order.status === 'Cancelled';
-                  const isOnlineDeposit = order.depositAmount != null;
-                  const firstPayment = order.payments?.[0];
+            {!query.isLoading &&
+              !query.error &&
+              visibleTransactions.length > 0 && (
+                <div className="space-y-3">
+                  {visibleTransactions.map((tx: TransactionRow) => {
+                    const order = tx;
+                    const payment = tx.currentPayment;
 
-                  return (
-                    <article
-                      key={order.id}
-                      className="group rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 transition-all hover:border-brand/40 shadow-sm"
-                    >
-                      <div className="flex items-center justify-between gap-4 flex-wrap">
-                        <div className="flex min-w-0 items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-slate-50 dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700">
-                            {getOrderStatusIcon(order.status)}
-                          </div>
+                    const isCompleted =
+                      (payment?.status ?? order.status) === 'Completed' ||
+                      order.status === 'Confirmed';
+                    const isRefunded =
+                      (payment?.status ?? order.status) === 'Refunded';
+                    const isCancelled =
+                      (payment?.status ?? order.status) === 'Cancelled';
+                    const isOnlineDeposit =
+                      payment?.description?.includes('Đặt cọc') ||
+                      (order.depositAmount != null && tx.paymentIndex === 0);
 
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand text-[10px] font-bold">
-                                {order.patientName
-                                  ? order.patientName
-                                      .split(' ')
-                                      .map((n) => n[0])
-                                      .join('')
-                                      .toUpperCase()
-                                      .slice(0, 2)
-                                  : 'PT'}
-                              </div>
-                              <p className="text-slate-900 dark:text-white font-bold truncate flex items-center gap-2">
-                                {order.patientName ||
-                                  `${t('SystemAdmin.cashflow.table.patientFallback', { defaultValue: 'Patient' })} ${order.userId.slice(0, 8)}`}
-                              </p>
-                            </div>
-
-                            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400 font-medium">
-                              {order.description ||
-                                t(
-                                  'SystemAdmin.cashflow.table.defaultDescription',
-                                  {
-                                    defaultValue: 'Thanh toán phòng khám',
-                                  }
-                                )}
-                            </p>
-
-                            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                              <span
-                                className="inline-flex items-center gap-1.5 cursor-pointer hover:text-brand transition-colors"
-                                onClick={() => handleSort('createdAt')}
-                              >
-                                <Calendar className="w-3.5 h-3.5 shrink-0" />
-                                {new Date(order.createdAt).toLocaleString()}
-                                {renderSortIcon('createdAt')}
-                              </span>
-                              <span className="text-slate-300">|</span>
-                              <span className="inline-flex items-center gap-1.5 font-medium text-brand">
-                                <Clock3 className="w-3.5 h-3.5 shrink-0" />
-                                ID: {order.id.slice(0, 8)}
-                              </span>
-                              <span className="text-slate-300">|</span>
-                              {isOnlineDeposit ? (
-                                <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 uppercase tracking-tighter">
-                                  {t(
-                                    'SystemAdmin.cashflow.table.onlineDeposit',
-                                    {
-                                      defaultValue: 'Online Deposit',
-                                    }
-                                  )}
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 uppercase tracking-tighter">
-                                  {t('SystemAdmin.cashflow.table.fullPayment', {
-                                    defaultValue: 'Full Payment',
-                                  })}
-                                </span>
+                    return (
+                      <article
+                        key={`${order.id}-${payment?.id ?? 'none'}-${tx.paymentIndex}`}
+                        className="group rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 transition-all hover:border-brand/40 shadow-sm"
+                      >
+                        <div className="flex items-center justify-between gap-4 flex-wrap">
+                          <div className="flex min-w-0 items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-slate-50 dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700">
+                              {getOrderStatusIcon(
+                                (payment?.status ?? order.status) as OrderStatus
                               )}
                             </div>
-                          </div>
-                        </div>
 
-                        <div className="text-left md:text-right shrink-0 flex flex-col items-end gap-2">
-                          <p className="font-bold text-lg text-slate-900 dark:text-white">
-                            {formatCurrency(order.totalAmount, {
-                              absolute: true,
-                            })}
-                          </p>
-                          {isOnlineDeposit && (
-                            <p className="text-xs text-slate-500 font-medium flex items-center gap-2">
-                              {t('SystemAdmin.cashflow.table.deposited', {
-                                defaultValue: 'Đã cọc',
-                              })}
-                              :{' '}
-                              <span className="text-blue-600 dark:text-blue-400">
-                                {formatCurrency(order.depositAmount!)}
-                              </span>
-                              <span className="text-slate-300">|</span>
-                              {t('SystemAdmin.cashflow.table.remaining', {
-                                defaultValue: 'Còn lại',
-                              })}
-                              :{' '}
-                              <span className="text-rose-500">
-                                {formatCurrency(
-                                  order.totalAmount - order.depositAmount!
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-3">
+                                <p className="text-slate-900 dark:text-white font-bold truncate">
+                                  {translateDescription(
+                                    payment?.description ||
+                                      order.description ||
+                                      ''
+                                  ) ||
+                                    t(
+                                      'SystemAdmin.cashflow.table.defaultDescription',
+                                      {
+                                        defaultValue: 'Thanh toán dịch vụ y tế',
+                                      }
+                                    )}
+                                </p>
+
+                                <div className="flex items-center gap-2">
+                                  {isOnlineDeposit ? (
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 uppercase tracking-tighter">
+                                      {t(
+                                        'SystemAdmin.cashflow.table.onlineDeposit',
+                                        {
+                                          defaultValue: 'Đặt cọc Online',
+                                        }
+                                      )}
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 uppercase tracking-tighter">
+                                      {t(
+                                        'SystemAdmin.cashflow.table.fullPayment',
+                                        {
+                                          defaultValue: 'Tất toán đơn hàng',
+                                        }
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                                <span className="inline-flex items-center gap-1.5 font-medium text-brand">
+                                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand text-[8px] font-bold">
+                                    {order.patientName
+                                      ? (order.patientName as string)
+                                          .split(' ')
+                                          .map((n: string) => n[0])
+                                          .join('')
+                                          .toUpperCase()
+                                          .slice(0, 2)
+                                      : 'PT'}
+                                  </div>
+                                  {order.patientName ||
+                                    `${t('SystemAdmin.cashflow.table.patientFallback', { defaultValue: 'Bệnh nhân' })} ${order.userId.slice(0, 8)}`}
+                                </span>
+                                <span className="text-slate-300">|</span>
+                                <span className="inline-flex items-center gap-1.5 transition-colors">
+                                  <Calendar className="w-3.5 h-3.5 shrink-0" />
+                                  {formatDateTimeWithYear(
+                                    payment?.paidAt || order.createdAt
+                                  )}
+                                </span>
+                                <span className="text-slate-300">|</span>
+                                <span className="inline-flex items-center gap-1.5">
+                                  <Clock3 className="w-3.5 h-3.5 shrink-0" />
+                                  ID: {(payment?.id ?? order.id).slice(0, 8)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="text-left md:text-right shrink-0 flex flex-col items-end gap-2">
+                            <p
+                              className={`font-bold text-lg ${
+                                isRefunded
+                                  ? 'text-rose-600'
+                                  : isCancelled
+                                    ? 'text-slate-400'
+                                    : 'text-green-600 dark:text-green-400'
+                              }`}
+                            >
+                              {isRefunded
+                                ? '-'
+                                : isCancelled || payment?.status === 'Pending'
+                                  ? ''
+                                  : '+'}
+                              {formatCurrency(
+                                payment?.amount ?? order.totalAmount,
+                                { absolute: true }
+                              )}
+                            </p>
+                            {isRefunded && (
+                              <p className="text-[10px] text-rose-500 font-medium italic">
+                                {t(
+                                  'SystemAdmin.cashflow.table.refundedDeposit',
+                                  { defaultValue: 'Đã hoàn tiền' }
+                                )}
+                              </p>
+                            )}
+                            {payment?.method && (
+                              <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase">
+                                {t(
+                                  `ClinicStaffBilling.methods.${payment.method}`,
+                                  { defaultValue: payment.method }
                                 )}
                               </span>
-                            </p>
-                          )}
+                            )}
 
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                              isCompleted
-                                ? 'bg-green-500/10 text-green-600 dark:text-green-400'
-                                : isCancelled
-                                  ? 'bg-slate-500/10 text-slate-500'
-                                  : isRefunded ||
-                                      status === 'CancellationRequested'
-                                    ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
-                                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                            }`}
-                          >
-                            {ORDER_STATUS_LABEL[order.status]}
-                          </span>
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                                PAYMENT_STATUS_COLOR[
+                                  (payment?.status ||
+                                    (order.status === 'FullyPaid'
+                                      ? 'Completed'
+                                      : order.status === 'PartiallyPaid'
+                                        ? 'Processing'
+                                        : order.status)) as PaymentStatus
+                                ] || 'bg-slate-500/10 text-slate-500'
+                              }`}
+                            >
+                              {payment?.status === 'Completed' ||
+                              order.status === 'Completed' ||
+                              order.status === 'FullyPaid'
+                                ? isOnlineDeposit
+                                  ? t(
+                                      'ClinicStaffBilling.orderDetails.confirmedDeposit',
+                                      { defaultValue: 'Đã xác nhận cọc' }
+                                    )
+                                  : t('ClinicStaffBilling.status.fullyPaid', {
+                                      defaultValue: 'Đã tất toán',
+                                    })
+                                : payment?.status === 'Failed' ||
+                                    payment?.status === 'Cancelled' ||
+                                    order.status === 'Cancelled'
+                                  ? t('SystemAdmin.cashflow.status.cancelled', {
+                                      defaultValue: 'Đã hủy',
+                                    })
+                                  : payment?.status === 'Pending' ||
+                                      order.status === 'Pending'
+                                    ? t('SystemAdmin.cashflow.status.pending', {
+                                        defaultValue: 'Chờ thanh toán',
+                                      })
+                                    : ORDER_STATUS_LABEL[
+                                        order.status as OrderStatus
+                                      ] || order.status}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
 
             {/* Pagination */}
             {query.data && query.data.totalPages > 1 && (

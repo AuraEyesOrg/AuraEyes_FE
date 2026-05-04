@@ -442,6 +442,8 @@ export const API_ENDPOINTS = {
     ORDER: (id: string) => `/financial/orders/${id}`,
     /** POST - Create a new payment order */
     CREATE_ORDER: '/financial/orders',
+    /** POST - Synchronize payment status with provider */
+    SYNC_ORDER: (id: string) => `/financial/orders/${id}/sync`,
   },
 
   // Master Data

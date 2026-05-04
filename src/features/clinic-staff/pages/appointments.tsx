@@ -17,6 +17,7 @@ import {
   AlertCircle,
   RefreshCw,
   AlertTriangle,
+  Search,
 } from 'lucide-react';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -300,14 +301,30 @@ export default function ClinicStaffAppointmentsPage() {
     })),
   });
 
+  const [patientSearchQuery, setPatientSearchQuery] = useState('');
+
   const selectedDayIndex = weekWindow.days.findIndex(
     (d) => d.dateKey === selectedDate
   );
   const selectedDayQuery =
     selectedDayIndex >= 0 ? weekAppointmentQueries[selectedDayIndex] : null;
-  const appointments = selectedDayQuery?.data ?? [];
+  const rawAppointments = selectedDayQuery?.data ?? [];
   const isLoading = selectedDayQuery?.isLoading ?? false;
   const appointmentsError = selectedDayQuery?.error;
+
+  const visibleAppointments = useMemo(() => {
+    if (!patientSearchQuery.trim()) return rawAppointments;
+    const query = patientSearchQuery.toLowerCase();
+    return rawAppointments.filter((appt) => {
+      const searchFields = [appt.patientName, appt.id]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return searchFields.includes(query);
+    });
+  }, [rawAppointments, patientSearchQuery]);
+
+  const appointments = visibleAppointments;
 
   const recentPatientsQuery = useQuery({
     queryKey: ['clinic-patients', 'recent'],
@@ -827,16 +844,48 @@ export default function ClinicStaffAppointmentsPage() {
                   <Plus className="h-4 w-4" />
                   {t('Organisation.calendar.actions.newWalkIn', 'New Walk-in')}
                 </button>
-                <span className="h-1 w-6 rounded-full bg-brand" />
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  {t(
-                    'Organisation.calendar.summary.records',
-                    '{{count}} total appointments',
-                    {
-                      count: appointments.length,
-                    }
+                <div className="flex flex-1 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="h-1 w-6 rounded-full bg-brand" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      {patientSearchQuery.trim()
+                        ? t(
+                            'Organisation.calendar.summary.filteredRecords',
+                            'Found {{count}} matching appointments',
+                            { count: appointments.length }
+                          )
+                        : t(
+                            'Organisation.calendar.summary.records',
+                            '{{count}} total appointments',
+                            { count: appointments.length }
+                          )}
+                    </p>
+                  </div>
+
+                  {rawAppointments.length > 0 && (
+                    <div className="relative w-full sm:max-w-xs">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder={t(
+                          'Organisation.calendar.search.placeholder',
+                          'Search by name, phone...'
+                        )}
+                        value={patientSearchQuery}
+                        onChange={(e) => setPatientSearchQuery(e.target.value)}
+                        className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-xs font-bold text-slate-700 outline-none transition-all focus:border-brand/50 focus:ring-4 focus:ring-brand/5 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                      />
+                      {patientSearchQuery && (
+                        <button
+                          onClick={() => setPatientSearchQuery('')}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
                   )}
-                </p>
+                </div>
               </div>
             </div>
           </div>
