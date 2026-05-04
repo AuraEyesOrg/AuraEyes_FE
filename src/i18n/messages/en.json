@@ -671,7 +671,9 @@
     },
     "common": {
       "doctor": "Doctor",
-      "retry": "Retry"
+      "retry": "Retry",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
     },
     "carePlan": {
       "back": "Back",

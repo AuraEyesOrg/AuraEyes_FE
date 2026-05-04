@@ -673,7 +673,9 @@
     },
     "common": {
       "doctor": "Bác sĩ",
-      "retry": "Thử lại"
+      "retry": "Thử lại",
+      "cancel": "Hủy",
+      "confirm": "Xác nhận"
     },
     "carePlan": {
       "back": "Quay lại",

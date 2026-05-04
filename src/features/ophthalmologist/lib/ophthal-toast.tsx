@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { CheckCircle2, CircleX, Info, TriangleAlert } from 'lucide-react';
+import i18n from '@/i18n/i18n';
 import {
   toast,
   type ToastContent,
@@ -54,7 +55,7 @@ const confirm = (
               }}
               className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700"
             >
-              {options.cancelLabel ?? 'Cancel'}
+              {options.cancelLabel ?? i18n.t('Ophthalmologist.common.cancel', 'Cancel')}
             </button>
             <button
               onClick={() => {
@@ -63,7 +64,7 @@ const confirm = (
               }}
               className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white"
             >
-              {options.confirmLabel ?? 'Confirm'}
+              {options.confirmLabel ?? i18n.t('Ophthalmologist.common.confirm', 'Confirm')}
             </button>
           </div>
         </div>
