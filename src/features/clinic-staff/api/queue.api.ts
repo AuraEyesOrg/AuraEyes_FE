@@ -98,6 +98,7 @@ export interface CreateClinicPaymentRequest {
   medicationPrices: MedicationPriceItem[];
   returnUrl: string;
   cancelUrl: string;
+  method?: 'Cash' | 'PayOS';
 }
 
 export interface CreateClinicPaymentResponse {

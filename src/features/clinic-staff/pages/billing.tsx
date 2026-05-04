@@ -131,6 +131,63 @@ export default function BillingPage() {
     return medicinesTotal + parseMoney(serviceFeeInput);
   }, [medicinePriceInputs, serviceFeeInput]);
 
+  const translateDescription = (description: string) => {
+    if (!description) return '';
+
+    // 1. Clean metadata
+    let result = cleanDescription(description);
+
+    // 2. Map of common phrases to translate
+    const phraseMap = [
+      {
+        vi: 'Thanh toán thuốc & dịch vụ',
+        key: 'description.medicationAndService',
+        def: 'Medication & Service Payment',
+      },
+      { vi: 'Đặt cọc khám', key: 'description.deposit', def: 'Online Deposit' },
+      {
+        vi: 'Thanh toán nốt khám',
+        key: 'description.finalPayment',
+        def: 'Final Payment',
+      },
+    ];
+
+    phraseMap.forEach(({ vi, key, def }) => {
+      if (result.includes(vi)) {
+        result = result.replace(
+          vi,
+          t(`ClinicStaffBilling.${key}`, { defaultValue: def })
+        );
+      }
+    });
+
+    // 3. Map of labels to translate
+    const labelMap = [
+      {
+        vi: 'BN:',
+        en: `${t('ClinicStaffBilling.orderDetails.patientLabelShort', { defaultValue: 'PT' })}:`,
+      },
+      {
+        vi: 'BS:',
+        en: `${t('ClinicStaffBilling.orderDetails.doctorLabelShort', { defaultValue: 'DR' })}:`,
+      },
+      {
+        vi: 'Đơn',
+        en: t('ClinicStaffBilling.orderDetails.orderLabel', {
+          defaultValue: 'Order',
+        }),
+      },
+    ];
+
+    labelMap.forEach(({ vi, en }) => {
+      // Replace all occurrences of the Vietnamese label
+      const regex = new RegExp(vi, 'g');
+      result = result.replace(regex, en);
+    });
+
+    return result;
+  };
+
   // ── Filter ──────────────────────────────────────────────────────────────────
   const visibleOrders = useMemo(() => {
     if (activeFilter === 'all') return orders;
@@ -422,24 +479,27 @@ export default function BillingPage() {
                           {/* Info */}
                           <div className="min-w-0">
                             <p className="text-(--text-primary) font-semibold truncate flex items-center gap-2">
-                              {cleanDescription(
+                              {translateDescription(
                                 payment?.description || order.description
                               ) ||
                                 t(
-                                  'ClinicStaffBilling.orderDetails.description' as any
+                                  'ClinicStaffBilling.orderDetails.description' as any,
+                                  { defaultValue: 'Thanh toán dịch vụ' }
                                 )}
 
                               {isDeposit && (
                                 <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs font-medium">
                                   {t(
-                                    'ClinicStaffBilling.orderDetails.depositOnline' as any
+                                    'ClinicStaffBilling.orderDetails.depositOnline' as any,
+                                    { defaultValue: 'Đặt cọc Online' }
                                   )}
                                 </span>
                               )}
                               {isFinal && (
                                 <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs font-medium">
                                   {t(
-                                    'ClinicStaffBilling.status.fullyPaid' as any
+                                    'ClinicStaffBilling.status.fullyPaid' as any,
+                                    { defaultValue: 'Đã tất toán' }
                                   )}
                                 </span>
                               )}
@@ -448,7 +508,8 @@ export default function BillingPage() {
                                 order.depositAmount == null && (
                                   <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400 text-xs font-medium">
                                     {t(
-                                      'ClinicStaffBilling.orderDetails.walkInFull' as any
+                                      'ClinicStaffBilling.orderDetails.walkInFull' as any,
+                                      { defaultValue: 'Walk-in / Full' }
                                     )}
                                   </span>
                                 )}
@@ -463,12 +524,13 @@ export default function BillingPage() {
                               <span className="inline-flex items-center gap-1.5 font-medium text-brand">
                                 <User className="w-3 h-3 shrink-0" />
                                 {order.patientName ||
-                                  `${t('ClinicStaffBilling.orderDetails.idLabel' as any)} ${order.userId.slice(0, 8)}`}
+                                  `${t('ClinicStaffBilling.orderDetails.idLabel' as any, { defaultValue: 'Đơn' })} ${order.userId.slice(0, 8)}`}
                               </span>
                               <span className="inline-flex items-center gap-1.5">
                                 <Clock3 className="w-3 h-3 shrink-0" />
                                 {t(
-                                  'ClinicStaffBilling.orderDetails.idLabel' as any
+                                  'ClinicStaffBilling.orderDetails.idLabel' as any,
+                                  { defaultValue: 'Đơn' }
                                 )}{' '}
                                 {(payment?.id ?? order.id).slice(0, 8)}
                               </span>
@@ -489,17 +551,23 @@ export default function BillingPage() {
                                 order.status === 'FullyPaid'
                                   ? isDeposit
                                     ? t(
-                                        'ClinicStaffBilling.orderDetails.confirmedDeposit' as any
+                                        'ClinicStaffBilling.orderDetails.confirmedDeposit' as any,
+                                        { defaultValue: 'Đã xác nhận cọc' }
                                       )
                                     : t(
-                                        'ClinicStaffBilling.status.fullyPaid' as any
+                                        'ClinicStaffBilling.status.fullyPaid' as any,
+                                        { defaultValue: 'Đã tất toán' }
                                       )
                                   : payment?.status === 'Pending' ||
                                       order.status === 'Pending'
                                     ? t(
-                                        'ClinicStaffBilling.filters.pending' as any
+                                        'ClinicStaffBilling.filters.pending' as any,
+                                        { defaultValue: 'Chờ thanh toán' }
                                       )
-                                    : t(order.status as any)}
+                                    : ORDER_STATUS_LABEL[order.status] ||
+                                      t(order.status as any, {
+                                        defaultValue: order.status,
+                                      })}
                               </span>
                             </div>
                           </div>
@@ -619,13 +687,17 @@ function CashierPricingPanel({
       <div className="rounded-2xl border border-(--border-color) bg-(--bg-secondary) p-4">
         <p className="text-sm text-(--text-secondary)">
           <span className="font-semibold text-(--text-primary)">
-            {t('ClinicStaffBilling.orderDetails.patientLabel' as any)}
+            {t('ClinicStaffBilling.orderDetails.patientLabel' as any, {
+              defaultValue: 'BỆNH NHÂN',
+            })}
           </span>{' '}
           {context.patientName}
         </p>
         <p className="mt-1 text-sm text-(--text-secondary)">
           <span className="font-semibold text-(--text-primary)">
-            {t('ClinicStaffBilling.orderDetails.doctorLabel' as any)}
+            {t('ClinicStaffBilling.orderDetails.doctorLabel' as any, {
+              defaultValue: 'BÁC SĨ CHẨN ĐOÁN',
+            })}
           </span>{' '}
           {context.diagnosis.diagnosedBy.doctorName || 'N/A'}
         </p>
@@ -633,7 +705,9 @@ function CashierPricingPanel({
 
       {context.diagnosis.noMedicationPrescribed ? (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
-          {t('ClinicStaffBilling.orderDetails.noMedication' as any)}
+          {t('ClinicStaffBilling.orderDetails.noMedication' as any, {
+            defaultValue: 'Không có thuốc kê đơn',
+          })}
         </div>
       ) : (
         <div className="space-y-3">
@@ -667,7 +741,8 @@ function CashierPricingPanel({
                     className="block text-xs font-semibold text-(--text-secondary)"
                   >
                     {t(
-                      'ClinicStaffBilling.orderDetails.medicinePriceLabel' as any
+                      'ClinicStaffBilling.orderDetails.medicinePriceLabel' as any,
+                      { defaultValue: 'Đơn giá (VND)' }
                     )}
                   </label>
                   <input
@@ -694,10 +769,14 @@ function CashierPricingPanel({
       <div className="grid grid-cols-1 gap-3 rounded-2xl border border-(--border-color) bg-(--bg-secondary) p-4 md:grid-cols-[2fr_1fr] md:items-end">
         <div>
           <p className="text-sm font-semibold text-(--text-primary)">
-            {t('ClinicStaffBilling.orderDetails.serviceFeeLabel' as any)}
+            {t('ClinicStaffBilling.orderDetails.serviceFeeLabel' as any, {
+              defaultValue: 'Phí dịch vụ',
+            })}
           </p>
           <p className="mt-1 text-xs text-(--text-muted)">
-            {t('ClinicStaffBilling.orderDetails.serviceFeeDescription' as any)}
+            {t('ClinicStaffBilling.orderDetails.serviceFeeDescription' as any, {
+              defaultValue: 'Bao gồm phí khám và các dịch vụ phòng khám đi kèm',
+            })}
           </p>
         </div>
         <div className="space-y-1">
@@ -705,7 +784,9 @@ function CashierPricingPanel({
             htmlFor="service-fee-input"
             className="block text-xs font-semibold text-(--text-secondary)"
           >
-            {t('ClinicStaffBilling.orderDetails.serviceFeeInputLabel' as any)}
+            {t('ClinicStaffBilling.orderDetails.serviceFeeInputLabel' as any, {
+              defaultValue: 'Nhập giá...',
+            })}
           </label>
           <input
             id="service-fee-input"
@@ -720,14 +801,18 @@ function CashierPricingPanel({
 
       <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
         <p className="text-xs text-(--text-secondary)">
-          {t('ClinicStaffBilling.orderDetails.totalManual' as any)}
+          {t('ClinicStaffBilling.orderDetails.totalManual' as any, {
+            defaultValue: 'Tổng cộng',
+          })}
         </p>
         <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
           {formatCurrency(computedManualTotal, { absolute: true })}
         </p>
       </div>
       <p className="text-xs text-(--text-muted)">
-        {t('ClinicStaffBilling.orderDetails.note' as any)}
+        {t('ClinicStaffBilling.orderDetails.note' as any, {
+          defaultValue: 'Vui lòng kiểm tra kỹ chi phí trước khi tạo yêu cầu',
+        })}
       </p>
     </div>
   );
