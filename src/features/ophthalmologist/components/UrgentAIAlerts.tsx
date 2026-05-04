@@ -86,7 +86,10 @@ export default function UrgentAIAlerts({ alerts }: UrgentAIAlertsProps) {
               <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200 dark:border-[#1e3a5f]">
                 <div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    {t('Ophthalmologist.urgentAIAlerts.aiConfidence', 'AI Confidence')}
+                    {t(
+                      'Ophthalmologist.urgentAIAlerts.aiConfidence',
+                      'AI Confidence'
+                    )}
                   </p>
                   <p className="text-base font-bold text-gray-800 dark:text-white">
                     {alert.aiConfidence}%
@@ -95,7 +98,12 @@ export default function UrgentAIAlerts({ alerts }: UrgentAIAlertsProps) {
                 <button
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${buttonStyle}`}
                 >
-                  {alert.priority === 'critical' ? t('Ophthalmologist.urgentAIAlerts.reviewNow', 'Review Now') : t('Ophthalmologist.urgentAIAlerts.verify', 'Verify')}
+                  {alert.priority === 'critical'
+                    ? t(
+                        'Ophthalmologist.urgentAIAlerts.reviewNow',
+                        'Review Now'
+                      )
+                    : t('Ophthalmologist.urgentAIAlerts.verify', 'Verify')}
                 </button>
               </div>
             </div>

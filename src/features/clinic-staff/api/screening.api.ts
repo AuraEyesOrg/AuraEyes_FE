@@ -28,6 +28,8 @@ export interface ClinicScreeningHistoryItem {
 
 export interface CreateClinicScreeningRequest {
   patientId: string;
+  /** Clinic check-in / queue row this screening belongs to */
+  patientVisitId: string;
   modelVersion?: string;
   retinalImages: Array<{
     imageUrl: string;

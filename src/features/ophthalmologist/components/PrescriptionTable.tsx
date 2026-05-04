@@ -307,12 +307,17 @@ function RxRow({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
 
-  const openSuggestions = useCallback((query: string) => {
-    const results = getTranslatedDrugCatalogue(t).filter((d) => fuzzyMatch(d.label, query));
-    setSuggestions(results);
-    setDropdownOpen(results.length > 0);
-    setActiveIdx(-1);
-  }, [t]);
+  const openSuggestions = useCallback(
+    (query: string) => {
+      const results = getTranslatedDrugCatalogue(t).filter((d) =>
+        fuzzyMatch(d.label, query)
+      );
+      setSuggestions(results);
+      setDropdownOpen(results.length > 0);
+      setActiveIdx(-1);
+    },
+    [t]
+  );
 
   const applyDrug = useCallback(
     (drug: DrugEntry) => {
@@ -709,7 +714,10 @@ export function PrescriptionTable({
       {/* Note */}
       <div>
         <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-gray-500 mb-1">
-          {t('Ophthalmologist.prescriptionTable.note', 'Ghi chú cho dược sĩ / bệnh nhân')}
+          {t(
+            'Ophthalmologist.prescriptionTable.note',
+            'Ghi chú cho dược sĩ / bệnh nhân'
+          )}
         </label>
         <textarea
           value={prescriptionNote}

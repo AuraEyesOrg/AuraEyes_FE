@@ -12,6 +12,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { postsApi } from '@/features/professional-network/api/network.api';
@@ -25,7 +26,7 @@ import useAuthStore from '@/store/auth-store';
 import { unwrapApiData } from '@/types/api-response';
 
 import { clinicScreeningApi } from '../api/screening.api';
-import { clinicQueueApi } from '../api/queue.api';
+import { clinicQueueApi, type ClinicFlowState } from '../api/queue.api';
 import { ClinicRetinalViewerCard } from '../components/ClinicRetinalViewerCard';
 import ClinicStaffLayout from '../components/ClinicStaffLayout';
 import { ClinicScreeningStepper } from '../components/ClinicScreeningStepper';
@@ -77,6 +78,7 @@ export default function ClinicStaffScreeningResultPage() {
   const location = useLocation();
   const { t } = useSafeTranslation();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
   const screeningId = searchParams.get('id');
   const locationState = location.state as ScreeningResultLocationState | null;
   const locationPatientName = locationState?.patientName?.trim() ?? '';
@@ -98,6 +100,8 @@ export default function ClinicStaffScreeningResultPage() {
   const [sendingToDoctor, setSendingToDoctor] = useState(false);
   const [queueVisitId, setQueueVisitId] = useState<string | null>(null);
   const [bookedDoctorId, setBookedDoctorId] = useState<string | null>(null);
+  const [currentFlowState, setCurrentFlowState] =
+    useState<ClinicFlowState | null>(null);
 
   const [sessionData, setSessionData] =
     useState<OrgScreeningSessionDetail | null>(null);
@@ -131,7 +135,12 @@ export default function ClinicStaffScreeningResultPage() {
   const selectedImage =
     sessionData?.images[selectedImageIndex] ?? sessionData?.images[0];
   const canSendToDoctor = Boolean(
-    screeningId && sessionData?.latestResult && !sendingToDoctor
+    screeningId &&
+    sessionData?.latestResult &&
+    !sendingToDoctor &&
+    currentFlowState !== 'SentToDoctor' &&
+    currentFlowState !== 'ConsultationInProgress' &&
+    currentFlowState !== 'Finalized'
   );
   const patientDisplayName =
     sessionData?.patientName?.trim() ||
@@ -310,9 +319,11 @@ export default function ClinicStaffScreeningResultPage() {
 
       setQueueVisitId(queueItem?.visitId ?? null);
       setBookedDoctorId(queueItem?.assignedDoctorId ?? null);
+      setCurrentFlowState(queueItem?.flowState ?? null);
     } catch {
       setQueueVisitId(null);
       setBookedDoctorId(null);
+      setCurrentFlowState(null);
     }
   }, [screeningId]);
 
@@ -711,13 +722,15 @@ export default function ClinicStaffScreeningResultPage() {
         screeningId,
         doctorId: bookedDoctorId,
       });
+      setCurrentFlowState('SentToDoctor');
       toast.success(
         t(
           'ClinicStaff.screeningResult.toast.sendToDoctorSuccess',
           'Case sent to doctor successfully.'
         )
       );
-      await hydrateQueueContext();
+      queryClient.invalidateQueries({ queryKey: ['clinic-staff', 'queue'] });
+      void hydrateQueueContext();
     } catch (error) {
       toast.error(
         getErrorMessage(
@@ -919,10 +932,17 @@ export default function ClinicStaffScreeningResultPage() {
                       'ClinicStaff.screeningResult.actions.sendingToDoctor',
                       'Sending...'
                     )
-                  : t(
-                      'ClinicStaff.screeningResult.actions.sendToDoctor',
-                      'Send to Doctor'
-                    )}
+                  : currentFlowState === 'SentToDoctor' ||
+                      currentFlowState === 'ConsultationInProgress' ||
+                      currentFlowState === 'Finalized'
+                    ? t(
+                        'ClinicStaff.screeningResult.actions.sentToDoctorSuccess',
+                        'Sent to Doctor'
+                      )
+                    : t(
+                        'ClinicStaff.screeningResult.actions.sendToDoctor',
+                        'Send to Doctor'
+                      )}
               </button>
 
               <span className="inline-flex items-center rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">

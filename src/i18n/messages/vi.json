@@ -2421,6 +2421,11 @@
       "ruleViolated": "Không thể hủy lịch hẹn vì đã quá hạn (ít hơn 6 tiếng trước giờ khám).",
       "confirmLabel": "Gửi yêu cầu hủy",
       "cancelling": "Đang gửi yêu cầu..."
+    },
+    "clinicBooking": {
+      "page": {
+        "title": "Lịch hẹn phòng khám"
+      }
     }
   },
   "PatientDashboard": {
@@ -8065,7 +8070,8 @@
             "screeningRequired": "Vui lòng hoàn tất sàng lọc AI trước khi gửi bác sĩ.",
             "loadDoctorsFailed": "Không thể tải danh sách bác sĩ.",
             "copyDoctorConsultationLinkSuccess": "Đã sao chép liên kết tư vấn cho bác sĩ.",
-            "copyDoctorConsultationLinkFailed": "Không thể sao chép liên kết tư vấn."
+            "copyDoctorConsultationLinkFailed": "Không thể sao chép liên kết tư vấn.",
+            "ermSaveRequiredBeforeScreening": "Vui lòng lưu xong phần hành chính ERM (bấm Lưu) trước khi tạo sàng lọc."
           },
           "error": {
             "title": "Lỗi tải hàng đợi",
@@ -8075,6 +8081,10 @@
             "retry": "Thử lại",
             "refresh": "Làm mới",
             "fillErm": "Nhập ERM",
+            "fillErmRequired": "Phải hoàn tất và lưu phần hành chính ERM trước khi tạo sàng lọc.",
+            "openErm": "Hồ sơ ERM",
+            "openErmHint": "Mở ERM của lượt check-in này (mỗi ca khám một hồ sơ).",
+            "createScreeningDisabledHint": "Vui lòng lưu xong phần hành chính ERM trước khi tạo sàng lọc.",
             "createScreening": "Tạo sàng lọc",
             "viewScreening": "Xem sàng lọc",
             "sending": "Đang gửi...",
