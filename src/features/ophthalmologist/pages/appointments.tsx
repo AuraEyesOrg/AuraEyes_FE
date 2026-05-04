@@ -477,7 +477,7 @@ export default function AppointmentsPage() {
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               />
               <input
-                type="text"
+                title={t('Ophthalmologist.appointments.toggleView', 'Toggle View')}
                 placeholder={t(
                   'Ophthalmologist.appointments.searchPlaceholder',
                   'Search patient, session ID, type...'

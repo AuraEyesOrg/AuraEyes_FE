@@ -1447,7 +1447,7 @@
         "saveFailed": "Lỗi khi lưu chỉnh sửa.",
         "saveSuccess": "Đã lưu chỉnh sửa thành công."
       },
-      "toolbar": {
+      "toolbox": {
         "addNewBox": "Thêm hộp ranh giới tùy chỉnh mới",
         "deleteBox": "Xóa hộp được chọn",
         "editOverlay": "Chỉnh sửa hộp AI: kéo để di chuyển, kéo góc để thay đổi kích thước",
@@ -1459,7 +1459,30 @@
         "resetAiBoxes": "Đặt lại tất cả vị trí AI",
         "undo": "Hoàn tác hành động cuối cùng",
         "zoomIn": "Phóng to",
-        "zoomOut": "Thu nhỏ"
+        "zoomOut": "Thu nhỏ",
+        "openHeatmapTools": "Mở bộ công cụ vẽ Heatmap",
+        "addFinding": "Thêm thẻ (Add finding)"
+      },
+      "findings": {
+        "namePlaceholder": "Nhập tên...",
+        "descriptionLabel": "Mô tả chi tiết",
+        "descriptionPlaceholder": "Nhập mô tả...",
+        "detectedFindings": "Phát hiện AI",
+        "finding": "Phát hiện",
+        "nameLabel": "Tên bệnh / Dấu hiệu",
+        "riskLabel": "Rủi ro:",
+        "severityLow": "Thấp (Vàng)",
+        "severityModerate": "Trung bình (Cam)",
+        "severityHigh": "Cao (Đỏ)"
+      },
+      "consiliumButton": "Yêu cầu Hội chẩn",
+      "consiliumModal": {
+        "subtitle": "Mời đồng nghiệp hỗ trợ chẩn đoán ca bệnh khẩn cấp",
+        "noDoctorsAvailable": "Không tìm thấy bác sĩ nào đang sẵn sàng.",
+        "maxDoctorsToast": "Tối đa mời 3 bác sĩ hội chẩn.",
+        "availableStatus": "Đang rảnh",
+        "emergencyDescription": "Thông báo ưu tiên cao tới bác sĩ được mời",
+        "sendEmergencyRequest": "Gửi yêu cầu khẩn cấp"
       },
       "validation": {
         "invalidLinkedSession": "Phiên được liên kết không hợp lệ",

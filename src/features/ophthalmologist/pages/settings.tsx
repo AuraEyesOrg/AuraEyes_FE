@@ -173,7 +173,7 @@ export default function SettingsPage() {
 
       <div className="flex-1 h-full overflow-y-auto">
         <DoctorHeader
-          pageName={t('Ophthalmologist.settings.pageTitle', 'Settings')}
+          pageName={t('Ophthalmologist.settings.title', 'Settings')}
         />
 
         <main className="p-6">

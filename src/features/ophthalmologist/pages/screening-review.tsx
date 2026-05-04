@@ -28,34 +28,24 @@ import {
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import { collaborationApi } from '@/features/professional-network/api/collaboration.api';
+import type { AvailableDoctorForConsiliumDto } from '@/features/professional-network/api/collaboration.api';
 import { medicalRecordApi } from '@/features/medical-records/api/medical-record.api';
-import { type InternalChatCandidateUser } from '@/features/professional-network/api/internal-chat.api';
-import ConfirmModal from '@/components/ui/confirm-modal';
 import {
   getOphthalmologistScreeningDetail,
   type OphthalmologistScreeningDetailDto,
   type OphthalmologistRetinalImageDto,
 } from '../api/ophthalmologist-screenings.api';
-import {
-  useConsultationSessions,
-  useSubmitVerificationReport,
-} from '@/features/consultation/hooks/use-consultation';
+import { useConsultationSessions } from '@/features/consultation/hooks/use-consultation';
 import { ConsultationSessionType } from '@/types/consultation';
 import { hydrateConsultationPreviewAnomalies } from '@/features/patient/pages/retinal-analysis';
 import type { Anomaly } from '@/features/patient/types/type';
 import useAuthStore from '@/store/auth-store';
-import i18n from '@/i18n/i18n';
 import Spinner from '@/components/ui/spinner';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import UserAvatar from '@/components/ui/UserAvatar';
 // import { mergeBoxesIntoRawJson } from '@/features/organisation/utils/screening-result.util';
 import type { DetectionBox } from '@/features/organisation/types/screening-result.types';
-import type { RxItem } from '../types/drug.type';
-import {
-  PrescriptionTable,
-  validatePrescriptionItems,
-} from '../components/PrescriptionTable';
 
 type RiskLevel = 'None' | 'Low' | 'Moderate' | 'High' | 'Critical';
 type EyeSide = 'Left' | 'Right' | 'Both';
@@ -79,7 +69,6 @@ interface DetectedFinding {
 }
 
 type BoxRect = { x: number; y: number; width: number; height: number };
-type TranslateFn = (key: string, fallback: string) => string;
 type ShareAssetKind =
   | 'retinal'
   | 'heatmap-matrix'
@@ -93,33 +82,6 @@ type ShareAssetOption = {
   kind: ShareAssetKind;
   sourceImageUrl?: string;
 };
-
-type DiagnosisModalTab = 'diagnosis' | 'prescription' | 'plan';
-
-const DIAGNOSIS_CODE_PRESETS = [
-  { value: 'H35.9', label: 'H35.9 - Retinal disorder, unspecified' },
-  {
-    value: 'E11.311',
-    label: 'E11.311 - Type 2 diabetic retinopathy with macular edema',
-  },
-  { value: 'H34.9', label: 'H34.9 - Retinal vascular occlusion, unspecified' },
-  { value: 'H40.9', label: 'H40.9 - Glaucoma, unspecified' },
-  { value: 'OTHER', label: 'Other diagnosis code' },
-] as const;
-
-const TREATMENT_PLAN_PRESETS = [
-  'Monitor and re-evaluate in 4-6 weeks.',
-  'Refer to retina specialist for further evaluation.',
-  'Initiate urgent in-person ophthalmic assessment within 24 hours.',
-  'Continue current treatment and monitor progression.',
-] as const;
-
-const RECOMMENDATION_PRESETS = [
-  'Schedule follow-up fundus imaging as advised.',
-  'Report immediately if vision becomes blurred or distorted.',
-  'Maintain blood sugar and blood pressure control.',
-  'Avoid delaying specialist consultation.',
-] as const;
 
 type FindingLexiconEntry = {
   en: string;
@@ -196,43 +158,6 @@ const FINDING_NAME_SUGGESTIONS = Array.from(
   new Set(FINDING_LEXICON.flatMap((item) => [item.en, item.vi]))
 );
 
-function normalizeFindingToken(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-    .replace(/\s+/g, ' ');
-}
-
-function resolveFindingLocale(): 'vi' | 'en' {
-  const lang = (i18n.resolvedLanguage ?? i18n.language ?? 'en').toLowerCase();
-  return lang.startsWith('vi') ? 'vi' : 'en';
-}
-
-function canonicalizeFindingName(name: string, locale: 'vi' | 'en'): string {
-  const normalizedName = normalizeFindingToken(name);
-  if (!normalizedName) return name.trim();
-
-  for (const entry of FINDING_LEXICON) {
-    const candidates = [entry.en, entry.vi, ...entry.synonyms].map(
-      normalizeFindingToken
-    );
-    const isMatched = candidates.some(
-      (candidate) =>
-        normalizedName === candidate ||
-        normalizedName.includes(candidate) ||
-        candidate.includes(normalizedName)
-    );
-    if (isMatched) {
-      return locale === 'vi' ? entry.vi : entry.en;
-    }
-  }
-
-  return name.trim();
-}
-
 function isUuid(s: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
     s
@@ -268,13 +193,6 @@ function normalizeRiskLevel(risk: string | undefined): RiskLevel {
   return 'None';
 }
 
-function toConfidencePercent(score: number | null | undefined): number {
-  if (score == null || !Number.isFinite(Number(score))) return 0;
-  const n = Number(score);
-  if (n > 0 && n <= 1) return Math.round(n * 100);
-  return Math.round(Math.min(100, Math.max(0, n)));
-}
-
 function anomalyToFinding(a: Anomaly): DetectedFinding {
   return {
     id: a.id,
@@ -294,37 +212,27 @@ function anomalyToFinding(a: Anomaly): DetectedFinding {
   };
 }
 
-const getRiskLevelConfig = (
-  t: TranslateFn
-): Record<RiskLevel, { label: string; color: string; bg: string }> => ({
-  None: {
-    label: t('Ophthalmologist.screeningReview.risk.none', 'No Risk'),
-    color: 'text-gray-600',
-    bg: 'bg-gray-100',
-  },
-  Low: {
-    label: t('Ophthalmologist.screeningReview.risk.low', 'Low Risk'),
-    color: 'text-green-600',
-    bg: 'bg-green-100',
-  },
-  Moderate: {
-    label: t('Ophthalmologist.screeningReview.risk.moderate', 'Moderate'),
-    color: 'text-yellow-600',
-    bg: 'bg-yellow-100',
-  },
-  High: {
-    label: t('Ophthalmologist.screeningReview.risk.high', 'High Risk'),
-    color: 'text-orange-600',
-    bg: 'bg-orange-100',
-  },
-  Critical: {
-    label: t('Ophthalmologist.screeningReview.risk.critical', 'Critical'),
-    color: 'text-red-600',
-    bg: 'bg-red-100',
-  },
-});
-
 type SidebarTab = 'patient' | 'history' | 'exam' | 'reports';
+
+const DIAGNOSIS_CODE_PRESETS = [
+  { value: 'H35.3', label: 'H35.3 - Thoái hóa hoàng điểm' },
+  { value: 'H35.0', label: 'H35.0 - Bệnh võng mạc nền' },
+  { value: 'H35.9', label: 'H35.9 - Bệnh võng mạc, không xác định' },
+  { value: 'H36.0', label: 'H36.0 - Bệnh võng mạc đái tháo đường' },
+  { value: 'H40.9', label: 'H40.9 - Glôcôm, không xác định' },
+  { value: 'Custom', label: 'Mã ICD-10 khác...' },
+] as const;
+
+interface RxItem {
+  id: string;
+  medicationName: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  instruction: string;
+}
+
+type DiagnosisModalTab = 'diagnosis' | 'prescription' | 'referral';
 
 export default function ScreeningReviewPage() {
   const { t } = useSafeTranslation();
@@ -347,6 +255,23 @@ export default function ScreeningReviewPage() {
   const [showOverlay, setShowOverlay] = useState(true);
   const [zoom, setZoom] = useState(1);
   const [focusedFinding, setFocusedFinding] = useState<string | null>(null);
+  const [sharingImages, setSharingImages] = useState(false);
+  const [showShareImagePicker, setShowShareImagePicker] = useState(false);
+  const [shareCandidateAssetId, setShareCandidateAssetId] = useState<
+    string | null
+  >(null);
+
+  // Consilium states
+  const [showConsiliumModal, setShowConsiliumModal] = useState(false);
+  const [candidateDoctors, setCandidateDoctors] = useState<
+    AvailableDoctorForConsiliumDto[]
+  >([]);
+  const [selectedDoctors, setSelectedDoctors] = useState<string[]>([]);
+  const [consiliumReason, setConsiliumReason] = useState('');
+  const [isEmergencyConsilium, setIsEmergencyConsilium] = useState(false);
+  const [requestingConsilium, setRequestingConsilium] = useState(false);
+
+  // Diagnosis & Finalization states
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
   const [diagnosisCodePreset, setDiagnosisCodePreset] =
     useState<(typeof DIAGNOSIS_CODE_PRESETS)[number]['value']>('H35.9');
@@ -370,24 +295,8 @@ export default function ScreeningReviewPage() {
   const [isDiagnosisLocked, setIsDiagnosisLocked] = useState(false);
   const [diagnosisModalTab, setDiagnosisModalTab] =
     useState<DiagnosisModalTab>('diagnosis');
-  const [sharingImages, setSharingImages] = useState(false);
-  const [showShareImagePicker, setShowShareImagePicker] = useState(false);
-  const [shareCandidateAssetId, setShareCandidateAssetId] = useState<
-    string | null
-  >(null);
-
-  // Consilium states
-  const [showConsiliumModal, setShowConsiliumModal] = useState(false);
-  const [candidateDoctors, setCandidateDoctors] = useState<
-    InternalChatCandidateUser[]
-  >([]);
-  const [selectedDoctors, setSelectedDoctors] = useState<string[]>([]);
-  const [consiliumReason, setConsiliumReason] = useState('');
-  const [requestingConsilium, setRequestingConsilium] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [showLockConfirm, setShowLockConfirm] = useState(false);
-
-  const riskLevelConfig = useMemo(() => getRiskLevelConfig(t), [t]);
 
   // ─── Heatmap toolkit draggable state ────────────────────────────────────
   const [toolkitPos, setToolkitPos] = useState({ x: 0, y: 0 });
@@ -424,7 +333,6 @@ export default function ScreeningReviewPage() {
     'low' | 'moderate' | 'high'
   >('moderate');
   const [isAddingFinding, setIsAddingFinding] = useState(false);
-  const didAutoFillClinicalFindingsRef = useRef(false);
 
   // ─── Undo stack ────────────────────────────────────────────────────────────
   interface EditorSnapshot {
@@ -480,7 +388,6 @@ export default function ScreeningReviewPage() {
     [detail]
   );
 
-  const submitVerificationReportMutation = useSubmitVerificationReport();
   const consultationSessionsQuery = useConsultationSessions(
     {
       ophthalmologistId: doctorFilterId,
@@ -492,7 +399,6 @@ export default function ScreeningReviewPage() {
   );
 
   const linkedSessions = consultationSessionsQuery.data?.items ?? [];
-  const linkedSession = linkedSessions[0] ?? null;
   const verificationSession =
     linkedSessions.find(
       (session) => session.type === ConsultationSessionType.Verification
@@ -510,12 +416,7 @@ export default function ScreeningReviewPage() {
 
   const reportableSessionId = reportableSession?.id ?? null;
   const isFinalizedDiagnosis =
-    isDiagnosisLocked || detail?.reviewStatus?.toLowerCase() === 'approved';
-  const resolvedDoctorId =
-    doctorFilterId ||
-    reportableSession?.ophthalmologistId ||
-    linkedSession?.ophthalmologistId ||
-    '';
+    detail?.reviewStatus?.toLowerCase() === 'approved';
 
   const shareableAssets = useMemo<ShareAssetOption[]>(() => {
     const assets: ShareAssetOption[] = [];
@@ -607,36 +508,10 @@ export default function ScreeningReviewPage() {
   }, [retinalImages, selectedImageId]);
 
   const riskLevelUi = normalizeRiskLevel(detail?.latestResult?.riskLevel);
-  const confidencePct = toConfidencePercent(
-    detail?.latestResult?.confidenceScore
-  );
-  const aiConfidencePct = useMemo(() => {
-    // Derived from the same `Detected Findings` that we show in the right panel
-    if (findings.length === 0) return confidencePct;
-    const max = Math.max(...findings.map((f) => f.confidence ?? 0));
-    if (!Number.isFinite(max)) return confidencePct;
-    return Math.min(100, Math.max(0, Math.round(max)));
-  }, [findings, confidencePct]);
   const showAttentionBadge =
     riskLevelUi === 'High' ||
     riskLevelUi === 'Critical' ||
     findings.some((f) => f.severity === 'high');
-
-  const referralPillLabel =
-    riskLevelUi === 'High' || riskLevelUi === 'Critical'
-      ? t(
-          'Ophthalmologist.screeningReview.referral.recommended',
-          'Referral Recommended'
-        )
-      : riskLevelUi === 'Moderate'
-        ? t(
-            'Ophthalmologist.screeningReview.referral.monitor',
-            'Monitor closely'
-          )
-        : t(
-            'Ophthalmologist.screeningReview.referral.routine',
-            'Routine follow-up'
-          );
 
   useEffect(() => {
     if (!screeningId || !isUuid(screeningId)) {
@@ -1128,7 +1003,7 @@ export default function ScreeningReviewPage() {
           'Đã lưu chỉnh sửa thành công.'
         )
       );
-    } catch (e) {
+    } catch {
       ophthalToast.error(
         t(
           'Ophthalmologist.screeningReview.toast.saveFailed',
@@ -1150,11 +1025,6 @@ export default function ScreeningReviewPage() {
     findings,
   ]);
 
-  const handleFocusFinding = (findingId: string) => {
-    setFocusedFinding(findingId);
-    // Could also animate/scroll to the finding location
-  };
-
   const getSeverityColor = (severity: 'low' | 'moderate' | 'high') => {
     switch (severity) {
       case 'high':
@@ -1170,25 +1040,49 @@ export default function ScreeningReviewPage() {
     if (!screeningId || selectedDoctors.length === 0) return;
     setRequestingConsilium(true);
     try {
-      const patientName = detail?.patientFullName || 'Unknown Patient';
+      const patientName = detail?.patientFullName || 'BN';
+      const recordSuffix = detail?.medicalRecordId
+        ? ` - ${detail.medicalRecordId.slice(0, 8).toUpperCase()}`
+        : '';
+      const isUrgent = consiliumUrgency === 'urgent';
+      const groupName = `[${t(
+        'Ophthalmologist.screeningReview.consilium.groupName',
+        'Hội chẩn'
+      )}] - ${patientName}${recordSuffix}`;
+      const title = `${t(
+        'Ophthalmologist.screeningReview.consilium.requestTitle',
+        'Yêu cầu hội chẩn'
+      )}${isUrgent ? ` (${t('Ophthalmologist.common.urgent', 'KHẨN CẤP')})` : ''} — ${
+        detail?.screeningTitle || detail?.patientFullName || 'Unknown'
+      }`;
       const groupId = await collaborationApi.createClinicalGroup({
-        name: `Hội chẩn: ${patientName}`,
+        name: groupName,
         consultationSessionId: reportableSessionId || undefined,
         invitedDoctorIds: selectedDoctors,
         reason: consiliumReason,
+        isEmergency: isUrgent,
+        medicalRecordId: detail?.medicalRecordId ?? undefined,
       });
 
       ophthalToast.success(
-        t(
-          'Ophthalmologist.screeningReview.toast.consiliumRequested',
-          'Yêu cầu hội chẩn đã được gửi!'
-        )
+        isUrgent
+          ? `🚨 ${t(
+              'Ophthalmologist.screeningReview.consilium.urgentSent',
+              'Yêu cầu hội chẩn KHẨN CẤP đã được gửi!'
+            )}`
+          : t(
+              'Ophthalmologist.screeningReview.consilium.sent',
+              'Yêu cầu hội chẩn đã được gửi!'
+            )
       );
       setShowConsiliumModal(false);
+      setIsEmergencyConsilium(false);
+      setSelectedDoctors([]);
+      setConsiliumReason('');
 
       // Navigate to chat
       navigate(`/professional-network/collaboration?groupId=${groupId}`);
-    } catch (e) {
+    } catch {
       ophthalToast.error(
         t(
           'Ophthalmologist.screeningReview.toast.consiliumFailed',
@@ -1242,314 +1136,56 @@ export default function ScreeningReviewPage() {
     }
   };
 
+  // Degree order for sorting available doctors from highest to lowest
+  const DEGREE_ORDER = ['GS', 'PGS', 'TS', 'ThS', 'BS'];
   useEffect(() => {
     if (showConsiliumModal) {
       void (async () => {
         try {
-          // Chỉ hiển thị bác sĩ "On-call" hoặc Available
-          const users = await collaborationApi.getAvailableDoctors();
-          // Filter out current user if backend doesn't
-          const doctors = users.filter((u) => u.id !== user?.id);
-          setCandidateDoctors(doctors);
+          const doctors = await collaborationApi.getAvailableDoctors();
+          // Filter out the currently logged-in doctor (roleId = ophthalmologistId)
+          const filtered = doctors.filter((d) => d.id !== user?.roleId);
+          // Sort by academic/clinical degree — highest first
+          const sorted = filtered.sort((a, b) => {
+            const ai = DEGREE_ORDER.findIndex(
+              (deg) => a.degreeLevel?.startsWith(deg) ?? false
+            );
+            const bi = DEGREE_ORDER.findIndex(
+              (deg) => b.degreeLevel?.startsWith(deg) ?? false
+            );
+            return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+          });
+          setCandidateDoctors(sorted);
         } catch (e) {
-          console.error('Failed to load candidate doctors', e);
+          console.error('Failed to load available doctors for consilium', e);
         }
       })();
+    } else {
+      // Reset selection when modal closes
+      setCandidateDoctors([]);
     }
-  }, [showConsiliumModal, user?.id]);
+  }, [showConsiliumModal, user?.roleId]);
 
-  const aiFindingsNarrative = useMemo(() => {
-    if (sidebarFindings.length === 0) return '';
-    const locale = resolveFindingLocale();
-    const normalizedSet = new Set<string>();
-    const lines: string[] = [];
-
-    for (const item of sidebarFindings) {
-      const canonicalName = canonicalizeFindingName(item.name, locale);
-      const dedupeKey = normalizeFindingToken(canonicalName);
-      if (!dedupeKey || normalizedSet.has(dedupeKey)) {
-        continue;
-      }
-      normalizedSet.add(dedupeKey);
-      lines.push(canonicalName);
-      if (lines.length >= 8) break;
-    }
-
-    return lines.join('\n');
-  }, [sidebarFindings]);
-
-  useEffect(() => {
-    const effectiveCode =
-      diagnosisCodePreset === 'OTHER'
-        ? customDiagnosisCode.trim()
-        : diagnosisCodePreset;
-    setDiagnosisCode(effectiveCode);
-  }, [diagnosisCodePreset, customDiagnosisCode]);
-
-  useEffect(() => {
-    if (!showDiagnosisModal) {
-      didAutoFillClinicalFindingsRef.current = false;
-      return;
-    }
-
-    if (didAutoFillClinicalFindingsRef.current) return;
-    if (clinicalFindings.trim().length > 0) return;
-    if (!aiFindingsNarrative) return;
-
-    setClinicalFindings(aiFindingsNarrative);
-    didAutoFillClinicalFindingsRef.current = true;
-  }, [showDiagnosisModal, clinicalFindings, aiFindingsNarrative]);
-
-  useEffect(() => {
-    if (showDiagnosisModal) {
-      setDiagnosisModalTab('diagnosis');
-    }
-  }, [showDiagnosisModal]);
-
-  const handleSubmitDiagnosis = async (
-    statusOverride?: 'Draft' | 'Finalized'
-  ) => {
-    if (isFinalizedDiagnosis) {
-      ophthalToast.info(
-        t(
-          'Ophthalmologist.screeningReview.status.finalizedLocked',
-          'This case is finalized. Editing is locked.'
-        )
-      );
-      return;
-    }
-
+  const navigateToErm = useCallback(() => {
     if (
-      consultationSessionsQuery.isLoading ||
-      consultationSessionsQuery.isFetching
+      !detail?.medicalRecordId ||
+      detail.medicalRecordId === '00000000-0000-0000-0000-000000000000'
     ) {
-      const message = t(
-        'Ophthalmologist.screeningReview.sessionLinkLoading',
-        'Still loading linked consultation session. Please retry in a moment.'
-      );
-      ophthalToast.info(message);
-      return;
-    }
-
-    if (!resolvedDoctorId) {
-      const message = t(
-        'Ophthalmologist.screeningReview.validation.missingDoctorIdentity',
-        'Missing doctor identity.'
-      );
-      ophthalToast.error(message);
-      return;
-    }
-
-    if (!reportableSessionId) {
-      const message = linkedSession
-        ? t(
-            'Ophthalmologist.screeningReview.validation.invalidLinkedSession',
-            `Linked consultation exists but it is "${linkedSession.typeName}". Only Verification, VideoCall, or ClinicBooking sessions can submit this report.`
-          )
-        : t(
-            'Ophthalmologist.screeningReview.validation.noLinkedSession',
-            'No linked Verification, VideoCall, or ClinicBooking session was found for this screening.'
-          );
-      ophthalToast.error(message);
-      return;
-    }
-
-    const normalizedDiagnosisCode = diagnosisCode.trim();
-    const normalizedFindings = clinicalFindings.trim();
-    const effectiveDiagnosisStatus = statusOverride ?? diagnosisStatus;
-    const isFinalizing =
-      effectiveDiagnosisStatus.trim().toLowerCase() === 'finalized';
-    const { valid: prescriptionValid, errors: nextPrescriptionErrors } =
-      validatePrescriptionItems(prescriptionItems, noMedicationPrescribed);
-    const normalizedPrescriptionItems = prescriptionItems
-      .map((item) => ({
-        medicineName: item.medicineName.trim(),
-        unit: item.unit.trim() || undefined,
-        dosage: item.dosage.trim(),
-        frequency: item.frequency.trim(),
-        duration: item.duration.trim(),
-        instruction: item.instruction.trim() || undefined,
-      }))
-      .filter(
-        (item) =>
-          item.medicineName ||
-          item.unit ||
-          item.dosage ||
-          item.frequency ||
-          item.duration ||
-          item.instruction
-      );
-    const trimmedPrescriptionNote = prescriptionNote.trim();
-
-    if (!normalizedDiagnosisCode || !normalizedFindings) {
-      const message = t(
-        'Ophthalmologist.screeningReview.validation.requiredDiagnosisAndFindings',
-        'Diagnosis code and clinical findings are required before saving.'
-      );
-      ophthalToast.error(message);
-      return;
-    }
-
-    if (isFinalizing && !noMedicationPrescribed && !prescriptionValid) {
-      setPrescriptionErrors(nextPrescriptionErrors);
       ophthalToast.error(
         t(
-          'Ophthalmologist.screeningReview.validation.incompletePrescriptionItem',
-          'Each medicine row must include medicine name, dosage, frequency, and duration.'
+          'Ophthalmologist.screeningReview.validation.noMedicalRecordForErm',
+          'No medical record linked yet. Create one from clinic reception first.'
         )
       );
       return;
     }
-
-    setPrescriptionErrors({});
-
-    try {
-      await submitVerificationReportMutation.mutateAsync({
-        sessionId: reportableSessionId,
-        doctorId: resolvedDoctorId,
-        diagnosisCode: normalizedDiagnosisCode,
-        diagnosesCode: normalizedDiagnosisCode,
-        codingSystem: codingSystem.trim() || undefined,
-        clinicalFindings: normalizedFindings,
-        diagnosesText: normalizedFindings,
-        severityLevel: severityLevel.trim() || undefined,
-        treatmentPlan: treatmentPlan.trim() || undefined,
-        recommendations: recommendations.trim() || undefined,
-        prescriptionItems:
-          normalizedPrescriptionItems.length > 0
-            ? normalizedPrescriptionItems
-            : undefined,
-        prescriptionNote: trimmedPrescriptionNote || undefined,
-        noMedicationPrescribed,
-        isUrgent,
-        status: effectiveDiagnosisStatus.trim() || undefined,
-        followUpDate: followUpDate
-          ? new Date(`${followUpDate}T00:00:00`).toISOString()
-          : undefined,
-        isReferralNeeded: referralRequired,
-        finalizedAt:
-          effectiveDiagnosisStatus.trim().toLowerCase() === 'finalized'
-            ? new Date().toISOString()
-            : undefined,
-      });
-
-      // Persist bbox/heatmap edits vào rawJsonOutput (nếu có chỉnh sửa và rawJson tồn tại)
-      const hasBoxEdits = Object.keys(boxOverrides).length > 0;
-      const shouldPersistPrescriptionSnapshot =
-        normalizedPrescriptionItems.length > 0 ||
-        noMedicationPrescribed ||
-        Boolean(trimmedPrescriptionNote);
-      if (
-        (hasBoxEdits || hasHeatmapEdits || shouldPersistPrescriptionSnapshot) &&
-        detail?.rawJsonOutput &&
-        screeningId
-      ) {
-        try {
-          // Use the same logic as handleSaveEdits for consistency
-          const currentBoxes = findings
-            .filter((f) => f.location)
-            .map((f) => {
-              const loc = boxOverrides[f.id] ?? f.location!;
-              return {
-                id: f.id,
-                name: f.name,
-                description: f.description,
-                confidence: f.confidence,
-                severity: f.severity,
-                location: {
-                  x: loc.x,
-                  y: loc.y,
-                  width: loc.width,
-                  height: loc.height,
-                },
-              };
-            });
-
-          const parsed = JSON.parse(detail.rawJsonOutput) as Record<
-            string,
-            unknown
-          >;
-          parsed.doctor_bbox_overrides = currentBoxes;
-
-          if (hasHeatmapEdits && heatmapData) {
-            parsed.heatmap_data = heatmapData;
-          }
-
-          if (shouldPersistPrescriptionSnapshot) {
-            parsed.doctor_prescription = {
-              noMedicationPrescribed,
-              note: trimmedPrescriptionNote || null,
-              items: normalizedPrescriptionItems,
-            };
-          }
-
-          parsed.doctor_manual_findings = sidebarFindings.filter((sf) =>
-            sf.id.startsWith('manual-find-')
-          );
-
-          const finalJsonString = JSON.stringify(parsed);
-
-          await import('@/lib/api').then(({ api }) =>
-            api.post(`/screenings/${screeningId}/save-results`, {
-              rawJsonOutput: finalJsonString,
-              riskLevel: detail.latestResult?.riskLevel ?? 'Low',
-              confidenceScore: detail.latestResult?.confidenceScore ?? 0,
-              summary: detail.latestResult?.summary,
-              findings: detail.latestResult?.findings,
-            })
-          );
-        } catch (bboxErr) {
-          // bbox save không nên làm fail toàn bộ flow diagnosis
-          console.warn('Bbox save failed (non-critical):', bboxErr);
-        }
-      }
-
-      ophthalToast.success(
-        t(
-          'Ophthalmologist.screeningReview.toast.saveSuccess',
-          'Diagnosis report saved successfully.'
-        )
-      );
-      if (effectiveDiagnosisStatus.trim().toLowerCase() === 'finalized') {
-        setIsDiagnosisLocked(true);
-      }
-      setShowDiagnosisModal(false);
-    } catch (error) {
-      const message =
-        isAxiosError(error) && typeof error.response?.data?.message === 'string'
-          ? error.response.data.message
-          : t(
-              'Ophthalmologist.screeningReview.toast.saveFailed',
-              'Failed to submit diagnosis report. Please try again.'
-            );
-
-      ophthalToast.error(message);
-    }
-  };
-
-  const handleOpenShareImagePicker = useCallback(() => {
-    if (!reportableSessionId) {
-      ophthalToast.error(
-        t(
-          'Ophthalmologist.screeningReview.validation.noLinkedSession',
-          'No linked Verification, VideoCall, or ClinicBooking session was found for this screening.'
-        )
-      );
-      return;
-    }
-
-    if (shareableAssets.length === 0) {
-      ophthalToast.error(
-        t(
-          'Ophthalmologist.screeningReview.share.noImages',
-          'No retinal images available to share.'
-        )
-      );
-      return;
-    }
-    setShareCandidateAssetId(shareableAssets[0].id);
-    setShowShareImagePicker(true);
-  }, [reportableSessionId, shareableAssets, t]);
+    navigate(`/medical-records/${detail.medicalRecordId}`, {
+      state: {
+        initialTab: 'clinical',
+        screeningId: detail.screeningId,
+      },
+    });
+  }, [detail, navigate, t]);
 
   const handleShareRetinalImage = useCallback(async () => {
     if (!reportableSessionId || !shareCandidateAssetId) return;
@@ -1756,7 +1392,7 @@ export default function ScreeningReviewPage() {
       );
       setShowShareImagePicker(false);
       setShareCandidateAssetId(null);
-    } catch (error) {
+    } catch {
       ophthalToast.error(
         t(
           'Ophthalmologist.screeningReview.share.failed',
@@ -1768,6 +1404,9 @@ export default function ScreeningReviewPage() {
     }
   }, [
     detail?.rawJsonOutput,
+    heatmapData,
+    heatmapOpacity,
+    heatmapThreshold,
     reportableSessionId,
     shareCandidateAssetId,
     shareableAssets,
@@ -1874,6 +1513,20 @@ export default function ScreeningReviewPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                  <button
+                    id="btn-request-consilium"
+                    type="button"
+                    onClick={() => {
+                      setSelectedDoctors([]);
+                      setConsiliumReason('');
+                      setIsEmergencyConsilium(false);
+                      setShowConsiliumModal(true);
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-amber-500/30 transition-all hover:-translate-y-0.5 hover:bg-amber-600 active:translate-y-0"
+                  >
+                    <Stethoscope className="h-4 w-4" />
+                    {t('Ophthalmologist.screeningReview.consiliumButton', 'Yêu cầu Hội chẩn')}
+                  </button>
                   <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded-full text-xs font-medium">
                     {t('Ophthalmologist.screeningReview.aiModel', 'AI Model')}:{' '}
                     {detail.modelVersion?.trim()
@@ -2221,7 +1874,7 @@ export default function ScreeningReviewPage() {
                             type="button"
                             onClick={() => handleChangeFocusedBoxColor('high')}
                             className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                            title="Change to Red (High)"
+                            title={t('Ophthalmologist.screeningReview.toolbox.changeRed', 'Change to Red (High)')}
                           >
                             <div className="w-4 h-4 rounded-full bg-red-400 border border-red-500" />
                           </button>
@@ -2231,7 +1884,7 @@ export default function ScreeningReviewPage() {
                               handleChangeFocusedBoxColor('moderate')
                             }
                             className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                            title="Change to Orange (Moderate)"
+                            title={t('Ophthalmologist.screeningReview.toolbox.changeOrange', 'Change to Orange (Moderate)')}
                           >
                             <div className="w-4 h-4 rounded-full bg-orange-400 border border-orange-500" />
                           </button>
@@ -2239,7 +1892,7 @@ export default function ScreeningReviewPage() {
                             type="button"
                             onClick={() => handleChangeFocusedBoxColor('low')}
                             className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                            title="Change to Yellow (Low)"
+                            title={t('Ophthalmologist.screeningReview.toolbox.changeYellow', 'Change to Yellow (Low)')}
                           >
                             <div className="w-4 h-4 rounded-full bg-yellow-400 border border-yellow-500" />
                           </button>
@@ -2547,16 +2200,16 @@ export default function ScreeningReviewPage() {
                                 ? 'bg-orange-500 text-white'
                                 : 'bg-gray-800 text-gray-400 hover:text-white'
                             }`}
-                            title="Toggle AI heatmap (Grad-CAM)"
+                            title={t('Ophthalmologist.screeningReview.toolbox.toggleHeatmap', 'Toggle AI heatmap (Grad-CAM)')}
                           >
-                            Heatmap
+                            {t('Ophthalmologist.screeningReview.toolbox.heatmap', 'Heatmap')}
                           </button>
                           {showHeatmap && (
                             <div className="flex items-center gap-4 flex-wrap border-l border-gray-700 pl-4 relative">
                               <div className="flex items-center gap-1.5">
                                 <span
                                   className="text-xs text-gray-500"
-                                  title="Opacity"
+                                  title={t('Ophthalmologist.screeningReview.toolbox.opacity', 'Opacity')}
                                 >
                                   Opa
                                 </span>
@@ -2576,7 +2229,7 @@ export default function ScreeningReviewPage() {
                               <div className="flex items-center gap-1.5">
                                 <span
                                   className="text-xs text-gray-500"
-                                  title="Heat Threshold"
+                                  title={t('Ophthalmologist.screeningReview.toolbox.heatThreshold', 'Heat Threshold')}
                                 >
                                   Thr
                                 </span>
@@ -2605,7 +2258,7 @@ export default function ScreeningReviewPage() {
                                       ? 'bg-cyan-600 text-white shadow-inner'
                                       : 'bg-gray-800 text-gray-400 hover:text-white'
                                   }`}
-                                  title="Mở bộ công cụ vẽ Heatmap"
+                                  title={t('Ophthalmologist.screeningReview.toolbox.clearNewTool', 'Tắt công cụ mới')}
                                 >
                                   <svg
                                     className="w-3.5 h-3.5"
@@ -2621,8 +2274,8 @@ export default function ScreeningReviewPage() {
                                     />
                                   </svg>
                                   {heatmapEditMode !== null
-                                    ? 'Đóng Tool'
-                                    : 'Bộ Vẽ Heatmap'}
+                                    ? t('Ophthalmologist.screeningReview.toolbox.closeTool', 'Đóng Tool')
+                                    : t('Ophthalmologist.screeningReview.toolbox.openTool', 'Bộ Vẽ Heatmap')}
                                 </button>
 
                                 {heatmapEditMode !== null && (
@@ -2649,7 +2302,7 @@ export default function ScreeningReviewPage() {
                                         ).setPointerCapture(e.pointerId);
                                       }}
                                       className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-gray-500 hover:text-cyan-400 transition-colors"
-                                      title="Kéo để di chuyển bộ công cụ"
+                                      title={t('Ophthalmologist.screeningReview.toolbox.dragToolbox', 'Kéo để di chuyển bộ công cụ')}
                                     >
                                       <svg
                                         width="12"
@@ -2697,7 +2350,7 @@ export default function ScreeningReviewPage() {
                                           setBrushTargetHeat(1.0);
                                         }}
                                         className={`w-5 h-5 rounded-full bg-red-600 transition-transform shadow-sm ${brushTargetHeat === 1.0 && heatmapEditMode === 'draw' ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-110' : 'opacity-60 hover:opacity-100 hover:scale-110'}`}
-                                        title="Lõi đỏ (Nhiệt cao nhất)"
+                                        title={t('Ophthalmologist.screeningReview.toolbox.resetOverlay', 'Lấy lại đường viền ban đầu')}
                                       />
                                       <button
                                         onClick={() => {
@@ -2705,7 +2358,7 @@ export default function ScreeningReviewPage() {
                                           setBrushTargetHeat(0.7);
                                         }}
                                         className={`w-5 h-5 rounded-full bg-orange-500 transition-transform shadow-sm ${brushTargetHeat === 0.7 && heatmapEditMode === 'draw' ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-110' : 'opacity-60 hover:opacity-100 hover:scale-110'}`}
-                                        title="Tỏa cam"
+                                        title={t('Ophthalmologist.screeningReview.toolbox.orangeSpread', 'Tỏa cam')}
                                       />
                                       <button
                                         onClick={() => {
@@ -2713,7 +2366,7 @@ export default function ScreeningReviewPage() {
                                           setBrushTargetHeat(0.4);
                                         }}
                                         className={`w-5 h-5 rounded-full bg-yellow-400 transition-transform shadow-sm ${brushTargetHeat === 0.4 && heatmapEditMode === 'draw' ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-110' : 'opacity-60 hover:opacity-100 hover:scale-110'}`}
-                                        title="Lan vàng"
+                                        title={t('Ophthalmologist.screeningReview.toolbox.yellowSpread', 'Lan vàng')}
                                       />
                                     </div>
                                     <div className="w-px h-5 bg-gray-700 mx-1" />
@@ -2723,7 +2376,7 @@ export default function ScreeningReviewPage() {
                                           setHeatmapEditMode('erase')
                                         }
                                         className={`flex items-center justify-center p-1.5 rounded w-max bg-gray-800 text-gray-200 transition-all shadow-sm ${heatmapEditMode === 'erase' ? 'ring-2 ring-cyan-400 text-white bg-gray-600' : 'hover:bg-gray-600 hover:text-white'}`}
-                                        title="Cục Tẩy"
+                                        title={t('Ophthalmologist.screeningReview.toolbox.eraser', 'Cục Tẩy')}
                                       >
                                         <Eraser className="w-4 h-4" />
                                       </button>
@@ -2735,7 +2388,7 @@ export default function ScreeningReviewPage() {
                                             ? 'bg-gray-700 text-cyan-400 hover:text-white hover:bg-gray-600'
                                             : 'bg-gray-800 text-gray-600 cursor-not-allowed opacity-40'
                                         }`}
-                                        title="Hoàn tác"
+                                        title={t('Ophthalmologist.screeningReview.toolbox.undo', 'Hoàn tác')}
                                       >
                                         <Undo2 className="w-4 h-4" />
                                       </button>
@@ -2749,7 +2402,7 @@ export default function ScreeningReviewPage() {
                                           setHasHeatmapEdits(true);
                                         }}
                                         className="ml-1 flex items-center gap-1 px-2 py-1 rounded border border-red-500/50 text-red-400 hover:bg-red-500/20 transition-all text-[9px] uppercase font-bold tracking-wider"
-                                        title="Xóa toàn bộ bản đồ nhiệt"
+                                        title={t('Ophthalmologist.screeningReview.toolbox.clearHeatmap', 'Xóa toàn bộ bản đồ nhiệt')}
                                       >
                                         Clear
                                       </button>
@@ -2770,20 +2423,16 @@ export default function ScreeningReviewPage() {
                   {/* Detected Findings */}
                   <div className="flex-1 overflow-y-auto p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        {t(
-                          'Ophthalmologist.screeningReview.detectedFindings',
-                          'Detected Findings'
-                        )}{' '}
-                        ({sidebarFindings.length})
-                      </p>
+                      <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                        {t('Ophthalmologist.screeningReview.findings.heading', 'Detected Findings')}
+                      </h3>
                       <button
                         onClick={() => {
                           if (!isFinalizedDiagnosis) setIsAddingFinding(true);
                         }}
                         disabled={isFinalizedDiagnosis}
                         className="p-1 text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors disabled:opacity-50"
-                        title="Thêm thẻ (Add finding)"
+                        title={t('Ophthalmologist.screeningReview.toolbox.addFinding', 'Thêm thẻ (Add finding)')}
                       >
                         <PlusSquare className="w-4 h-4" />
                       </button>
@@ -2793,7 +2442,7 @@ export default function ScreeningReviewPage() {
                       <div className="mb-4 space-y-3 p-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-sm">
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold uppercase text-gray-400">
-                            Tên bệnh / Dấu hiệu
+                            {t('Ophthalmologist.screeningReview.findings.nameLabel', 'Tên bệnh / Dấu hiệu')}
                           </label>
                           <input
                             type="text"
@@ -2801,7 +2450,7 @@ export default function ScreeningReviewPage() {
                             value={newFindingName}
                             onChange={(e) => setNewFindingName(e.target.value)}
                             list="finding-name-suggestions"
-                            placeholder="Nhập tên..."
+                            placeholder={t('Ophthalmologist.screeningReview.findings.namePlaceholder', 'Nhập tên...')}
                             className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
                           />
                           <datalist id="finding-name-suggestions">
@@ -2818,14 +2467,14 @@ export default function ScreeningReviewPage() {
 
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold uppercase text-gray-400">
-                            Mô tả chi tiết
+                            {t('Ophthalmologist.screeningReview.findings.descriptionLabel', 'Mô tả chi tiết')}
                           </label>
                           <textarea
                             value={newFindingDescription}
                             onChange={(e) =>
                               setNewFindingDescription(e.target.value)
                             }
-                            placeholder="Nhập mô tả..."
+                            placeholder={t('Ophthalmologist.screeningReview.findings.descriptionPlaceholder', 'Nhập mô tả...')}
                             rows={2}
                             className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none"
                           />
@@ -2834,25 +2483,25 @@ export default function ScreeningReviewPage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <label className="text-[10px] font-bold uppercase text-gray-400 mr-1">
-                              Rủi ro:
+                              {t('Ophthalmologist.screeningReview.findings.severityLabel', 'Rủi ro:')}
                             </label>
                             <button
                               type="button"
                               onClick={() => setNewFindingSeverity('low')}
                               className={`w-6 h-6 rounded-full bg-yellow-400 border-2 transition-all ${newFindingSeverity === 'low' ? 'border-white ring-2 ring-yellow-400 scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                              title="Low (Yellow)"
+                              title={t('Ophthalmologist.screeningReview.findings.severity.low', 'Low (Yellow)')}
                             />
                             <button
                               type="button"
                               onClick={() => setNewFindingSeverity('moderate')}
                               className={`w-6 h-6 rounded-full bg-orange-500 border-2 transition-all ${newFindingSeverity === 'moderate' ? 'border-white ring-2 ring-orange-500 scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                              title="Moderate (Orange)"
+                              title={t('Ophthalmologist.screeningReview.findings.severity.moderate', 'Moderate (Orange)')}
                             />
                             <button
                               type="button"
                               onClick={() => setNewFindingSeverity('high')}
                               className={`w-6 h-6 rounded-full bg-red-600 border-2 transition-all ${newFindingSeverity === 'high' ? 'border-white ring-2 ring-red-600 scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                              title="High (Red)"
+                              title={t('Ophthalmologist.screeningReview.findings.severity.high', 'High (Red)')}
                             />
                           </div>
                           <div className="flex items-center gap-2">
@@ -2860,7 +2509,7 @@ export default function ScreeningReviewPage() {
                               onClick={() => setIsAddingFinding(false)}
                               className="px-3 py-1.5 text-[11px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
                             >
-                              Hủy
+                              {t('Ophthalmologist.common.cancel', 'Hủy')}
                             </button>
                             <button
                               onClick={() => {
@@ -2944,7 +2593,7 @@ export default function ScreeningReviewPage() {
                               }}
                               disabled={isFinalizedDiagnosis}
                               className="p-1 text-gray-400 hover:text-red-500 transition-colors ml-2"
-                              title="Delete Finding"
+                              title={t('Ophthalmologist.screeningReview.findings.deleteFinding', 'Delete Finding')}
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
@@ -3008,7 +2657,7 @@ export default function ScreeningReviewPage() {
                         )}
                       </p>
                     ) : null}
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       <button
                         onClick={handleSaveEdits}
                         disabled={savingEdits || isFinalizedDiagnosis}
@@ -3025,44 +2674,28 @@ export default function ScreeningReviewPage() {
                         )}
                       </button>
                       <button
+                        type="button"
                         onClick={() => {
-                          if (!isFinalizedDiagnosis)
-                            setShowDiagnosisModal(true);
+                          if (!isFinalizedDiagnosis) navigateToErm();
                         }}
                         disabled={isFinalizedDiagnosis}
                         className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 text-sm font-semibold text-white shadow-sm shadow-cyan-600/25 transition-all hover:-translate-y-0.5 hover:bg-cyan-700 hover:shadow-md hover:shadow-cyan-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <FileText className="w-4 h-4" />
                         {t(
-                          'Ophthalmologist.screeningReview.generateReport',
-                          'Generate Report'
+                          'Ophthalmologist.screeningReview.openErmDiagnosis',
+                          'Chẩn đoán, đơn thuốc & khóa hồ sơ (ERM)'
                         )}
                       </button>
-                      {detail.medicalRecordId &&
-                        detail.medicalRecordId !==
-                          '00000000-0000-0000-0000-000000000000' && (
-                          <button
-                            onClick={() => {
-                              navigate(
-                                `/medical-records/${detail.medicalRecordId}`,
-                                {
-                                  state: {
-                                    initialTab: 'clinical',
-                                    screeningId: detail.screeningId,
-                                  },
-                                }
-                              );
-                            }}
-                            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm shadow-indigo-600/25 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md hover:shadow-indigo-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            <FileText className="w-4 h-4" />
-                            {t(
-                              'Ophthalmologist.screeningReview.createMedicalRecord',
-                              'Điền bệnh án'
-                            )}
-                          </button>
-                        )}
                     </div>
+                    {!isFinalizedDiagnosis ? (
+                      <p className="mt-2 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
+                        {t(
+                          'Ophthalmologist.screeningReview.ermWorkflowHint',
+                          'Chẩn đoán cuối, đơn thuốc và gửi Thu ngân được thực hiện trong bệnh án điện tử (ERM), không còn màn hình Complete Diagnosis cũ.'
+                        )}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -3145,463 +2778,6 @@ export default function ScreeningReviewPage() {
         </div>
       )}
 
-      {/* Diagnosis Modal */}
-      {showDiagnosisModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0a1f44] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl">
-            {/* Modal Header */}
-            <div className="p-6 border-b border-gray-200 dark:border-[#1e3a5f]">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  {t(
-                    'Ophthalmologist.screeningReview.modal.completeDiagnosis',
-                    'Complete Diagnosis'
-                  )}
-                </h2>
-                <button
-                  onClick={() => setShowDiagnosisModal(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {t(
-                  'Ophthalmologist.screeningReview.modal.description',
-                  'Review AI findings and provide your clinical assessment'
-                )}
-              </p>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)] space-y-6">
-              {/* AI Summary */}
-              <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-cyan-800 dark:text-cyan-300 mb-2">
-                  {t(
-                    'Ophthalmologist.screeningReview.modal.aiSummary',
-                    'AI Analysis Summary'
-                  )}
-                </h3>
-                <p className="text-sm text-cyan-700 dark:text-cyan-400">
-                  {detail?.latestResult?.summary?.trim() ||
-                    t(
-                      'Ophthalmologist.screeningReview.modal.noAiSummary',
-                      'No AI summary stored for this screening.'
-                    )}
-                </p>
-                <div className="flex items-center gap-4 mt-3">
-                  <span className="text-sm text-cyan-600 dark:text-cyan-400">
-                    {t(
-                      'Ophthalmologist.screeningReview.modal.riskLevel',
-                      'Risk Level'
-                    )}
-                    :{' '}
-                    <strong>
-                      {detail?.latestResult?.riskLevel ?? riskLevelUi}
-                    </strong>
-                  </span>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-gray-200 bg-gray-50/90 p-1 dark:border-[#1e3a5f] dark:bg-[#10294f]/70">
-                <div className="grid grid-cols-3 gap-1">
-                  {(
-                    [
-                      {
-                        id: 'diagnosis',
-                        label: t(
-                          'Ophthalmologist.screeningReview.modal.tabDiagnosis',
-                          'Diagnosis'
-                        ),
-                      },
-                      {
-                        id: 'prescription',
-                        label: t(
-                          'Ophthalmologist.screeningReview.modal.tabPrescription',
-                          'Prescription'
-                        ),
-                      },
-                      {
-                        id: 'plan',
-                        label: t(
-                          'Ophthalmologist.screeningReview.modal.tabPlan',
-                          'Care Plan'
-                        ),
-                      },
-                    ] as { id: DiagnosisModalTab; label: string }[]
-                  ).map((tab) => (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setDiagnosisModalTab(tab.id)}
-                      className={`h-10 rounded-lg text-sm font-semibold transition-colors ${
-                        diagnosisModalTab === tab.id
-                          ? 'bg-white text-cyan-700 shadow-sm dark:bg-[#0a1f44] dark:text-cyan-300'
-                          : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {diagnosisModalTab === 'diagnosis' && (
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                      {t(
-                        'Ophthalmologist.screeningReview.modal.diagnosisCore',
-                        'Diagnosis Core'
-                      )}
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <select
-                        value={diagnosisCodePreset}
-                        onChange={(e) =>
-                          setDiagnosisCodePreset(
-                            e.target
-                              .value as (typeof DIAGNOSIS_CODE_PRESETS)[number]['value']
-                          )
-                        }
-                        className="md:col-span-2 px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                      >
-                        {DIAGNOSIS_CODE_PRESETS.map((item) => (
-                          <option key={item.value} value={item.value}>
-                            {item.label}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        value={codingSystem}
-                        onChange={(e) => setCodingSystem(e.target.value)}
-                        className="px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                      >
-                        <option value="ICD-10">ICD-10</option>
-                        <option value="SNOMED CT">SNOMED CT</option>
-                        <option value="Other">
-                          {t('Ophthalmologist.common.other', 'Other')}
-                        </option>
-                      </select>
-                    </div>
-                    {diagnosisCodePreset === 'OTHER' && (
-                      <input
-                        type="text"
-                        value={customDiagnosisCode}
-                        onChange={(e) => setCustomDiagnosisCode(e.target.value)}
-                        placeholder={t(
-                          'Ophthalmologist.screeningReview.modal.diagnosisCode',
-                          'Diagnosis code'
-                        )}
-                        className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                      />
-                    )}
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
-                      {t(
-                        'Ophthalmologist.screeningReview.modal.clinicalFindings',
-                        'Clinical Findings'
-                      )}
-                    </h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                      {t(
-                        'Ophthalmologist.screeningReview.modal.clinicalFindingsHint',
-                        'Auto-filled from AI findings. You can adjust before saving.'
-                      )}
-                    </p>
-                    <textarea
-                      value={clinicalFindings}
-                      onChange={(e) => setClinicalFindings(e.target.value)}
-                      placeholder={t(
-                        'Ophthalmologist.screeningReview.modal.clinicalFindingsPlaceholder',
-                        'Document physician findings and interpretation...'
-                      )}
-                      rows={4}
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4 space-y-2">
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {t(
-                          'Ophthalmologist.screeningReview.modal.severityLevel',
-                          'Severity Level'
-                        )}
-                      </p>
-                      <select
-                        value={severityLevel}
-                        onChange={(e) => setSeverityLevel(e.target.value)}
-                        className="w-full px-3 py-2 bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                      >
-                        <option value="Mild">
-                          {t('Ophthalmologist.common.severity.mild', 'Mild')}
-                        </option>
-                        <option value="Moderate">
-                          {t(
-                            'Ophthalmologist.common.severity.moderate',
-                            'Moderate'
-                          )}
-                        </option>
-                        <option value="Severe">
-                          {t(
-                            'Ophthalmologist.common.severity.severe',
-                            'Severe'
-                          )}
-                        </option>
-                        <option value="Critical">
-                          {t(
-                            'Ophthalmologist.common.severity.critical',
-                            'Critical'
-                          )}
-                        </option>
-                      </select>
-                    </div>
-
-                    <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white">
-                            {t(
-                              'Ophthalmologist.screeningReview.modal.urgentCase',
-                              'Urgent Case'
-                            )}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {t(
-                              'Ophthalmologist.screeningReview.modal.urgentCaseHint',
-                              'Mark if immediate attention is required'
-                            )}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => setIsUrgent(!isUrgent)}
-                          className={`w-12 h-6 rounded-full transition-colors relative ${
-                            isUrgent
-                              ? 'bg-red-500'
-                              : 'bg-gray-300 dark:bg-gray-600'
-                          }`}
-                        >
-                          <span
-                            className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                              isUrgent ? 'left-7' : 'left-1'
-                            }`}
-                          />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {diagnosisModalTab === 'prescription' && (
-                <PrescriptionTable
-                  items={prescriptionItems}
-                  onChange={(items) => {
-                    setPrescriptionItems(items);
-                    if (Object.keys(prescriptionErrors).length > 0) {
-                      setPrescriptionErrors({});
-                    }
-                  }}
-                  noMedicationPrescribed={noMedicationPrescribed}
-                  onNoMedicationChange={(value) => {
-                    setNoMedicationPrescribed(value);
-                    setPrescriptionErrors({});
-                  }}
-                  prescriptionNote={prescriptionNote}
-                  onNoteChange={setPrescriptionNote}
-                  locked={isFinalizedDiagnosis}
-                  validationErrors={prescriptionErrors}
-                />
-              )}
-
-              {diagnosisModalTab === 'plan' && (
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                      {t(
-                        'Ophthalmologist.screeningReview.modal.treatmentAdvice',
-                        'Treatment and Advice'
-                      )}
-                    </h4>
-                    <select
-                      value=""
-                      onChange={(e) => {
-                        if (e.target.value) setTreatmentPlan(e.target.value);
-                      }}
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                    >
-                      <option value="">
-                        {t(
-                          'Ophthalmologist.screeningReview.modal.selectTreatmentTemplate',
-                          'Select a treatment template'
-                        )}
-                      </option>
-                      {TREATMENT_PLAN_PRESETS.map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </select>
-                    <textarea
-                      value={treatmentPlan}
-                      onChange={(e) => setTreatmentPlan(e.target.value)}
-                      placeholder={t(
-                        'Ophthalmologist.screeningReview.modal.treatmentPlan',
-                        'Treatment plan...'
-                      )}
-                      rows={3}
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
-                    />
-                  </div>
-
-                  <div className="space-y-3">
-                    <select
-                      value=""
-                      onChange={(e) => {
-                        if (e.target.value) setRecommendations(e.target.value);
-                      }}
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                    >
-                      <option value="">
-                        {t(
-                          'Ophthalmologist.screeningReview.modal.selectRecommendationTemplate',
-                          'Select a recommendation template'
-                        )}
-                      </option>
-                      {RECOMMENDATION_PRESETS.map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </select>
-                    <textarea
-                      value={recommendations}
-                      onChange={(e) => setRecommendations(e.target.value)}
-                      placeholder={t(
-                        'Ophthalmologist.screeningReview.modal.recommendations',
-                        'Recommendations for patient and follow-up care...'
-                      )}
-                      rows={3}
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white">
-                            {t(
-                              'Ophthalmologist.screeningReview.modal.referralRequired',
-                              'Referral Required'
-                            )}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {t(
-                              'Ophthalmologist.screeningReview.modal.referralHint',
-                              'Recommend specialist consultation'
-                            )}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => setReferralRequired(!referralRequired)}
-                          className={`w-12 h-6 rounded-full transition-colors relative ${
-                            referralRequired
-                              ? 'bg-cyan-500'
-                              : 'bg-gray-300 dark:bg-gray-600'
-                          }`}
-                        >
-                          <span
-                            className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                              referralRequired ? 'left-7' : 'left-1'
-                            }`}
-                          />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4">
-                      <p className="font-medium text-gray-900 dark:text-white mb-2">
-                        {t(
-                          'Ophthalmologist.screeningReview.modal.followUpDate',
-                          'Follow-up Date'
-                        )}
-                      </p>
-                      <input
-                        type="date"
-                        value={followUpDate}
-                        onChange={(e) => setFollowUpDate(e.target.value)}
-                        className="w-full px-3 py-2 bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-6 border-t border-gray-200 dark:border-[#1e3a5f] flex items-center justify-between">
-              <button
-                onClick={() => setShowDiagnosisModal(false)}
-                className="h-11 px-6 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors"
-              >
-                {t('Ophthalmologist.common.cancel', 'Cancel')}
-              </button>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => {
-                    setDiagnosisStatus('Draft');
-                    void handleSubmitDiagnosis('Draft');
-                  }}
-                  disabled={
-                    submitVerificationReportMutation.isPending ||
-                    consultationSessionsQuery.isLoading ||
-                    consultationSessionsQuery.isFetching
-                  }
-                  className="h-11 px-6 bg-slate-600 hover:bg-slate-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors flex items-center gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  {submitVerificationReportMutation.isPending
-                    ? t('Ophthalmologist.common.saving', 'Saving...')
-                    : t(
-                        'Ophthalmologist.screeningReview.modal.saveDraft',
-                        'Save Draft'
-                      )}
-                </button>
-                <button
-                  onClick={() => {
-                    setDiagnosisStatus('Finalized');
-                    void handleSubmitDiagnosis('Finalized');
-                  }}
-                  disabled={
-                    submitVerificationReportMutation.isPending ||
-                    consultationSessionsQuery.isLoading ||
-                    consultationSessionsQuery.isFetching
-                  }
-                  className="h-11 px-6 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors flex items-center gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  {consultationSessionsQuery.isLoading ||
-                  consultationSessionsQuery.isFetching
-                    ? t(
-                        'Ophthalmologist.screeningReview.modal.linkingSession',
-                        'Linking session...'
-                      )
-                    : t(
-                        'Ophthalmologist.screeningReview.modal.sendToCashier',
-                        'Finalize & Send to Cashier'
-                      )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Consilium Modal */}
       {showConsiliumModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -3619,7 +2795,7 @@ export default function ScreeningReviewPage() {
                     )}
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Mời đồng nghiệp hỗ trợ chẩn đoán ca bệnh khẩn cấp
+                    {t('Ophthalmologist.screeningReview.consiliumModal.subtitle', 'Mời đồng nghiệp hỗ trợ chẩn đoán ca bệnh khẩn cấp')}
                   </p>
                 </div>
               </div>
@@ -3634,12 +2810,12 @@ export default function ScreeningReviewPage() {
             <div className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Chọn bác sĩ đang trực (Available)
+                  {t('Ophthalmologist.screeningReview.consiliumModal.selectDoctorLabel', 'Chọn bác sĩ đang trực (Available)')}
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
                   {candidateDoctors.length === 0 ? (
                     <div className="col-span-2 py-8 text-center text-gray-500">
-                      Không tìm thấy bác sĩ nào đang sẵn sàng.
+                      {t('Ophthalmologist.screeningReview.consiliumModal.noDoctorsAvailable', 'Không tìm thấy bác sĩ nào đang sẵn sàng.')}
                     </div>
                   ) : (
                     candidateDoctors.map((doc) => (
@@ -3655,7 +2831,7 @@ export default function ScreeningReviewPage() {
                               setSelectedDoctors([...selectedDoctors, doc.id]);
                             } else {
                               ophthalToast.info(
-                                'Tối đa mời 3 bác sĩ hội chẩn.'
+                                t('Ophthalmologist.screeningReview.consiliumModal.maxDoctorsToast', 'Tối đa mời 3 bác sĩ hội chẩn.')
                               );
                             }
                           }
@@ -3668,22 +2844,28 @@ export default function ScreeningReviewPage() {
                       >
                         <div className="relative">
                           <UserAvatar
-                            fullName={doc.fullName}
+                            fullName={doc.name}
+                            avatarUrl={doc.avatar ?? undefined}
                             size="md"
                             className="shrink-0"
                           />
                           <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-[#0a1f44] rounded-full" />
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p className="font-bold text-gray-900 dark:text-white truncate">
-                            {doc.fullName}
+                            {doc.name}
                           </p>
-                          <p className="text-xs text-gray-500 truncate">
-                            {doc.roles.join(', ')}
+                          {doc.degreeLevel && (
+                            <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                              {doc.degreeLevel}
+                            </p>
+                          )}
+                          <p className="text-xs text-green-600 dark:text-green-400">
+                            ● {t('Ophthalmologist.screeningReview.consiliumModal.doctorAvailable', 'Đang rảnh')}
                           </p>
                         </div>
                         {selectedDoctors.includes(doc.id) && (
-                          <div className="ml-auto">
+                          <div className="ml-auto shrink-0">
                             <Check className="w-5 h-5 text-amber-600" />
                           </div>
                         )}
@@ -3695,15 +2877,35 @@ export default function ScreeningReviewPage() {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Lý do hội chẩn
+                  {t('Ophthalmologist.screeningReview.consiliumModal.reasonLabel', 'Lý do hội chẩn')}
                 </label>
                 <textarea
                   value={consiliumReason}
                   onChange={(e) => setConsiliumReason(e.target.value)}
-                  placeholder="Nhập lý do cần hỗ trợ (ví dụ: Hình ảnh đáy mắt không rõ ràng, nghi ngờ glôcôm...)"
+                  placeholder={t('Ophthalmologist.screeningReview.consiliumModal.reasonPlaceholder', 'Nhập lý do cần hỗ trợ (ví dụ: Hình ảnh đáy mắt không rõ ràng, nghi ngờ glôcôm...)')}
                   className="w-full h-24 px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/30 border border-gray-200 dark:border-[#1e3a5f] rounded-2xl text-sm focus:ring-2 focus:ring-amber-500/50 outline-none transition-all resize-none"
                 />
               </div>
+
+              {/* Emergency Checkbox */}
+              <label
+                htmlFor="emergency-consilium-check"
+                className="flex cursor-pointer items-center gap-3 rounded-2xl border-2 border-red-200 bg-red-50/60 p-4 transition-colors hover:bg-red-50 dark:border-red-900/40 dark:bg-red-900/10 dark:hover:bg-red-900/20"
+              >
+                <input
+                  id="emergency-consilium-check"
+                  type="checkbox"
+                  checked={isEmergencyConsilium}
+                  onChange={(e) => setIsEmergencyConsilium(e.target.checked)}
+                  className="h-5 w-5 cursor-pointer accent-red-600"
+                />
+                <span className="text-sm font-bold text-red-700 dark:text-red-400">
+                  🚨 Ca Khẩn Cấp (Emergency) —{' '}
+                  <span className="font-normal">
+                    {t('Ophthalmologist.screeningReview.consiliumModal.emergencyDescription', 'Thông báo ưu tiên cao tới bác sĩ được mời')}
+                  </span>
+                </span>
+              </label>
             </div>
 
             <div className="p-6 border-t border-gray-200 dark:border-[#1e3a5f] flex justify-end gap-3 bg-gray-50/50 dark:bg-slate-900/30">
@@ -3711,7 +2913,7 @@ export default function ScreeningReviewPage() {
                 onClick={() => setShowConsiliumModal(false)}
                 className="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               >
-                Hủy
+                {t('Ophthalmologist.common.cancel', 'Hủy')}
               </button>
               <button
                 onClick={() => void handleRequestConsilium()}
@@ -3723,25 +2925,12 @@ export default function ScreeningReviewPage() {
                 ) : (
                   <Send className="w-4 h-4" />
                 )}
-                Gửi yêu cầu khẩn cấp
+                {t('Ophthalmologist.screeningReview.consiliumModal.sendEmergencyRequest', 'Gửi yêu cầu khẩn cấp')}
               </button>
             </div>
           </div>
         </div>
       )}
-
-      {/* Finalize Confirmation */}
-      <ConfirmModal
-        open={showLockConfirm}
-        title="Khóa hồ sơ bệnh án?"
-        message="Hành động này sẽ khóa vĩnh viễn hồ sơ bệnh án này. Bạn sẽ không thể chỉnh sửa chẩn đoán hoặc đơn thuốc sau khi khóa. Hồ sơ sẽ được gửi tới Thu ngân để hoàn tất thanh toán."
-        confirmLabel="Tôi đồng ý, Khóa ngay"
-        cancelLabel="Hủy"
-        tone="danger"
-        isLoading={isFinalizing}
-        onConfirm={() => void handleFinalizeMedicalRecord()}
-        onCancel={() => setShowLockConfirm(false)}
-      />
     </div>
   );
 }

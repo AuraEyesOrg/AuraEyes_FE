@@ -18,6 +18,7 @@ export interface PrescriptionTableProps {
   onNoteChange: (val: string) => void;
   locked?: boolean;
   validationErrors?: Record<string, (keyof Omit<RxItem, 'id'>)[]>;
+  t: (key: string, fallback?: string) => string;
 }
 
 // ─── Drug catalogue ───────────────────────────────────────────────────────────
@@ -164,6 +165,27 @@ const DRUG_CATALOGUE: DrugEntry[] = [
   },
 ];
 
+const slugify = (str: string) =>
+  str
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
+const getTranslatedDrugCatalogue = (
+  t: (key: string, fallback?: string) => string
+): DrugEntry[] =>
+  DRUG_CATALOGUE.map((drug) => {
+    const key = `Ophthalmologist.drug.${slugify(drug.label)}`;
+    return {
+      ...drug,
+      defaultDosage: t(`${key}.dosage`, drug.defaultDosage),
+      defaultUnit: t(`${key}.unit`, drug.defaultUnit),
+      defaultFrequency: t(`${key}.frequency`, drug.defaultFrequency),
+      defaultInstruction: t(`${key}.instruction`, drug.defaultInstruction),
+    };
+  });
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const makeId = () =>
@@ -265,6 +287,7 @@ interface RowProps {
     field: keyof Omit<RxItem, 'id'>,
     el: HTMLInputElement | null
   ) => void;
+  t: (key: string, fallback?: string) => string;
 }
 
 function RxRow({
@@ -277,17 +300,18 @@ function RxRow({
   onDelete,
   onAddAfter,
   registerRef,
+  t,
 }: RowProps) {
   const [suggestions, setSuggestions] = useState<DrugEntry[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
 
   const openSuggestions = useCallback((query: string) => {
-    const results = DRUG_CATALOGUE.filter((d) => fuzzyMatch(d.label, query));
+    const results = getTranslatedDrugCatalogue(t).filter((d) => fuzzyMatch(d.label, query));
     setSuggestions(results);
     setDropdownOpen(results.length > 0);
     setActiveIdx(-1);
-  }, []);
+  }, [t]);
 
   const applyDrug = useCallback(
     (drug: DrugEntry) => {
@@ -385,7 +409,10 @@ function RxRow({
                 ref={(el) => registerRef(item.id, col.field, el)}
                 value={item[col.field]}
                 disabled={locked}
-                placeholder={col.placeholder}
+                placeholder={t(
+                  `Ophthalmologist.prescriptionTable.placeholders.${col.field}`,
+                  col.placeholder
+                )}
                 autoComplete="off"
                 spellCheck={false}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
@@ -449,7 +476,7 @@ function RxRow({
         <button
           type="button"
           onClick={() => onDelete(item.id)}
-          title="Xoá dòng"
+          title={t('Ophthalmologist.prescriptionTable.deleteRow', 'Xoá dòng')}
           className="mt-1.5 shrink-0 w-5 h-5 flex items-center justify-center rounded text-gray-300 dark:text-white/25 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
         >
           <X className="w-3.5 h-3.5" />
@@ -472,6 +499,7 @@ export function PrescriptionTable({
   onNoteChange,
   locked = false,
   validationErrors = {},
+  t,
 }: PrescriptionTableProps) {
   const refMap = useRef<
     Record<
@@ -577,7 +605,7 @@ export function PrescriptionTable({
       {/* Header */}
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-          Đơn thuốc
+          {t('Ophthalmologist.prescriptionTable.title', 'Đơn thuốc')}
         </h4>
         {!locked && !noMedicationPrescribed && (
           <button
@@ -586,7 +614,7 @@ export function PrescriptionTable({
             className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 px-3 py-1.5 text-xs font-semibold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 dark:hover:bg-cyan-800/40 transition-colors"
           >
             <PlusSquare className="h-3.5 w-3.5" />
-            Thêm thuốc
+            {t('Ophthalmologist.prescriptionTable.addMedicine', 'Thêm thuốc')}
           </button>
         )}
       </div>
@@ -601,7 +629,10 @@ export function PrescriptionTable({
           className="h-3.5 w-3.5 accent-cyan-600 cursor-pointer disabled:cursor-default"
         />
         <span className="text-xs text-gray-600 dark:text-gray-300">
-          Không kê thuốc (chỉ tư vấn / lifestyle)
+          {t(
+            'Ophthalmologist.prescriptionTable.noMedication',
+            'Không kê thuốc (chỉ tư vấn / lifestyle)'
+          )}
         </span>
       </label>
 
@@ -619,7 +650,10 @@ export function PrescriptionTable({
                 key={col.field}
                 className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 truncate"
               >
-                {col.label}
+                {t(
+                  `Ophthalmologist.prescriptionTable.columns.${col.field}`,
+                  col.label
+                )}
                 {col.required && <span className="ml-0.5 text-red-400">*</span>}
               </span>
             ))}
@@ -629,7 +663,10 @@ export function PrescriptionTable({
           <div className="rounded-xl border border-gray-200 dark:border-white/8 bg-white dark:bg-[#0a1f44] px-2 py-0.5">
             {items.length === 0 ? (
               <p className="py-4 text-center text-xs text-gray-400 dark:text-gray-500 italic">
-                Chưa có thuốc. Nhấn "Thêm thuốc" hoặc bắt đầu nhập.
+                {t(
+                  'Ophthalmologist.prescriptionTable.empty',
+                  'Chưa có thuốc. Nhấn "Thêm thuốc" hoặc bắt đầu nhập.'
+                )}
               </p>
             ) : (
               items.map((item, index) => (
@@ -644,6 +681,7 @@ export function PrescriptionTable({
                   onDelete={handleDelete}
                   onAddAfter={handleAddAfter}
                   registerRef={registerRef}
+                  t={t}
                 />
               ))
             )}
@@ -654,11 +692,14 @@ export function PrescriptionTable({
               <kbd className="font-mono bg-gray-100 dark:bg-white/10 px-1 rounded">
                 Tab
               </kbd>{' '}
-              hoặc{' '}
+              {t('Ophthalmologist.prescriptionTable.keyboardHint.or', 'hoặc')}{' '}
               <kbd className="font-mono bg-gray-100 dark:bg-white/10 px-1 rounded">
                 Enter
               </kbd>{' '}
-              để chuyển ô · Enter ở ô cuối để thêm dòng mới
+              {t(
+                'Ophthalmologist.prescriptionTable.keyboardHint.description',
+                'để chuyển ô · Enter ở ô cuối để thêm dòng mới'
+              )}
             </p>
           )}
         </div>
@@ -667,13 +708,16 @@ export function PrescriptionTable({
       {/* Note */}
       <div>
         <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
-          Ghi chú cho dược sĩ / bệnh nhân
+          {t('Ophthalmologist.prescriptionTable.note', 'Ghi chú cho dược sĩ / bệnh nhân')}
         </label>
         <textarea
           value={prescriptionNote}
           onChange={(e) => onNoteChange(e.target.value)}
           disabled={locked}
-          placeholder="Ví dụ: Bệnh nhân dị ứng Penicillin. Lưu ý bảo quản thuốc ở nhiệt độ thường…"
+          placeholder={t(
+            'Ophthalmologist.prescriptionTable.notePlaceholder',
+            'Ví dụ: Bệnh nhân dị ứng Penicillin. Lưu ý bảo quản thuốc ở nhiệt độ thường…'
+          )}
           rows={2}
           className="w-full px-4 py-2.5 text-xs bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none disabled:opacity-60 disabled:cursor-default"
         />
@@ -681,7 +725,10 @@ export function PrescriptionTable({
 
       {locked && (
         <p className="rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20 px-3 py-2 text-xs font-medium text-amber-800 dark:text-amber-300">
-          Đơn thuốc đã finalize — không thể chỉnh sửa.
+          {t(
+            'Ophthalmologist.prescriptionTable.lockedMessage',
+            'Đơn thuốc đã finalize — không thể chỉnh sửa.'
+          )}
         </p>
       )}
     </div>
