@@ -4813,6 +4813,24 @@
     },
     "scheduling": {
       "records": "records",
+      "page": {
+        "title": "Clinic Scheduling",
+        "description": "View and manage all appointment slots and schedule templates across doctors."
+      },
+      "tabs": {
+        "appointments": "Appointments",
+        "templates": "Schedule Templates"
+      },
+      "actions": {
+        "trigger": "Trigger Generation",
+        "addTemplate": "Add Template",
+        "activate": "Activate",
+        "deactivate": "Deactivate"
+      },
+      "filters": {
+        "allDoctors": "All Doctors",
+        "allStatuses": "All Statuses"
+      },
       "status": {
         "available": "Available",
         "partial": "Partial Booked",
@@ -4820,6 +4838,45 @@
         "blocked": "Blocked",
         "attended": "Attended (Past)",
         "expired": "Expired (Past)"
+      },
+      "states": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "daily": {
+        "empty": "No appointments on this day.",
+        "summary": "{{date}} Summary",
+        "totalSlots": "Total Slots",
+        "bookings": "Bookings",
+        "booked": "Booked",
+        "available": "Available",
+        "fullPartial": "Full/Partial",
+        "attended": "Attended",
+        "expired": "Expired",
+        "today": "Today"
+      },
+      "info": {
+        "title": "Appointment Info",
+        "description": "Overview of appointments for this day"
+      },
+      "templates": {
+        "title": "Recurring Schedule Templates",
+        "count": "templates",
+        "empty": "No recurring templates defined yet.",
+        "duration": "Slot Duration",
+        "capacityMode": "Capacity Mode",
+        "dynamic": "Dynamic (By Doctor)",
+        "minutes": "min"
+      },
+      "doctorInitials": "Dr",
+      "clinicSlot": "Clinic Slot",
+      "toasts": {
+        "triggerSuccess": "Slot generation job triggered successfully.",
+        "triggerError": "Slot generation job failed.",
+        "deleteSuccess": "Template deleted successfully.",
+        "deleteError": "Failed to delete template.",
+        "statusUpdateSuccess": "Template status updated successfully.",
+        "statusUpdateError": "Failed to update template status."
       }
     },
     "auditLogs": {
@@ -4908,16 +4965,104 @@
       }
     },
     "settings": {
+      "page": {
+        "title": "System Settings",
+        "description": "Configure system-wide settings and preferences",
+        "actions": {
+          "saveChanges": "Save Changes",
+          "resetChanges": "Reset",
+          "saving": "Saving...",
+          "stickyHint": "Unsaved changes"
+        }
+      },
+      "sections": {
+        "general": {
+          "title": "General Settings",
+          "description": "Configure basic system settings"
+        },
+        "security": {
+          "title": "Security",
+          "description": "Security and authentication settings"
+        },
+        "data": {
+          "title": "Data Management",
+          "description": "Backup, export, and data retention"
+        }
+      },
       "general": {
+        "platformName": "Platform Name",
+        "supportEmail": "Support Email",
+        "timezone": "Timezone",
+        "defaultLanguage": "Default Language",
+        "languageOptions": {
+          "en": {
+            "label": "English",
+            "native": "English"
+          },
+          "vi": {
+            "label": "Vietnamese",
+            "native": "Tiếng Việt"
+          }
+        },
+        "timezoneOptions": {
+          "utc": "UTC",
+          "americaNewYork": "Eastern Time (ET)",
+          "americaLosAngeles": "Pacific Time (PT)",
+          "europeLondon": "London (GMT)",
+          "asiaHoChiMinh": "Asia/Ho Chi Minh (ICT)"
+        },
         "sections": {
           "platformLocale": {
             "title": "Platform & locale",
             "description": "Basic identity, contact channel, timezone, and default language."
           }
         },
-        "timezoneOptions": {
-          "utc": "UTC"
+        "maintenanceMode": {
+          "title": "Maintenance Mode",
+          "description": "When enabled, users will see the maintenance page"
+        },
+        "trustedDomains": {
+          "title": "Trusted Domains",
+          "descriptionPrefix": "Only allow registration from the following email domains",
+          "descriptionSuffix": "Leave empty to allow all domains",
+          "placeholder": "example.com",
+          "add": "Add",
+          "empty": "No domains yet",
+          "removeDomainAria": "Remove domain"
         }
+      },
+      "security": {
+        "minimumPasswordLength": "Minimum Password Length",
+        "maxLoginAttempts": "Max Login Attempts",
+        "sessionTimeout": "Session Timeout (minutes)",
+        "requireTwoFactor": {
+          "title": "Require Two-Factor Auth",
+          "description": "Enforce two-factor authentication for all admin users"
+        },
+        "ipWhitelist": "IP Whitelist",
+        "ipWhitelistPlaceholder": "e.g. 192.168.1.0/24, 10.0.0.1"
+      },
+      "data": {
+        "databaseBackup": {
+          "title": "Database Backup",
+          "lastBackup": "Last backup",
+          "createNow": "Backup Now"
+        },
+        "exportData": {
+          "title": "Export Data",
+          "description": "Export all system data",
+          "exportToEmail": "Send to email"
+        },
+        "dangerZone": {
+          "title": "Danger Zone",
+          "description": "Irreversible actions - proceed with caution",
+          "clearCache": "Clear Cache",
+          "resetStatistics": "Reset Statistics"
+        }
+      },
+      "toasts": {
+        "saveSuccess": "Settings saved successfully.",
+        "saveFailed": "Failed to save settings"
       }
     },
     "cashflow": {

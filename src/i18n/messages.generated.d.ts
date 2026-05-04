@@ -5393,21 +5393,39 @@ declare module 'i18next' {
           capacityMode: string;
           dynamic: string;
           empty: string;
+          minutes: string;
         };
+        doctorInitials: string;
+        clinicSlot: string;
         filters: {
           allDoctors: string;
           allStatuses: string;
         };
         daily: {
           empty: string;
+          summary: string;
+          totalSlots: string;
+          bookings: string;
+          booked: string;
+          available: string;
+          fullPartial: string;
+          attended: string;
+          expired: string;
+          today: string;
         };
-        createModal: {
-          title: string;
-          editTitle: string;
+        states: {
+          active: string;
+          inactive: string;
         };
         actions: {
           trigger: string;
           addTemplate: string;
+          activate: string;
+          deactivate: string;
+        };
+        createModal: {
+          title: string;
+          editTitle: string;
         };
         status: {
           available: string;

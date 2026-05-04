@@ -5389,22 +5389,40 @@
         "duration": "Thời lượng",
         "capacityMode": "Chế độ dung lượng",
         "dynamic": "Linh hoạt",
-        "empty": "Chưa có mẫu thời gian biểu"
+        "empty": "Chưa có mẫu thời gian biểu",
+        "minutes": "phút"
       },
+      "doctorInitials": "BS",
+      "clinicSlot": "Slot phòng khám",
       "filters": {
         "allDoctors": "Tất cả bác sĩ",
         "allStatuses": "Tất cả trạng thái"
       },
       "daily": {
-        "empty": "Không có lịch hẹn nào trong ngày này."
+        "empty": "Không có lịch hẹn nào trong ngày này.",
+        "summary": "Tổng quan ngày {{date}}",
+        "totalSlots": "Tổng slot",
+        "bookings": "Đã đặt",
+        "booked": "đã đặt",
+        "available": "Còn trống",
+        "fullPartial": "Đầy/Một phần",
+        "attended": "Đã khám",
+        "expired": "Hết hạn",
+        "today": "Hôm nay"
+      },
+      "states": {
+        "active": "Hoạt động",
+        "inactive": "Ngừng hoạt động"
+      },
+      "actions": {
+        "trigger": "Kích hoạt",
+        "addTemplate": "Thêm mẫu",
+        "activate": "Kích hoạt",
+        "deactivate": "Vô hiệu hóa"
       },
       "createModal": {
         "title": "Tạo lịch hẹn",
         "editTitle": "Chỉnh sửa lịch hẹn"
-      },
-      "actions": {
-        "trigger": "Kích hoạt",
-        "addTemplate": "Thêm mẫu"
       },
       "status": {
         "available": "Có sẵn",
