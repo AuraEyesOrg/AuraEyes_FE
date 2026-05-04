@@ -2420,7 +2420,8 @@
       "ruleNotice": "Lưu ý: Bạn chỉ có thể hủy lịch hẹn trước giờ bắt đầu ít nhất 6 tiếng.",
       "ruleViolated": "Không thể hủy lịch hẹn vì đã quá hạn (ít hơn 6 tiếng trước giờ khám).",
       "confirmLabel": "Gửi yêu cầu hủy",
-      "cancelling": "Đang gửi yêu cầu..."
+      "cancelling": "Đang gửi yêu cầu...",
+      "confirmDirect": "Bạn có chắc chắn muốn hủy lịch hẹn này không? Vì bạn chưa thanh toán nên lịch hẹn sẽ bị hủy ngay lập tức và giải phóng chỗ cho người khác."
     },
     "clinicBooking": {
       "page": {
@@ -6870,7 +6871,8 @@
   "Cashier": {
     "toast": {
       "createSuccess": "Đã tạo yêu cầu thanh toán.",
-      "createError": "Lỗi tạo yêu cầu thanh toán."
+      "createError": "Lỗi tạo yêu cầu thanh toán.",
+      "cashSuccess": "Thanh toán tiền mặt thành công"
     },
     "header": {
       "badge": "Quầy thu ngân",
@@ -6917,59 +6919,16 @@
       "title": "Xác nhận thanh toán",
       "message": "Tạo yêu cầu thanh toán {{amount}} cho bệnh nhân {{name}}?",
       "confirm": "Xác nhận",
-      "cancel": "Hủy"
-    }
-  },
-  "ClinicStaffBilling": {
-    "page": {
-      "title": "Quản lý thanh toán",
-      "subtitle": "Theo dõi tất cả đơn thanh toán khám chữa bệnh của bệnh nhân."
-    },
-    "stats": {
-      "totalRevenue": "Tổng doanh thu (ước tính)",
-      "totalRefund": "Đã hoàn tiền",
-      "orders": "Tổng đơn"
-    },
-    "transactions": {
-      "title": "Danh sách đơn hàng",
-      "loadFailed": "Lỗi khi tải dữ liệu",
-      "emptyTitle": "Không có đơn nào"
-    },
-    "filters": {
-      "all": "Tất cả",
-      "completed": "Hoàn thành",
-      "pending": "Chờ thanh toán",
-      "cancelled": "Đã hủy"
-    },
-    "orderDetails": {
-      "description": "Thanh toán phòng khám",
-      "depositOnline": "Đặt cọc Online",
-      "walkInFull": "Walk-in / Full",
-      "idLabel": "Đơn:",
-      "patientLabel": "Bệnh nhân:",
-      "doctorLabel": "Bác sĩ:",
-      "noMedication": "Bác sĩ đánh dấu không kê thuốc cho ca này.",
-      "medicationCount": "Có {{count}} thuốc trong đơn",
-      "medicinePriceLabel": "Giá thuốc (VND)",
-      "manualPricePlaceholder": "Nhập giá thủ công",
-      "serviceFeeLabel": "Phí khám / dịch vụ khác",
-      "serviceFeeDescription": "Nhập khoản phí ngoài giá thuốc nếu có.",
-      "serviceFeeInputLabel": "Phí dịch vụ (VND)",
-      "totalManual": "Tổng tiền thủ công",
-      "note": "Lưu ý: BE hiện mới trả dữ liệu diagnosis/prescription cho cashier, chưa có endpoint để submit breakdown đơn giá thuốc theo visit.",
-      "confirmedDeposit": "Đã thanh toán cọc/100%",
-      "remaining": "Còn lại:",
-      "paid": "Đã cọc:",
-      "processing": "Đang xử lý...",
-      "confirmFinalPayment": "Xác nhận thanh toán nốt"
-    },
-    "pagination": {
-      "previous": "Trước",
-      "next": "Sau",
-      "pageOf": "Trang {{page}} / {{total}}"
-    },
-    "error": {
-      "retry": "Thử lại"
+      "cancel": "Hủy",
+      "patient": "Bệnh nhân",
+      "totalAmount": "Tổng chi phí",
+      "depositPaid": "Đã đặt cọc (Online)",
+      "remaining": "Số tiền còn lại",
+      "methodTitle": "Phương thức thanh toán",
+      "cash": "Tiền mặt",
+      "payos": "PayOS QR",
+      "confirmCash": "Xác nhận thu tiền mặt",
+      "confirmPayos": "Tạo mã thanh toán QR"
     }
   },
   "ClinicStaffSettings": {
@@ -7666,58 +7625,6 @@
           "cancel": "Hủy"
         }
       },
-      "ClinicStaffBilling": {
-        "page": {
-          "title": "Quản lý thanh toán",
-          "subtitle": "Theo dõi tất cả đơn thanh toán khám chữa bệnh của bệnh nhân."
-        },
-        "stats": {
-          "totalRevenue": "Tổng doanh thu (ước tính)",
-          "totalRefund": "Đã hoàn tiền",
-          "orders": "Tổng đơn"
-        },
-        "transactions": {
-          "title": "Danh sách đơn hàng",
-          "loadFailed": "Lỗi khi tải dữ liệu",
-          "emptyTitle": "Không có đơn nào"
-        },
-        "filters": {
-          "all": "Tất cả",
-          "completed": "Hoàn thành",
-          "pending": "Chờ thanh toán",
-          "cancelled": "Đã hủy"
-        },
-        "orderDetails": {
-          "description": "Thanh toán phòng khám",
-          "depositOnline": "Đặt cọc Online",
-          "walkInFull": "Walk-in / Full",
-          "idLabel": "Đơn:",
-          "patientLabel": "Bệnh nhân:",
-          "doctorLabel": "Bác sĩ:",
-          "noMedication": "Bác sĩ đánh dấu không kê thuốc cho ca này.",
-          "medicationCount": "Có {{count}} thuốc trong đơn",
-          "medicinePriceLabel": "Giá thuốc (VND)",
-          "manualPricePlaceholder": "Nhập giá thủ công",
-          "serviceFeeLabel": "Phí khám / dịch vụ khác",
-          "serviceFeeDescription": "Nhập khoản phí ngoài giá thuốc nếu có.",
-          "serviceFeeInputLabel": "Phí dịch vụ (VND)",
-          "totalManual": "Tổng tiền thủ công",
-          "note": "Lưu ý: BE hiện mới trả dữ liệu diagnosis/prescription cho cashier, chưa có endpoint để submit breakdown đơn giá thuốc theo visit.",
-          "confirmedDeposit": "Đã thanh toán cọc/100%",
-          "remaining": "Còn lại:",
-          "paid": "Đã cọc:",
-          "processing": "Đang xử lý...",
-          "confirmFinalPayment": "Xác nhận thanh toán nốt"
-        },
-        "pagination": {
-          "previous": "Trước",
-          "next": "Sau",
-          "pageOf": "Trang {{page}} / {{total}}"
-        },
-        "error": {
-          "retry": "Thử lại"
-        }
-      },
       "ClinicStaffSettings": {
         "title": "Cài đặt",
         "subtitle": "Cấu hình tài khoản, bảo mật và tùy chọn cổng nhân viên",
@@ -8297,6 +8204,64 @@
           "title": "Quét QR check-in"
         }
       }
+    }
+  },
+  "ClinicStaffBilling": {
+    "page": {
+      "title": "Quản lý thanh toán",
+      "subtitle": "Theo dõi tất cả đơn thanh toán khám chữa bệnh của bệnh nhân."
+    },
+    "stats": {
+      "totalRevenue": "Tổng doanh thu (ước tính)",
+      "totalRefund": "Đã hoàn tiền",
+      "orders": "Tổng đơn"
+    },
+    "filters": {
+      "all": "Tất cả",
+      "completed": "Hoàn thành",
+      "pending": "Chờ thanh toán",
+      "cancelled": "Đã hủy"
+    },
+    "transactions": {
+      "title": "Lịch sử giao dịch",
+      "emptyTitle": "Không có giao dịch nào",
+      "loadFailed": "Lỗi khi tải dữ liệu"
+    },
+    "status": {
+      "fullyPaid": "Đã tất toán",
+      "partiallyPaid": "Thanh toán cọc"
+    },
+    "description": {
+      "medicationAndService": "Thanh toán thuốc & dịch vụ",
+      "deposit": "Đặt cọc khám",
+      "finalPayment": "Thanh toán nốt khám"
+    },
+    "orderDetails": {
+      "patientLabel": "BỆNH NHÂN",
+      "patientLabelShort": "BN",
+      "doctorLabel": "BÁC SĨ CHẨN ĐOÁN",
+      "doctorLabelShort": "BS",
+      "orderLabel": "Đơn",
+      "noMedication": "Không có thuốc kê đơn",
+      "medicationCount": "{{count}} loại thuốc",
+      "medicinePriceLabel": "Đơn giá (VND)",
+      "serviceFeeLabel": "Phí dịch vụ",
+      "serviceFeeDescription": "Bao gồm phí khám và các dịch vụ phòng khám đi kèm",
+      "serviceFeeInputLabel": "Nhập giá...",
+      "totalManual": "Tổng cộng",
+      "note": "Vui lòng kiểm tra kỹ chi phí trước khi tạo yêu cầu",
+      "idLabel": "Đơn",
+      "description": "Thanh toán dịch vụ",
+      "confirmedDeposit": "Đã xác nhận cọc",
+      "walkInFull": "Walk-in / Full",
+      "depositOnline": "Đặt cọc Online",
+      "processing": "Đang xử lý...",
+      "confirmFinalPayment": "Xác nhận thanh toán nốt"
+    },
+    "pagination": {
+      "previous": "Trước",
+      "next": "Tiếp",
+      "pageOf": "Trang {{page}} / {{total}}"
     }
   }
 }

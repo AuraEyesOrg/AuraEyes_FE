@@ -24,6 +24,7 @@ import {
   usePatientClinicAppointments,
   usePatientClinicAppointmentCounts,
   useRequestClinicCancellation,
+  useCancelClinicAppointment,
 } from '@/features/patient/hooks/use-clinic-booking';
 import { useCreateClinicFeedback } from '@/features/patient/hooks/use-feedback';
 import {
@@ -82,9 +83,7 @@ const CLINIC_STATUS_LABEL_KEYS: Record<string, string> = {
 };
 
 const AppointmentsPage = () => {
-  const { t: i18nT } = useTranslation();
-  const t = (key: string, options?: Record<string, unknown>) =>
-    i18nT(key as never, options as never) as unknown as string;
+  const { t } = useTranslation() as any;
 
   const [filter, setFilter] = useState<FilterTab>('all');
   const [clinicPage, setClinicPage] = useState(1);
@@ -128,12 +127,32 @@ const AppointmentsPage = () => {
 
   const createClinicFeedbackMutation = useCreateClinicFeedback();
   const requestCancellationMutation = useRequestClinicCancellation();
+  const cancelAppointmentMutation = useCancelClinicAppointment();
 
   const clinicAppointments = clinicAppointmentsQuery.data?.items ?? [];
   const clinicTotalPages = clinicAppointmentsQuery.data?.totalPages ?? 1;
   const clinicTotalCount = clinicAppointmentsQuery.data?.totalCount ?? 0;
   const isLoadingClinic = clinicAppointmentsQuery.isLoading;
   const isFetchingClinic = clinicAppointmentsQuery.isFetching;
+
+  const handleCancelClick = (appointment: ClinicAppointmentDto) => {
+    // If not paid and pending, cancel directly (no refund needed)
+    if (appointment.status === 'Pending' && !appointment.isPaidDeposit) {
+      if (window.confirm(t('PatientAppointments.cancellation.confirmDirect'))) {
+        cancelAppointmentMutation.mutate(appointment.id, {
+          onSuccess: () => {
+            toast.success(t('PatientAppointments.cancellation.successToast'));
+          },
+          onError: (error: any) => {
+            toast.error(mapClinicPatientErrorMessage(error));
+          },
+        });
+      }
+    } else {
+      // Refund request needed
+      setCancellationTarget(appointment);
+    }
+  };
 
   const stats = useMemo(
     () => [
@@ -391,7 +410,7 @@ const AppointmentsPage = () => {
                   onViewQR={() => setQrTarget(appointment)}
                   onSync={handleSync}
                   isSyncing={isSyncing}
-                  onCancel={() => setCancellationTarget(appointment)}
+                  onCancel={() => handleCancelClick(appointment)}
                 />
               ))}
             </div>

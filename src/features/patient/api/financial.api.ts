@@ -50,3 +50,16 @@ export const getOrderById = async (id: string): Promise<OrderDto | null> => {
     return null;
   }
 };
+/**
+ * Synchronizes the payment status with PayOS for a specific order.
+ */
+export const syncOrder = async (id: string): Promise<boolean> => {
+  try {
+    const response = await api.post<any>(
+      API_ENDPOINTS.FINANCIAL.SYNC_ORDER(id)
+    );
+    return response.data?.success || response.data === true;
+  } catch {
+    return false;
+  }
+};
