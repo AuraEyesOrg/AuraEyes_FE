@@ -17,6 +17,7 @@ import StatsCard from '../components/StatsCard';
 import { dashboardApi } from '../api';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { TransactionVolumeChart } from '@/components/admin/transactions/TransactionVolumeChart';
 
 const POLLING_INTERVAL = 60000;
 const WAITING_THRESHOLD_MINUTES = 20;
@@ -498,6 +499,11 @@ export default function SystemAdminDashboard() {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Transactions Chart Section */}
+          <div className="mb-6">
+            <TransactionVolumeChart />
           </div>
 
           {/* Quick Actions */}

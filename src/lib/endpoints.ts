@@ -28,6 +28,7 @@ export const API_ENDPOINTS = {
       SLOT_UTILIZATION: '/system-admin/dashboard/slot-utilization',
       LIVE_QUEUE: '/system-admin/dashboard/live-queue',
       DOCTOR_STATUS: '/system-admin/dashboard/doctor-status',
+      TRANSACTION_STATS: '/system-admin/dashboard/transaction-stats',
     },
 
     // Organisation & Device Management (formerly Clinic)
