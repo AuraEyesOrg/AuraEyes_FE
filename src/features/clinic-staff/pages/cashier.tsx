@@ -10,6 +10,12 @@ import {
   UserRound,
   CheckCircle2,
   ArrowLeft,
+  Banknote,
+  QrCode,
+  X,
+  Loader2,
+  CreditCard,
+  Search,
 } from 'lucide-react';
 import ClinicStaffLayout from '../components/ClinicStaffLayout';
 import { formatCurrency } from '@/lib/helper';
@@ -17,12 +23,11 @@ import { clinicQueueApi, type ClinicPaymentContext } from '../api/queue.api';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { useTranslation, Trans } from 'react-i18next';
-import ConfirmModal from '@/components/ui/confirm-modal';
 import { extractApiErrorMessage } from '@/lib/api-error';
-import { CreditCard, Loader2 } from 'lucide-react';
+import { syncOrder } from '@/features/patient/api/financial.api';
 
 export default function CashierPage() {
-  const { t } = useTranslation();
+  const { t: translate } = useTranslation() as any;
   const [searchParams, setSearchParams] = useSearchParams();
   const visitIdFromQuery = searchParams.get('visitId');
   const [selectedVisitId, setSelectedVisitId] = useState<string | null>(
@@ -45,18 +50,6 @@ export default function CashierPage() {
     enabled: Boolean(effectiveVisitId),
   });
 
-  const finalizedVisits = useMemo(
-    () =>
-      (queueQuery.data ?? []).filter((item) => item.flowState === 'Finalized'),
-    [queueQuery.data]
-  );
-
-  const activeVisit = useMemo(
-    () =>
-      finalizedVisits.find((item) => item.visitId === effectiveVisitId) ?? null,
-    [effectiveVisitId, finalizedVisits]
-  );
-
   useEffect(() => {
     if (visitIdFromQuery && visitIdFromQuery !== selectedVisitId) {
       setSelectedVisitId(visitIdFromQuery);
@@ -66,8 +59,17 @@ export default function CashierPage() {
   // Handle successful payment: clear status and refresh queue after delay
   useEffect(() => {
     if (isPaidSuccess) {
-      // Refresh queue immediately
-      queueQuery.refetch();
+      const orderId = searchParams.get('orderId');
+
+      // Proactively sync order status (webhook might be slow/localhost)
+      if (orderId) {
+        syncOrder(orderId).finally(() => {
+          queueQuery.refetch();
+          paymentContextQuery.refetch();
+        });
+      } else {
+        queueQuery.refetch();
+      }
 
       // Clear the "PAID" status from URL after 5 seconds
       const timer = setTimeout(() => {
@@ -77,15 +79,23 @@ export default function CashierPage() {
           next.delete('orderCode');
           next.delete('code');
           next.delete('cancel');
+          next.delete('orderId'); // also clear orderId
           return next;
         });
       }, 5000);
 
       return () => clearTimeout(timer);
     }
-  }, [isPaidSuccess, queueQuery, setSearchParams]);
+  }, [
+    isPaidSuccess,
+    queueQuery,
+    paymentContextQuery,
+    setSearchParams,
+    searchParams,
+  ]);
 
   const paymentContext = paymentContextQuery.data;
+  const [searchQuery, setSearchQuery] = useState('');
   const [medicinePriceInputs, setMedicinePriceInputs] = useState<
     Record<string, string>
   >({});
@@ -117,23 +127,81 @@ export default function CashierPage() {
   }, [medicinePriceInputs, serviceFeeInput]);
 
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState<'Cash' | 'PayOS'>(
+    'PayOS'
+  );
+
+  const [showCashSuccess, setShowCashSuccess] = useState(false);
+  const [lastPaidVisitName, setLastPaidVisitName] = useState<string | null>(
+    null
+  );
 
   const paymentMutation = useMutation({
     mutationFn: (payload: any) =>
       clinicQueueApi.createClinicPayment(effectiveVisitId!, payload),
-    onSuccess: (data) => {
-      toast.success(t('Cashier.toast.createSuccess'));
-      // Redirect to PayOS checkout page
-      window.location.href = data.paymentUrl;
+    onSuccess: (data, variables) => {
+      // Capture name for success screen before it disappears from queue
+      setLastPaidVisitName(activeVisit?.patientName || null);
+
+      if (variables.method === 'Cash') {
+        toast.success(
+          translate('Cashier.toast.cashSuccess', {
+            defaultValue: 'Thanh toán tiền mặt thành công',
+          })
+        );
+
+        // Show local success state for Cash
+        setShowCashSuccess(true);
+
+        // Clear inputs
+        setMedicinePriceInputs({});
+        setServiceFeeInput('');
+
+        // Refetch to update the queue list
+        queueQuery.refetch();
+      } else {
+        toast.success(translate('Cashier.toast.createSuccess'));
+        window.location.href = data.paymentUrl;
+      }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       const message = extractApiErrorMessage(
         error,
-        t('Cashier.toast.createError')
+        translate('Cashier.toast.createError')
       );
       toast.error(message);
     },
   });
+
+  const finalizedVisits = useMemo(() => {
+    let visits = (queueQuery.data ?? []).filter(
+      (item) => item.flowState === 'Finalized'
+    );
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      visits = visits.filter(
+        (v) =>
+          v.patientName.toLowerCase().includes(query) ||
+          v.visitId.toLowerCase().includes(query)
+      );
+    }
+
+    return visits;
+  }, [queueQuery.data, searchQuery]);
+
+  // Sync selectedVisitId with URL but also handle filtering
+  const activeVisit = useMemo(
+    () => finalizedVisits.find((v) => v.visitId === effectiveVisitId),
+    [finalizedVisits, effectiveVisitId]
+  );
+
+  // Reset success state when selecting a new visit
+  useEffect(() => {
+    if (selectedVisitId && !showCashSuccess) {
+      setLastPaidVisitName(null);
+    }
+  }, [selectedVisitId, showCashSuccess]);
 
   const handlePayment = () => {
     if (!effectiveVisitId || !paymentContext) return;
@@ -149,6 +217,7 @@ export default function CashierPage() {
       visitId: effectiveVisitId,
       serviceFee: parseMoney(serviceFeeInput),
       medicationPrices,
+      method: selectedMethod,
       // Use absolute URLs for PayOS return/cancel
       returnUrl: window.location.href,
       cancelUrl: window.location.href,
@@ -172,20 +241,20 @@ export default function CashierPage() {
           <div className="relative grid gap-4 md:grid-cols-[1.2fr_0.8fr] md:items-end">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">
-                {t('Cashier.header.badge')}
+                {translate('Cashier.header.badge')}
               </p>
               <h1 className="mt-2 text-3xl font-bold tracking-tight text-(--text-primary) md:text-4xl [text-wrap:balance]">
-                {t('Cashier.header.title')}
+                {translate('Cashier.header.title')}
               </h1>
               <p className="mt-3 max-w-[62ch] text-sm leading-relaxed text-(--text-secondary)">
-                {t('Cashier.header.description')}
+                {translate('Cashier.header.description')}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-(--text-secondary)">
-                  {t('Cashier.stats.finalizedCount')}
+                  {translate('Cashier.stats.finalizedCount')}
                 </p>
                 <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400 [font-variant-numeric:tabular-nums]">
                   {finalizedVisits.length}
@@ -193,12 +262,12 @@ export default function CashierPage() {
               </div>
               <div className="rounded-2xl border border-(--border-color) bg-(--bg-primary)/80 px-4 py-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-(--text-secondary)">
-                  {t('Cashier.stats.currentlySelecting')}
+                  {translate('Cashier.stats.currentlySelecting')}
                 </p>
                 <p className="mt-1 truncate text-sm font-semibold text-(--text-primary)">
                   {effectiveVisitId
                     ? `${effectiveVisitId.slice(0, 8)}...`
-                    : t('Cashier.stats.noVisitSelected')}
+                    : translate('Cashier.stats.noVisitSelected')}
                 </p>
               </div>
             </div>
@@ -207,11 +276,27 @@ export default function CashierPage() {
 
         <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
           <aside className="h-fit rounded-3xl border border-(--border-color) bg-(--bg-primary) p-5 md:p-6 xl:sticky xl:top-24">
-            <div className="flex items-start justify-between gap-3">
-              <div>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-start justify-between gap-3">
                 <h2 className="text-lg font-semibold text-(--text-primary)">
-                  {t('Cashier.queue.title')}
+                  {translate('Cashier.queue.title')}
                 </h2>
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                  <Search className="h-4 w-4 text-(--text-muted) transition-colors group-focus-within:text-brand" />
+                </div>
+                <input
+                  type="text"
+                  placeholder={translate('Cashier.queue.searchPlaceholder', {
+                    defaultValue: 'Tìm bệnh nhân, ID...',
+                  })}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full h-11 pl-10 pr-4 text-sm bg-(--bg-secondary) border border-(--border-color) rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all placeholder:text-(--text-muted)"
+                />
               </div>
             </div>
 
@@ -230,7 +315,7 @@ export default function CashierPage() {
               <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">
                 <div className="flex items-start gap-2.5">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <p>{t('Cashier.queue.loadError')}</p>
+                  <p>{translate('Cashier.queue.loadError')}</p>
                 </div>
               </div>
             )}
@@ -240,10 +325,10 @@ export default function CashierPage() {
               finalizedVisits.length === 0 && (
                 <div className="mt-4 rounded-2xl border border-(--border-color) bg-(--bg-secondary) px-4 py-6 text-center">
                   <p className="text-sm font-medium text-(--text-primary)">
-                    {t('Cashier.queue.empty')}
+                    {translate('Cashier.queue.empty')}
                   </p>
                   <p className="mt-1 text-xs text-(--text-muted)">
-                    {t('Cashier.queue.emptySub')}
+                    {translate('Cashier.queue.emptySub')}
                   </p>
                 </div>
               )}
@@ -279,7 +364,7 @@ export default function CashierPage() {
                           </p>
                           {isActive && (
                             <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-700 dark:text-emerald-300">
-                              {t('Cashier.queue.selectedBadge')}
+                              {translate('Cashier.queue.selectedBadge')}
                             </span>
                           )}
                         </div>
@@ -287,7 +372,7 @@ export default function CashierPage() {
                           Visit: {visit.visitId.slice(0, 8)}...
                         </p>
                         <p className="mt-0.5 text-xs text-(--text-muted)">
-                          {t('Cashier.queue.doctorName')}:{' '}
+                          {translate('Cashier.queue.doctorName')}:{' '}
                           {visit.assignedDoctorName || 'N/A'}
                         </p>
                       </button>
@@ -301,17 +386,17 @@ export default function CashierPage() {
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div>
                 <h2 className="text-lg font-semibold text-(--text-primary)">
-                  {t('Cashier.pricingPanel.title')}
+                  {translate('Cashier.pricingPanel.title')}
                 </h2>
                 <p className="mt-1 text-xs text-(--text-muted)">
-                  {t('Cashier.pricingPanel.description')}
+                  {translate('Cashier.pricingPanel.description')}
                 </p>
               </div>
               <span className="inline-flex items-center gap-1 rounded-full border border-(--border-color) bg-(--bg-secondary) px-2.5 py-1 text-[11px] font-medium text-(--text-secondary)">
                 <FileText className="h-3.5 w-3.5" />
                 {effectiveVisitId
                   ? `Visit ${effectiveVisitId.slice(0, 8)}...`
-                  : t('Cashier.pricingPanel.noVisitSelectedBadge')}
+                  : translate('Cashier.pricingPanel.noVisitSelectedBadge')}
               </span>
             </div>
 
@@ -319,10 +404,10 @@ export default function CashierPage() {
               <div className="mt-5 rounded-2xl border border-dashed border-(--border-color) bg-(--bg-secondary) p-8 text-center">
                 <ReceiptText className="mx-auto h-9 w-9 text-(--text-muted)" />
                 <p className="mt-3 text-sm font-medium text-(--text-primary)">
-                  {t('Cashier.pricingPanel.selectPrompt')}
+                  {translate('Cashier.pricingPanel.selectPrompt')}
                 </p>
                 <p className="mt-1 text-xs text-(--text-muted)">
-                  {t('Cashier.pricingPanel.selectPromptSub')}
+                  {translate('Cashier.pricingPanel.selectPromptSub')}
                 </p>
               </div>
             )}
@@ -339,23 +424,30 @@ export default function CashierPage() {
               <div className="mt-5 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
                 <div className="flex items-start gap-2.5">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <p>{t('Cashier.pricingPanel.contextLoadError')}</p>
+                  <p>{translate('Cashier.pricingPanel.contextLoadError')}</p>
                 </div>
               </div>
             )}
 
-            {isPaidSuccess && effectiveVisitId && (
+            {(isPaidSuccess || showCashSuccess) && effectiveVisitId && (
               <div className="mt-5 flex flex-col items-center justify-center rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-10 text-center animate-in fade-in zoom-in duration-500">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-600">
                   <CheckCircle2 className="h-10 w-10" />
                 </div>
                 <h3 className="mt-5 text-xl font-bold text-(--text-primary)">
-                  {t('Cashier.pricingPanel.paymentSuccessTitle')}
+                  {translate('Cashier.pricingPanel.paymentSuccessTitle', {
+                    defaultValue: 'Thanh toán thành công',
+                  })}
                 </h3>
                 <p className="mt-2 max-w-[30ch] text-sm text-(--text-secondary)">
                   <Trans
-                    i18nKey="Cashier.pricingPanel.paymentSuccessDescription"
-                    values={{ name: activeVisit?.patientName || 'này' }}
+                    i18nKey={
+                      'Cashier.pricingPanel.paymentSuccessDescription' as any
+                    }
+                    values={{
+                      name:
+                        lastPaidVisitName || activeVisit?.patientName || 'này',
+                    }}
                   >
                     Ca khám của bệnh nhân{' '}
                     <span className="font-semibold text-emerald-600">
@@ -365,23 +457,38 @@ export default function CashierPage() {
                   </Trans>
                 </p>
 
-                <div className="mt-8 flex gap-3">
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedVisitId(null);
-                      setSearchParams(new URLSearchParams());
+                      setSearchParams({}, { replace: true });
+                      setShowCashSuccess(false);
+                      setLastPaidVisitName(null);
                     }}
-                    className="inline-flex items-center gap-2 rounded-xl border border-(--border-color) bg-(--bg-primary) px-5 py-2.5 text-sm font-semibold text-(--text-primary) transition hover:bg-(--bg-secondary)"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-500 bg-emerald-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-600 hover:-translate-y-0.5 active:scale-95"
+                  >
+                    {translate('Cashier.pricingPanel.backToList', {
+                      defaultValue: 'Tiếp tục thu ngân',
+                    })}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.location.href = '/clinic-staff/dashboard';
+                    }}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-(--border-color) bg-(--bg-primary) px-6 py-3 text-sm font-semibold text-(--text-primary) transition hover:bg-(--bg-secondary) hover:-translate-y-0.5 active:scale-95"
                   >
                     <ArrowLeft className="h-4 w-4" />
-                    {t('Cashier.pricingPanel.backToList')}
+                    {translate('Cashier.pricingPanel.backToDashboard', {
+                      defaultValue: 'Về trang chủ',
+                    })}
                   </button>
                 </div>
               </div>
             )}
 
-            {!isPaidSuccess && paymentContext && (
+            {!(isPaidSuccess || showCashSuccess) && paymentContext && (
               <CashierPricingPanel
                 context={paymentContext}
                 fallbackDoctorName={activeVisit?.assignedDoctorName}
@@ -400,20 +507,188 @@ export default function CashierPage() {
         </div>
       </main>
 
-      <ConfirmModal
-        open={isConfirmModalOpen}
-        title={t('Cashier.confirmModal.title')}
-        message={t('Cashier.confirmModal.message', {
-          name: paymentContext?.patientName,
-          amount: formatCurrency(computedManualTotal, { absolute: true }),
-        })}
-        confirmLabel={t('Cashier.confirmModal.confirm')}
-        cancelLabel={t('Cashier.confirmModal.cancel')}
-        tone="default"
-        onConfirm={handlePayment}
-        onCancel={() => setIsConfirmModalOpen(false)}
-        isLoading={paymentMutation.isPending}
-      />
+      {/* Payment Selection Modal */}
+      <div
+        className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
+          isConfirmModalOpen ? 'visible opacity-100' : 'invisible opacity-0'
+        }`}
+      >
+        <div
+          className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+          onClick={() => setIsConfirmModalOpen(false)}
+        />
+        <div
+          className={`relative w-full max-w-lg transform overflow-hidden rounded-[2rem] border border-(--border-color) bg-(--bg-primary) shadow-2xl transition-all duration-300 ${
+            isConfirmModalOpen ? 'scale-100' : 'scale-95'
+          }`}
+        >
+          <div className="flex items-center justify-between border-b border-(--border-color) bg-(--bg-secondary)/50 px-8 py-5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-brand/10 p-2.5 text-brand">
+                <CreditCard className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-(--text-primary)">
+                  {translate('Cashier.confirmModal.title', {
+                    defaultValue: 'Xác nhận thanh toán',
+                  })}
+                </h3>
+                <p className="text-[11px] font-medium text-(--text-muted) uppercase tracking-wider">
+                  Visit: {effectiveVisitId?.slice(0, 8)}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsConfirmModalOpen(false)}
+              className="rounded-full p-2 text-(--text-muted) transition hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="p-8">
+            <div className="rounded-3xl border border-(--border-color) bg-(--bg-secondary)/40 p-6 space-y-4">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-(--text-secondary)">
+                  {translate('Cashier.confirmModal.patient', {
+                    defaultValue: 'Bệnh nhân',
+                  })}
+                </span>
+                <span className="font-bold text-(--text-primary)">
+                  {paymentContext?.patientName}
+                </span>
+              </div>
+              <div className="h-px bg-dashed bg-(--border-color)" />
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-(--text-muted)">
+                    {translate('Cashier.confirmModal.totalAmount', {
+                      defaultValue: 'Tổng chi phí',
+                    })}
+                  </span>
+                  <span className="font-semibold text-(--text-primary)">
+                    {formatCurrency(computedManualTotal, { absolute: true })}
+                  </span>
+                </div>
+                {/* For cashier context, usually no deposit subtraction in this specific manual pricing flow, 
+                    but we show it as 0 if not applicable to keep UI consistent with screenshot */}
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-(--text-muted)">
+                    {translate('Cashier.confirmModal.depositPaid', {
+                      defaultValue: 'Đã đặt cọc (Online)',
+                    })}
+                  </span>
+                  <span className="font-semibold text-emerald-600">-0 đ</span>
+                </div>
+              </div>
+              <div className="h-px border-t-2 border-dashed border-(--border-color)" />
+              <div className="flex justify-between items-center">
+                <span className="text-base font-bold text-(--text-primary)">
+                  {translate('Cashier.confirmModal.remaining', {
+                    defaultValue: 'Số tiền còn lại',
+                  })}
+                </span>
+                <span className="text-2xl font-black text-brand tracking-tight">
+                  {formatCurrency(computedManualTotal, { absolute: true })}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-8 space-y-4">
+              <p className="text-sm font-bold text-(--text-primary)">
+                {translate('Cashier.confirmModal.methodTitle', {
+                  defaultValue: 'Phương thức thanh toán',
+                })}
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setSelectedMethod('Cash')}
+                  className={`group relative flex flex-col items-center gap-3 rounded-2xl border-2 p-5 transition-all duration-200 ${
+                    selectedMethod === 'Cash'
+                      ? 'border-brand bg-brand/5 shadow-md shadow-brand/10'
+                      : 'border-(--border-color) bg-(--bg-secondary) hover:border-brand/40'
+                  }`}
+                >
+                  <div
+                    className={`rounded-xl p-2.5 transition-colors ${
+                      selectedMethod === 'Cash'
+                        ? 'bg-brand text-white'
+                        : 'bg-(--bg-primary) text-(--text-secondary) group-hover:text-brand'
+                    }`}
+                  >
+                    <Banknote className="h-6 w-6" />
+                  </div>
+                  <span
+                    className={`text-sm font-bold ${selectedMethod === 'Cash' ? 'text-brand' : 'text-(--text-secondary)'}`}
+                  >
+                    {translate('Cashier.confirmModal.cash', {
+                      defaultValue: 'Tiền mặt',
+                    })}
+                  </span>
+                  {selectedMethod === 'Cash' && (
+                    <CheckCircle2 className="absolute top-2 right-2 h-4 w-4 text-brand" />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedMethod('PayOS')}
+                  className={`group relative flex flex-col items-center gap-3 rounded-2xl border-2 p-5 transition-all duration-200 ${
+                    selectedMethod === 'PayOS'
+                      ? 'border-brand bg-brand/5 shadow-md shadow-brand/10'
+                      : 'border-(--border-color) bg-(--bg-secondary) hover:border-brand/40'
+                  }`}
+                >
+                  <div
+                    className={`rounded-xl p-2.5 transition-colors ${
+                      selectedMethod === 'PayOS'
+                        ? 'bg-brand text-white'
+                        : 'bg-(--bg-primary) text-(--text-secondary) group-hover:text-brand'
+                    }`}
+                  >
+                    <QrCode className="h-6 w-6" />
+                  </div>
+                  <span
+                    className={`text-sm font-bold ${selectedMethod === 'PayOS' ? 'text-brand' : 'text-(--text-secondary)'}`}
+                  >
+                    {translate('Cashier.confirmModal.payos', {
+                      defaultValue: 'PayOS QR',
+                    })}
+                  </span>
+                  {selectedMethod === 'PayOS' && (
+                    <CheckCircle2 className="absolute top-2 right-2 h-4 w-4 text-brand" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <button
+                type="button"
+                onClick={handlePayment}
+                disabled={paymentMutation.isPending}
+                className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-brand py-4 text-sm font-bold text-white shadow-xl shadow-brand/20 transition-all hover:bg-brand/90 hover:translate-y-[-2px] active:scale-[0.98] disabled:opacity-50"
+              >
+                {paymentMutation.isPending ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-5 w-5" />
+                    {selectedMethod === 'Cash'
+                      ? translate('Cashier.confirmModal.confirmCash', {
+                          defaultValue: 'Xác nhận thu tiền mặt',
+                        })
+                      : translate('Cashier.confirmModal.confirmPayos', {
+                          defaultValue: 'Tạo mã thanh toán QR',
+                        })}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </ClinicStaffLayout>
   );
 }
@@ -441,7 +716,7 @@ function CashierPricingPanel({
   onInitiatePayment,
   isProcessing,
 }: CashierPricingPanelProps) {
-  const { t } = useTranslation();
+  const { t: translate } = useTranslation() as any;
   const doctorName =
     context.diagnosis.diagnosedBy.doctorName || fallbackDoctorName;
 
@@ -460,7 +735,7 @@ function CashierPricingPanel({
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-(--text-secondary)">
-                {t('Cashier.pricingPanel.patientLabel')}
+                {translate('Cashier.pricingPanel.patientLabel')}
               </p>
               <p className="mt-1 text-sm font-semibold text-(--text-primary)">
                 {context.patientName}
@@ -476,7 +751,7 @@ function CashierPricingPanel({
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-(--text-secondary)">
-                {t('Cashier.pricingPanel.doctorLabel')}
+                {translate('Cashier.pricingPanel.doctorLabel')}
               </p>
               <p className="mt-1 text-sm font-semibold text-(--text-primary)">
                 {doctorName || 'N/A'}
@@ -490,14 +765,14 @@ function CashierPricingPanel({
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
           <div className="flex items-start gap-2.5">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-            <p>{t('Cashier.pricingPanel.noMedication')}</p>
+            <p>{translate('Cashier.pricingPanel.noMedication')}</p>
           </div>
         </div>
       ) : (
         <section className="space-y-3">
           <div className="inline-flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
             <Pill className="h-3.5 w-3.5" />
-            {t('Cashier.pricingPanel.medicationCount', {
+            {translate('Cashier.pricingPanel.medicationCount', {
               count: context.diagnosis.prescriptionItems.length,
             })}
           </div>
@@ -527,7 +802,7 @@ function CashierPricingPanel({
                     htmlFor={inputKey}
                     className="block text-xs font-semibold text-(--text-secondary)"
                   >
-                    {t('Cashier.pricingPanel.medicinePriceLabel')}
+                    {translate('Cashier.pricingPanel.medicinePriceLabel')}
                   </label>
                   <input
                     id={inputKey}
@@ -536,13 +811,13 @@ function CashierPricingPanel({
                     onChange={(event) =>
                       onMedicinePriceChange(inputKey, event.target.value)
                     }
-                    placeholder={t(
+                    placeholder={translate(
                       'Cashier.pricingPanel.manualPricePlaceholder'
                     )}
                     className="w-full rounded-xl border border-(--border-color) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary) [font-variant-numeric:tabular-nums] placeholder:text-(--text-muted) transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                   />
                   <p className="text-[11px] text-(--text-muted)">
-                    {t('Cashier.pricingPanel.estimated')}:{' '}
+                    {translate('Cashier.pricingPanel.estimated')}:{' '}
                     {formatCurrency(medicinePrice, { absolute: true })}
                   </p>
                 </div>
@@ -555,10 +830,10 @@ function CashierPricingPanel({
       <section className="grid grid-cols-1 gap-3 rounded-2xl border border-(--border-color) bg-(--bg-secondary) p-4 md:grid-cols-[2fr_1fr] md:items-end">
         <div>
           <p className="text-sm font-semibold text-(--text-primary)">
-            {t('Cashier.pricingPanel.serviceFeeLabel')}
+            {translate('Cashier.pricingPanel.serviceFeeLabel')}
           </p>
           <p className="mt-1 text-xs text-(--text-muted)">
-            {t('Cashier.pricingPanel.serviceFeeDescription')}
+            {translate('Cashier.pricingPanel.serviceFeeDescription')}
           </p>
         </div>
         <div className="space-y-1.5">
@@ -566,7 +841,7 @@ function CashierPricingPanel({
             htmlFor="service-fee-input"
             className="block text-xs font-semibold text-(--text-secondary)"
           >
-            {t('Cashier.pricingPanel.serviceFeeInputLabel')}
+            {translate('Cashier.pricingPanel.serviceFeeInputLabel')}
           </label>
           <input
             id="service-fee-input"
@@ -577,7 +852,7 @@ function CashierPricingPanel({
             className="w-full rounded-xl border border-(--border-color) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary) [font-variant-numeric:tabular-nums] placeholder:text-(--text-muted) transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           />
           <p className="text-[11px] text-(--text-muted)">
-            {t('Cashier.pricingPanel.estimated')}:{' '}
+            {translate('Cashier.pricingPanel.estimated')}:{' '}
             {formatCurrency(parseMoney(serviceFeeInput), { absolute: true })}
           </p>
         </div>
@@ -585,7 +860,7 @@ function CashierPricingPanel({
 
       <section className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4">
         <p className="text-xs font-medium text-(--text-secondary)">
-          {t('Cashier.pricingPanel.totalManual')}
+          {translate('Cashier.pricingPanel.totalManual')}
         </p>
         <div className="mt-2 flex items-end justify-between gap-3">
           <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 [font-variant-numeric:tabular-nums]">
@@ -603,7 +878,7 @@ function CashierPricingPanel({
             ) : (
               <CreditCard className="h-4 w-4" />
             )}
-            {t('Cashier.pricingPanel.payButton')}
+            {translate('Cashier.pricingPanel.payButton')}
           </button>
         </div>
       </section>

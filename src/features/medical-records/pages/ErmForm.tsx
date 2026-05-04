@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import {
   PrescriptionTable,
@@ -6,6 +6,19 @@ import {
   validatePrescriptionItems,
 } from '@/features/ophthalmologist/components/PrescriptionTable';
 import type { RxItem } from '@/features/ophthalmologist/types/drug.type';
+
+/** Stable snapshot for IV. Đơn thuốc — RHF isDirty does not track prescription state. */
+function buildPrescriptionFingerprint(
+  items: RxItem[],
+  note: string,
+  noMedicationPrescribed: boolean
+): string {
+  return JSON.stringify({
+    items: normalizePrescriptionItemsForPersistence(items),
+    note: note.trim(),
+    noMed: noMedicationPrescribed,
+  });
+}
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import {
   Save,
@@ -352,6 +365,8 @@ const sectionConfig: Record<
 
 export default function ErmForm() {
   const { t } = useTranslation();
+  const translatePrescription = (key: string, fallback?: string): string =>
+    t(key, fallback ?? key);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -384,6 +399,8 @@ export default function ErmForm() {
   const [prescriptionErrors, setPrescriptionErrors] = useState<
     Record<string, (keyof Omit<RxItem, 'id'>)[]>
   >({});
+  const [prescriptionBaselineFingerprint, setPrescriptionBaselineFingerprint] =
+    useState<string | null>(null);
 
   // Custom Hooks
   const { data: record, isLoading: isLoadingRecord } = useMedicalRecord(
@@ -548,6 +565,28 @@ export default function ErmForm() {
     }
   }, [isOphthalmologist, activeStep]);
 
+  const isPrescriptionDirty = useMemo(() => {
+    if (!isOphthalmologist || !id || id === 'new') return false;
+    if (prescriptionBaselineFingerprint === null) return false;
+    return (
+      buildPrescriptionFingerprint(
+        prescriptionItems,
+        prescriptionNote,
+        noMedicationPrescribed
+      ) !== prescriptionBaselineFingerprint
+    );
+  }, [
+    isOphthalmologist,
+    id,
+    prescriptionItems,
+    prescriptionNote,
+    noMedicationPrescribed,
+    prescriptionBaselineFingerprint,
+  ]);
+
+  const hasUnsavedClinicalOrRx =
+    isDirty || (isOphthalmologist && isPrescriptionDirty);
+
   useEffect(() => {
     if (record) {
       const adminData = JSON.parse(record.administrativeDataJson || '{}');
@@ -602,34 +641,41 @@ export default function ErmForm() {
       });
 
       // Hydrate prescription from clinicalDataJson (safe fallback for old records)
+      let nextRxItems: RxItem[] = [];
+      let nextRxNote = '';
+      let nextNoMed = false;
       try {
         const savedItems = clinicalData?.prescriptionItems;
         if (Array.isArray(savedItems) && savedItems.length > 0) {
-          setPrescriptionItems(
-            savedItems.map((item: Partial<RxItem>) => ({
-              id:
-                item.id ??
-                `rx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-              medicineName: item.medicineName ?? '',
-              dosage: item.dosage ?? '',
-              unit: item.unit ?? '',
-              frequency: item.frequency ?? '',
-              duration: item.duration ?? '',
-              instruction: item.instruction ?? '',
-            }))
-          );
-        } else {
-          setPrescriptionItems([]);
+          nextRxItems = savedItems.map((item: Partial<RxItem>) => ({
+            id:
+              item.id ??
+              `rx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            medicineName: item.medicineName ?? '',
+            dosage: item.dosage ?? '',
+            unit: item.unit ?? '',
+            frequency: item.frequency ?? '',
+            duration: item.duration ?? '',
+            instruction: item.instruction ?? '',
+          }));
         }
-        setPrescriptionNote(clinicalData?.prescriptionNote ?? '');
-        setNoMedicationPrescribed(
-          clinicalData?.noMedicationPrescribed ?? false
-        );
+        nextRxNote = clinicalData?.prescriptionNote ?? '';
+        nextNoMed = clinicalData?.noMedicationPrescribed ?? false;
       } catch {
         // silently ignore malformed prescription data from old records
-        setPrescriptionItems([]);
-        setPrescriptionNote('');
-        setNoMedicationPrescribed(false);
+        nextRxItems = [];
+        nextRxNote = '';
+        nextNoMed = false;
+      }
+      setPrescriptionItems(nextRxItems);
+      setPrescriptionNote(nextRxNote);
+      setNoMedicationPrescribed(nextNoMed);
+      if (isOphthalmologist) {
+        setPrescriptionBaselineFingerprint(
+          buildPrescriptionFingerprint(nextRxItems, nextRxNote, nextNoMed)
+        );
+      } else {
+        setPrescriptionBaselineFingerprint(null);
       }
 
       // Explicitly load geographic data and set values to ensure they aren't lost
@@ -733,7 +779,7 @@ export default function ErmForm() {
           .catch(console.error);
       }
     }
-  }, [record, location.state, reset, setValue]);
+  }, [record, location.state, reset, setValue, isOphthalmologist]);
 
   // Age calculation effect
   const birthDate = useWatch({ control, name: 'birthDate' });
@@ -944,6 +990,21 @@ export default function ErmForm() {
         });
         navigate(resolvePathWithLocale('/clinic-staff/queue'));
       } else if (isOphthalmologist) {
+        if (!noMedicationPrescribed) {
+          const { valid, errors: rxErrors } = validatePrescriptionItems(
+            prescriptionItems,
+            noMedicationPrescribed
+          );
+          if (!valid) {
+            setPrescriptionErrors(rxErrors);
+            toast.error(
+              'Mỗi dòng thuốc cần điền đủ: Tên thuốc, Liều, Tần suất và Số ngày. Hoặc tick "Không kê thuốc".'
+            );
+            return;
+          }
+        }
+        setPrescriptionErrors({});
+
         const clinicalFields = [
           'medicalHistory',
           'personalHistory',
@@ -987,6 +1048,14 @@ export default function ErmForm() {
             treatmentPlan: data.finalDiagnosisExtra,
           },
         });
+
+        setPrescriptionBaselineFingerprint(
+          buildPrescriptionFingerprint(
+            prescriptionItems,
+            prescriptionNote,
+            noMedicationPrescribed
+          )
+        );
       }
       reset(data); // Clear dirty state
       toast.success('Đã lưu hồ sơ');
@@ -1182,7 +1251,7 @@ export default function ErmForm() {
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans pb-20 selection:bg-cyan-500/20">
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-5">
-          <AuraLogo size="sm" />
+          <AuraLogo size="sm" variant="dark" />
           <div className="h-4 w-px bg-slate-200" />
           <div
             className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
@@ -1231,7 +1300,11 @@ export default function ErmForm() {
             recordStatus !== MedicalRecordStatus.Finalized && (
               <button
                 onClick={handleFinalize}
-                disabled={isSubmitting || finalizeMutation.isPending}
+                disabled={
+                  isSubmitting ||
+                  finalizeMutation.isPending ||
+                  hasUnsavedClinicalOrRx
+                }
                 className={`flex items-center gap-2 px-6 py-2 rounded-xl font-black text-[10px] transition-all bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-600/20 disabled:opacity-50`}
               >
                 <Lock className="w-3.5 h-3.5" /> KHÓA HỒ SƠ
@@ -1242,12 +1315,12 @@ export default function ErmForm() {
             onClick={handleSubmit(onSubmit)}
             disabled={
               recordStatus === MedicalRecordStatus.Finalized ||
-              !isDirty ||
+              !hasUnsavedClinicalOrRx ||
               isSubmitting
             }
             className={`flex items-center gap-2 px-6 py-2 rounded-xl font-black text-[10px] transition-all ${
               recordStatus === MedicalRecordStatus.Finalized ||
-              !isDirty ||
+              !hasUnsavedClinicalOrRx ||
               isSubmitting
                 ? 'bg-slate-200 text-slate-700 ring-1 ring-inset ring-slate-300 cursor-not-allowed'
                 : 'bg-slate-900 text-white hover:bg-black hover:shadow-lg hover:shadow-black/20'
@@ -2372,10 +2445,14 @@ export default function ErmForm() {
                             type="button"
                             onClick={handleFinalize}
                             disabled={
-                              isSubmitting || finalizeMutation.isPending
+                              isSubmitting ||
+                              finalizeMutation.isPending ||
+                              hasUnsavedClinicalOrRx
                             }
                             className={`flex items-center gap-2 rounded-2xl px-8 py-4 text-xs font-black uppercase tracking-widest shadow-lg transition-all md:px-10 ${
-                              isSubmitting || finalizeMutation.isPending
+                              isSubmitting ||
+                              finalizeMutation.isPending ||
+                              hasUnsavedClinicalOrRx
                                 ? 'cursor-not-allowed bg-slate-200 text-slate-700 ring-1 ring-inset ring-slate-300 shadow-none'
                                 : 'bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-700'
                             }`}
@@ -2385,10 +2462,10 @@ export default function ErmForm() {
                         )}
                       <button
                         type="submit"
-                        disabled={!isDirty || isSubmitting}
+                        disabled={!hasUnsavedClinicalOrRx || isSubmitting}
                         onClick={handleSubmit(onSubmit)}
                         className={`group flex items-center gap-2 rounded-2xl px-10 py-4 text-xs font-black uppercase tracking-widest shadow-lg transition-all md:px-12 ${
-                          !isDirty || isSubmitting
+                          !hasUnsavedClinicalOrRx || isSubmitting
                             ? 'cursor-not-allowed bg-slate-200 text-slate-700 ring-1 ring-inset ring-slate-300 shadow-none'
                             : 'bg-cyan-600 text-white shadow-cyan-600/25 hover:bg-cyan-700'
                         }`}
@@ -2426,7 +2503,7 @@ export default function ErmForm() {
                       onNoteChange={setPrescriptionNote}
                       locked={recordStatus === MedicalRecordStatus.Finalized}
                       validationErrors={prescriptionErrors}
-                      t={t}
+                      t={translatePrescription as any}
                     />
                   </div>
                   <div className="grid grid-cols-1 gap-6 rounded-[2.5rem] border border-slate-300 bg-slate-100/80 p-6 shadow-sm ring-1 ring-slate-200/90 md:grid-cols-2 md:p-8">
@@ -2446,9 +2523,15 @@ export default function ErmForm() {
                         <button
                           type="button"
                           onClick={handleFinalize}
-                          disabled={isSubmitting || finalizeMutation.isPending}
+                          disabled={
+                            isSubmitting ||
+                            finalizeMutation.isPending ||
+                            hasUnsavedClinicalOrRx
+                          }
                           className={`flex items-center gap-2 rounded-2xl px-8 py-4 text-xs font-black uppercase tracking-widest shadow-lg transition-all md:px-10 ${
-                            isSubmitting || finalizeMutation.isPending
+                            isSubmitting ||
+                            finalizeMutation.isPending ||
+                            hasUnsavedClinicalOrRx
                               ? 'cursor-not-allowed bg-slate-200 text-slate-700 ring-1 ring-inset ring-slate-300 shadow-none'
                               : 'bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-700'
                           }`}
@@ -2458,10 +2541,10 @@ export default function ErmForm() {
                       )}
                       <button
                         type="submit"
-                        disabled={!isDirty || isSubmitting}
+                        disabled={!hasUnsavedClinicalOrRx || isSubmitting}
                         onClick={handleSubmit(onSubmit)}
                         className={`group flex items-center gap-2 rounded-2xl px-10 py-4 text-xs font-black uppercase tracking-widest shadow-lg transition-all md:px-12 ${
-                          !isDirty || isSubmitting
+                          !hasUnsavedClinicalOrRx || isSubmitting
                             ? 'cursor-not-allowed bg-slate-200 text-slate-700 ring-1 ring-inset ring-slate-300 shadow-none'
                             : 'bg-cyan-600 text-white shadow-cyan-600/25 hover:bg-cyan-700'
                         }`}

@@ -54,15 +54,17 @@ export default function ClinicStaffScreeningNewPage() {
     queryFn: getClinicPatients,
   });
 
-  // Pre-select patient from query param
   const preSelectedPatientId = searchParams.get('patientId');
+  const preSelectedVisitId = searchParams.get('visitId');
+
   useEffect(() => {
-    if (!preSelectedPatientId) {
+    if (!preSelectedPatientId || !preSelectedVisitId) {
       toast.error(
-        t('ClinicStaff.screeningNew.toast.noPatient', 'No patient selected'),
-        {
-          toastId: 'no-patient',
-        }
+        t(
+          'ClinicStaff.screeningNew.toast.missingVisit',
+          'A clinic visit (check-in) is required to start screening.'
+        ),
+        { toastId: 'missing-visit' }
       );
       navigate(resolvePathWithLocale('/clinic-staff/screenings'));
       return;
@@ -71,7 +73,14 @@ export default function ClinicStaffScreeningNewPage() {
       const match = patients.find((p) => p.id === preSelectedPatientId);
       if (match) setSelectedPatient(match);
     }
-  }, [preSelectedPatientId, patients, selectedPatient, navigate]);
+  }, [
+    preSelectedPatientId,
+    preSelectedVisitId,
+    patients,
+    selectedPatient,
+    navigate,
+    t,
+  ]);
 
   // Image handlers
   const validateImage = async (imageId: string, file: File) => {
@@ -170,10 +179,12 @@ export default function ClinicStaffScreeningNewPage() {
   const readyImages = images.filter(
     (img) => img.status === 'ready' || img.status === 'warning'
   );
-  const canProceed = !!selectedPatient && readyImages.length > 0;
+  const canProceed =
+    !!selectedPatient && !!preSelectedVisitId && readyImages.length > 0;
 
   const handleLaunchScreening = async () => {
-    if (!selectedPatient || readyImages.length === 0) return;
+    if (!selectedPatient || !preSelectedVisitId || readyImages.length === 0)
+      return;
     try {
       setIsCreating(true);
       setIsUploading(true);
@@ -193,6 +204,7 @@ export default function ClinicStaffScreeningNewPage() {
 
       const sessionResponse = await clinicScreeningApi.createSession({
         patientId: selectedPatient.id,
+        patientVisitId: preSelectedVisitId,
         retinalImages,
       });
       // BE trả data là string UUID trực tiếp (không phải object { screeningId })

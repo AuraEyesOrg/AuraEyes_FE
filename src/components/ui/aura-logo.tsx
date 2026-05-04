@@ -79,8 +79,7 @@ export function AuraLogo({
     variant === 'auto' ? (theme === 'dark' ? 'light' : 'dark') : variant;
 
   const s = sizeMap[size];
-  const textColor =
-    resolvedVariant === 'light' ? 'text-white' : 'text-gray-900';
+  const textColor = resolvedVariant === 'light' ? 'text-white' : 'text-black';
   const subtitleColor =
     resolvedVariant === 'light' ? 'text-gray-400' : 'text-gray-500';
 

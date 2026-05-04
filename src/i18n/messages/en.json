@@ -2397,7 +2397,13 @@
       "ruleNotice": "Note: You can only cancel an appointment at least 6 hours before the start time.",
       "ruleViolated": "Cannot cancel appointment as it is less than 6 hours before the start time.",
       "confirmLabel": "Submit Request",
-      "cancelling": "Submitting..."
+      "cancelling": "Submitting...",
+      "confirmDirect": "Are you sure you want to cancel this appointment? Since payment has not been completed, it will be cancelled immediately and the slot will be released for others."
+    },
+    "clinicBooking": {
+      "page": {
+        "title": "Organisation Schedule"
+      }
     }
   },
   "PatientDashboard_Legacy": {
@@ -4614,7 +4620,6 @@
       "initialStaff": "S",
       "notAvailable": "N/A"
     },
-
     "sidebar": {
       "dashboard": "Dashboard",
       "groups": {
@@ -4635,6 +4640,48 @@
         "audit-logs": "Audit Logs",
         "settings": "Settings",
         "aura-network": "Aura Network"
+      }
+    },
+    "cashflow": {
+      "title": "Payment Transactions",
+      "description": "Monitor all patient clinic payments across the entire system.",
+      "stats": {
+        "totalVolume": "Total Revenue",
+        "pendingAmount": "Total Pending",
+        "completedOrders": "Total Orders"
+      },
+      "filterOptions": {
+        "all": "All",
+        "completed": "Completed",
+        "pending": "Pending",
+        "cancelled": "Cancelled/Refund"
+      },
+      "status": {
+        "pending": "Pending Payment",
+        "confirmed": "Confirmed",
+        "processing": "Processing",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded",
+        "partiallyPaid": "Deposit Paid",
+        "fullyPaid": "Fully Paid",
+        "cancellationRequested": "Refund Pending"
+      },
+      "table": {
+        "list": "Order List",
+        "patientFallback": "Patient",
+        "defaultDescription": "Medical Service Payment",
+        "onlineDeposit": "Online Deposit",
+        "fullPayment": "Full Payment",
+        "refundedDeposit": "Refunded Deposit",
+        "paidLabel": "Received",
+        "deposited": "Deposited",
+        "remaining": "Remaining"
+      },
+      "pagination": {
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page"
       }
     },
     "refundRequests": {
@@ -6991,58 +7038,6 @@
       }
     }
   },
-  "ClinicStaffBilling": {
-    "page": {
-      "title": "Billing Management",
-      "subtitle": "Monitor all medical payment orders for patients."
-    },
-    "stats": {
-      "totalRevenue": "Total Revenue (Est.)",
-      "totalRefund": "Refunded",
-      "orders": "Total Orders"
-    },
-    "transactions": {
-      "title": "Order List",
-      "loadFailed": "Failed to load data",
-      "emptyTitle": "No orders found"
-    },
-    "filters": {
-      "all": "All",
-      "completed": "Completed",
-      "pending": "Pending",
-      "cancelled": "Cancelled"
-    },
-    "orderDetails": {
-      "description": "Clinic Payment",
-      "depositOnline": "Online Deposit",
-      "walkInFull": "Walk-in / Full",
-      "idLabel": "Order:",
-      "patientLabel": "Patient:",
-      "doctorLabel": "Doctor:",
-      "noMedication": "No medication prescribed.",
-      "medicationCount": "{{count}} medications in prescription",
-      "medicinePriceLabel": "Medicine Price (VND)",
-      "manualPricePlaceholder": "Enter price manually",
-      "serviceFeeLabel": "Examination / Other service fee",
-      "serviceFeeDescription": "Enter fees other than medication if applicable.",
-      "serviceFeeInputLabel": "Service Fee (VND)",
-      "totalManual": "Total Manual Amount",
-      "note": "Note: Backend currently provides diagnosis/prescription for cashier but no endpoint for price breakdown submission yet.",
-      "confirmedDeposit": "Paid deposit/100%",
-      "remaining": "Remaining:",
-      "paid": "Paid:",
-      "processing": "Processing...",
-      "confirmFinalPayment": "Confirm Final Payment"
-    },
-    "pagination": {
-      "previous": "Prev",
-      "next": "Next",
-      "pageOf": "Page {{page}} of {{total}}"
-    },
-    "error": {
-      "retry": "Retry"
-    }
-  },
   "ClinicStaffSettings": {
     "title": "Settings",
     "subtitle": "Configure account, security, and staff portal preferences",
@@ -7108,7 +7103,8 @@
   "Cashier": {
     "toast": {
       "createSuccess": "Payment request created.",
-      "createError": "Error creating payment request."
+      "createError": "Error creating payment request.",
+      "cashSuccess": "Cash payment processed successfully"
     },
     "header": {
       "badge": "Cashier Desk",
@@ -7133,13 +7129,13 @@
       "description": "Please review all charges before creating request",
       "noVisitSelectedBadge": "No visit selected",
       "selectPrompt": "Select a patient from the list",
-      "selectPromptSub": "To start the payment and prescription process",
+      "selectPromptSub": "To start the billing and prescription process",
       "contextLoadError": "Unable to load payment context.",
-      "paymentSuccessTitle": "Payment Success!",
-      "paymentSuccessDescription": "Visit for <0>{{name}}</0> has been completed and status updated successfully.",
+      "paymentSuccessTitle": "Payment Successful!",
+      "paymentSuccessDescription": "The visit for patient <0>{{name}}</0> has been finalized and marked as completed.",
       "backToList": "Back to list",
       "patientLabel": "Patient",
-      "doctorLabel": "Diagnosed by",
+      "doctorLabel": "Diagnosing Doctor",
       "noMedication": "No medication prescribed for this visit.",
       "medicationCount": "Prescription ({{count}} items)",
       "medicinePriceLabel": "Unit Price (VND)",
@@ -7147,15 +7143,24 @@
       "estimated": "Subtotal",
       "serviceFeeLabel": "Service Fee",
       "serviceFeeDescription": "Includes consultation and clinic service fees",
-      "serviceFeeInputLabel": "Total service fee (VND)",
-      "totalManual": "Grand Total",
+      "serviceFeeInputLabel": "Total Service Fee (VND)",
+      "totalManual": "Total Amount",
       "payButton": "Pay Now"
     },
     "confirmModal": {
       "title": "Confirm Payment",
-      "message": "Create payment request of {{amount}} for {{name}}?",
+      "message": "Create a payment request of {{amount}} for patient {{name}}?",
       "confirm": "Confirm",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "patient": "Patient",
+      "totalAmount": "Total Fee",
+      "depositPaid": "Deposit Paid (Online)",
+      "remaining": "Remaining Balance",
+      "methodTitle": "Payment Method",
+      "cash": "Cash",
+      "payos": "PayOS QR",
+      "confirmCash": "Confirm Cash Payment",
+      "confirmPayos": "Create QR Payment"
     }
   },
   "PatientDashboard": {
@@ -7349,7 +7354,8 @@
         "screeningRequired": "Please complete AI screening before sending to doctor.",
         "loadDoctorsFailed": "Unable to load available doctors.",
         "copyDoctorConsultationLinkSuccess": "Doctor consultation link copied.",
-        "copyDoctorConsultationLinkFailed": "Failed to copy doctor consultation link."
+        "copyDoctorConsultationLinkFailed": "Failed to copy doctor consultation link.",
+        "ermSaveRequiredBeforeScreening": "Please save the administrative ERM section (Save) before starting screening."
       },
       "error": {
         "title": "Failed to load queue",
@@ -7360,6 +7366,10 @@
         "refresh": "Refresh",
         "fillErm": "Fill ERM",
         "editErm": "Edit ERM",
+        "fillErmRequired": "Complete and save the administrative ERM section before screening.",
+        "openErm": "ERM record",
+        "openErmHint": "Open this check-in’s ERM (one record per visit).",
+        "createScreeningDisabledHint": "Save the administrative ERM section first.",
         "createScreening": "Create Screening",
         "viewScreening": "View Screening",
         "sending": "Sending...",
@@ -7621,6 +7631,70 @@
       "pagination": "Showing {{showing}} of {{total}} pending reviews",
       "previous": "Previous",
       "next": "Next"
+    }
+  },
+  "ClinicStaffBilling": {
+    "page": {
+      "title": "Billing Management",
+      "subtitle": "Monitor all medical payment orders for patients."
+    },
+    "stats": {
+      "totalRevenue": "Total Revenue (Est.)",
+      "totalRefund": "Refunded",
+      "orders": "Total Orders"
+    },
+    "filters": {
+      "all": "All",
+      "completed": "Completed",
+      "pending": "Pending",
+      "cancelled": "Cancelled"
+    },
+    "transactions": {
+      "title": "Transaction History",
+      "emptyTitle": "No transactions found",
+      "loadFailed": "Failed to load transactions"
+    },
+    "status": {
+      "fullyPaid": "Fully Paid",
+      "partiallyPaid": "Partial Payment"
+    },
+    "description": {
+      "medicationAndService": "Medication & Service Payment",
+      "deposit": "Online Deposit",
+      "finalPayment": "Final Payment",
+      "refund": "Refund:",
+      "methods": {
+        "Cash": "Cash",
+        "PayOS": "PayOS",
+        "BankTransfer": "Bank Transfer"
+      }
+    },
+    "orderDetails": {
+      "patientLabel": "PATIENT",
+      "patientLabelShort": "PT",
+      "doctorLabel": "DIAGNOSING DOCTOR",
+      "doctorLabelShort": "DR",
+      "orderLabel": "Order",
+      "noMedication": "No medication prescribed",
+      "medicationCount": "{{count}} medication(s)",
+      "medicinePriceLabel": "Unit Price (VND)",
+      "serviceFeeLabel": "Service Fee",
+      "serviceFeeDescription": "Includes consultation and clinic service fees",
+      "serviceFeeInputLabel": "Enter price...",
+      "totalManual": "Total",
+      "note": "Please double check the costs before creating request",
+      "idLabel": "Order",
+      "description": "Service Payment",
+      "confirmedDeposit": "Confirmed Deposit",
+      "walkInFull": "Walk-in / Full",
+      "depositOnline": "Online Deposit",
+      "processing": "Processing...",
+      "confirmFinalPayment": "Confirm Final Payment"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {{page}} / {{total}}"
     }
   }
 }

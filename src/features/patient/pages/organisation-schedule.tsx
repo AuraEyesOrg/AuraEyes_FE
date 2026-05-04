@@ -196,7 +196,7 @@ export default function OrganisationSchedulePage() {
         <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-              {t('ClinicBooking.page.title')}
+              {t('PatientAppointments.clinicBooking.page.title')}
             </h1>
             <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
               Organisation:{' '}

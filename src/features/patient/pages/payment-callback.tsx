@@ -13,7 +13,7 @@ import {
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import { toast } from 'react-toastify';
-import { getOrderById } from '../api/financial.api';
+import { getOrderById, syncOrder } from '../api/financial.api';
 import { formatCurrency } from '@/lib/helper';
 import { useTranslation } from 'react-i18next';
 import useAuthStore from '@/store/auth-store';
@@ -78,18 +78,24 @@ export default function PaymentCallbackPage() {
     searchParams.get('cancel') === 'true' ||
     searchParams.get('status') === 'CANCELLED';
 
-  const [status, setStatus] = useState<CallbackStatus>(
-    cancelled ? 'cancelled' : 'loading'
-  );
+  const [status, setStatus] = useState<CallbackStatus>('loading');
   const [orderData, setOrderData] = useState<OrderDto | null>(null);
   const hasStarted = useRef(false);
 
   useEffect(() => {
-    if (cancelled || hasStarted.current) return;
+    if (hasStarted.current) return;
     hasStarted.current = true;
 
     if (!orderId) {
       setStatus('failed');
+      return;
+    }
+
+    if (cancelled) {
+      // Proactively sync cancellation status to Backend
+      syncOrder(orderId).finally(() => {
+        setStatus('cancelled');
+      });
       return;
     }
 

@@ -81,7 +81,10 @@ export function CaseSnapshotAiThumbnail({
     return (
       <img
         src={snapshot.annotatedImageUrl}
-        alt={t('Ophthalmologist.caseSnapshot.alt', 'AI annotated retinal image')}
+        alt={t(
+          'Ophthalmologist.caseSnapshot.alt',
+          'AI annotated retinal image'
+        )}
         className="h-24 w-full object-cover"
       />
     );
@@ -103,7 +106,10 @@ export function ScreeningReviewLink({ screeningId }: { screeningId: string }) {
       className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
     >
       <ExternalLink className="h-3 w-3" />
-      {t('Ophthalmologist.caseSnapshot.openReview', 'Open full AI screening review')}
+      {t(
+        'Ophthalmologist.caseSnapshot.openReview',
+        'Open full AI screening review'
+      )}
     </Link>
   );
 }

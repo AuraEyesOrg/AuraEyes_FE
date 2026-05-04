@@ -2683,6 +2683,12 @@ declare module 'i18next' {
         ruleViolated: string;
         confirmLabel: string;
         cancelling: string;
+        confirmDirect: string;
+      };
+      clinicBooking: {
+        page: {
+          title: string;
+        };
       };
     };
     PatientDashboard: {
@@ -8927,6 +8933,7 @@ declare module 'i18next' {
       toast: {
         createSuccess: string;
         createError: string;
+        cashSuccess: string;
       };
       header: {
         badge: string;
@@ -8974,58 +8981,15 @@ declare module 'i18next' {
         message: string;
         confirm: string;
         cancel: string;
-      };
-    };
-    ClinicStaffBilling: {
-      page: {
-        title: string;
-        subtitle: string;
-      };
-      stats: {
-        totalRevenue: string;
-        totalRefund: string;
-        orders: string;
-      };
-      transactions: {
-        title: string;
-        loadFailed: string;
-        emptyTitle: string;
-      };
-      filters: {
-        all: string;
-        completed: string;
-        pending: string;
-        cancelled: string;
-      };
-      orderDetails: {
-        description: string;
-        depositOnline: string;
-        walkInFull: string;
-        idLabel: string;
-        patientLabel: string;
-        doctorLabel: string;
-        noMedication: string;
-        medicationCount: string;
-        medicinePriceLabel: string;
-        manualPricePlaceholder: string;
-        serviceFeeLabel: string;
-        serviceFeeDescription: string;
-        serviceFeeInputLabel: string;
-        totalManual: string;
-        note: string;
-        confirmedDeposit: string;
+        patient: string;
+        totalAmount: string;
+        depositPaid: string;
         remaining: string;
-        paid: string;
-        processing: string;
-        confirmFinalPayment: string;
-      };
-      pagination: {
-        previous: string;
-        next: string;
-        pageOf: string;
-      };
-      error: {
-        retry: string;
+        methodTitle: string;
+        cash: string;
+        payos: string;
+        confirmCash: string;
+        confirmPayos: string;
       };
     };
     ClinicStaffSettings: {
@@ -9722,58 +9686,6 @@ declare module 'i18next' {
             cancel: string;
           };
         };
-        ClinicStaffBilling: {
-          page: {
-            title: string;
-            subtitle: string;
-          };
-          stats: {
-            totalRevenue: string;
-            totalRefund: string;
-            orders: string;
-          };
-          transactions: {
-            title: string;
-            loadFailed: string;
-            emptyTitle: string;
-          };
-          filters: {
-            all: string;
-            completed: string;
-            pending: string;
-            cancelled: string;
-          };
-          orderDetails: {
-            description: string;
-            depositOnline: string;
-            walkInFull: string;
-            idLabel: string;
-            patientLabel: string;
-            doctorLabel: string;
-            noMedication: string;
-            medicationCount: string;
-            medicinePriceLabel: string;
-            manualPricePlaceholder: string;
-            serviceFeeLabel: string;
-            serviceFeeDescription: string;
-            serviceFeeInputLabel: string;
-            totalManual: string;
-            note: string;
-            confirmedDeposit: string;
-            remaining: string;
-            paid: string;
-            processing: string;
-            confirmFinalPayment: string;
-          };
-          pagination: {
-            previous: string;
-            next: string;
-            pageOf: string;
-          };
-          error: {
-            retry: string;
-          };
-        };
         ClinicStaffSettings: {
           title: string;
           subtitle: string;
@@ -10127,6 +10039,7 @@ declare module 'i18next' {
               loadDoctorsFailed: string;
               copyDoctorConsultationLinkSuccess: string;
               copyDoctorConsultationLinkFailed: string;
+              ermSaveRequiredBeforeScreening: string;
             };
             error: {
               title: string;
@@ -10136,6 +10049,10 @@ declare module 'i18next' {
               retry: string;
               refresh: string;
               fillErm: string;
+              fillErmRequired: string;
+              openErm: string;
+              openErmHint: string;
+              createScreeningDisabledHint: string;
               createScreening: string;
               viewScreening: string;
               sending: string;
@@ -10348,6 +10265,70 @@ declare module 'i18next' {
             title: string;
           };
         };
+      };
+    };
+    ClinicStaffBilling: {
+      page: {
+        title: string;
+        subtitle: string;
+      };
+      stats: {
+        totalRevenue: string;
+        totalRefund: string;
+        orders: string;
+      };
+      filters: {
+        all: string;
+        completed: string;
+        pending: string;
+        cancelled: string;
+      };
+      transactions: {
+        title: string;
+        emptyTitle: string;
+        loadFailed: string;
+      };
+      status: {
+        fullyPaid: string;
+        partiallyPaid: string;
+      };
+      description: {
+        medicationAndService: string;
+        deposit: string;
+        finalPayment: string;
+        refund: string;
+        methods: {
+          Cash: string;
+          PayOS: string;
+          BankTransfer: string;
+        };
+      };
+      orderDetails: {
+        patientLabel: string;
+        patientLabelShort: string;
+        doctorLabel: string;
+        doctorLabelShort: string;
+        orderLabel: string;
+        noMedication: string;
+        medicationCount: string;
+        medicinePriceLabel: string;
+        serviceFeeLabel: string;
+        serviceFeeDescription: string;
+        serviceFeeInputLabel: string;
+        totalManual: string;
+        note: string;
+        idLabel: string;
+        description: string;
+        confirmedDeposit: string;
+        walkInFull: string;
+        depositOnline: string;
+        processing: string;
+        confirmFinalPayment: string;
+      };
+      pagination: {
+        previous: string;
+        next: string;
+        pageOf: string;
       };
     };
   }

@@ -10,6 +10,7 @@ import {
   Pencil,
   History,
   MoreHorizontal,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
@@ -18,6 +19,8 @@ import ClinicStaffLayout from '../components/ClinicStaffLayout';
 import AvatarFallback from '@/components/ui/avatar-fallback';
 import { useTranslation } from 'react-i18next';
 import { getClinicPatients, type ClinicPatientDto } from '../api/patients.api';
+import { clinicQueueApi, type ClinicQueueItem } from '../api/queue.api';
+import { formatAppointmentSlot } from '@/lib/date-utils';
 import CreateWalkInPatientModal from '../components/CreateWalkInPatientModal';
 import UpdatePatientContactModal from '../components/UpdatePatientContactModal';
 
@@ -76,6 +79,17 @@ export default function ClinicStaffPatientsPage() {
   >({});
   const [actionMenuPosition, setActionMenuPosition] =
     useState<ActionMenuPosition | null>(null);
+
+  const [visitPickerOpen, setVisitPickerOpen] = useState(false);
+  const [visitPickerPatientId, setVisitPickerPatientId] = useState<
+    string | null
+  >(null);
+  const [visitPickerItems, setVisitPickerItems] = useState<ClinicQueueItem[]>(
+    []
+  );
+  const [screenVisitLoadingFor, setScreenVisitLoadingFor] = useState<
+    string | null
+  >(null);
 
   const patientsQuery = useQuery({
     queryKey: ['clinic-staff', 'patients'],
@@ -210,12 +224,57 @@ export default function ClinicStaffPatientsPage() {
     );
   }
 
-  const handleScreenPatient = (patientId: string) => {
+  const handleScreenPatient = async (patientId: string) => {
+    setScreenVisitLoadingFor(patientId);
+    try {
+      const queue = await clinicQueueApi.getQueue();
+      const items = queue.filter((i) => i.patientId === patientId);
+      if (items.length === 0) {
+        toast.error(
+          t(
+            'ClinicStaff.patients.toast.noActiveVisit',
+            'No active check-in for this patient. Check them in from the queue first.'
+          )
+        );
+        return;
+      }
+      if (items.length === 1) {
+        navigate(
+          resolvePathWithLocale(
+            `/clinic-staff/screenings/new?patientId=${encodeURIComponent(patientId)}&visitId=${encodeURIComponent(items[0].visitId)}`
+          )
+        );
+        return;
+      }
+      setVisitPickerPatientId(patientId);
+      setVisitPickerItems(items);
+      setVisitPickerOpen(true);
+    } catch {
+      toast.error(
+        t(
+          'ClinicStaff.patients.toast.queueLoadFailed',
+          'Could not load the clinic queue. Try again.'
+        )
+      );
+    } finally {
+      setScreenVisitLoadingFor(null);
+    }
+  };
+
+  const closeVisitPicker = () => {
+    setVisitPickerOpen(false);
+    setVisitPickerPatientId(null);
+    setVisitPickerItems([]);
+  };
+
+  const confirmVisitForScreening = (visitId: string) => {
+    if (!visitPickerPatientId) return;
     navigate(
       resolvePathWithLocale(
-        `/clinic-staff/screenings/new?patientId=${patientId}`
+        `/clinic-staff/screenings/new?patientId=${encodeURIComponent(visitPickerPatientId)}&visitId=${encodeURIComponent(visitId)}`
       )
     );
+    closeVisitPicker();
   };
 
   const handleViewPatientHistory = (patientId: string) => {
@@ -421,10 +480,15 @@ export default function ClinicStaffPatientsPage() {
                         <div className="inline-flex items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => handleScreenPatient(patient.id)}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
+                            disabled={screenVisitLoadingFor === patient.id}
+                            onClick={() => void handleScreenPatient(patient.id)}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20 disabled:opacity-50"
                           >
-                            <ScanEye className="h-3.5 w-3.5" />
+                            {screenVisitLoadingFor === patient.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <ScanEye className="h-3.5 w-3.5" />
+                            )}
                             {t(
                               'ClinicStaff.patients.actions.screenNow',
                               'Screen Now'
@@ -502,6 +566,61 @@ export default function ClinicStaffPatientsPage() {
             </table>
           </div>
         </div>
+
+        {visitPickerOpen &&
+          visitPickerPatientId &&
+          createPortal(
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="visit-picker-title"
+            >
+              <div className="w-full max-w-md rounded-2xl border border-(--border-primary) bg-(--bg-primary) p-6 shadow-xl">
+                <h2
+                  id="visit-picker-title"
+                  className="text-lg font-semibold text-(--text-primary)"
+                >
+                  {t(
+                    'ClinicStaff.patients.visitPicker.title',
+                    'Choose a check-in'
+                  )}
+                </h2>
+                <p className="mt-2 text-sm text-(--text-secondary)">
+                  {t(
+                    'ClinicStaff.patients.visitPicker.subtitle',
+                    'This patient has more than one active visit. Pick the one you are screening for.'
+                  )}
+                </p>
+                <ul className="mt-4 max-h-64 space-y-2 overflow-y-auto">
+                  {visitPickerItems.map((item) => (
+                    <li key={item.visitId}>
+                      <button
+                        type="button"
+                        onClick={() => confirmVisitForScreening(item.visitId)}
+                        className="flex w-full flex-col rounded-xl border border-(--border-primary) bg-(--bg-secondary) px-4 py-3 text-left text-sm transition hover:bg-(--bg-tertiary)"
+                      >
+                        <span className="font-medium text-(--text-primary)">
+                          {formatAppointmentSlot(item.checkedInAt)}
+                        </span>
+                        <span className="text-xs text-(--text-tertiary)">
+                          {item.flowState} · {item.visitId.slice(0, 8)}…
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  onClick={closeVisitPicker}
+                  className="mt-4 w-full rounded-xl border border-(--border-primary) py-2.5 text-sm font-medium text-(--text-secondary) transition hover:bg-(--bg-tertiary)"
+                >
+                  {t('ClinicStaff.patients.visitPicker.cancel', 'Cancel')}
+                </button>
+              </div>
+            </div>,
+            document.body
+          )}
 
         {/* Modals */}
         <CreateWalkInPatientModal

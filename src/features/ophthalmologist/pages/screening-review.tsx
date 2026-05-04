@@ -22,13 +22,13 @@ import {
   PlusSquare,
   Trash2,
   Undo2,
-  Users,
   Check,
   Send,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import { collaborationApi } from '@/features/professional-network/api/collaboration.api';
 import type { AvailableDoctorForConsiliumDto } from '@/features/professional-network/api/collaboration.api';
+import { internalChatApi } from '@/features/professional-network/api/internal-chat.api';
 import { medicalRecordApi } from '@/features/medical-records/api/medical-record.api';
 import {
   getOphthalmologistScreeningDetail,
@@ -309,6 +309,7 @@ export default function ScreeningReviewPage() {
   const [consiliumReason, setConsiliumReason] = useState('');
   const [isEmergencyConsilium, setIsEmergencyConsilium] = useState(false);
   const [requestingConsilium, setRequestingConsilium] = useState(false);
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 
   // Diagnosis & Finalization states
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
@@ -1113,18 +1114,15 @@ export default function ScreeningReviewPage() {
         consultationSessionId: reportableSessionId || undefined,
         invitedDoctorIds: selectedDoctors,
         reason: consiliumReason,
-        isEmergency: isUrgent,
+        isEmergency: isEmergencyConsilium,
         medicalRecordId: detail?.medicalRecordId ?? undefined,
       });
 
       ophthalToast.success(
-        isUrgent
-          ? `🚨 ${t(
-              'Ophthalmologist.screeningReview.consilium.urgentSent',
-              'Yêu cầu hội chẩn KHẨN CẤP đã được gửi!'
-            )}`
+        isEmergencyConsilium
+          ? '🚨 Yêu cầu hội chẩn KHẨN CẤP đã được gửi!'
           : t(
-              'Ophthalmologist.screeningReview.consilium.sent',
+              'Ophthalmologist.screeningReview.toast.consiliumRequested',
               'Yêu cầu hội chẩn đã được gửi!'
             )
       );
@@ -1133,8 +1131,8 @@ export default function ScreeningReviewPage() {
       setSelectedDoctors([]);
       setConsiliumReason('');
 
-      // Navigate to chat
-      navigate(`/professional-network/collaboration?groupId=${groupId}`);
+      // Refresh groups status
+      setActiveGroupId(groupId);
     } catch {
       ophthalToast.error(
         t(
@@ -1146,6 +1144,26 @@ export default function ScreeningReviewPage() {
       setRequestingConsilium(false);
     }
   };
+
+  useEffect(() => {
+    if (reportableSessionId) {
+      void (async () => {
+        try {
+          const groups = await internalChatApi.getGroups();
+          const existing = groups.find(
+            (g) =>
+              g.consultationSessionId === reportableSessionId &&
+              g.consiliumStatus !== 'Concluded'
+          );
+          if (existing) {
+            setActiveGroupId(existing.id);
+          }
+        } catch (e) {
+          console.error('Error checking existing consilium', e);
+        }
+      })();
+    }
+  }, [reportableSessionId]);
 
   const handleFinalizeMedicalRecord = async () => {
     if (!detail?.medicalRecordId) return;
@@ -2542,12 +2560,13 @@ export default function ScreeningReviewPage() {
                   {/* Detected Findings */}
                   <div className="flex-1 overflow-y-auto p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                         {t(
-                          'Ophthalmologist.screeningReview.findings.heading',
+                          'Ophthalmologist.screeningReview.detectedFindings',
                           'Detected Findings'
-                        )}
-                      </h3>
+                        )}{' '}
+                        ({sidebarFindings.length})
+                      </p>
                       <button
                         onClick={() => {
                           if (!isFinalizedDiagnosis) setIsAddingFinding(true);
@@ -2658,7 +2677,7 @@ export default function ScreeningReviewPage() {
                               onClick={() => setIsAddingFinding(false)}
                               className="px-3 py-1.5 text-[11px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
                             >
-                              {t('Ophthalmologist.common.cancel', 'Hủy')}
+                              Hủy
                             </button>
                             <button
                               onClick={() => {
@@ -2938,7 +2957,7 @@ export default function ScreeningReviewPage() {
             <div className="p-6 border-b border-gray-200 dark:border-[#1e3a5f] flex items-center justify-between bg-amber-50/50 dark:bg-amber-900/10">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-amber-600" />
+                  <span className="text-xl">🤝</span>
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -3013,6 +3032,7 @@ export default function ScreeningReviewPage() {
                             avatarUrl={doc.avatar ?? undefined}
                             size="md"
                             className="shrink-0"
+                            useStoredAvatarFallback={false}
                           />
                           <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-[#0a1f44] rounded-full" />
                         </div>
@@ -3091,7 +3111,7 @@ export default function ScreeningReviewPage() {
                 onClick={() => setShowConsiliumModal(false)}
                 className="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               >
-                {t('Ophthalmologist.common.cancel', 'Hủy')}
+                Hủy
               </button>
               <button
                 onClick={() => void handleRequestConsilium()}
