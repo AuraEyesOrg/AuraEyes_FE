@@ -290,6 +290,9 @@ const SystemAdminVerificationRequests = lazy(
 const SystemAdminWithdrawalRequests = lazy(
   () => import('@/features/system-admin/pages/withdrawal-requests')
 );
+const SystemAdminRefundRequests = lazy(
+  () => import('@/features/system-admin/pages/refund-requests')
+);
 const SystemAdminLeaveRequests = lazy(
   () => import('@/features/system-admin/pages/leave-requests')
 );
@@ -1299,6 +1302,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/system-admin/refund-requests"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin']}
+              element={<SystemAdminRefundRequests />}
+            />
+          }
+        />
+        <Route
           path="/:locale/system-admin/cashflow"
           element={
             <LocalizedPrivateRoute
@@ -2115,6 +2127,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['SystemAdmin']}>
               <SystemAdminWithdrawalRequests />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/system-admin/refund-requests"
+          element={
+            <PrivateRoute allowedRoles={['SystemAdmin']}>
+              <SystemAdminRefundRequests />
             </PrivateRoute>
           }
         />

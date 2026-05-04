@@ -49,13 +49,15 @@ export const GuestTourProvider = ({ children }: GuestTourProviderProps) => {
 
   const steps = useMemo(() => {
     const messages = {
-      logo: t('GuestTour.steps.logo'),
-      navAbout: t('GuestTour.steps.navAbout'),
-      navHowItWorks: t('GuestTour.steps.navHowItWorks'),
-      navEthics: t('GuestTour.steps.navEthics'),
-      navContact: t('GuestTour.steps.navContact'),
-      bookAppointment: t('GuestTour.steps.bookAppointment'),
-      patientPortalLogin: t('GuestTour.steps.patientPortalLogin'),
+      logo: t('GuestTour.steps.logo' as any) as string,
+      navAbout: t('GuestTour.steps.navAbout' as any) as string,
+      navHowItWorks: t('GuestTour.steps.navHowItWorks' as any) as string,
+      navEthics: t('GuestTour.steps.navEthics' as any) as string,
+      navContact: t('GuestTour.steps.navContact' as any) as string,
+      bookAppointment: t('GuestTour.steps.bookAppointment' as any) as string,
+      patientPortalLogin: t(
+        'GuestTour.steps.patientPortalLogin' as any
+      ) as string,
     };
     return buildGuestTourSteps(messages);
   }, [t]);

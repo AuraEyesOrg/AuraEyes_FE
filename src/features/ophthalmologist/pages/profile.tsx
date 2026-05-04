@@ -27,11 +27,16 @@ import { formatMonthYear, formatShortDate } from '@/lib/date-utils';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { resolveAvatarUrl } from '@/lib/user-avatar';
 import useAuthStore from '@/store/auth-store';
-import { DoctorSidebar, DoctorHeader } from '../components';
+import {
+  DoctorSidebar,
+  DoctorHeader,
+  UploadCredentialsModal,
+} from '../components';
 import {
   useOphthalmologistProfile,
   useUpdateOphthalmologistProfile,
   useUploadOphthalmologistAvatar,
+  useDeleteCertificate,
 } from '../hooks/useOphthalmologistProfile';
 
 const profileSchema = yup.object({
@@ -82,6 +87,10 @@ export default function OphthalmologistProfilePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [avatarImageError, setAvatarImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const deleteCertMutation = useDeleteCertificate();
+
+  const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+  const [editingCredential, setEditingCredential] = useState<any>(null);
 
   const {
     register,
@@ -209,13 +218,17 @@ export default function OphthalmologistProfilePage() {
       deleteCertMutation.mutate(certId, {
         onSuccess: () => {
           toast.success(t('Ophthalmologist.profile.toast.certificateDeleted', 'Certificate deleted successfully'));
-          queryClient.invalidateQueries({ queryKey: ophthalmologistProfileKeys.certificates() });
         },
-        onError: () => {
+        onError: (err) => {
           toast.error(t('Ophthalmologist.profile.toast.certificateDeleteFailed', 'Failed to delete certificate'));
         },
       });
     }
+  };
+
+  const handleCloseCredentialsModal = () => {
+    setShowCredentialsModal(false);
+    setEditingCredential(null);
   };
 
   const handleEditCredential = (cert: any, type: 'Degree' | 'License') => {
@@ -345,8 +358,9 @@ export default function OphthalmologistProfilePage() {
                     <button
                       type="button"
                       onClick={() => setIsEditing(true)}
-                      className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] px-4 py-2 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-tertiary)]"
+                      className="flex items-center gap-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] px-4 py-2 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-tertiary)]"
                     >
+                      <Edit2 className="h-4 w-4" />
                       Edit
                     </button>
                   ) : (
@@ -374,7 +388,7 @@ export default function OphthalmologistProfilePage() {
                       <button
                         type="submit"
                         disabled={updateMutation.isPending || !isDirty}
-                        className="btn-primary flex items-center gap-2 disabled:opacity-50"
+                        className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:grayscale transition-all"
                       >
                         {updateMutation.isPending ? (
                           <Spinner size={14} />
@@ -529,6 +543,7 @@ export default function OphthalmologistProfilePage() {
                   </div>
                   <button
                     type="button"
+                    onClick={() => setShowCredentialsModal(true)}
                     className="flex items-center gap-1 text-sm font-medium text-brand transition hover:text-brand/80"
                   >
                     <Plus className="h-4 w-4" />
@@ -623,16 +638,26 @@ export default function OphthalmologistProfilePage() {
                                     </span>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2 opacity-0 transition group-hover:opacity-100">
+                                <div className="flex items-center gap-2">
                                   <button
                                     title="Edit"
+                                    onClick={() =>
+                                      handleEditCredential(degree, 'Degree')
+                                    }
                                     className="rounded-lg p-1.5 text-[var(--text-secondary)] transition hover:bg-brand/10 hover:text-brand"
                                   >
                                     <Edit2 className="h-4 w-4" />
                                   </button>
                                   <button
                                     title="Delete"
-                                    className="rounded-lg p-1.5 text-[var(--text-secondary)] transition hover:bg-red-50 hover:text-red-500"
+                                    onClick={() =>
+                                      handleDeleteCertificate(
+                                        degree.id,
+                                        degree.name
+                                      )
+                                    }
+                                    disabled={deleteCertMutation.isPending}
+                                    className="rounded-lg p-1.5 text-[var(--text-secondary)] transition hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </button>
@@ -753,16 +778,26 @@ export default function OphthalmologistProfilePage() {
                                     )}
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2 opacity-0 transition group-hover:opacity-100">
+                                <div className="flex items-center gap-2">
                                   <button
                                     title="Edit"
+                                    onClick={() =>
+                                      handleEditCredential(cert, 'License')
+                                    }
                                     className="rounded-lg p-1.5 text-[var(--text-secondary)] transition hover:bg-brand/10 hover:text-brand"
                                   >
                                     <Edit2 className="h-4 w-4" />
                                   </button>
                                   <button
                                     title="Delete"
-                                    className="rounded-lg p-1.5 text-[var(--text-secondary)] transition hover:bg-red-50 hover:text-red-500"
+                                    onClick={() =>
+                                      handleDeleteCertificate(
+                                        cert.id,
+                                        cert.name
+                                      )
+                                    }
+                                    disabled={deleteCertMutation.isPending}
+                                    className="rounded-lg p-1.5 text-[var(--text-secondary)] transition hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </button>
@@ -870,6 +905,13 @@ export default function OphthalmologistProfilePage() {
           </div>
         </div>
       )}
+
+      <UploadCredentialsModal
+        isOpen={showCredentialsModal}
+        onClose={handleCloseCredentialsModal}
+        ophthalmologistId={profileData.id}
+        editingCredential={editingCredential}
+      />
 
       {/* Image Lightbox */}
       {selectedImage && (

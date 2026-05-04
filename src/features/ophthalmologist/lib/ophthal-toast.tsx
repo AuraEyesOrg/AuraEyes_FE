@@ -55,7 +55,8 @@ const confirm = (
               }}
               className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700"
             >
-              {options.cancelLabel ?? i18n.t('Ophthalmologist.common.cancel', 'Cancel')}
+              {options.cancelLabel ??
+                i18n.t('Ophthalmologist.common.cancel', 'Cancel')}
             </button>
             <button
               onClick={() => {
@@ -64,7 +65,8 @@ const confirm = (
               }}
               className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white"
             >
-              {options.confirmLabel ?? i18n.t('Ophthalmologist.common.confirm', 'Confirm')}
+              {options.confirmLabel ??
+                i18n.t('Ophthalmologist.common.confirm', 'Confirm')}
             </button>
           </div>
         </div>

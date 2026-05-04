@@ -49,6 +49,7 @@
     "learnMore": "Learn More",
     "helpTour": "Guide",
     "language": "Language",
+    "toggleLanguage": "Toggle Language",
     "toggleMenu": "Toggle menu",
     "switchToDark": "Switch to dark mode",
     "switchToLight": "Switch to light mode",
@@ -652,6 +653,125 @@
     }
   },
   "Ophthalmologist": {
+    "common": {
+      "doctor": "Doctor",
+      "role": "Ophthalmologist",
+      "logout": "Logout",
+      "cancel": "Cancel",
+      "back": "Back",
+      "email": "Email",
+      "next": "Next",
+      "of": "of",
+      "other": "Other",
+      "page": "Page",
+      "previous": "Previous",
+      "refresh": "Refresh",
+      "retry": "Retry",
+      "saving": "Saving...",
+      "severity": {
+        "mild": "Mild",
+        "severe": "Severe",
+        "critical": "Critical",
+        "moderate": "Moderate"
+      },
+      "showing": "Showing",
+      "status": {
+        "draft": "Draft",
+        "finalized": "Finalized",
+        "reviewed": "Reviewed"
+      },
+      "submitting": "Submitting...",
+      "view": "View",
+      "confirm": "Confirm",
+      "fullName": "Full Name",
+      "loading": "Loading...",
+      "nextPage": "Next",
+      "notAvailable": "N/A",
+      "previousPage": "Previous",
+      "submitRequest": "Submit Request"
+    },
+    "header": {
+      "pages": "Pages",
+      "searchPlaceholder": "Search patient, ID...",
+      "toggleTheme": "Toggle theme"
+    },
+    "sidebar": {
+      "Dashboard": "Dashboard",
+      "Patients": "Patients",
+      "Screenings": "Review Queue",
+      "LeaveRequests": "Leave Requests",
+      "Appointments": "Appointments",
+      "Schedules": "Schedules",
+      "EmploymentRequests": "Employment Type Changes",
+      "Consultations": "Consultations",
+      "AuraNetwork": "Aura Network",
+      "Contract": "Contract",
+      "Settings": "Settings",
+      "Wallet": "Wallet"
+    },
+    "leaveRequests": {
+      "pageTitle": "Leave Requests",
+      "submitTitle": "Submit New Leave Request",
+      "submitDescription": "Leave requests must be submitted at least 3 days in advance and reviewed by system admin.",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "reason": "Reason",
+      "reasonPlaceholder": "Describe why you need this leave request.",
+      "submitAction": "Submit Request",
+      "historyTitle": "Request History",
+      "empty": "No leave requests found for the selected filter.",
+      "submittedAt": "Submitted at",
+      "adminNote": "Admin note",
+      "confirmCancel": "Are you sure you want to cancel this leave request? This action cannot be undone.",
+      "cancelAction": "Cancel request",
+      "status": {
+        "all": "All statuses",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled"
+      },
+      "toast": {
+        "createSuccess": "Leave request submitted successfully.",
+        "createFailed": "Failed to submit leave request.",
+        "cancelSuccess": "Leave request cancelled successfully.",
+        "cancelFailed": "Failed to cancel leave request.",
+        "missingFields": "Please provide start date, end date, and reason.",
+        "invalidDateRange": "End date must be on or after start date."
+      }
+    },
+    "employmentTypeChangeRequests": {
+      "pageTitle": "Employment Type Change Requests",
+      "submitTitle": "Submit New Request",
+      "submitDescription": "System admin will review your request. Approved requests require signing a new contract.",
+      "currentType": "Current employment type",
+      "targetType": "Target employment type",
+      "reason": "Reason",
+      "reasonPlaceholder": "Describe why you need to change your employment type.",
+      "submitAction": "Submit Request",
+      "historyTitle": "Request History",
+      "empty": "No requests found.",
+      "createdAt": "Created at",
+      "reviewedAt": "Reviewed at",
+      "adminNote": "Admin note",
+      "confirmCancel": "Are you sure you want to cancel this request?",
+      "cancelAction": "Cancel request",
+      "status": {
+        "all": "All statuses",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled"
+      },
+      "toast": {
+        "createSuccess": "Employment type change request submitted successfully.",
+        "createFailed": "Failed to submit employment type change request.",
+        "cancelSuccess": "Employment type change request cancelled successfully.",
+        "cancelFailed": "Failed to cancel employment type change request.",
+        "missingReason": "Please provide a reason.",
+        "sameType": "Target employment type must be different from current type."
+      }
+    },
     "dashboard": {
       "greeting": {
         "morning": "Good Morning",
@@ -661,19 +781,143 @@
       "loadError": "Unable to load the live ophthalmologist dashboard.",
       "subtitle": "Your workspace — review queue and patient cases",
       "reviewQueue": {
-        "title": "Review Queue",
-        "description": "Cases sorted by risk level and waiting time",
+        "title": "Review Queue Snapshot",
+        "description": "Live metrics from consultation sessions and screening risk analyses.",
+        "pendingReviews": "Pending Reviews",
+        "urgentCases": "Urgent Cases",
         "viewAll": "View all screenings"
       },
       "queue": {
         "updating": "Updating..."
       }
     },
-    "common": {
-      "doctor": "Doctor",
-      "retry": "Retry",
-      "cancel": "Cancel",
-      "confirm": "Confirm"
+    "settings": {
+      "defaults": {
+        "unknownDoctor": "Unknown doctor",
+        "noBio": "No profile bio available."
+      },
+      "pageTitle": "Settings",
+      "profile": {
+        "title": "Profile Information",
+        "edit": "Edit Profile",
+        "loading": "Loading profile...",
+        "verifiedPractitioner": "Verified Practitioner",
+        "memberSince": "Member since",
+        "email": "Email Address",
+        "phone": "Phone Number",
+        "experience": "Experience",
+        "experienceSuffix": "years experience",
+        "years": "years",
+        "specialty": "Specialty",
+        "employmentType": "Employment Type",
+        "employmentTypeValues": {
+          "fullTime": "Full-time",
+          "partTime": "Part-time"
+        },
+        "hospital": "Hospital / Clinic",
+        "address": "Address",
+        "bio": "Bio / Description"
+      },
+      "credentials": {
+        "title": "Professional Credentials",
+        "upload": "Upload Credentials",
+        "degrees": "Degrees",
+        "licenses": "Licenses",
+        "issuedBy": "Issued by",
+        "issued": "Issued",
+        "expires": "Expires",
+        "noDegrees": "No degrees uploaded yet",
+        "noLicenses": "No licenses uploaded yet",
+        "addNow": "Add now",
+        "status": {
+          "verified": "Verified",
+          "pending": "Pending",
+          "expired": "Expired"
+        },
+        "medicalDegrees": "Medical Degrees",
+        "licensesCertificates": "Licenses & Certificates",
+        "degreeName": "Degree Name",
+        "degreeLevel": "Degree Level",
+        "issuingAuthority": "Issuing Authority",
+        "issuedDate": "Issued Date",
+        "expiryDate": "Expiry Date",
+        "uploadDocument": "Upload Document",
+        "certificateName": "Certificate Name",
+        "addAnotherDegree": "Add Another Degree",
+        "addAnotherCertificate": "Add Another Certificate",
+        "updateTitle": "Update Credential",
+        "uploadTitle": "Upload Credentials"
+      },
+      "wallet": {
+        "title": "Wallet",
+        "availableBalance": "Available Balance",
+        "withdrawFunds": "Withdraw Funds",
+        "recentTransactions": "Recent Transactions",
+        "loadingTransactions": "Loading transactions...",
+        "noTransactions": "No transactions yet.",
+        "viewAllTransactions": "View All Transactions",
+        "withdrawalAmount": "Withdrawal Amount",
+        "minimumWithdrawal": "Minimum withdrawal amount",
+        "withdrawalTo": "Withdrawal to",
+        "withdraw": "Withdraw"
+      },
+      "accountSettings": {
+        "title": "Account Settings",
+        "security": "Security",
+        "securityHint": "Reset password & 2FA",
+        "securityHintChecking": "Checking 2FA status...",
+        "securityHintEnabled": "2FA is enabled. Manage password and recovery codes",
+        "securityHintDisabled": "2FA is off. Set up protection now",
+        "resetPassword": "Reset Password",
+        "resetPasswordHint": "Update your current password",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmNewPassword": "Confirm New Password",
+        "updatePassword": "Update Password",
+        "passwordChanged": "Password changed successfully.",
+        "passwordChangeFailed": "Unable to change password right now. Please try again.",
+        "language": "Language",
+        "languageVi": "Vietnamese (VN)",
+        "languageEn": "English (US)"
+      },
+      "appearance": {
+        "title": "Appearance",
+        "darkMode": "Dark Mode",
+        "currentlyOn": "Currently on",
+        "currentlyOff": "Currently off"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "email": "Email",
+        "emailHint": "Receive via email",
+        "push": "Push",
+        "pushHint": "Browser notifications",
+        "reminders": "Reminders",
+        "remindersHint": "Appointment reminders"
+      },
+      "dangerZone": {
+        "title": "Danger Zone",
+        "deactivate": "Deactivate Account",
+        "description": "Temporarily deactivate your account"
+      },
+      "editModal": {
+        "bioDescription": "Bio / Description",
+        "fullName": "Full Name",
+        "phoneNumber": "Phone Number",
+        "saveChanges": "Save Changes",
+        "title": "Edit Profile Information"
+      },
+      "toast": {
+        "avatarUploaded": "Avatar uploaded successfully.",
+        "avatarUploadFailed": "Unable to upload avatar right now. Please try again.",
+        "fullNameRequired": "Full name is required.",
+        "profileUpdated": "Profile updated successfully.",
+        "profileUpdateFailed": "Unable to update profile right now. Please try again."
+      },
+      "validation": {
+        "avatarFileSize": "File must be smaller than 5MB",
+        "avatarFileType": "Invalid file type. Supported: JPG, PNG, GIF, WebP"
+      }
     },
     "carePlan": {
       "back": "Back",
@@ -1586,7 +1830,8 @@
       "inProgress": "In Progress",
       "completed": "Completed",
       "cancelled": "Cancelled",
-      "noShow": "No Show"
+      "noShow": "No Show",
+      "cancellationRequested": "Refund Pending"
     },
     "empty": {
       "clinicAll": "No clinic appointments yet.",
@@ -1614,6 +1859,20 @@
       "modalTitle": "Clinic feedback",
       "modalSubtitle": "Share your clinic visit experience.",
       "submitLabel": "Submit clinic feedback"
+    },
+    "cancellation": {
+      "modalTitle": "Request Appointment Cancellation",
+      "modalSubtitle": "Please provide your banking information so we can refund your deposit (30% of slot price).",
+      "bankName": "Bank Name",
+      "accountName": "Account Name",
+      "bankNumber": "Bank Account Number",
+      "reason": "Cancellation Reason (optional)",
+      "successToast": "Cancellation request submitted. An administrator will review and process your refund.",
+      "errorToast": "Failed to submit cancellation request. Please try again later.",
+      "ruleNotice": "Note: You can only cancel an appointment at least 6 hours before the start time.",
+      "ruleViolated": "Cannot cancel appointment as it is less than 6 hours before the start time.",
+      "confirmLabel": "Submit Request",
+      "cancelling": "Submitting..."
     }
   },
   "PatientDashboard_Legacy": {
@@ -3800,6 +4059,248 @@
     }
   },
   "SystemAdmin": {
+    "common": {
+      "systemAdmin": "System Admin"
+    },
+
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "groups": {
+        "user-directory": {
+          "label": "User Directory",
+          "description": "Manage users and staff"
+        }
+      },
+      "items": {
+        "dashboard": "Dashboard",
+        "staff-management": "Staff Management",
+        "leave-requests": "Leave Requests",
+        "patients": "Patients",
+        "transaction-ledger": "Transaction Ledger",
+        "refund-requests": "Refund Requests",
+        "scheduling": "Scheduling",
+        "permissions": "Permissions",
+        "audit-logs": "Audit Logs",
+        "settings": "Settings",
+        "aura-network": "Aura Network"
+      }
+    },
+    "refundRequests": {
+      "title": "Refund Requests",
+      "description": "Process refunds for cancelled appointments",
+      "searchPlaceholder": "Search patient, phone, bank number...",
+      "empty": "No pending refund requests found.",
+      "labels": {
+        "appointmentDate": "Appointment Time",
+        "refundAmount": "Refund Amount",
+        "bankingInfo": "Banking Information",
+        "bankName": "Bank",
+        "accountName": "Account",
+        "accountNumber": "Number",
+        "reason": "Cancellation Reason"
+      },
+      "actions": {
+        "confirmRefund": "Confirm & Complete Refund"
+      },
+      "modals": {
+        "confirm": {
+          "title": "Process Refund",
+          "subtitle": "Enter refund details after completing the bank transfer.",
+          "transactionId": "Transaction ID (Optional)",
+          "notePlaceholder": "e.g. Refunded via Vietcombank app"
+        }
+      },
+      "toasts": {
+        "confirmSuccess": "Refund confirmed successfully.",
+        "confirmError": "Unable to confirm refund."
+      },
+      "placeholders": {
+        "transactionId": "e.g. REF123456789"
+      }
+    },
+    "staff": {
+      "modal": {
+        "title": "Add New Staff"
+      },
+      "fields": {
+        "fullName": "Full Name",
+        "email": "Email Address",
+        "phone": "Phone Number",
+        "role": "Staff Role",
+        "subRoles": "Functional Roles",
+        "consultationFee": "Consultation Fee (VND)"
+      },
+      "validation": {
+        "fullNameRequired": "Full name is required",
+        "nameTooShort": "Name is too short",
+        "emailRequired": "Email is required",
+        "invalidEmail": "Invalid email format",
+        "phoneRequired": "Phone number is required",
+        "invalidPhone": "Invalid phone format",
+        "roleRequired": "Role is required",
+        "feeNegative": "Fee cannot be negative",
+        "feeRequired": "Consultation fee is required",
+        "subRoleRequired": "At least one sub-role is required"
+      },
+      "placeholders": {
+        "fullName": "John Doe",
+        "email": "john.doe@auraeyes.com",
+        "phone": "+84 123 456 789",
+        "consultationFee": "500000"
+      },
+      "roles": {
+        "clinicStaff": "Clinic Staff",
+        "ophthalmologist": "Ophthalmologist"
+      },
+      "subRoles": {
+        "receptionist": "Receptionist",
+        "coordinator": "Coordinator",
+        "cashier": "Cashier"
+      },
+      "labels": {
+        "preview": "Preview:"
+      },
+      "actions": {
+        "create": "Create Staff"
+      },
+      "toasts": {
+        "createSuccess": "Staff created successfully. Temporary password sent.",
+        "createError": "Failed to create staff"
+      }
+    },
+    "leavePolicies": {
+      "title": "Leave Policies",
+      "description": "Define automatic leave day compensation rules for staff.",
+      "activeRule": "ACTIVE RULE",
+      "days": "days",
+      "empty": "No leave policies yet",
+      "emptyDesc": "Start by adding a policy to define how staff earn extra leave days.",
+      "noDescription": "No description provided",
+      "fields": {
+        "name": "Policy Name",
+        "days": "Additional Days",
+        "daysUnit": "Days",
+        "daysHint": "This number will be added to the staff member's leave fund when this policy is applied.",
+        "description": "Description"
+      },
+      "placeholders": {
+        "name": "e.g., Small Holiday Shift",
+        "description": "Describe the conditions for this policy..."
+      },
+      "actions": {
+        "add": "Add Policy"
+      },
+      "toasts": {
+        "createSuccess": "Policy created successfully",
+        "createError": "Failed to create policy",
+        "updateSuccess": "Policy updated successfully",
+        "updateError": "Failed to update policy",
+        "deleteSuccess": "Policy deleted successfully",
+        "deleteError": "Failed to delete policy"
+      }
+    },
+    "staffManagement": {
+      "title": "Staff Management",
+      "description": "Control access and professional settings for your clinic team",
+      "actions": {
+        "addStaff": "Add Staff"
+      },
+      "stats": {
+        "totalStaff": "Total Staff",
+        "doctors": "Doctors",
+        "locked": "Locked"
+      },
+      "searchPlaceholder": "Search staff...",
+      "toasts": {
+        "loadError": "Failed to load staff data"
+      }
+    },
+    "scheduling": {
+      "records": "records",
+      "status": {
+        "available": "Available",
+        "partial": "Partial Booked",
+        "full": "Fully Booked",
+        "blocked": "Blocked",
+        "attended": "Attended (Past)",
+        "expired": "Expired (Past)"
+      }
+    },
+    "auditLogs": {
+      "detail": {
+        "title": "Audit Log Detail",
+        "noData": "No data",
+        "before": "Before (Old Value)",
+        "after": "After (New Value)",
+        "createdData": "Created Data",
+        "deletedData": "Deleted Data",
+        "actionLabel": "Action:",
+        "entityLabel": "Entity:",
+        "entityIdLabel": "Entity ID:",
+        "userLabel": "User:",
+        "ipLabel": "IP:"
+      }
+    },
+    "settings": {
+      "general": {
+        "sections": {
+          "platformLocale": {
+            "title": "Platform & locale",
+            "description": "Basic identity, contact channel, timezone, and default language."
+          }
+        },
+        "timezoneOptions": {
+          "utc": "UTC"
+        }
+      }
+    },
+    "cashflow": {
+      "title": "Payment Transactions",
+      "description": "Manage cashflow and system-wide transactions",
+      "stats": {
+        "totalVolume": "Total Volume",
+        "pendingAmount": "Pending Amount",
+        "completedOrders": "Completed Orders",
+        "avgOrderValue": "Avg Order Value"
+      },
+      "filters": {
+        "all": "All Transactions",
+        "pending": "Pending",
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "table": {
+        "orderId": "Order ID",
+        "customer": "Customer",
+        "amount": "Amount",
+        "status": "Status",
+        "date": "Date Created",
+        "actions": "Actions",
+        "list": "Order List",
+        "defaultDescription": "Clinic Payment",
+        "deposited": "Deposited",
+        "remaining": "Remaining",
+        "onlineDeposit": "Online Deposit",
+        "fullPayment": "Full Payment",
+        "patientFallback": "Patient"
+      },
+      "status": {
+        "pending": "Pending Payment",
+        "confirmed": "Confirmed",
+        "processing": "Processing",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "failed": "Failed",
+        "refunded": "Refunded"
+      },
+      "pagination": {
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page"
+      },
+      "noData": "No transactions found",
+      "error": "An error occurred while loading data"
+    },
     "dashboard": {
       "title": "Clinic Operations",
       "subtitle": "Real-time overview of today's patient flow",
@@ -4844,6 +5345,7 @@
         "retry": "Retry",
         "refresh": "Refresh",
         "fillErm": "Fill ERM",
+        "editErm": "Edit ERM",
         "createScreening": "Create Screening",
         "viewScreening": "View Screening",
         "sending": "Sending...",

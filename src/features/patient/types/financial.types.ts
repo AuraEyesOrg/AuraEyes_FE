@@ -10,7 +10,8 @@ export type OrderStatus =
   | 'Cancelled'
   | 'Refunded'
   | 'PartiallyPaid'
-  | 'FullyPaid';
+  | 'FullyPaid'
+  | 'CancellationRequested';
 
 export type PaymentStatus =
   | 'Pending'

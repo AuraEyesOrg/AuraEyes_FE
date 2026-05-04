@@ -62,20 +62,45 @@ export default function PatientCarePlanPage() {
   const handleComplete = async (step: HealthRoadmapStepDto) => {
     try {
       await completeMutation.mutateAsync(step.id);
-      toast.success(t('Ophthalmologist.carePlan.toast.stepCompleted', 'Step marked as completed.'));
+      toast.success(
+        t(
+          'Ophthalmologist.carePlan.toast.stepCompleted',
+          'Step marked as completed.'
+        )
+      );
     } catch {
-      toast.error(t('Ophthalmologist.carePlan.toast.stepCompleteFailed', 'Failed to complete step.'));
+      toast.error(
+        t(
+          'Ophthalmologist.carePlan.toast.stepCompleteFailed',
+          'Failed to complete step.'
+        )
+      );
     }
   };
 
   const handleDelete = async (step: HealthRoadmapStepDto) => {
-    if (!window.confirm(t('Ophthalmologist.carePlan.confirm.delete', 'Delete step "{{title}}"? This cannot be undone.', { title: step.title })))
+    if (
+      !window.confirm(
+        t(
+          'Ophthalmologist.carePlan.confirm.delete',
+          'Delete step "{{title}}"? This cannot be undone.',
+          { title: step.title }
+        )
+      )
+    )
       return;
     try {
       await deleteMutation.mutateAsync(step.id);
-      toast.success(t('Ophthalmologist.carePlan.toast.stepDeleted', 'Step deleted.'));
+      toast.success(
+        t('Ophthalmologist.carePlan.toast.stepDeleted', 'Step deleted.')
+      );
     } catch {
-      toast.error(t('Ophthalmologist.carePlan.toast.stepDeleteFailed', 'Failed to delete step.'));
+      toast.error(
+        t(
+          'Ophthalmologist.carePlan.toast.stepDeleteFailed',
+          'Failed to delete step.'
+        )
+      );
     }
   };
 
@@ -103,7 +128,10 @@ export default function PatientCarePlanPage() {
                 {t('Ophthalmologist.carePlan.title', 'Healthcare Roadmap')}
               </h1>
               <p className="mt-1 text-sm text-(--text-secondary)">
-                {t('Ophthalmologist.carePlan.subtitle', 'Doctor-authored care plan timeline for patient')}{' '}
+                {t(
+                  'Ophthalmologist.carePlan.subtitle',
+                  'Doctor-authored care plan timeline for patient'
+                )}{' '}
                 <code className="px-1.5 py-0.5 rounded bg-(--bg-secondary) text-xs">
                   {patientId.slice(0, 8)}
                 </code>
@@ -122,9 +150,21 @@ export default function PatientCarePlanPage() {
 
           {/* Stats */}
           <div className="mb-8 grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatTile label={t('Ophthalmologist.carePlan.stats.total', 'Total')} value={stats.total} tone="slate" />
-            <StatTile label={t('Ophthalmologist.carePlan.stats.upcoming', 'Upcoming')} value={stats.upcoming} tone="sky" />
-            <StatTile label={t('Ophthalmologist.carePlan.stats.overdue', 'Overdue')} value={stats.overdue} tone="red" />
+            <StatTile
+              label={t('Ophthalmologist.carePlan.stats.total', 'Total')}
+              value={stats.total}
+              tone="slate"
+            />
+            <StatTile
+              label={t('Ophthalmologist.carePlan.stats.upcoming', 'Upcoming')}
+              value={stats.upcoming}
+              tone="sky"
+            />
+            <StatTile
+              label={t('Ophthalmologist.carePlan.stats.overdue', 'Overdue')}
+              value={stats.overdue}
+              tone="red"
+            />
             <StatTile
               label={t('Ophthalmologist.carePlan.stats.completed', 'Completed')}
               value={stats.completed}
@@ -135,11 +175,15 @@ export default function PatientCarePlanPage() {
           {/* Timeline */}
           {roadmapQuery.isLoading ? (
             <div className="flex items-center gap-3 py-12 text-(--text-secondary)">
-              <Spinner /> {t('Ophthalmologist.carePlan.loading', 'Loading roadmap...')}
+              <Spinner />{' '}
+              {t('Ophthalmologist.carePlan.loading', 'Loading roadmap...')}
             </div>
           ) : roadmapQuery.error ? (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-700/50 dark:bg-red-900/20 dark:text-red-300">
-              {t('Ophthalmologist.carePlan.loadError', 'Failed to load the healthcare roadmap.')}
+              {t(
+                'Ophthalmologist.carePlan.loadError',
+                'Failed to load the healthcare roadmap.'
+              )}
             </div>
           ) : (
             <RoadmapTimeline
@@ -151,7 +195,10 @@ export default function PatientCarePlanPage() {
               emptyState={
                 <div className="rounded-2xl border border-dashed border-(--border-color) bg-(--bg-secondary) p-10 text-center">
                   <p className="text-(--text-secondary) mb-4">
-                    {t('Ophthalmologist.carePlan.empty', 'No roadmap steps yet. Start by adding the first care plan item for this patient.')}
+                    {t(
+                      'Ophthalmologist.carePlan.empty',
+                      'No roadmap steps yet. Start by adding the first care plan item for this patient.'
+                    )}
                   </p>
                   <button
                     type="button"
@@ -159,7 +206,10 @@ export default function PatientCarePlanPage() {
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand hover:bg-brand/90 text-white font-semibold transition-colors"
                   >
                     <Plus className="w-4 h-4" strokeWidth={2.5} />
-                    {t('Ophthalmologist.carePlan.addFirstStep', 'Add first step')}
+                    {t(
+                      'Ophthalmologist.carePlan.addFirstStep',
+                      'Add first step'
+                    )}
                   </button>
                 </div>
               }
@@ -176,24 +226,42 @@ export default function PatientCarePlanPage() {
         onCreate={async (request) => {
           try {
             await createMutation.mutateAsync(request);
-            toast.success(t('Ophthalmologist.carePlan.toast.stepAdded', 'Roadmap step added.'));
+            toast.success(
+              t(
+                'Ophthalmologist.carePlan.toast.stepAdded',
+                'Roadmap step added.'
+              )
+            );
             setFormMode(null);
           } catch (err) {
             toast.error(
-              err instanceof Error ? err.message : t('Ophthalmologist.carePlan.toast.stepAddFailed', 'Failed to add roadmap step.')
+              err instanceof Error
+                ? err.message
+                : t(
+                    'Ophthalmologist.carePlan.toast.stepAddFailed',
+                    'Failed to add roadmap step.'
+                  )
             );
           }
         }}
         onUpdate={async (stepId, request) => {
           try {
             await updateMutation.mutateAsync({ stepId, request });
-            toast.success(t('Ophthalmologist.carePlan.toast.stepUpdated', 'Roadmap step updated.'));
+            toast.success(
+              t(
+                'Ophthalmologist.carePlan.toast.stepUpdated',
+                'Roadmap step updated.'
+              )
+            );
             setFormMode(null);
           } catch (err) {
             toast.error(
               err instanceof Error
                 ? err.message
-                : t('Ophthalmologist.carePlan.toast.stepUpdateFailed', 'Failed to update roadmap step.')
+                : t(
+                    'Ophthalmologist.carePlan.toast.stepUpdateFailed',
+                    'Failed to update roadmap step.'
+                  )
             );
           }
         }}

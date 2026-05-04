@@ -32,6 +32,7 @@ import CreateTemplateModal from '../components/CreateTemplateModal';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import Spinner from '@/components/ui/spinner';
 
+import { ophthalmologistApi } from '../api/ophthalmologist.api';
 import { ScheduleTemplateDto, DAY_OF_WEEK_LABELS } from '@/types/schedule';
 
 type Tab = 'appointments' | 'templates';
@@ -49,23 +50,35 @@ export default function SystemAdminScheduling() {
     startOfWeek(new Date(), { weekStartsOn: 1 })
   );
 
+  const [filterOphthalId, setFilterOphthalId] = useState<string>('');
+  const [filterStatus, setFilterStatus] = useState<string>('');
+
   // --- Queries ---
   const { data: templatesData, isLoading: isLoadingTemplates } = useQuery({
     queryKey: ['system-admin', 'schedule-templates'],
     queryFn: () => schedulingApi.getTemplates({ pageSize: 100 }),
   });
 
+  const { data: doctorsData } = useQuery({
+    queryKey: ['system-admin', 'ophthalmologists-list'],
+    queryFn: () => ophthalmologistApi.getOphthalmologists(1, 100),
+  });
+  const doctors = doctorsData?.items ?? [];
+
   const { data: slotsData, isLoading: isLoadingSlots } = useQuery({
     queryKey: [
       'system-admin',
       'appointment-slots',
       format(selectedDate, 'yyyy-MM-dd'),
+      filterOphthalId,
+      filterStatus,
     ],
     queryFn: () =>
       schedulingApi.getSlots({
         fromDate: format(selectedDate, 'yyyy-MM-dd'),
         toDate: format(selectedDate, 'yyyy-MM-dd'),
         pageSize: 100,
+        ophthalId: filterOphthalId || undefined,
       }),
   });
 
@@ -181,9 +194,82 @@ export default function SystemAdminScheduling() {
   });
 
   const templates = templatesData?.data?.items ?? [];
+  // We no longer pre-filter by status here. We only filter by OphthalId (which is already done by API, but we can double check).
+  // Status filtering will be applied AFTER grouping.
   const slots = slotsData?.data?.items ?? [];
 
-  // Sort templates by Day of Week (Monday first)
+  // Group slots by time, compute group status, then apply filterStatus
+  const groupedAndFilteredSlots = useMemo(() => {
+    // 1. Group by time
+    const groupsMap = slots.reduce(
+      (acc, slot) => {
+        const timeKey = `${slot.startTime}-${slot.endTime}`;
+        if (!acc[timeKey]) {
+          acc[timeKey] = {
+            id: timeKey,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            slots: [],
+            totalCapacity: 0,
+            totalBooked: 0,
+            isPast: false,
+          };
+        }
+        acc[timeKey].slots.push(slot);
+        acc[timeKey].totalCapacity += slot.maxCapacity;
+        acc[timeKey].totalBooked += slot.bookedCount;
+
+        // Determine if the slot time has already passed
+        const now = new Date();
+        const slotDateStr = `${slot.date}T${slot.startTime}`;
+        const slotDateTime = new Date(slotDateStr);
+        if (slotDateTime < now) acc[timeKey].isPast = true;
+
+        return acc;
+      },
+      {} as Record<
+        string,
+        {
+          id: string;
+          startTime: string;
+          endTime: string;
+          slots: typeof slots;
+          totalCapacity: number;
+          totalBooked: number;
+          isPast: boolean;
+        }
+      >
+    );
+
+    // 2. Filter groups by status
+    const groupsArray = Object.values(groupsMap).sort((a, b) =>
+      a.startTime.localeCompare(b.startTime)
+    );
+
+    return groupsArray.filter((group) => {
+      if (!filterStatus) return true;
+
+      const isFullyBooked = group.totalBooked >= group.totalCapacity;
+      const hasBookings = group.totalBooked > 0;
+      // If ANY slot in the group is blocked, we can consider the group blocked, or we can just check if all are blocked.
+      // Usually, if we want to filter by blocked, we check if the group is fully blocked, or has blocked slots.
+      // For simplicity, let's say a group is blocked if totalBooked == 0 and capacity == 0, or all slots are blocked.
+      const isBlocked = group.slots.every((s) => s.status === 'Blocked');
+
+      let computedStatus = 'Available';
+      if (group.isPast) {
+        computedStatus = hasBookings ? 'Attended' : 'Expired';
+      } else if (isBlocked) {
+        computedStatus = 'Blocked';
+      } else if (isFullyBooked) {
+        computedStatus = 'Full';
+      } else if (hasBookings) {
+        computedStatus = 'Partial';
+      }
+
+      return computedStatus === filterStatus;
+    });
+  }, [slots, filterStatus]);
   const sortedTemplates = useMemo(() => {
     const dayOrder = [
       'Monday',
@@ -519,16 +605,86 @@ export default function SystemAdminScheduling() {
                   <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                     {format(selectedDate, 'EEEE, MMMM d, yyyy')}
                   </h2>
-                  <span className="text-sm font-medium text-slate-500">
-                    {slots.length} records
-                  </span>
+                  <div className="flex items-center gap-4">
+                    <select
+                      value={filterOphthalId}
+                      onChange={(e) => setFilterOphthalId(e.target.value)}
+                      className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    >
+                      <option value="">
+                        {t(
+                          'SystemAdmin.scheduling.filters.allDoctors',
+                          'All Doctors'
+                        )}
+                      </option>
+                      {doctors.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.fullName}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    >
+                      <option value="">
+                        {t(
+                          'SystemAdmin.scheduling.filters.allStatuses',
+                          'All Statuses'
+                        )}
+                      </option>
+                      <option value="Available">
+                        {t(
+                          'SystemAdmin.scheduling.status.available',
+                          'Available'
+                        )}
+                      </option>
+                      <option value="Partial">
+                        {t(
+                          'SystemAdmin.scheduling.status.partial',
+                          'Partial Booked'
+                        )}
+                      </option>
+                      <option value="Full">
+                        {t(
+                          'SystemAdmin.scheduling.status.full',
+                          'Fully Booked'
+                        )}
+                      </option>
+                      <option value="Blocked">
+                        {t('SystemAdmin.scheduling.status.blocked', 'Blocked')}
+                      </option>
+                      <option value="Attended">
+                        {t(
+                          'SystemAdmin.scheduling.status.attended',
+                          'Attended (Past)'
+                        )}
+                      </option>
+                      <option value="Expired">
+                        {t(
+                          'SystemAdmin.scheduling.status.expired',
+                          'Expired (Past)'
+                        )}
+                      </option>
+                    </select>
+
+                    <span className="text-sm font-medium text-slate-500 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-xl shadow-sm">
+                      {groupedAndFilteredSlots.reduce(
+                        (acc, g) => acc + g.slots.length,
+                        0
+                      )}{' '}
+                      {t('SystemAdmin.scheduling.records', 'records')}
+                    </span>
+                  </div>
                 </div>
 
                 {isLoadingSlots ? (
                   <div className="flex items-center justify-center h-64">
                     <Spinner size={40} />
                   </div>
-                ) : slots.length === 0 ? (
+                ) : groupedAndFilteredSlots.length === 0 ? (
                   <div className="border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-16 flex items-center justify-center bg-white/50 dark:bg-slate-900/30">
                     <p className="text-slate-400 dark:text-slate-500 font-medium">
                       {t(
@@ -540,117 +696,77 @@ export default function SystemAdminScheduling() {
                 ) : (
                   <div className="space-y-3">
                     {/* Aggregated Slots Logic */}
-                    {Object.values(
-                      slots.reduce(
-                        (acc, slot) => {
-                          const timeKey = `${slot.startTime}-${slot.endTime}`;
-                          if (!acc[timeKey]) {
-                            acc[timeKey] = {
-                              startTime: slot.startTime,
-                              endTime: slot.endTime,
-                              slots: [],
-                              totalCapacity: 0,
-                              totalBooked: 0,
-                              isPast: false,
-                            };
-                          }
-                          acc[timeKey].slots.push(slot);
-                          acc[timeKey].totalCapacity += slot.maxCapacity;
-                          acc[timeKey].totalBooked += slot.bookedCount;
+                    {groupedAndFilteredSlots.map((group) => {
+                      const isFullyBooked =
+                        group.totalBooked >= group.totalCapacity;
+                      const hasBookings = group.totalBooked > 0;
 
-                          // Determine if the slot time has already passed
-                          const now = new Date();
-                          const slotDateStr = `${slot.date}T${slot.startTime}`;
-                          const slotDateTime = new Date(slotDateStr);
-                          if (slotDateTime < now) acc[timeKey].isPast = true;
+                      let statusLabel = 'Available';
+                      let statusClass =
+                        'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400';
+                      let cardClass =
+                        'border-emerald-100 dark:border-emerald-900/30';
 
-                          return acc;
-                        },
-                        {} as Record<
-                          string,
-                          {
-                            startTime: string;
-                            endTime: string;
-                            slots: typeof slots;
-                            totalCapacity: number;
-                            totalBooked: number;
-                            isPast: boolean;
-                          }
+                      if (group.isPast) {
+                        statusLabel = hasBookings ? 'Attended' : 'Expired';
+                        statusClass =
+                          'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500';
+                        cardClass =
+                          'border-slate-100 dark:border-slate-800 opacity-75';
+                      } else if (isFullyBooked) {
+                        statusLabel = 'Full';
+                        statusClass =
+                          'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400';
+                        cardClass =
+                          'border-orange-100 dark:border-orange-900/30';
+                      } else if (hasBookings) {
+                        statusLabel = 'Partial';
+                        statusClass =
+                          'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400';
+                        cardClass = 'border-amber-100 dark:border-amber-900/30';
+                      }
+
+                      return (
+                        <div
+                          key={`${group.startTime}-${group.endTime}`}
+                          className={`bg-white dark:bg-slate-900 rounded-3xl border p-5 shadow-sm hover:shadow-md transition-all ${cardClass}`}
                         >
-                      )
-                    )
-                      .sort((a, b) => a.startTime.localeCompare(b.startTime))
-                      .map((group) => {
-                        const isFullyBooked =
-                          group.totalBooked >= group.totalCapacity;
-                        const hasBookings = group.totalBooked > 0;
-
-                        let statusLabel = 'Available';
-                        let statusClass =
-                          'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400';
-                        let cardClass =
-                          'border-emerald-100 dark:border-emerald-900/30';
-
-                        if (group.isPast) {
-                          statusLabel = hasBookings ? 'Attended' : 'Expired';
-                          statusClass =
-                            'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500';
-                          cardClass =
-                            'border-slate-100 dark:border-slate-800 opacity-75';
-                        } else if (isFullyBooked) {
-                          statusLabel = 'Full';
-                          statusClass =
-                            'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400';
-                          cardClass =
-                            'border-orange-100 dark:border-orange-900/30';
-                        } else if (hasBookings) {
-                          statusLabel = 'Partial';
-                          statusClass =
-                            'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400';
-                          cardClass =
-                            'border-amber-100 dark:border-amber-900/30';
-                        }
-
-                        return (
-                          <div
-                            key={`${group.startTime}-${group.endTime}`}
-                            className={`bg-white dark:bg-slate-900 rounded-3xl border p-5 shadow-sm hover:shadow-md transition-all ${cardClass}`}
-                          >
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex flex-col items-center justify-center border border-slate-100 dark:border-slate-700">
-                                  <Clock className="w-3.5 h-3.5 mb-0.5 text-slate-400" />
-                                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                    {group.startTime.substring(0, 5)}
-                                  </span>
-                                </div>
-                                <div>
-                                  <h4 className="font-bold text-slate-900 dark:text-white">
-                                    {group.startTime.substring(0, 5)} -{' '}
-                                    {group.endTime.substring(0, 5)}
-                                  </h4>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <div
-                                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusClass}`}
-                                    >
-                                      {statusLabel}
-                                    </div>
-                                    <span className="text-xs font-semibold text-slate-500">
-                                      {group.totalBooked} /{' '}
-                                      {group.totalCapacity} Booked
-                                    </span>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex flex-col items-center justify-center border border-slate-100 dark:border-slate-700">
+                                <Clock className="w-3.5 h-3.5 mb-0.5 text-slate-400" />
+                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                  {group.startTime.substring(0, 5)}
+                                </span>
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-slate-900 dark:text-white">
+                                  {group.startTime.substring(0, 5)} -{' '}
+                                  {group.endTime.substring(0, 5)}
+                                </h4>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <div
+                                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusClass}`}
+                                  >
+                                    {statusLabel}
                                   </div>
+                                  <span className="text-xs font-semibold text-slate-500">
+                                    {group.totalBooked} / {group.totalCapacity}{' '}
+                                    Booked
+                                  </span>
                                 </div>
                               </div>
                             </div>
+                          </div>
 
-                            {/* Doctor Specific Slots inside the group */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                              {group.slots.map((slot) => (
-                                <div
-                                  key={slot.id}
-                                  className={`p-3 rounded-2xl border ${slot.bookedCount > 0 ? 'bg-blue-50/30 border-blue-100 dark:bg-blue-900/10 dark:border-blue-900/30' : 'bg-slate-50/30 border-slate-100 dark:bg-slate-800/30 dark:border-slate-800'} flex items-center justify-between`}
-                                >
+                          {/* Doctor Specific Slots inside the group */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            {group.slots.map((slot) => (
+                              <div
+                                key={slot.id}
+                                className={`p-3 rounded-2xl border ${slot.bookedCount > 0 ? 'bg-blue-50/30 border-blue-100 dark:bg-blue-900/10 dark:border-blue-900/30' : 'bg-slate-50/30 border-slate-100 dark:bg-slate-800/30 dark:border-slate-800'} flex flex-col gap-3`}
+                              >
+                                <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
                                     <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center text-[10px] font-bold text-primary-600">
                                       {slot.ophthalFullName
@@ -675,11 +791,32 @@ export default function SystemAdminScheduling() {
                                     </span>
                                   )}
                                 </div>
-                              ))}
-                            </div>
+
+                                {slot.bookings && slot.bookings.length > 0 && (
+                                  <div className="border-t border-slate-200 dark:border-slate-700/50 pt-2 space-y-1.5">
+                                    {slot.bookings.map((b) => (
+                                      <div
+                                        key={b.appointmentId}
+                                        className="flex flex-col gap-0.5 bg-white/50 dark:bg-slate-800/50 rounded-lg p-2"
+                                      >
+                                        <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 truncate">
+                                          {b.patientName}
+                                        </span>
+                                        <span
+                                          className={`text-[9px] font-bold uppercase tracking-wider ${b.status === 'Cancelled' || b.status === 'CancellationRequested' ? 'text-red-500' : 'text-blue-500'}`}
+                                        >
+                                          {b.status}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
                           </div>
-                        );
-                      })}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

@@ -247,7 +247,7 @@ export default function LeavePoliciesSection() {
                   {t('SystemAdmin.leavePolicies.days', 'days')}
                 </div>
                 <div className="text-[10px] font-bold text-slate-300 dark:text-slate-600 tracking-widest uppercase">
-                  ACTIVE RULE
+                  {t('SystemAdmin.leavePolicies.activeRule', 'ACTIVE RULE')}
                 </div>
               </div>
             </div>
@@ -298,7 +298,10 @@ export default function LeavePoliciesSection() {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  placeholder="e.g., Small Holiday Shift"
+                  placeholder={t(
+                    'SystemAdmin.leavePolicies.placeholders.name',
+                    'e.g., Small Holiday Shift'
+                  )}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-3.5 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-medium text-slate-900 dark:text-white"
                 />
               </div>
@@ -328,7 +331,7 @@ export default function LeavePoliciesSection() {
                   <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2 text-slate-400 pointer-events-none">
                     <Gift className="w-5 h-5" />
                     <span className="text-sm font-bold uppercase tracking-wider">
-                      Days
+                      {t('SystemAdmin.leavePolicies.fields.daysUnit', 'Days')}
                     </span>
                   </div>
                 </div>
@@ -356,7 +359,10 @@ export default function LeavePoliciesSection() {
                     setFormData({ ...formData, description: e.target.value })
                   }
                   rows={3}
-                  placeholder="Describe the conditions for this policy..."
+                  placeholder={t(
+                    'SystemAdmin.leavePolicies.placeholders.description',
+                    'Describe the conditions for this policy...'
+                  )}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-3.5 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-medium text-slate-900 dark:text-white resize-none"
                 />
               </div>

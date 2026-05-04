@@ -67,6 +67,12 @@ export default function CashflowPage() {
       FullyPaid: t('SystemAdmin.cashflow.status.fullyPaid', {
         defaultValue: 'Đã tất toán',
       }),
+      CancellationRequested: t(
+        'SystemAdmin.cashflow.status.cancellationRequested',
+        {
+          defaultValue: 'Chờ hoàn tiền',
+        }
+      ),
     }),
     [t]
   );
@@ -139,7 +145,7 @@ export default function CashflowPage() {
       return (
         <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
       );
-    if (status === 'Refunded')
+    if (status === 'Refunded' || status === 'CancellationRequested')
       return <X className="w-5 h-5 text-purple-600 dark:text-purple-400" />;
     if (status === 'Cancelled') return <X className="w-5 h-5 text-slate-400" />;
     return <ShoppingCart className="w-5 h-5 text-amber-500" />;
@@ -414,7 +420,8 @@ export default function CashflowPage() {
                                 ? 'bg-green-500/10 text-green-600 dark:text-green-400'
                                 : isCancelled
                                   ? 'bg-slate-500/10 text-slate-500'
-                                  : isRefunded
+                                  : isRefunded ||
+                                      status === 'CancellationRequested'
                                     ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
                                     : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                             }`}
