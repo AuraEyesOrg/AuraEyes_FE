@@ -276,8 +276,15 @@ export default function ClinicStaffQueuePage() {
   };
 
   const handleCreateScreening = (item: ClinicQueueItem) => {
-    // Guard by current visit flow state only (not by historical record id).
-    if (!item.isAdminCompleted) return;
+    if (!item.isAdminCompleted) {
+      toast.error(
+        t(
+          'ClinicStaff.queue.toast.ermSaveRequiredBeforeScreening',
+          'Please save the administrative ERM section (Save) before starting screening.'
+        )
+      );
+      return;
+    }
 
     navigate(
       resolvePathWithLocale(
@@ -676,9 +683,8 @@ export default function ClinicStaffQueuePage() {
                             })()}
                           {item.flowState === 'CheckedIn' &&
                             (() => {
-                              const isErmReady = item.isAdminCompleted;
                               const navigateToErm = () => {
-                                // CheckedIn (ERM đã điền): mở record hiện có để sửa
+                                // CheckedIn: hồ sơ ERM đã lưu phần hành chính; mở form theo ca (visit)
                                 const path = item.medicalRecordId
                                   ? resolvePathWithLocale(
                                       `/medical-records/${item.medicalRecordId}`
@@ -709,18 +715,31 @@ export default function ClinicStaffQueuePage() {
                                   <button
                                     type="button"
                                     onClick={navigateToErm}
+                                    title={t(
+                                      'ClinicStaff.queue.actions.openErmHint',
+                                      'Open this visit’s ERM (administrative record for this check-in).'
+                                    )}
                                     className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-100"
                                   >
                                     <FileText className="h-3.5 w-3.5" />
                                     {t(
-                                      'ClinicStaff.queue.actions.editErm',
-                                      'Sửa ERM'
+                                      'ClinicStaff.queue.actions.openErm',
+                                      'ERM record'
                                     )}
                                   </button>
                                   <button
                                     type="button"
+                                    disabled={!item.isAdminCompleted}
+                                    title={
+                                      !item.isAdminCompleted
+                                        ? t(
+                                            'ClinicStaff.queue.actions.createScreeningDisabledHint',
+                                            'Save the administrative ERM section first.'
+                                          )
+                                        : undefined
+                                    }
                                     onClick={() => handleCreateScreening(item)}
-                                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
                                   >
                                     <Sparkles className="h-3.5 w-3.5" />
                                     {t(

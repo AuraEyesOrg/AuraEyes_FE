@@ -5869,7 +5869,8 @@
         "screeningRequired": "Please complete AI screening before sending to doctor.",
         "loadDoctorsFailed": "Unable to load available doctors.",
         "copyDoctorConsultationLinkSuccess": "Doctor consultation link copied.",
-        "copyDoctorConsultationLinkFailed": "Failed to copy doctor consultation link."
+        "copyDoctorConsultationLinkFailed": "Failed to copy doctor consultation link.",
+        "ermSaveRequiredBeforeScreening": "Please save the administrative ERM section (Save) before starting screening."
       },
       "error": {
         "title": "Failed to load queue",
@@ -5880,6 +5881,10 @@
         "refresh": "Refresh",
         "fillErm": "Fill ERM",
         "editErm": "Edit ERM",
+        "fillErmRequired": "Complete and save the administrative ERM section before screening.",
+        "openErm": "ERM record",
+        "openErmHint": "Open this check-in’s ERM (one record per visit).",
+        "createScreeningDisabledHint": "Save the administrative ERM section first.",
         "createScreening": "Create Screening",
         "viewScreening": "View Screening",
         "sending": "Sending...",
