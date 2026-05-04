@@ -1054,6 +1054,22 @@ declare module 'i18next' {
           schedulePending: string;
           shareCase: {
             error: string;
+            previewTitle: string;
+            patient: string;
+            riskLevel: string;
+            aiConfidence: string;
+            summary: string;
+            finalDiagnosis: string;
+            doctorSays: string;
+            title: string;
+            doctorContent: string;
+            contentPlaceholder: string;
+            retinalImages: string;
+            preview: string;
+            sharing: string;
+            success: string;
+            description: string;
+            notEligible: string;
           };
           aiAnnotated: string;
           aiCaseSnapshot: string;
@@ -1091,6 +1107,50 @@ declare module 'i18next' {
           sharedImage: string;
           unknown: string;
           unreadActivity: string;
+          sendError: string;
+          typeMessage: string;
+          patient: string;
+          doctor: string;
+          you: string;
+          loading: string;
+          searchPlaceholder: string;
+          complete: string;
+          linkPending: string;
+          hideSessionOverview: string;
+          showSessionOverview: string;
+          autoOpenAtSchedule: string;
+          opensIn: string;
+          savedAsDoctorNote: string;
+          deliveredToPatient: string;
+          patientPreVisitNote: string;
+          patientMessage: string;
+          reviewPatientNotes: string;
+          noMessagesInSession: string;
+          noMessagesYet: string;
+          preVisitEmptyDescription: string;
+          inProgressEmptyDescription: string;
+          completedEmptyDescription: string;
+          selectSession: string;
+          selectSessionDescription: string;
+          appointment: string;
+          lastActivity: string;
+          consultationFee: string;
+          phaseLabel: string;
+          conversationGuidance: string;
+          guidanceDescription: string;
+          sessionOverview: string;
+          completeBlockedBeforeAppointment: string;
+          completeBlockedWithoutReport: string;
+          cancelReason: string;
+          confirmCancelSession: string;
+          confirmCompleteSession: string;
+          stats: {
+            all: string;
+            open: string;
+            upcoming: string;
+          };
+          emptySearchTitle: string;
+          emptySearchSubtitle: string;
         };
       };
       patients: {
@@ -1138,6 +1198,47 @@ declare module 'i18next' {
         noSearchResults: string;
         carePlan: string;
         latestVisit: string;
+      };
+      schedules: {
+        title: string;
+        subtitle: string;
+        loading: string;
+        addSlot: string;
+        today: string;
+        noSlots: string;
+        cancelSlotTitle: string;
+        errorCreateSlot: string;
+        stats: {
+          totalSlots: string;
+          available: string;
+          booked: string;
+          blocked: string;
+        };
+        filter: {
+          all: string;
+          available: string;
+          booked: string;
+          past: string;
+        };
+        validation: {
+          missingDateTime: string;
+          invalidRange: string;
+          invalidCost: string;
+        };
+        toast: {
+          createSuccess: string;
+          cancelSuccess: string;
+          cancelError: string;
+        };
+        modal: {
+          title: string;
+          date: string;
+          startTime: string;
+          endTime: string;
+          slotType: string;
+          costOptional: string;
+          createSlot: string;
+        };
       };
       slotManagement: {
         title: string;

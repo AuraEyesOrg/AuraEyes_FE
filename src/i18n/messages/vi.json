@@ -1050,7 +1050,23 @@
         },
         "schedulePending": "Đang chờ lên lịch",
         "shareCase": {
-          "error": "Không thể chia sẻ ca tư vấn"
+          "error": "Không thể chia sẻ ca tư vấn",
+          "previewTitle": "Bài đăng ca lâm sàng ẩn danh",
+          "patient": "Bệnh nhân",
+          "riskLevel": "Mức độ nguy cơ",
+          "aiConfidence": "Độ tin cậy AI",
+          "summary": "Tóm tắt",
+          "finalDiagnosis": "Chẩn đoán cuối",
+          "doctorSays": "Bác sĩ nói rằng",
+          "title": "Chia sẻ ca bệnh lên mạng lưới",
+          "doctorContent": "Nội dung bác sĩ",
+          "contentPlaceholder": "Nhập ghi chú lâm sàng để chia sẻ với mạng lưới bác sĩ...",
+          "retinalImages": "Hình ảnh võng mạc",
+          "preview": "Xem trước",
+          "sharing": "Đang chia sẻ...",
+          "success": "Đã chia sẻ ca bệnh thành công.",
+          "description": "Chia sẻ ca bệnh này với mạng lưới bác sĩ để thảo luận.",
+          "notEligible": "Phiên này không đủ điều kiện để chia sẻ ca bệnh."
         },
         "aiAnnotated": "Ghi chú bởi AI",
         "aiCaseSnapshot": "Tóm tắt ca bệnh AI",
@@ -1087,7 +1103,51 @@
         },
         "sharedImage": "Ảnh đã chia sẻ",
         "unknown": "Không rõ",
-        "unreadActivity": "Hoạt động chưa đọc"
+        "unreadActivity": "Hoạt động chưa đọc",
+        "sendError": "Không thể gửi tin nhắn.",
+        "typeMessage": "Nhập tin nhắn...",
+        "patient": "Bệnh nhân",
+        "doctor": "Bác sĩ",
+        "you": "Bạn",
+        "loading": "Đang tải tư vấn...",
+        "searchPlaceholder": "Tìm kiếm cuộc trò chuyện...",
+        "complete": "Hoàn tất",
+        "linkPending": "Đang chờ liên kết",
+        "hideSessionOverview": "Ẩn tổng quan phiên",
+        "showSessionOverview": "Hiện tổng quan phiên",
+        "autoOpenAtSchedule": "Tự động mở theo lịch hẹn",
+        "opensIn": "Mở sau",
+        "savedAsDoctorNote": "Đã lưu làm ghi chú bác sĩ",
+        "deliveredToPatient": "Đã gửi đến bệnh nhân",
+        "patientPreVisitNote": "Ghi chú trước khám của bệnh nhân",
+        "patientMessage": "Tin nhắn bệnh nhân",
+        "reviewPatientNotes": "Xem ghi chú bệnh nhân",
+        "noMessagesInSession": "Không có tin nhắn nào trong phiên này.",
+        "noMessagesYet": "Chưa có tin nhắn nào.",
+        "preVisitEmptyDescription": "Bệnh nhân chưa thêm ghi chú trước khám.",
+        "inProgressEmptyDescription": "Tin nhắn sẽ xuất hiện khi bệnh nhân chat.",
+        "completedEmptyDescription": "Phiên tư vấn đã hoàn tất. Tất cả tin nhắn ở chế độ chỉ đọc.",
+        "selectSession": "Chọn một cuộc trò chuyện",
+        "selectSessionDescription": "Chọn một phiên từ danh sách để xem tin nhắn.",
+        "appointment": "Lịch hẹn",
+        "lastActivity": "Hoạt động gần nhất",
+        "consultationFee": "Phí tư vấn",
+        "phaseLabel": "Giai đoạn",
+        "conversationGuidance": "Hướng dẫn trò chuyện",
+        "guidanceDescription": "Xem ngữ cảnh bệnh nhân và chia sẻ chi tiết ca bệnh liên quan trong quá trình tư vấn.",
+        "sessionOverview": "Tổng quan phiên",
+        "completeBlockedBeforeAppointment": "Không thể hoàn tất tư vấn trước thời gian hẹn.",
+        "completeBlockedWithoutReport": "Vui lòng lưu báo cáo chẩn đoán trước khi hoàn tất tư vấn.",
+        "cancelReason": "Nhập lý do hủy...",
+        "confirmCancelSession": "Bạn có chắc muốn hủy phiên này?",
+        "confirmCompleteSession": "Bạn có chắc muốn hoàn tất tư vấn này?",
+        "stats": {
+          "all": "Tất cả",
+          "open": "Đang mở",
+          "upcoming": "Sắp tới"
+        },
+        "emptySearchTitle": "Không tìm thấy cuộc trò chuyện",
+        "emptySearchSubtitle": "Thử từ khóa tìm kiếm khác."
       }
     },
     "patients": {
@@ -1135,6 +1195,47 @@
       "noSearchResults": "Không tìm thấy kết quả cho \"{{query}}\"",
       "carePlan": "Kế hoạch chăm sóc",
       "latestVisit": "Lần khám gần nhất"
+    },
+    "schedules": {
+      "title": "Quản lý lịch",
+      "subtitle": "Tạo và quản lý slot lịch hẹn của bạn",
+      "loading": "Đang tải lịch...",
+      "addSlot": "Thêm slot",
+      "today": "Hôm nay",
+      "noSlots": "Không có slot",
+      "cancelSlotTitle": "Hủy slot này?",
+      "errorCreateSlot": "Không thể tạo slot. Vui lòng thử lại.",
+      "stats": {
+        "totalSlots": "Tổng slot",
+        "available": "Còn trống",
+        "booked": "Đã đặt",
+        "blocked": "Đã chặn"
+      },
+      "filter": {
+        "all": "Tất cả",
+        "available": "Còn trống",
+        "booked": "Đã đặt",
+        "past": "Đã qua"
+      },
+      "validation": {
+        "missingDateTime": "Ngày, giờ bắt đầu và giờ kết thúc là bắt buộc.",
+        "invalidRange": "Giờ kết thúc phải sau giờ bắt đầu.",
+        "invalidCost": "Chi phí phải là số không âm."
+      },
+      "toast": {
+        "createSuccess": "Tạo slot thành công.",
+        "cancelSuccess": "Hủy slot thành công.",
+        "cancelError": "Không thể hủy slot."
+      },
+      "modal": {
+        "title": "Thêm slot lịch mới",
+        "date": "Ngày",
+        "startTime": "Giờ bắt đầu",
+        "endTime": "Giờ kết thúc",
+        "slotType": "Loại slot",
+        "costOptional": "Chi phí (tùy chọn, VND)",
+        "createSlot": "Tạo slot"
+      }
     },
     "slotManagement": {
       "title": "Slot lịch hẹn",

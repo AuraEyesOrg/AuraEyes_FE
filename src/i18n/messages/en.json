@@ -1061,8 +1061,104 @@
         "previewLocked": "Chat opens at appointment time",
         "previewUnavailable": "No messages yet",
         "schedulePending": "Schedule pending",
+        "aiAnnotated": "AI Annotated",
+        "aiCaseSnapshot": "AI Case Snapshot",
+        "cancelSessionTitle": "Cancel Session?",
+        "characterLimitReached": "Character limit reached.",
+        "closeSessionOverview": "Close Session Overview",
+        "completeConsultationTitle": "Complete Consultation?",
+        "completedPlaceholder": "Consultation completed. Chat is read-only.",
+        "confidence": "Confidence",
+        "encryptionNoticeShort": "Encrypted",
+        "imageAttached": "image attached",
+        "invalidSchedule": "Schedule unavailable",
+        "join": "Join",
+        "na": "N/A",
+        "noOriginalImage": "No original image",
+        "original": "Original",
+        "originalRetinalImage": "Original retinal image",
+        "patientTyping": "Patient is typing...",
+        "pendingImage": "Pending image",
+        "previewImageAttachment": "Shared image attachment",
+        "previewNewMessage": "New message",
+        "previewScanAttachment": "Shared retinal scan",
+        "preVisitPlaceholder": "Review patient notes and leave guidance before the session opens...",
+        "readyToShareImage": "Ready to share image",
+        "risk": "Risk",
+        "saveResult": {
+          "aiSummary": "AI Summary",
+          "doctorSays": "Doctor says",
+          "finalDiagnosis": "Final Diagnosis"
+        },
+        "sharedImage": "Shared image",
+        "unknown": "Unknown",
+        "unreadActivity": "Unread activity",
+        "sendError": "Failed to send message.",
+        "typeMessage": "Type a message...",
+        "patient": "Patient",
+        "doctor": "Doctor",
+        "you": "You",
+        "loading": "Loading consultations...",
+        "searchPlaceholder": "Search conversations...",
+        "complete": "Complete",
+        "linkPending": "Link pending",
+        "hideSessionOverview": "Hide session overview",
+        "showSessionOverview": "Show session overview",
+        "autoOpenAtSchedule": "Auto opens at scheduled time",
+        "opensIn": "Opens in",
+        "savedAsDoctorNote": "Saved as doctor note",
+        "deliveredToPatient": "Delivered to patient",
+        "patientPreVisitNote": "Patient pre-visit note",
+        "patientMessage": "Patient message",
+        "reviewPatientNotes": "Review Patient Notes",
+        "noMessagesInSession": "No messages in this session.",
+        "noMessagesYet": "No messages yet.",
+        "preVisitEmptyDescription": "The patient has not added any pre-visit notes yet.",
+        "inProgressEmptyDescription": "Messages will appear here once the patient chats.",
+        "completedEmptyDescription": "This consultation is complete. All messages are read-only.",
+        "selectSession": "Select a conversation",
+        "selectSessionDescription": "Choose a session from the list to view messages.",
+        "appointment": "Appointment",
+        "lastActivity": "Last Activity",
+        "consultationFee": "Consultation Fee",
+        "phaseLabel": "Phase",
+        "conversationGuidance": "Conversation Guidance",
+        "guidanceDescription": "Review patient context and share relevant case details during the consultation.",
+        "sessionOverview": "Session Overview",
+        "completeBlockedBeforeAppointment": "Cannot complete the consultation before the scheduled appointment time.",
+        "completeBlockedWithoutReport": "Please save a diagnosis report before completing the consultation.",
+        "cancelReason": "Enter cancellation reason...",
+        "confirmCancelSession": "Are you sure you want to cancel this session?",
+        "confirmCompleteSession": "Are you sure you want to complete this consultation?",
+        "previewPreVisitEmpty": "Awaiting patient pre-visit notes…",
+        "previewCompletedEmpty": "Session completed — no messages",
+        "previewLocked": "Chat opens at appointment time",
+        "previewUnavailable": "No messages yet",
+        "stats": {
+          "all": "All",
+          "open": "Open",
+          "upcoming": "Upcoming"
+        },
+        "emptySearchTitle": "No conversations found",
+        "emptySearchSubtitle": "Try a different search term.",
         "shareCase": {
-          "error": "Failed to share consultation case"
+          "error": "Failed to share consultation case",
+          "previewTitle": "Anonymized clinical case post",
+          "patient": "Patient",
+          "riskLevel": "Risk level",
+          "aiConfidence": "AI confidence",
+          "summary": "Summary",
+          "finalDiagnosis": "Final diagnosis",
+          "doctorSays": "Doctor says",
+          "title": "Share Case To Network",
+          "doctorContent": "Doctor Content",
+          "contentPlaceholder": "Enter clinical notes to share with the doctor network...",
+          "retinalImages": "Retinal Images",
+          "preview": "Preview",
+          "sharing": "Sharing...",
+          "success": "Case shared successfully.",
+          "description": "Share this case with the doctor network for discussion.",
+          "notEligible": "This session is not eligible for case sharing."
         },
         "image": {
           "invalidType": "Please select a valid image file.",
@@ -1071,6 +1167,93 @@
           "attached": "Image attached.",
           "uploadError": "Unable to upload image. Please try again."
         }
+      }
+    },
+    "patients": {
+      "title": "Patients",
+      "subtitle": "Patients with past or upcoming consultation sessions assigned to you",
+      "loading": "Loading patient consultation list...",
+      "patientPrefix": "Patient",
+      "notAvailable": "N/A",
+      "searchPlaceholder": "Search patient by name or record ID...",
+      "moreFilters": "More Filters",
+      "empty": "No patients found for this doctor.",
+      "sessionsSuffix": "sessions",
+      "nextAppointment": "Next Appointment",
+      "lastCompletedVisit": "Last Completed Visit",
+      "upcoming": "Upcoming",
+      "completed": "Completed",
+      "viewDetails": "View Details",
+      "statusLabel": {
+        "urgent": "Upcoming < 24h",
+        "active": "Has upcoming appointment",
+        "past": "Past only"
+      },
+      "filter": {
+        "allStatus": "All Statuses",
+        "active": "Active",
+        "urgent": "Urgent",
+        "pastOnly": "Past Only"
+      },
+      "stats": {
+        "totalPatients": "Total Patients",
+        "active": "Active",
+        "urgent": "Urgent",
+        "pastOnly": "Past Only"
+      },
+      "emptyTitle": "No Patients Found",
+      "message": "Message",
+      "chart": {
+        "oneMonthAgo": "1 mo",
+        "thisMonth": "This",
+        "twoMonthsAgo": "2 mo"
+      },
+      "emptySearch": "No patients match your search. Try different keywords.",
+      "lastDiagnosis": "Last Diagnosis:",
+      "carePlan": "Care Plan",
+      "noPatients": "No patients",
+      "noSearchResults": "No results for \"{{query}}\"",
+      "latestVisit": "Latest Visit"
+    },
+    "schedules": {
+      "title": "Schedule Management",
+      "subtitle": "Create and manage your appointment slots",
+      "loading": "Loading schedules...",
+      "addSlot": "Add Slot",
+      "today": "Today",
+      "noSlots": "No slots",
+      "cancelSlotTitle": "Cancel this slot?",
+      "errorCreateSlot": "Failed to create slot. Please try again.",
+      "stats": {
+        "totalSlots": "Total Slots",
+        "available": "Available",
+        "booked": "Booked",
+        "blocked": "Blocked"
+      },
+      "filter": {
+        "all": "All",
+        "available": "Available",
+        "booked": "Booked",
+        "past": "Past"
+      },
+      "validation": {
+        "missingDateTime": "Date, start time, and end time are required.",
+        "invalidRange": "End time must be after start time.",
+        "invalidCost": "Cost must be a non-negative number."
+      },
+      "toast": {
+        "createSuccess": "Slot created successfully.",
+        "cancelSuccess": "Slot cancelled successfully.",
+        "cancelError": "Failed to cancel slot."
+      },
+      "modal": {
+        "title": "Add New Time Slot",
+        "date": "Date",
+        "startTime": "Start Time",
+        "endTime": "End Time",
+        "slotType": "Slot Type",
+        "costOptional": "Cost (optional, VND)",
+        "createSlot": "Create Slot"
       }
     },
     "profile": {
@@ -1136,6 +1319,169 @@
         "doctorBoxedOverlay": "Doctor boxed overlay"
       },
       "fundusAlt": "eye fundus"
+    },
+    "screenings": {
+      "title": "Incoming Screenings",
+      "subtitle": "AI screening results for your patients - sorted by priority",
+      "loading": "Loading screenings...",
+      "loadError": "Unable to load screenings. Please try again.",
+      "searchPlaceholder": "Search by patient name or screening ID...",
+      "toggleSortOrder": "Toggle sort order",
+      "pendingAnalysis": "Pending analysis",
+      "reviewNow": "Review Now",
+      "review": "Review",
+      "images": "images",
+      "needsAttention": "Needs Attention",
+      "aiPrediction": "AI Prediction",
+      "consultationDate": "Consultation Date",
+      "createdDate": "Created Date",
+      "openChat": "Open Chat",
+      "openAftercare": "Open Aftercare",
+      "liveQueue": "Live review queue",
+      "autoSync": "Auto-sync",
+      "risk": {
+        "high": "High Risk",
+        "medium": "Medium Risk",
+        "low": "Low Risk",
+        "unknown": "Unknown"
+      },
+      "filter": {
+        "all": "All",
+        "pending": "Pending",
+        "flagged": "Flagged",
+        "reviewed": "Reviewed",
+        "approved": "Approved"
+      },
+      "stats": {
+        "total": "Total",
+        "pending": "Pending",
+        "flagged": "Flagged",
+        "approved": "Approved"
+      },
+      "status": {
+        "approved": "Approved",
+        "flagged": "Flagged",
+        "rejected": "Rejected",
+        "reviewed": "Reviewed",
+        "pendingReview": "Pending Review"
+      },
+      "confidence": {
+        "high": "High",
+        "moderate": "Moderate",
+        "low": "Low",
+        "na": "N/A"
+      },
+      "sort": {
+        "byDate": "By Date",
+        "byPriority": "By Priority"
+      },
+      "empty": {
+        "title": "No Screenings Found",
+        "default": "Screenings appear here when patients book a consultation that includes an AI screening linked to you.",
+        "filtered": "No screenings match your current filter. Try adjusting your search or status filter."
+      }
+    },
+    "wallet": {
+      "title": "Doctor Wallet",
+      "subtitle": "Track your consultation income and wallet transactions.",
+      "loading": "Loading wallet...",
+      "loadError": "Unable to load wallet data. Please try again.",
+      "balance": "Current Balance",
+      "transactions": "Transaction History",
+      "noTransactions": "No transactions yet.",
+      "consultationIncome": "Consultation Income (current page)",
+      "consultationIncomeShort": "Consultation Income",
+      "thisMonthIn": "Wallet Inflow This Month",
+      "thisMonthInDescription": "Includes deposits, bonuses, refunds and consultation income",
+      "transactionsInMonth": "transactions this month",
+      "pendingWithdrawRequests": "Pending Withdrawal Requests",
+      "requestsProcessing": "requests processing",
+      "withdrawRequestsTitle": "Withdrawal Requests",
+      "noWithdrawRequests": "No withdrawal requests.",
+      "submittedAt": "Submitted at",
+      "contractReference": "Contract Reference",
+      "transferReference": "Transfer Reference",
+      "contractNumberPlaceholder": "AURA-OPH-...",
+      "yourNote": "Your note",
+      "adminNote": "Admin Note",
+      "transactionType": {
+        "deposit": "Deposit",
+        "withdrawal": "Withdrawal",
+        "payment": "Payment",
+        "refund": "Refund",
+        "transfer": "Transfer",
+        "bonus": "Bonus",
+        "transaction": "Transaction"
+      },
+      "withdraw": {
+        "status": {
+          "completed": "Completed",
+          "cancelled": "Cancelled",
+          "failed": "Rejected",
+          "pending": "Pending",
+          "processing": "Processing"
+        }
+      },
+      "actions": {
+        "createWithdrawRequest": "Create Withdrawal Request"
+      },
+      "toast": {
+        "invalidWithdrawAmount": "Invalid withdrawal amount.",
+        "withdrawExceedsBalance": "Withdrawal amount exceeds current wallet balance.",
+        "missingBankInfo": "Please provide full recipient bank details.",
+        "missingBankBin": "Please provide bank BIN for auto PayOS payout.",
+        "withdrawSubmitted": "Withdrawal request submitted. Please wait for admin confirmation.",
+        "withdrawSubmitFailed": "Unable to submit withdrawal request."
+      },
+      "withdrawModal": {
+        "title": "Create Withdrawal Request",
+        "amountLabel": "Withdrawal Amount (VND)",
+        "amountPlaceholder": "e.g. 500000",
+        "contractLabel": "Contract Number (optional)",
+        "bankLabel": "Bank",
+        "bankPlaceholder": "Search and select a bank…",
+        "bankSearchPlaceholder": "Search bank name or BIN…",
+        "noBankFound": "No banks found.",
+        "accountNumberLabel": "Account Number",
+        "accountNumberPlaceholder": "Enter account number",
+        "accountHolderLabel": "Account Holder Name",
+        "accountHolderPlaceholder": "As stated in contract",
+        "noteLabel": "Note",
+        "notePlaceholder": "Additional note for admin (optional)"
+      }
+    },
+    "caseSnapshot": {
+      "alt": "AI-annotated retinal image",
+      "noImage": "No AI image",
+      "openReview": "Open full AI screening review"
+    },
+    "urgentAIAlerts": {
+      "title": "Urgent AI Alerts",
+      "viewAll": "View All",
+      "aiConfidence": "AI Confidence",
+      "reviewNow": "Review Now",
+      "verify": "Verify"
+    },
+    "screeningQueue": {
+      "title": "Screening Queue",
+      "filter": "Filter",
+      "sort": "Sort",
+      "patientDetails": "Patient Details",
+      "scanDate": "Scan Date",
+      "aiPrediction": "AI Prediction",
+      "confidence": "Confidence",
+      "status": "Status",
+      "action": "Action",
+      "aiAnalyzed": "AI Analyzed",
+      "flaggedForReview": "Flagged for Review",
+      "reviewed": "Reviewed",
+      "pending": "Pending",
+      "check": "Check",
+      "quickApprove": "Quick Approve",
+      "startReview": "Start Review",
+      "pagination": "Showing {{showing}} of {{total}} pending reviews",
+      "previous": "Previous",
+      "next": "Next"
     }
   },
   "MedicalTerms": {
