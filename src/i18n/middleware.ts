@@ -4,7 +4,10 @@ import {
   getLocaleFromPathname,
   toSupportedLocale,
   withLocalePathname,
+  useLocalePath,
 } from '@/i18n/locales';
+
+export { useLocalePath };
 
 const LOCALE_STORAGE_KEY = 'aura.locale';
 

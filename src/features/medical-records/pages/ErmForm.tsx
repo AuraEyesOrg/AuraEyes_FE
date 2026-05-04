@@ -1251,7 +1251,7 @@ export default function ErmForm() {
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans pb-20 selection:bg-cyan-500/20">
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-5">
-          <AuraLogo size="sm" />
+          <AuraLogo size="sm" variant="dark" />
           <div className="h-4 w-px bg-slate-200" />
           <div
             className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${

@@ -22,6 +22,8 @@ import {
   Image as ImageIcon,
   Trash2,
   Pencil,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import {
   internalChatApi,
@@ -30,7 +32,8 @@ import {
   type InternalGroupMessage,
 } from '../api/internal-chat.api';
 import { collaborationApi } from '../api/collaboration.api';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams } from 'react-router-dom';
+import { useLocalePath } from '@/i18n/middleware';
 import useAuthStore from '@/store/auth-store';
 import {
   joinInternalChatGroup,
@@ -39,6 +42,7 @@ import {
   SIGNALR_INTERNAL_GROUP_UPDATE_EVENT,
   SIGNALR_INTERNAL_MESSAGE_EVENT,
 } from '@/hooks/useSignalRInternalChat';
+import { getConsultationSession } from '@/features/consultation/api/consultation.api';
 import UserAvatar from '@/components/ui/UserAvatar';
 import Spinner from '@/components/ui/spinner';
 import { toast } from 'react-toastify';
@@ -97,6 +101,8 @@ export default function CollaborationPage() {
   const { t } = useSafeTranslation();
   const { user } = useAuthStore();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { locale } = useParams();
+  const localePath = useLocalePath();
   const urlGroupId = searchParams.get('groupId');
 
   const [groups, setGroups] = useState<InternalGroupChat[]>([]);
@@ -152,9 +158,15 @@ export default function CollaborationPage() {
     loadJson(GROUP_MEMBERS_KEY, {})
   );
 
+  const [groupPage, setGroupPage] = useState(1);
+  const groupsPerPage = 8;
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const previousJoinedGroupRef = useRef<string | null>(null);
   const processedChatEventIdRef = useRef<string | null>(null);
+  const [activeScreeningId, setActiveScreeningId] = useState<string | null>(
+    null
+  );
   const imageInputRef = useRef<HTMLInputElement>(null);
   const isSystemAdmin = (user?.roles ?? []).includes('SystemAdmin');
 
@@ -203,6 +215,39 @@ export default function CollaborationPage() {
 
     void joinSelectedGroup();
   }, [selectedGroupId]);
+
+  useEffect(() => {
+    const fetchScreeningId = async () => {
+      const selectedGroup = groups.find((g) => g.id === selectedGroupId);
+      if (
+        selectedGroup?.type === 'ClinicalCase' &&
+        selectedGroup.consultationSessionId
+      ) {
+        try {
+          const session = await getConsultationSession(
+            selectedGroup.consultationSessionId
+          );
+          setActiveScreeningId(
+            session.aiScreeningId || session.caseSnapshot?.screeningId || null
+          );
+        } catch (error) {
+          console.error(
+            'Failed to fetch screening ID for clinical group',
+            error
+          );
+          setActiveScreeningId(null);
+        }
+      } else {
+        setActiveScreeningId(null);
+      }
+    };
+
+    if (selectedGroupId && groups.length > 0) {
+      void fetchScreeningId();
+    } else {
+      setActiveScreeningId(null);
+    }
+  }, [selectedGroupId, groups]);
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -798,6 +843,17 @@ export default function CollaborationPage() {
     });
   }, [groupSearchTerm, groups, groupSettings]);
 
+  const totalPages = Math.ceil(filteredGroups.length / groupsPerPage);
+  const paginatedGroups = useMemo(() => {
+    const start = (groupPage - 1) * groupsPerPage;
+    return filteredGroups.slice(start, start + groupsPerPage);
+  }, [filteredGroups, groupPage]);
+
+  // Reset page when searching
+  useEffect(() => {
+    setGroupPage(1);
+  }, [groupSearchTerm]);
+
   const memberSearchKeyword = memberSearchTerm.trim().toLowerCase();
   const filteredCandidateUsers = useMemo(() => {
     let baseUsers = candidateUsers;
@@ -881,7 +937,7 @@ export default function CollaborationPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-2 space-y-1">
-          {filteredGroups.map((group) => {
+          {paginatedGroups.map((group) => {
             const label = group.name;
             const count = group.memberIds?.length ?? group.memberCount ?? 0;
 
@@ -940,6 +996,29 @@ export default function CollaborationPage() {
             </div>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
+            <button
+              onClick={() => setGroupPage((p) => Math.max(1, p - 1))}
+              disabled={groupPage === 1}
+              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-xs font-bold text-slate-500">
+              {groupPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setGroupPage((p) => Math.min(totalPages, p + 1))}
+              disabled={groupPage === totalPages}
+              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Main Content Area */}
@@ -1194,16 +1273,28 @@ export default function CollaborationPage() {
                             >
                               {(() => {
                                 const recordRegex =
-                                  /\/medical-records\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi;
+                                  /\/(?:medical-records|screenings|screening-review)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi;
                                 const parts = msg.content.split(recordRegex);
                                 if (parts.length === 1) return msg.content;
 
                                 return parts.map((part, i) => {
                                   if (i % 2 === 1) {
+                                    // Priority 1: Use activeScreeningId fetched from consultation session (most accurate)
+                                    // Priority 2: Use group's consultationSessionId as fallback
+                                    // Priority 3: Use the ID from the link itself (e.g. medicalRecordId)
+                                    const targetId =
+                                      activeScreeningId ||
+                                      (selectedGroup?.type === 'ClinicalCase' &&
+                                      selectedGroup.consultationSessionId
+                                        ? selectedGroup.consultationSessionId
+                                        : part);
+
                                     return (
                                       <a
                                         key={i}
-                                        href={`/ophthalmologist/screening-review/${part}`}
+                                        href={localePath(
+                                          `/ophthalmologist/screenings/${targetId}/review`
+                                        )}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="inline-flex items-center gap-1 px-2 py-0.5 mx-1 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold rounded-md hover:underline decoration-2"

@@ -6,7 +6,6 @@ import { useProfile } from '../hooks/useProfile';
 import { useTranslation } from 'react-i18next';
 import {
   FileText,
-  Download,
   Calendar,
   Activity,
   ChevronRight,
@@ -18,7 +17,6 @@ import {
 import { format } from 'date-fns';
 import { useNavigate, Link } from 'react-router-dom';
 import { MedicalRecordDto } from '@/features/medical-records/api/medical-record.api';
-import { toast } from 'react-toastify';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 
 const HistoryCard = ({ record }: { record: MedicalRecordDto }) => {
@@ -27,28 +25,6 @@ const HistoryCard = ({ record }: { record: MedicalRecordDto }) => {
     record.status === 'Finalized' ||
     record.status === '3' ||
     (record.status as any) === 3;
-
-  const handleDownload = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!record.pdfUrl) {
-      toast.info('Bản PDF đang được xử lý, vui lòng quay lại sau.');
-      return;
-    }
-
-    // Simple way: open in new tab
-    window.open(record.pdfUrl, '_blank');
-
-    // Blob way (if requested):
-    /*
-    try {
-      const response = await fetch(record.pdfUrl);
-      const blob = await response.blob();
-      downloadBlobFile(blob, `EMR_${record.medicalRecordNumber}.pdf`);
-    } catch (err) {
-      window.open(record.pdfUrl, '_blank');
-    }
-    */
-  };
 
   return (
     <div
@@ -93,11 +69,15 @@ const HistoryCard = ({ record }: { record: MedicalRecordDto }) => {
 
         <div className="flex items-center gap-3 self-end md:self-center">
           <button
-            onClick={handleDownload}
-            disabled={!isLocked}
-            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-tighter transition-all ${isLocked ? 'bg-slate-900 text-white hover:bg-primary shadow-lg shadow-black/5 active:scale-95' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(
+                resolvePathWithLocale(`/medical-records/patient/${record.id}`)
+              );
+            }}
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-tighter transition-all bg-slate-900 text-white hover:bg-primary shadow-lg shadow-black/5 active:scale-95"
           >
-            <Download className="w-4 h-4" /> Tải PDF
+            <Eye className="w-4 h-4" /> Xem chi tiết
           </button>
           <div className="w-10 h-10 rounded-full border border-slate-100 flex items-center justify-center text-slate-300 group-hover:text-primary group-hover:border-primary/20 transition-all">
             <ChevronRight className="w-5 h-5" />

@@ -1521,27 +1521,29 @@ export default function ScreeningReviewPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <button
-                    id="btn-request-consilium"
-                    type="button"
-                    onClick={() => {
-                      if (activeGroupId) {
-                        navigate(`/network/collaboration`);
-                      } else {
-                        setSelectedDoctors([]);
-                        setConsiliumReason('');
-                        setIsEmergencyConsilium(false);
-                        setShowConsiliumModal(true);
-                      }
-                    }}
-                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 ${
-                      activeGroupId
-                        ? 'bg-cyan-600 hover:bg-cyan-700 shadow-cyan-500/30'
-                        : 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/30'
-                    }`}
-                  >
-                    {activeGroupId ? 'Vào Hội chẩn' : 'Yêu cầu Hội chẩn'}
-                  </button>
+                  {!isFinalizedDiagnosis && !isDiagnosisLocked && (
+                    <button
+                      id="btn-request-consilium"
+                      type="button"
+                      onClick={() => {
+                        if (activeGroupId) {
+                          navigate(`/network/collaboration`);
+                        } else {
+                          setSelectedDoctors([]);
+                          setConsiliumReason('');
+                          setIsEmergencyConsilium(false);
+                          setShowConsiliumModal(true);
+                        }
+                      }}
+                      className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 ${
+                        activeGroupId
+                          ? 'bg-cyan-600 hover:bg-cyan-700 shadow-cyan-500/30'
+                          : 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/30'
+                      }`}
+                    >
+                      {activeGroupId ? 'Vào Hội chẩn' : 'Yêu cầu Hội chẩn'}
+                    </button>
+                  )}
                   <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded-full text-xs font-medium">
                     {t('Ophthalmologist.screeningReview.aiModel', 'AI Model')}:{' '}
                     {detail.modelVersion?.trim()
