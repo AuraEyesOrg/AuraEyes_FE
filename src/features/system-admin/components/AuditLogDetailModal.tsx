@@ -6,6 +6,7 @@
 import { X } from 'lucide-react';
 import type { AuditLogDto } from '../types/system-admin.types';
 import { formatViTimestamp } from '@/lib/date-utils';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 interface AuditLogDetailModalProps {
   log: AuditLogDto;
@@ -44,11 +45,13 @@ function JsonPanel({
   data,
   changedKeys,
   variant,
+  noDataLabel = 'No data',
 }: {
   title: string;
   data: object | null;
   changedKeys: Set<string>;
   variant: 'old' | 'new';
+  noDataLabel?: string;
 }) {
   if (!data) {
     return (
@@ -57,7 +60,7 @@ function JsonPanel({
           {title}
         </h4>
         <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-          <p className="text-sm text-slate-400 italic">No data</p>
+          <p className="text-sm text-slate-400 italic">{noDataLabel}</p>
         </div>
       </div>
     );
@@ -102,6 +105,7 @@ export default function AuditLogDetailModal({
   log,
   onClose,
 }: AuditLogDetailModalProps) {
+  const { t } = useSafeTranslation();
   const oldData = safeParse(log.oldValue);
   const newData = safeParse(log.newValue);
   const changedKeys = getChangedKeys(
@@ -129,7 +133,7 @@ export default function AuditLogDetailModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
           <div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              Audit Log Detail
+              {t('SystemAdmin.auditLogs.detail.title', 'Audit Log Detail')}
             </h3>
             <p className="text-sm text-slate-500 mt-0.5">
               {log.entityName} &middot; {formatTimestamp(log.createdAt)}
@@ -146,7 +150,9 @@ export default function AuditLogDetailModal({
         {/* Meta Info */}
         <div className="px-6 py-3 border-b border-slate-100 dark:border-slate-800 flex flex-wrap gap-4 text-sm">
           <div>
-            <span className="text-slate-500">Action:</span>{' '}
+            <span className="text-slate-500">
+              {t('SystemAdmin.auditLogs.detail.actionLabel', 'Action:')}
+            </span>{' '}
             <span
               className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${actionColor}`}
             >
@@ -154,28 +160,38 @@ export default function AuditLogDetailModal({
             </span>
           </div>
           <div>
-            <span className="text-slate-500">Entity:</span>{' '}
+            <span className="text-slate-500">
+              {t('SystemAdmin.auditLogs.detail.entityLabel', 'Entity:')}
+            </span>{' '}
             <span className="font-medium text-slate-900 dark:text-white">
               {log.entityName}
             </span>
           </div>
           {log.entityId && (
             <div>
-              <span className="text-slate-500">Entity ID:</span>{' '}
+              <span className="text-slate-500">
+                {t('SystemAdmin.auditLogs.detail.entityIdLabel', 'Entity ID:')}
+              </span>{' '}
               <span className="font-mono text-slate-700 dark:text-slate-300">
                 {log.entityId}
               </span>
             </div>
           )}
           <div>
-            <span className="text-slate-500">User:</span>{' '}
+            <span className="text-slate-500">
+              {t('SystemAdmin.auditLogs.detail.userLabel', 'User:')}
+            </span>{' '}
             <span className="font-medium text-slate-900 dark:text-white">
-              {log.userName ?? log.userId ?? 'System'}
+              {log.userName ??
+                log.userId ??
+                t('SystemAdmin.auditLogs.values.system', 'System')}
             </span>
           </div>
           {log.ipAddress && (
             <div>
-              <span className="text-slate-500">IP:</span>{' '}
+              <span className="text-slate-500">
+                {t('SystemAdmin.auditLogs.detail.ipLabel', 'IP:')}
+              </span>{' '}
               <span className="font-mono text-slate-700 dark:text-slate-300">
                 {log.ipAddress}
               </span>
@@ -188,7 +204,7 @@ export default function AuditLogDetailModal({
           {log.action === 'Insert' && !oldData ? (
             <div>
               <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">
-                Created Data
+                {t('SystemAdmin.auditLogs.detail.createdData', 'Created Data')}
               </h4>
               <pre className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg p-4 text-sm font-mono text-green-800 dark:text-green-300 whitespace-pre-wrap break-all max-h-[400px] overflow-auto">
                 {JSON.stringify(newData ?? log.newValue, null, 2)}
@@ -197,7 +213,7 @@ export default function AuditLogDetailModal({
           ) : log.action === 'Delete' && !newData ? (
             <div>
               <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">
-                Deleted Data
+                {t('SystemAdmin.auditLogs.detail.deletedData', 'Deleted Data')}
               </h4>
               <pre className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-4 text-sm font-mono text-red-800 dark:text-red-300 whitespace-pre-wrap break-all max-h-[400px] overflow-auto">
                 {JSON.stringify(oldData ?? log.oldValue, null, 2)}
@@ -206,16 +222,30 @@ export default function AuditLogDetailModal({
           ) : (
             <div className="flex gap-4">
               <JsonPanel
-                title="Before (Old Value)"
+                title={t(
+                  'SystemAdmin.auditLogs.detail.before',
+                  'Before (Old Value)'
+                )}
                 data={oldData}
                 changedKeys={changedKeys}
                 variant="old"
+                noDataLabel={t(
+                  'SystemAdmin.auditLogs.detail.noData',
+                  'No data'
+                )}
               />
               <JsonPanel
-                title="After (New Value)"
+                title={t(
+                  'SystemAdmin.auditLogs.detail.after',
+                  'After (New Value)'
+                )}
                 data={newData}
                 changedKeys={changedKeys}
                 variant="new"
+                noDataLabel={t(
+                  'SystemAdmin.auditLogs.detail.noData',
+                  'No data'
+                )}
               />
             </div>
           )}

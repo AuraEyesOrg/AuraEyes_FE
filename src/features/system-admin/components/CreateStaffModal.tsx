@@ -26,41 +26,83 @@ interface FormValues {
   subRoles: string[];
 }
 
-const schema = yup.object().shape({
-  fullName: yup
-    .string()
-    .required('Full name is required')
-    .min(2, 'Name is too short'),
-  email: yup
-    .string()
-    .required('Email is required')
-    .email('Invalid email format'),
-  phone: yup
-    .string()
-    .required('Phone number is required')
-    .matches(/^[0-9+() -]+$/, 'Invalid phone format'),
-  role: yup
-    .string()
-    .oneOf(['Ophthalmologist', 'ClinicStaff'])
-    .required('Role is required') as yup.Schema<UserRole>,
-  consultationFee: yup.number().when('role', {
-    is: 'Ophthalmologist',
-    then: (schema) =>
-      schema
-        .min(0, 'Fee cannot be negative')
-        .required('Consultation fee is required'),
-    otherwise: (schema) => schema.optional(),
-  }),
-  subRoles: yup
-    .array()
-    .of(yup.string())
-    .when('role', {
-      is: 'ClinicStaff',
+const getSchema = (t: (key: string, fallback?: string) => string) =>
+  yup.object().shape({
+    fullName: yup
+      .string()
+      .required(
+        t(
+          'SystemAdmin.staff.validation.fullNameRequired',
+          'Full name is required'
+        )
+      )
+      .min(
+        2,
+        t('SystemAdmin.staff.validation.nameTooShort', 'Name is too short')
+      ),
+    email: yup
+      .string()
+      .required(
+        t('SystemAdmin.staff.validation.emailRequired', 'Email is required')
+      )
+      .email(
+        t('SystemAdmin.staff.validation.invalidEmail', 'Invalid email format')
+      ),
+    phone: yup
+      .string()
+      .required(
+        t(
+          'SystemAdmin.staff.validation.phoneRequired',
+          'Phone number is required'
+        )
+      )
+      .matches(
+        /^[0-9+() -]+$/,
+        t('SystemAdmin.staff.validation.invalidPhone', 'Invalid phone format')
+      ),
+    role: yup
+      .string()
+      .oneOf(['Ophthalmologist', 'ClinicStaff'])
+      .required(
+        t('SystemAdmin.staff.validation.roleRequired', 'Role is required')
+      ) as yup.Schema<UserRole>,
+    consultationFee: yup.number().when('role', {
+      is: 'Ophthalmologist',
       then: (schema) =>
-        schema.min(1, 'At least one sub-role is required').required(),
+        schema
+          .min(
+            0,
+            t(
+              'SystemAdmin.staff.validation.feeNegative',
+              'Fee cannot be negative'
+            )
+          )
+          .required(
+            t(
+              'SystemAdmin.staff.validation.feeRequired',
+              'Consultation fee is required'
+            )
+          ),
       otherwise: (schema) => schema.optional(),
-    }) as any,
-});
+    }),
+    subRoles: yup
+      .array()
+      .of(yup.string())
+      .when('role', {
+        is: 'ClinicStaff',
+        then: (schema) =>
+          schema
+            .min(
+              1,
+              t(
+                'SystemAdmin.staff.validation.subRoleRequired',
+                'At least one sub-role is required'
+              )
+            )
+            .required(),
+        otherwise: (schema) => schema.optional(),
+      }) as any,
+  });
 
 export default function CreateStaffModal({
   isOpen,
@@ -69,6 +111,8 @@ export default function CreateStaffModal({
 }: CreateStaffModalProps) {
   const { t } = useSafeTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const schema = getSchema(t);
 
   const {
     register,
@@ -141,7 +185,7 @@ export default function CreateStaffModal({
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <img
                 src={AURA_LOGO}
-                alt="Aura"
+                alt={t('SystemAdmin.common.logoAlt', 'Aura')}
                 className="w-6 h-6 object-contain"
               />
             </div>
@@ -169,7 +213,10 @@ export default function CreateStaffModal({
               <input
                 {...register('fullName')}
                 type="text"
-                placeholder="John Doe"
+                placeholder={t(
+                  'SystemAdmin.staff.placeholders.fullName',
+                  'John Doe'
+                )}
                 className={`w-full pl-10 pr-4 py-2.5 rounded-lg border bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-all ${
                   errors.fullName
                     ? 'border-red-500 focus:ring-2 focus:ring-red-500/20'
@@ -193,7 +240,10 @@ export default function CreateStaffModal({
               <input
                 {...register('email')}
                 type="email"
-                placeholder="john.doe@auraeyes.com"
+                placeholder={t(
+                  'SystemAdmin.staff.placeholders.email',
+                  'john.doe@auraeyes.com'
+                )}
                 className={`w-full pl-10 pr-4 py-2.5 rounded-lg border bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-all ${
                   errors.email
                     ? 'border-red-500 focus:ring-2 focus:ring-red-500/20'
@@ -217,7 +267,10 @@ export default function CreateStaffModal({
               <input
                 {...register('phone')}
                 type="text"
-                placeholder="+84 123 456 789"
+                placeholder={t(
+                  'SystemAdmin.staff.placeholders.phone',
+                  '+84 123 456 789'
+                )}
                 className={`w-full pl-10 pr-4 py-2.5 rounded-lg border bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-all ${
                   errors.phone
                     ? 'border-red-500 focus:ring-2 focus:ring-red-500/20'
@@ -246,8 +299,15 @@ export default function CreateStaffModal({
                     : 'border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/20'
                 }`}
               >
-                <option value="ClinicStaff">Clinic Staff</option>
-                <option value="Ophthalmologist">Ophthalmologist</option>
+                <option value="ClinicStaff">
+                  {t('SystemAdmin.staff.roles.clinicStaff', 'Clinic Staff')}
+                </option>
+                <option value="Ophthalmologist">
+                  {t(
+                    'SystemAdmin.staff.roles.ophthalmologist',
+                    'Ophthalmologist'
+                  )}
+                </option>
               </select>
             </div>
             {errors.role && (
@@ -263,18 +323,34 @@ export default function CreateStaffModal({
                 <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-3 gap-2">
-                {['Receptionist', 'Coordinator', 'Cashier'].map((sub) => (
+                {[
+                  {
+                    key: 'Receptionist',
+                    labelKey: 'SystemAdmin.staff.subRoles.receptionist',
+                    fallback: 'Receptionist',
+                  },
+                  {
+                    key: 'Coordinator',
+                    labelKey: 'SystemAdmin.staff.subRoles.coordinator',
+                    fallback: 'Coordinator',
+                  },
+                  {
+                    key: 'Cashier',
+                    labelKey: 'SystemAdmin.staff.subRoles.cashier',
+                    fallback: 'Cashier',
+                  },
+                ].map((sub) => (
                   <button
-                    key={sub}
+                    key={sub.key}
                     type="button"
-                    onClick={() => toggleSubRole(sub)}
+                    onClick={() => toggleSubRole(sub.key)}
                     className={`px-3 py-2 rounded-lg text-xs font-bold border-2 transition-all ${
-                      selectedSubRoles.includes(sub)
+                      selectedSubRoles.includes(sub.key)
                         ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
                         : 'border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-200 dark:hover:border-slate-700'
                     }`}
                   >
-                    {sub}
+                    {t(sub.labelKey, sub.fallback)}
                   </button>
                 ))}
               </div>
@@ -304,7 +380,10 @@ export default function CreateStaffModal({
                   <input
                     {...register('consultationFee')}
                     type="number"
-                    placeholder="500000"
+                    placeholder={t(
+                      'SystemAdmin.staff.placeholders.consultationFee',
+                      '500000'
+                    )}
                     className={`w-full pl-8 pr-4 py-2.5 rounded-lg border bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-all font-medium ${
                       errors.consultationFee
                         ? 'border-red-500 focus:ring-2 focus:ring-red-500/20'
@@ -313,7 +392,9 @@ export default function CreateStaffModal({
                   />
                 </div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center px-1">
-                  <span>Preview:</span>
+                  <span>
+                    {t('SystemAdmin.staff.labels.preview', 'Preview:')}
+                  </span>
                   <span className="text-primary">
                     {formatCurrency(
                       watch('consultationFee') || 0,
@@ -337,7 +418,7 @@ export default function CreateStaffModal({
               disabled={isSubmitting}
               className="px-5 py-2.5 rounded-lg font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
-              Cancel
+              {t('SystemAdmin.common.cancel', 'Cancel')}
             </button>
             <button
               type="submit"

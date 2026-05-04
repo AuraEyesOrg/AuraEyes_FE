@@ -96,8 +96,17 @@ export default function StaffManagementPage() {
       value: 'all',
       label: t('SystemAdmin.users.filters.options.allRoles', 'All Roles'),
     },
-    { value: 'Ophthalmologist', label: 'Ophthalmologist' },
-    { value: 'ClinicStaff', label: 'Clinic Staff' },
+    {
+      value: 'Ophthalmologist',
+      label: t(
+        'SystemAdmin.users.filters.options.ophthalmologist',
+        'Ophthalmologist'
+      ),
+    },
+    {
+      value: 'ClinicStaff',
+      label: t('SystemAdmin.users.filters.options.clinicStaff', 'Clinic Staff'),
+    },
   ];
 
   const getRoleLabel = (role: string) => {
@@ -132,7 +141,12 @@ export default function StaffManagementPage() {
       setUsers(staffUsers);
     } catch (error) {
       console.error('Failed to load staff data', error);
-      toast.error('Failed to load staff data');
+      toast.error(
+        t(
+          'SystemAdmin.staffManagement.toasts.loadError',
+          'Failed to load staff data'
+        )
+      );
     } finally {
       setLoading(false);
     }
@@ -342,14 +356,17 @@ export default function StaffManagementPage() {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="Staff Management"
-          description="Control access and professional settings for your clinic team"
+          title={t('SystemAdmin.staffManagement.title', 'Staff Management')}
+          description={t(
+            'SystemAdmin.staffManagement.description',
+            'Control access and professional settings for your clinic team'
+          )}
           actions={
             <button
               onClick={() => setIsCreateModalOpen(true)}
               className="px-6 py-2.5 bg-primary text-slate-900 font-black rounded-2xl shadow-lg shadow-primary/20 hover:opacity-90 transition-all text-sm uppercase tracking-widest"
             >
-              Add Staff
+              {t('SystemAdmin.staffManagement.actions.addStaff', 'Add Staff')}
             </button>
           }
         />
@@ -359,19 +376,25 @@ export default function StaffManagementPage() {
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <StatsCard
-                title="Total Staff"
+                title={t(
+                  'SystemAdmin.staffManagement.stats.totalStaff',
+                  'Total Staff'
+                )}
                 value={users.length}
                 icon={Users}
                 variant="primary"
               />
               <StatsCard
-                title="Doctors"
+                title={t(
+                  'SystemAdmin.staffManagement.stats.doctors',
+                  'Doctors'
+                )}
                 value={users.filter((u) => u.role === 'Ophthalmologist').length}
                 icon={Stethoscope}
                 variant="success"
               />
               <StatsCard
-                title="Locked"
+                title={t('SystemAdmin.staffManagement.stats.locked', 'Locked')}
                 value={users.filter((u) => isLockedStatus(u.status)).length}
                 icon={Lock}
                 variant="danger"
@@ -384,7 +407,10 @@ export default function StaffManagementPage() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                 <input
                   type="text"
-                  placeholder="Search staff..."
+                  placeholder={t(
+                    'SystemAdmin.staffManagement.searchPlaceholder',
+                    'Search staff...'
+                  )}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-medium outline-none focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"

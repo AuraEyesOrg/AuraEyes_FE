@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink } from 'lucide-react';
 import PatientImageViewer from '@/features/patient/components/ImageViewer';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import type {
   Anomaly,
   RetinalImage,
@@ -26,6 +27,7 @@ export function CaseSnapshotAiThumbnail({
 }: {
   snapshot: ConsultationCaseSnapshotDto;
 }) {
+  const { t } = useSafeTranslation();
   const imageUrl = snapshot.originalImageUrls[0] ?? null;
   const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
 
@@ -79,7 +81,10 @@ export function CaseSnapshotAiThumbnail({
     return (
       <img
         src={snapshot.annotatedImageUrl}
-        alt="AI annotated retinal image"
+        alt={t(
+          'Ophthalmologist.caseSnapshot.alt',
+          'AI annotated retinal image'
+        )}
         className="h-24 w-full object-cover"
       />
     );
@@ -87,12 +92,13 @@ export function CaseSnapshotAiThumbnail({
 
   return (
     <div className="h-24 w-full flex items-center justify-center text-[11px] text-slate-500">
-      No AI image
+      {t('Ophthalmologist.caseSnapshot.noImage', 'No AI image')}
     </div>
   );
 }
 
 export function ScreeningReviewLink({ screeningId }: { screeningId: string }) {
+  const { t } = useSafeTranslation();
   const to = `/ophthalmologist/screenings/${screeningId}/review`;
   return (
     <Link
@@ -100,7 +106,10 @@ export function ScreeningReviewLink({ screeningId }: { screeningId: string }) {
       className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
     >
       <ExternalLink className="h-3 w-3" />
-      Open full AI screening review
+      {t(
+        'Ophthalmologist.caseSnapshot.openReview',
+        'Open full AI screening review'
+      )}
     </Link>
   );
 }

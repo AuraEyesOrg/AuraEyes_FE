@@ -3,6 +3,7 @@ import type {
   UrgentAlert,
   ConditionType,
 } from '../types/ophthalmologist.types';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 interface UrgentAIAlertsProps {
   alerts: UrgentAlert[];
@@ -29,6 +30,7 @@ function getButtonStyle(priority: string): string {
 }
 
 export default function UrgentAIAlerts({ alerts }: UrgentAIAlertsProps) {
+  const { t } = useSafeTranslation();
   return (
     <section className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] p-5">
       {/* Header */}
@@ -36,11 +38,11 @@ export default function UrgentAIAlerts({ alerts }: UrgentAIAlertsProps) {
         <div className="flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-amber-500" />
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-            Urgent AI Alerts
+            {t('Ophthalmologist.urgentAIAlerts.title', 'Urgent AI Alerts')}
           </h2>
         </div>
         <button className="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 font-medium transition-colors">
-          View all
+          {t('Ophthalmologist.urgentAIAlerts.viewAll', 'View all')}
         </button>
       </div>
 
@@ -84,7 +86,10 @@ export default function UrgentAIAlerts({ alerts }: UrgentAIAlertsProps) {
               <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200 dark:border-[#1e3a5f]">
                 <div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    AI Confidence
+                    {t(
+                      'Ophthalmologist.urgentAIAlerts.aiConfidence',
+                      'AI Confidence'
+                    )}
                   </p>
                   <p className="text-base font-bold text-gray-800 dark:text-white">
                     {alert.aiConfidence}%
@@ -93,7 +98,12 @@ export default function UrgentAIAlerts({ alerts }: UrgentAIAlertsProps) {
                 <button
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${buttonStyle}`}
                 >
-                  {alert.priority === 'critical' ? 'Review Now' : 'Verify'}
+                  {alert.priority === 'critical'
+                    ? t(
+                        'Ophthalmologist.urgentAIAlerts.reviewNow',
+                        'Review Now'
+                      )
+                    : t('Ophthalmologist.urgentAIAlerts.verify', 'Verify')}
                 </button>
               </div>
             </div>

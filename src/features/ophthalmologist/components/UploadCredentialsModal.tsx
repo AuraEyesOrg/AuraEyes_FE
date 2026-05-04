@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { api } from '@/lib/api';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { ophthalmologistProfileKeys } from '../hooks/useOphthalmologistProfile';
 
 type DegreeLevel =
@@ -64,6 +65,7 @@ export default function UploadCredentialsModal({
   ophthalmologistId,
   editingCredential,
 }: UploadCredentialsModalProps) {
+  const { t } = useSafeTranslation();
   const queryClient = useQueryClient();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const isEditMode = !!editingCredential;
@@ -308,7 +310,15 @@ export default function UploadCredentialsModal({
       <div className="bg-white dark:bg-[#0a1f44] w-full max-w-2xl rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-[#1e3a5f]">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            {isEditMode ? 'Update Credential' : 'Upload Additional Credentials'}
+            {isEditMode
+              ? t(
+                  'Ophthalmologist.credentials.updateTitle',
+                  'Update Credential'
+                )
+              : t(
+                  'Ophthalmologist.credentials.uploadTitle',
+                  'Upload Additional Credentials'
+                )}
           </h2>
           <button
             onClick={onClose}
@@ -335,7 +345,10 @@ export default function UploadCredentialsModal({
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-[#1e3a5f] w-full pb-2">
-                    Medical Degrees
+                    {t(
+                      'Ophthalmologist.credentials.medicalDegrees',
+                      'Medical Degrees'
+                    )}
                   </h3>
                 </div>
                 {degreeFields.map((field, index) => (
@@ -358,7 +371,11 @@ export default function UploadCredentialsModal({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Degree Name <span className="text-red-500">*</span>
+                          {t(
+                            'Ophthalmologist.credentials.degreeName',
+                            'Degree Name'
+                          )}{' '}
+                          <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -370,7 +387,11 @@ export default function UploadCredentialsModal({
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Degree Level <span className="text-red-500">*</span>
+                          {t(
+                            'Ophthalmologist.credentials.degreeLevel',
+                            'Degree Level'
+                          )}{' '}
+                          <span className="text-red-500">*</span>
                         </label>
                         <select
                           {...register(`degrees.${index}.degreeLevel`, {
@@ -439,7 +460,10 @@ export default function UploadCredentialsModal({
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-[#1e3a5f] w-full pb-2">
-                    Licenses & Certificates
+                    {t(
+                      'Ophthalmologist.credentials.licensesCertificates',
+                      'Licenses & Certificates'
+                    )}
                   </h3>
                 </div>
                 {certificateFields.map((field, index) => (
@@ -462,7 +486,10 @@ export default function UploadCredentialsModal({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Certificate Name{' '}
+                          {t(
+                            'Ophthalmologist.credentials.certificateName',
+                            'Certificate Name'
+                          )}{' '}
                           <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -475,7 +502,10 @@ export default function UploadCredentialsModal({
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Issuing Authority
+                          {t(
+                            'Ophthalmologist.credentials.issuingAuthority',
+                            'Issuing Authority'
+                          )}
                         </label>
                         <input
                           type="text"
@@ -487,19 +517,29 @@ export default function UploadCredentialsModal({
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Issued Date <span className="text-red-500">*</span>
+                          {t(
+                            'Ophthalmologist.credentials.issuedDate',
+                            'Issued Date'
+                          )}{' '}
+                          <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="date"
                           {...register(`certificates.${index}.issuedDate`, {
-                            required: 'Required',
+                            required: t(
+                              'Ophthalmologist.common.required',
+                              'Required'
+                            ),
                           })}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Expiry Date
+                          {t(
+                            'Ophthalmologist.credentials.expiryDate',
+                            'Expiry Date'
+                          )}
                         </label>
                         <input
                           type="date"
@@ -530,7 +570,11 @@ export default function UploadCredentialsModal({
                     }
                     className="flex items-center gap-2 text-cyan-600 hover:text-cyan-700 text-sm font-medium"
                   >
-                    <Plus className="w-4 h-4" /> Add Another Certificate
+                    <Plus className="w-4 h-4" />{' '}
+                    {t(
+                      'Ophthalmologist.credentials.addAnotherCertificate',
+                      'Add Another Certificate'
+                    )}
                   </button>
                 )}
               </section>
@@ -546,7 +590,7 @@ export default function UploadCredentialsModal({
               disabled={uploadMutation.isPending}
               className="px-5 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-[#2d4a6f]/80 transition-colors"
             >
-              Cancel
+              {t('Ophthalmologist.common.cancel', 'Cancel')}
             </button>
             <button
               type="submit"
@@ -575,7 +619,15 @@ export default function UploadCredentialsModal({
                   />
                 </svg>
               )}
-              {isEditMode ? 'Update Credential' : 'Upload Credentials'}
+              {isEditMode
+                ? t(
+                    'Ophthalmologist.credentials.updateTitle',
+                    'Update Credential'
+                  )
+                : t(
+                    'Ophthalmologist.credentials.uploadTitle',
+                    'Upload Credentials'
+                  )}
             </button>
           </div>
         </div>

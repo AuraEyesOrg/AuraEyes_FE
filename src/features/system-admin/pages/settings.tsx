@@ -363,10 +363,16 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <section className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800/50">
         <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
-          Platform & locale
+          {t(
+            'SystemAdmin.settings.general.sections.platformLocale.title',
+            'Platform & locale'
+          )}
         </h4>
         <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-          Basic identity, contact channel, timezone, and default language.
+          {t(
+            'SystemAdmin.settings.general.sections.platformLocale.description',
+            'Basic identity, contact channel, timezone, and default language.'
+          )}
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -418,7 +424,9 @@ export default function SettingsPage() {
               }
               className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
             >
-              <option value="UTC">UTC</option>
+              <option value="UTC">
+                {t('SystemAdmin.settings.general.timezoneOptions.utc', 'UTC')}
+              </option>
               <option value="America/New_York">
                 {t(
                   'SystemAdmin.settings.general.timezoneOptions.americaNewYork',

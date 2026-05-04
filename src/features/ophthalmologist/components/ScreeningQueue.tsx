@@ -1,4 +1,5 @@
 import { Filter, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import type {
   ScreeningQueue as ScreeningQueueType,
   ConditionType,
@@ -85,25 +86,28 @@ function getStatusStyle(status: PatientStatus): {
     case 'ai-analyzed':
       return {
         icon: '◉',
-        text: 'AI Analyzed',
+        text: t('Ophthalmologist.screeningQueue.aiAnalyzed', 'AI Analyzed'),
         color: 'text-gray-500 dark:text-gray-400',
       };
     case 'flagged-for-review':
       return {
         icon: '⚠',
-        text: 'Flagged for Review',
+        text: t(
+          'Ophthalmologist.screeningQueue.flaggedForReview',
+          'Flagged for Review'
+        ),
         color: 'text-amber-500 dark:text-amber-400',
       };
     case 'reviewed':
       return {
         icon: '✓',
-        text: 'Reviewed',
+        text: t('Ophthalmologist.screeningQueue.reviewed', 'Reviewed'),
         color: 'text-emerald-500 dark:text-emerald-400',
       };
     default:
       return {
         icon: '○',
-        text: 'Pending',
+        text: t('Ophthalmologist.screeningQueue.pending', 'Pending'),
         color: 'text-gray-400 dark:text-gray-500',
       };
   }
@@ -116,21 +120,22 @@ function getConfidenceColor(confidence: number): string {
 }
 
 export default function ScreeningQueue({ queue }: ScreeningQueueProps) {
+  const { t } = useSafeTranslation();
   return (
     <section className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-[#1e3a5f]">
         <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-          Screening Queue
+          {t('Ophthalmologist.screeningQueue.title', 'Screening Queue')}
         </h2>
         <div className="flex items-center gap-2">
           <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors">
             <Filter size={16} />
-            Filter
+            {t('Ophthalmologist.screeningQueue.filter', 'Filter')}
           </button>
           <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors">
             <ArrowUpDown size={16} />
-            Sort
+            {t('Ophthalmologist.screeningQueue.sort', 'Sort')}
           </button>
         </div>
       </div>
@@ -141,22 +146,28 @@ export default function ScreeningQueue({ queue }: ScreeningQueueProps) {
           <thead>
             <tr className="bg-gray-50/50 dark:bg-[#0a1929]/50">
               <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Patient Details
+                {t(
+                  'Ophthalmologist.screeningQueue.patientDetails',
+                  'Patient Details'
+                )}
               </th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Scan Date
+                {t('Ophthalmologist.screeningQueue.scanDate', 'Scan Date')}
               </th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                AI Prediction
+                {t(
+                  'Ophthalmologist.screeningQueue.aiPrediction',
+                  'AI Prediction'
+                )}
               </th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Confidence
+                {t('Ophthalmologist.screeningQueue.confidence', 'Confidence')}
               </th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Status
+                {t('Ophthalmologist.screeningQueue.status', 'Status')}
               </th>
               <th className="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Action
+                {t('Ophthalmologist.screeningQueue.action', 'Action')}
               </th>
             </tr>
           </thead>
@@ -206,7 +217,10 @@ export default function ScreeningQueue({ queue }: ScreeningQueueProps) {
                       <span
                         className={`w-1.5 h-1.5 rounded-full ${predictionStyle.dot}`}
                       />
-                      {patient.aiPrediction}
+                      {t(
+                        `Ophthalmologist.screeningQueue.${patient.aiPrediction.replace(/\s+/g, '')}`,
+                        patient.aiPrediction
+                      )}
                     </span>
                   </td>
 
@@ -245,8 +259,14 @@ export default function ScreeningQueue({ queue }: ScreeningQueueProps) {
                       }`}
                     >
                       {patient.action === 'quick-approve'
-                        ? 'Quick Approve'
-                        : 'Start Review'}
+                        ? t(
+                            'Ophthalmologist.screeningQueue.quickApprove',
+                            'Quick Approve'
+                          )
+                        : t(
+                            'Ophthalmologist.screeningQueue.startReview',
+                            'Start Review'
+                          )}
                     </button>
                   </td>
                 </tr>
@@ -259,7 +279,11 @@ export default function ScreeningQueue({ queue }: ScreeningQueueProps) {
       {/* Pagination */}
       <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100 dark:border-[#1e3a5f]">
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Showing {queue.showing} of {queue.total} pending reviews
+          {t(
+            'Ophthalmologist.screeningQueue.pagination',
+            'Showing {{showing}} of {{total}} pending reviews',
+            { showing: queue.showing, total: queue.total }
+          )}
         </p>
         <div className="flex items-center gap-1">
           <button
@@ -269,7 +293,7 @@ export default function ScreeningQueue({ queue }: ScreeningQueueProps) {
             <ChevronLeft size={16} />
           </button>
           <span className="text-sm text-gray-500 dark:text-gray-400">
-            Previous
+            {t('Ophthalmologist.screeningQueue.previous', 'Previous')}
           </span>
 
           <div className="flex items-center gap-1 mx-2">
@@ -287,7 +311,9 @@ export default function ScreeningQueue({ queue }: ScreeningQueueProps) {
             ))}
           </div>
 
-          <span className="text-sm text-gray-500 dark:text-gray-400">Next</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            {t('Ophthalmologist.screeningQueue.next', 'Next')}
+          </span>
           <button className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors">
             <ChevronRight size={16} />
           </button>
