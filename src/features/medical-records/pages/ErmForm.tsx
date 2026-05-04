@@ -365,6 +365,8 @@ const sectionConfig: Record<
 
 export default function ErmForm() {
   const { t } = useTranslation();
+  const translatePrescription = (key: string, fallback?: string): string =>
+    t(key, fallback ?? key);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -2501,6 +2503,7 @@ export default function ErmForm() {
                       onNoteChange={setPrescriptionNote}
                       locked={recordStatus === MedicalRecordStatus.Finalized}
                       validationErrors={prescriptionErrors}
+                      t={translatePrescription}
                     />
                   </div>
                   <div className="grid grid-cols-1 gap-6 rounded-[2.5rem] border border-slate-300 bg-slate-100/80 p-6 shadow-sm ring-1 ring-slate-200/90 md:grid-cols-2 md:p-8">

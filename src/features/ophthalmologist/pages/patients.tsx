@@ -609,11 +609,7 @@ export default function PatientsPage() {
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Clock className="w-3.5 h-3.5" />
-                                  {getPatientFindingsOrSummary(
-                                    patient.latestFinding,
-                                    patient.lastVisit,
-                                    t
-                                  )}
+                                  {patient.lastDiagnosis}
                                 </span>
                                 <span className="text-xs text-gray-400 dark:text-gray-500">
                                   {patient.id.slice(0, 8)}
