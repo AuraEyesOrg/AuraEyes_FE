@@ -12,6 +12,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { postsApi } from '@/features/professional-network/api/network.api';
@@ -77,6 +78,7 @@ export default function ClinicStaffScreeningResultPage() {
   const location = useLocation();
   const { t } = useSafeTranslation();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
   const screeningId = searchParams.get('id');
   const locationState = location.state as ScreeningResultLocationState | null;
   const locationPatientName = locationState?.patientName?.trim() ?? '';
@@ -720,13 +722,15 @@ export default function ClinicStaffScreeningResultPage() {
         screeningId,
         doctorId: bookedDoctorId,
       });
+      setCurrentFlowState('SentToDoctor');
       toast.success(
         t(
           'ClinicStaff.screeningResult.toast.sendToDoctorSuccess',
           'Case sent to doctor successfully.'
         )
       );
-      await hydrateQueueContext();
+      queryClient.invalidateQueries({ queryKey: ['clinic-staff', 'queue'] });
+      void hydrateQueueContext();
     } catch (error) {
       toast.error(
         getErrorMessage(

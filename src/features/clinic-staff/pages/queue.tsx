@@ -206,7 +206,6 @@ export default function ClinicStaffQueuePage() {
     queryKey: ['clinic-staff', 'queue'],
     queryFn: clinicQueueApi.getQueue,
     refetchInterval: 30_000, // Auto-refresh every 30 seconds
-    staleTime: 10_000,
   });
 
   const queue = queueQuery.data ?? [];
