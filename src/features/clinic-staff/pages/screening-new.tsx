@@ -291,8 +291,17 @@ export default function ClinicStaffScreeningNewPage() {
                   {selectedPatient.name}
                 </p>
                 <p className="text-xs text-(--text-secondary) mt-0.5">
-                  {selectedPatient.gender === 'M' ? 'Male' : 'Female'} ·{' '}
-                  {selectedPatient.age} yrs
+                  {t(
+                    'ClinicStaff.screeningNew.patientInfo.gender',
+                    '{{gender}} · {{age}} yrs',
+                    {
+                      gender:
+                        selectedPatient.gender === 'M'
+                          ? t('ClinicStaff.common.gender.male', 'Male')
+                          : t('ClinicStaff.common.gender.female', 'Female'),
+                      age: selectedPatient.age,
+                    }
+                  )}
                 </p>
               </div>
             </div>
@@ -505,19 +514,28 @@ export default function ClinicStaffScreeningNewPage() {
                           {img.status === 'ready' && (
                             <span className="flex items-center gap-1 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full border border-green-500/30">
                               <CheckCircle className="w-3 h-3" />
-                              Ready
+                              {t(
+                                'ClinicStaff.screeningNew.images.ready',
+                                'Ready'
+                              )}
                             </span>
                           )}
                           {img.status === 'warning' && (
                             <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full border border-amber-500/30">
                               <AlertCircle className="w-3 h-3" />
-                              Warning
+                              {t(
+                                'ClinicStaff.screeningNew.images.warning',
+                                'Warning'
+                              )}
                             </span>
                           )}
                           {img.status === 'error' && (
                             <span className="flex items-center gap-1 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full border border-red-500/30">
                               <X className="w-3 h-3" />
-                              Invalid
+                              {t(
+                                'ClinicStaff.screeningNew.images.invalid',
+                                'Invalid'
+                              )}
                             </span>
                           )}
                           {/* Retry / Remove */}
@@ -528,7 +546,10 @@ export default function ClinicStaffScreeningNewPage() {
                                 void validateImage(img.id, img.file);
                               }}
                               className="p-2 text-(--text-muted) hover:text-brand hover:bg-brand/10 rounded-lg transition-colors"
-                              title="Retry"
+                              title={t(
+                                'ClinicStaff.screeningNew.images.retry',
+                                'Retry'
+                              )}
                             >
                               <RefreshCw className="w-4 h-4" />
                             </button>
@@ -536,7 +557,10 @@ export default function ClinicStaffScreeningNewPage() {
                             <button
                               onClick={() => removeImage(img.id)}
                               className="p-2 text-(--text-muted) hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                              title="Remove"
+                              title={t(
+                                'ClinicStaff.screeningNew.images.remove',
+                                'Remove'
+                              )}
                             >
                               <X className="w-4 h-4" />
                             </button>

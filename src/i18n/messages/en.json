@@ -1135,10 +1135,6 @@
         "cancelReason": "Enter cancellation reason...",
         "confirmCancelSession": "Are you sure you want to cancel this session?",
         "confirmCompleteSession": "Are you sure you want to complete this consultation?",
-        "previewPreVisitEmpty": "Awaiting patient pre-visit notes…",
-        "previewCompletedEmpty": "Session completed — no messages",
-        "previewLocked": "Chat opens at appointment time",
-        "previewUnavailable": "No messages yet",
         "stats": {
           "all": "All",
           "open": "Open",
@@ -1499,8 +1495,11 @@
     "primaryCta": "Book Now",
     "secondaryCta": "Find a Doctor",
     "recruitmentPopup": {
+      "badge": "Professional Cooperation Invitation",
       "title": "Join our Specialist Team",
       "description": "We are looking for talented doctors to co-create the future of digital healthcare. Become a part of Aura today!",
+      "benefit1": "Enhance efficiency with clinical-grade AI retinal analysis.",
+      "benefit2": "Access global patients through telemedicine platform.",
       "cta": "Apply Now",
       "close": "Maybe later"
     }
@@ -2404,7 +2403,26 @@
     "clinicBooking": {
       "page": {
         "title": "Organisation Schedule"
-      }
+      },
+      "visitDate": "Visit Date",
+      "visitReason": "Visit Reason",
+      "searchingSlots": "Searching for slots...",
+      "selectOphthalmologist": "Select Ophthalmologist",
+      "anyDoctor": "Any available doctor",
+      "anyDoctorDesc": "System will randomly select an available doctor for you",
+      "noSlots": "No Slots Available",
+      "noSlotsDesc": "There are no available slots for this date. Please select another day from the calendar.",
+      "timeFrames": "time frame(s)",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "infoText": "Appointment is subject to confirmation. Please arrive 15 minutes before your time slot.",
+      "slotUnavailable": "This slot is too close to start time. Please choose another slot at least 30 minutes ahead.",
+      "selectDoctorFirst": "Please select a doctor to continue.",
+      "bookingSuccess": "Booking successful! Redirecting to payment...",
+      "randomDoctorAssigned": "Randomly assigned doctor",
+      "doctorExperience": "{{years}} years exp",
+      "forSlot": "For {{start}} - {{end}}",
+      "bookButton": "Book Appointment"
     }
   },
   "PatientDashboard_Legacy": {
@@ -2691,7 +2709,9 @@
       "totalSpent": "Total Spent",
       "transactions": "Transactions",
       "totalPaid": "Total Paid",
-      "totalRefund": "Total Refunded"
+      "totalRefund": "Total Refunded",
+      "spending": "Spending",
+      "refund": "Refund"
     },
     "paymentMethods": {
       "title": "Payment Methods",
@@ -2711,7 +2731,8 @@
       "emptyByFilterDescription": "Try adjusting your filter or check back later",
       "medicalAppt": "Medical Appointment",
       "ref": "Ref: {{id}}",
-      "payNow": "Pay Now"
+      "payNow": "Pay Now",
+      "emptyPaymentOrdersDescription": "When you book an appointment, transactions will appear here."
     },
     "filters": {
       "all": "All",
@@ -2750,6 +2771,17 @@
       "createFailed": "Failed to create deposit. Please try again.",
       "creating": "Creating...",
       "proceedToPay": "Proceed to Pay"
+    },
+    "orderStatus": {
+      "Pending": "Pending Payment",
+      "Confirmed": "Confirmed",
+      "Processing": "Processing",
+      "Completed": "Completed",
+      "Cancelled": "Cancelled",
+      "Refunded": "Refunded",
+      "FullyPaid": "Fully Paid",
+      "PartiallyPaid": "Deposit Paid",
+      "CancellationRequested": "Refund Pending"
     }
   },
   "PatientScreening": {
@@ -4652,17 +4684,33 @@
     },
     "cashflow": {
       "title": "Payment Transactions",
-      "description": "Monitor all patient clinic payments across the entire system.",
+      "description": "Manage cashflow and system-wide transactions",
       "stats": {
-        "totalVolume": "Total Revenue",
-        "pendingAmount": "Total Pending",
-        "completedOrders": "Total Orders"
+        "totalVolume": "Total Volume",
+        "pendingAmount": "Pending Amount",
+        "completedOrders": "Completed Orders",
+        "avgOrderValue": "Avg Order Value"
       },
-      "filterOptions": {
-        "all": "All",
-        "completed": "Completed",
+      "filters": {
+        "all": "All Transactions",
         "pending": "Pending",
-        "cancelled": "Cancelled/Refund"
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "table": {
+        "orderId": "Order ID",
+        "customer": "Customer",
+        "amount": "Amount",
+        "status": "Status",
+        "date": "Date Created",
+        "actions": "Actions",
+        "list": "Order List",
+        "defaultDescription": "Clinic Payment",
+        "deposited": "Deposited",
+        "remaining": "Remaining",
+        "onlineDeposit": "Online Deposit",
+        "fullPayment": "Full Payment",
+        "patientFallback": "Patient"
       },
       "status": {
         "pending": "Pending Payment",
@@ -4670,27 +4718,16 @@
         "processing": "Processing",
         "completed": "Completed",
         "cancelled": "Cancelled",
-        "refunded": "Refunded",
-        "partiallyPaid": "Deposit Paid",
-        "fullyPaid": "Fully Paid",
-        "cancellationRequested": "Refund Pending"
-      },
-      "table": {
-        "list": "Order List",
-        "patientFallback": "Patient",
-        "defaultDescription": "Medical Service Payment",
-        "onlineDeposit": "Online Deposit",
-        "fullPayment": "Full Payment",
-        "refundedDeposit": "Refunded Deposit",
-        "paidLabel": "Received",
-        "deposited": "Deposited",
-        "remaining": "Remaining"
+        "failed": "Failed",
+        "refunded": "Refunded"
       },
       "pagination": {
         "previous": "Previous",
         "next": "Next",
         "page": "Page"
-      }
+      },
+      "noData": "No transactions found",
+      "error": "An error occurred while loading data"
     },
     "refundRequests": {
       "title": "Refund Requests",
@@ -5119,53 +5156,6 @@
         "saveSuccess": "Settings saved successfully.",
         "saveFailed": "Failed to save settings"
       }
-    },
-    "cashflow": {
-      "title": "Payment Transactions",
-      "description": "Manage cashflow and system-wide transactions",
-      "stats": {
-        "totalVolume": "Total Volume",
-        "pendingAmount": "Pending Amount",
-        "completedOrders": "Completed Orders",
-        "avgOrderValue": "Avg Order Value"
-      },
-      "filters": {
-        "all": "All Transactions",
-        "pending": "Pending",
-        "completed": "Completed",
-        "failed": "Failed"
-      },
-      "table": {
-        "orderId": "Order ID",
-        "customer": "Customer",
-        "amount": "Amount",
-        "status": "Status",
-        "date": "Date Created",
-        "actions": "Actions",
-        "list": "Order List",
-        "defaultDescription": "Clinic Payment",
-        "deposited": "Deposited",
-        "remaining": "Remaining",
-        "onlineDeposit": "Online Deposit",
-        "fullPayment": "Full Payment",
-        "patientFallback": "Patient"
-      },
-      "status": {
-        "pending": "Pending Payment",
-        "confirmed": "Confirmed",
-        "processing": "Processing",
-        "completed": "Completed",
-        "cancelled": "Cancelled",
-        "failed": "Failed",
-        "refunded": "Refunded"
-      },
-      "pagination": {
-        "previous": "Previous",
-        "next": "Next",
-        "page": "Page"
-      },
-      "noData": "No transactions found",
-      "error": "An error occurred while loading data"
     },
     "dashboard": {
       "title": "Clinic Operations",
@@ -7121,6 +7111,25 @@
       "viewScheduleDesc": "See today's full schedule",
       "cashierDesk": "Cashier desk",
       "cashierDeskDesc": "Review finalized visits and collect payment"
+    },
+    "activityStatus": {
+      "completed": "Completed",
+      "pending": "Pending",
+      "urgent": "Urgent"
+    },
+    "activityActions": {
+      "checkedIn": "Checked in",
+      "checkedInAtCounter": "Patient checked in at counter",
+      "appointmentCreated": "Appointment created",
+      "appointmentCancelled": "Appointment cancelled",
+      "newAppointmentBooked": "New appointment booked",
+      "screeningCompleted": "Screening completed",
+      "sentToDoctor": "Sent to doctor",
+      "consultationStarted": "Consultation started",
+      "consultationInProgress": "Consultation in progress",
+      "paymentCompleted": "Payment completed",
+      "patientRegistered": "Patient registered",
+      "ermFilled": "ERM record filled"
     }
   },
   "Cashier": {
@@ -7366,7 +7375,177 @@
         "analyzing": "Analyzing..."
       },
       "toast": {
-        "noPatient": "No patient selected"
+        "noPatient": "No patient selected",
+        "missingVisit": "A clinic visit (check-in) is required to start screening."
+      },
+      "errors": {
+        "createFailed": "Failed to create screening session."
+      },
+      "dropzone": {
+        "dropHere": "Drop files here",
+        "dragDrop": "Drag & drop retinal images",
+        "or": "or",
+        "browse": "browse files"
+      },
+      "queue": {
+        "title": "Uploaded Images"
+      },
+      "images": {
+        "ready": "Ready",
+        "warning": "Warning",
+        "invalid": "Invalid",
+        "retry": "Retry",
+        "remove": "Remove"
+      },
+      "patientInfo": {
+        "gender": "{{gender}} · {{age}} yrs"
+      }
+    },
+    "screenings": {
+      "page": {
+        "title": "Screenings",
+        "subtitle": "Manage and review retinal screening sessions"
+      },
+      "actions": {
+        "newScreening": "New Screening",
+        "clear": "Clear",
+        "viewResult": "View Result",
+        "viewDetails": "View Details"
+      },
+      "stats": {
+        "total": "Total",
+        "completed": "Completed",
+        "pending": "Pending",
+        "today": "Today"
+      },
+      "search": {
+        "placeholder": "Search by patient name, AI prediction, risk level..."
+      },
+      "table": {
+        "patient": "Patient",
+        "date": "Date",
+        "aiPrediction": "AI Prediction",
+        "risk": "Risk",
+        "status": "Status",
+        "action": "Action"
+      },
+      "states": {
+        "noMatch": "No screenings found."
+      },
+      "toast": {
+        "loadFailed": "Unable to load screenings."
+      },
+      "status": {
+        "saved": "Saved",
+        "completed": "Completed",
+        "pending": "Pending",
+        "unknown": "Unknown"
+      },
+      "labels": {
+        "imagesCount": "{{count}} image(s)",
+        "confidence": "{{score}}% confidence",
+        "countFound": "{{count}} screening(s) found"
+      }
+    },
+    "screeningResult": {
+      "patientFallback": "Patient",
+      "header": {
+        "title": "Screening Result",
+        "patient": "Patient",
+        "session": "Session"
+      },
+      "actions": {
+        "analyzing": "Analyzing...",
+        "refining": "Refining...",
+        "reanalyze": "Re-analyze",
+        "sendingToDoctor": "Sending...",
+        "sendToDoctor": "Send to Doctor",
+        "sentToDoctorSuccess": "Sent to Doctor",
+        "backToList": "Back to screening list"
+      },
+      "badges": {
+        "viewOnly": "View mode - AI result only"
+      },
+      "riskCard": {
+        "title": "Risk level",
+        "confidence": "Confidence score: {{score}}%"
+      },
+      "cards": {
+        "summaryTitle": "AI Summary",
+        "findingsTitle": "Diagnosis Findings"
+      },
+      "aiResults": {
+        "title": "AI Analysis Results",
+        "primary": "Primary Finding",
+        "empty": "Analysis results will appear here after AI processing is complete."
+      },
+      "sessionInfo": {
+        "title": "Session Information",
+        "model": "Model",
+        "imageCount": "Image count",
+        "createdAt": "Created at",
+        "assessedAt": "Last assessed",
+        "sessionCode": "Session code"
+      },
+      "states": {
+        "missingId": "Missing screening id.",
+        "loading": "Loading screening result...",
+        "notFound": "Screening session not found.",
+        "noDraft": "No AI result yet. Press \"Re-analyze\" to generate results."
+      },
+      "toast": {
+        "loadFailed": "Unable to load screening result.",
+        "analyzing": "Analyzing retinal image...",
+        "noPredictionData": "AI service returned no prediction data.",
+        "analyzeSuccess": "AI analysis completed successfully.",
+        "analyzeFailed": "AI analysis failed. Please try again.",
+        "selectShareOption": "Please select at least one item to share.",
+        "walkInEmailRequired": "Please enter recipient email for walk-in patient.",
+        "shareEmailSuccess": "Result sent to {{email}}.",
+        "shareEmailFailed": "Unable to share result at this time.",
+        "shareNetworkSuccess": "Case shared to Professional Network successfully.",
+        "shareNetworkFailed": "Unable to post to Professional Network.",
+        "sendToDoctorRequiresAi": "Please complete AI analysis first.",
+        "bookedDoctorMissing": "Patient has no booked doctor. Please check the appointment.",
+        "sendToDoctorSuccess": "Case sent to doctor successfully.",
+        "sendToDoctorFailed": "Unable to send this case to doctor."
+      },
+      "shareModal": {
+        "title": "Share screening result",
+        "tabs": {
+          "email": "Send email",
+          "network": "Post to Network"
+        },
+        "email": {
+          "walkInHint": "Walk-in patient: enter recipient email for result delivery.",
+          "defaultHint": "Email can be edited before sending.",
+          "recipient": "Recipient email",
+          "placeholder": "patient@example.com",
+          "attachPdf": "Attach PDF report",
+          "attachImages": "Share retinal image links",
+          "send": "Send share"
+        },
+        "network": {
+          "hint": "Post this screening case to Professional Network as a case presentation.",
+          "riskLabel": "Risk level:",
+          "summaryLabel": "Summary:",
+          "noDraft": "No AI result yet. Please run analysis first.",
+          "notePlaceholder": "Add an optional note for this case...",
+          "post": "Post to Network"
+        }
+      },
+      "network": {
+        "title": "AI screening case shared by clinic coordinator",
+        "session": "Session: {{id}}...",
+        "risk": "Risk level: {{risk}}",
+        "summaryLabel": "Summary:",
+        "findingsLabel": "Top findings:",
+        "noteLabel": "Coordinator note: {{note}}",
+        "noteEmpty": "Not provided",
+        "noFindings": "No clear abnormal findings"
+      },
+      "findings": {
+        "emptyFallback": "No significant AI findings were identified."
       }
     },
     "queue": {
@@ -7437,6 +7616,7 @@
         "pending": "Pending"
       },
       "states": {
+        "ermPending": "ERM Required",
         "checkedIn": "Checked In",
         "screeningPending": "Screening Pending",
         "aiCompleted": "AI Completed",
@@ -7449,10 +7629,32 @@
       }
     },
     "patients": {
+      "header": {
+        "title": "Patients",
+        "subtitle": "Manage your clinic's patient records and screenings"
+      },
+      "search": {
+        "placeholder": "Search by name, phone number, or CCCD..."
+      },
+      "actions": {
+        "walkInPatient": "Walk-in Patient",
+        "clear": "Clear",
+        "moreFor": "More actions for",
+        "viewHistory": "View History",
+        "editContact": "Edit Contact",
+        "retry": "Retry"
+      },
       "summary": {
         "countFound": "{{count}} {{unit}} found",
         "patients": "patients",
         "patient": "patient"
+      },
+      "table": {
+        "patient": "Patient",
+        "lastScreening": "Last Screening",
+        "type": "Type",
+        "risk": "Risk",
+        "action": "Action"
       },
       "risk": {
         "low": "low",
@@ -7460,7 +7662,22 @@
         "high": "high"
       },
       "types": {
-        "walkIn": "Walk-in"
+        "walkIn": "Walk-in",
+        "auraPartner": "Aura Partner"
+      },
+      "states": {
+        "loadFailed": "Unable to load patients",
+        "noMatch": "No patients match your search."
+      },
+      "toast": {
+        "loadFailed": "Unable to load patients.",
+        "noActiveVisit": "No active check-in for this patient. Check them in from the queue first.",
+        "queueLoadFailed": "Could not load the clinic queue. Try again."
+      },
+      "visitPicker": {
+        "title": "Choose a check-in",
+        "subtitle": "This patient has more than one active visit. Pick the one you are screening for.",
+        "cancel": "Cancel"
       }
     },
     "updatePatientModal": {
@@ -7656,6 +7873,60 @@
       "next": "Next"
     }
   },
+  "ClinicStaffMedicalRecords": {
+    "page": {
+      "title": "Medical Records Management",
+      "subtitle": "View and manage EMR medical records"
+    },
+    "header": {
+      "title": "Manage Medical Records",
+      "subtitle": "Search and manage EMR 23/BV-01 medical records"
+    },
+    "search": {
+      "placeholder": "Search by patient name or record number..."
+    },
+    "filter": {
+      "all": "All statuses",
+      "draft": "Pending Examination",
+      "clinicFilling": "Clinic Filling",
+      "doctorFilling": "Doctor Examining",
+      "completed": "Completed",
+      "locked": "Finalized"
+    },
+    "table": {
+      "recordNumber": "Record Number",
+      "patient": "Patient",
+      "createdAt": "Created At",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "draft": "Pending Examination",
+      "clinicFilling": "Clinic Filling",
+      "doctorFilling": "Doctor Examining",
+      "completed": "Completed",
+      "locked": "Finalized"
+    },
+    "actions": {
+      "view": "View details",
+      "downloadPdf": "Download PDF",
+      "more": "More"
+    },
+    "empty": {
+      "title": "No matching results found"
+    },
+    "pagination": {
+      "page": "Page {{page}} / {{total}}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "loading": {
+      "skeleton": "Loading..."
+    },
+    "patient": {
+      "phoneNotUpdated": "Not updated"
+    }
+  },
   "ClinicStaffBilling": {
     "page": {
       "title": "Billing Management",
@@ -7718,6 +7989,38 @@
       "previous": "Previous",
       "next": "Next",
       "pageOf": "Page {{page}} / {{total}}"
+    }
+  },
+  "PatientMedicalHistory": {
+    "page": {
+      "title": "Medical Records",
+      "subtitle": "Track your complete examination history, diagnoses, and treatment plans from specialists."
+    },
+    "stats": {
+      "totalVisits": "Total Visits"
+    },
+    "search": {
+      "placeholder": "Search by date or diagnosis..."
+    },
+    "empty": {
+      "title": "No visit history yet",
+      "description": "Your medical records will appear here after completing an exam."
+    },
+    "cta": {
+      "bookNow": "Book Appointment Now"
+    },
+    "help": {
+      "title": "Need help with your results?",
+      "description": "If you have questions about your diagnosis or medication, contact our medical team.",
+      "cta": "Request Consultation"
+    },
+    "record": {
+      "code": "Record ID",
+      "diagnosisUpdating": "Updating diagnosis...",
+      "statusOfficial": "Official",
+      "completed": "Completed",
+      "processing": "In Progress",
+      "viewDetails": "View Details"
     }
   }
 }

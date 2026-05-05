@@ -15,37 +15,44 @@ import {
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { MedicalRecordDto } from '@/features/medical-records/api/medical-record.api';
+import { useTranslation } from 'react-i18next';
 
 const StatusBadge = ({ status }: { status: string }) => {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, defaultValue?: string) =>
+    i18nT(key as never, { defaultValue } as never) as unknown as string;
+
+  const statusKey = `ClinicStaffMedicalRecords.status.${status.charAt(0).toLowerCase() + status.slice(1)}`;
+
   switch (status) {
     case 'Draft':
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-slate-100 text-slate-500">
-          <Clock className="w-3 h-3" /> Chờ khám
+          <Clock className="w-3 h-3" /> {t(statusKey, 'Pending Examination')}
         </span>
       );
     case 'ClinicFilling':
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-600">
-          <Clock className="w-3 h-3" /> Đang điền HC
+          <Clock className="w-3 h-3" /> {t(statusKey, 'Clinic Filling')}
         </span>
       );
     case 'DoctorFilling':
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-600">
-          <Clock className="w-3 h-3" /> Bác sĩ khám
+          <Clock className="w-3 h-3" /> {t(statusKey, 'Doctor Examining')}
         </span>
       );
     case 'Completed':
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-50 text-emerald-600">
-          <FileText className="w-3 h-3" /> Hoàn thành
+          <FileText className="w-3 h-3" /> {t(statusKey, 'Completed')}
         </span>
       );
     case 'Locked':
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-50 text-emerald-600">
-          <CheckCircle2 className="w-3 h-3" /> Hoàn tất
+          <CheckCircle2 className="w-3 h-3" /> {t(statusKey, 'Finalized')}
         </span>
       );
     default:
@@ -59,6 +66,9 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 export default function MedicalRecordsManagementPage() {
   const navigate = useNavigate();
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, defaultValue?: string) =>
+    i18nT(key as never, { defaultValue } as never) as unknown as string;
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [pageNumber, setPageNumber] = useState(1);
@@ -79,10 +89,16 @@ export default function MedicalRecordsManagementPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
             <h1 className="text-3xl font-black tracking-tight text-slate-900">
-              Quản lý <span className="text-primary">Bệnh án</span>
+              {t('ClinicStaffMedicalRecords.header.title', 'Quản lý')}{' '}
+              <span className="text-primary">
+                {t('ClinicStaffMedicalRecords.page.title', 'Bệnh án')}
+              </span>
             </h1>
             <p className="text-slate-500 text-sm font-medium">
-              Tra cứu và quản lý hồ sơ bệnh án EMR 23/BV-01
+              {t(
+                'ClinicStaffMedicalRecords.header.subtitle',
+                'Tra cứu và quản lý hồ sơ bệnh án EMR 23/BV-01'
+              )}
             </p>
           </div>
         </div>
@@ -94,7 +110,10 @@ export default function MedicalRecordsManagementPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Tìm theo tên bệnh nhân hoặc số bệnh án..."
+                placeholder={t(
+                  'ClinicStaffMedicalRecords.search.placeholder',
+                  'Tìm theo tên bệnh nhân hoặc số bệnh án...'
+                )}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-11 pr-4 py-3 bg-slate-50 border-none rounded-2xl outline-none text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all"
@@ -106,12 +125,36 @@ export default function MedicalRecordsManagementPage() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-6 py-3 bg-slate-50 border-none rounded-2xl outline-none text-sm font-bold text-slate-600 appearance-none"
               >
-                <option value="">Tất cả trạng thái</option>
-                <option value="Draft">Chờ khám</option>
-                <option value="ClinicFilling">Đang điền HC</option>
-                <option value="DoctorFilling">Bác sĩ khám</option>
-                <option value="Completed">Hoàn thành</option>
-                <option value="Locked">Hoàn tất</option>
+                <option value="">
+                  {t(
+                    'ClinicStaffMedicalRecords.filter.all',
+                    'Tất cả trạng thái'
+                  )}
+                </option>
+                <option value="Draft">
+                  {t('ClinicStaffMedicalRecords.filter.draft', 'Chờ khám')}
+                </option>
+                <option value="ClinicFilling">
+                  {t(
+                    'ClinicStaffMedicalRecords.filter.clinicFilling',
+                    'Đang điền HC'
+                  )}
+                </option>
+                <option value="DoctorFilling">
+                  {t(
+                    'ClinicStaffMedicalRecords.filter.doctorFilling',
+                    'Bác sĩ khám'
+                  )}
+                </option>
+                <option value="Completed">
+                  {t(
+                    'ClinicStaffMedicalRecords.filter.completed',
+                    'Hoàn thành'
+                  )}
+                </option>
+                <option value="Locked">
+                  {t('ClinicStaffMedicalRecords.filter.locked', 'Hoàn tất')}
+                </option>
               </select>
               <button className="p-3 bg-slate-900 text-white rounded-2xl hover:scale-105 active:scale-95 transition-all">
                 <Filter className="w-5 h-5" />
@@ -127,19 +170,22 @@ export default function MedicalRecordsManagementPage() {
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100">
                   <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400">
-                    Số bệnh án
+                    {t(
+                      'ClinicStaffMedicalRecords.table.recordNumber',
+                      'Số bệnh án'
+                    )}
                   </th>
                   <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400">
-                    Bệnh nhân
+                    {t('ClinicStaffMedicalRecords.table.patient', 'Bệnh nhân')}
                   </th>
                   <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400">
-                    Ngày tạo
+                    {t('ClinicStaffMedicalRecords.table.createdAt', 'Ngày tạo')}
                   </th>
                   <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400">
-                    Trạng thái
+                    {t('ClinicStaffMedicalRecords.table.status', 'Trạng thái')}
                   </th>
                   <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400 text-right">
-                    Thao tác
+                    {t('ClinicStaffMedicalRecords.table.actions', 'Thao tác')}
                   </th>
                 </tr>
               </thead>
@@ -164,7 +210,10 @@ export default function MedicalRecordsManagementPage() {
                         </div>
                       </div>
                       <p className="text-slate-400 font-bold tracking-tight">
-                        Không tìm thấy kết quả phù hợp
+                        {t(
+                          'ClinicStaffMedicalRecords.empty.title',
+                          'Không tìm thấy kết quả phù hợp'
+                        )}
                       </p>
                     </td>
                   </tr>
@@ -191,7 +240,11 @@ export default function MedicalRecordsManagementPage() {
                             {record.patient?.fullName || 'N/A'}
                           </span>
                           <span className="text-xs text-slate-400 font-medium">
-                            {record.patient?.phone || 'Chưa cập nhật'}
+                            {record.patient?.phone ||
+                              t(
+                                'ClinicStaffMedicalRecords.patient.phoneNotUpdated',
+                                'Chưa cập nhật'
+                              )}
                           </span>
                         </div>
                       </td>
@@ -211,7 +264,10 @@ export default function MedicalRecordsManagementPage() {
                         <div className="flex justify-end gap-2">
                           <button
                             className="p-2 hover:bg-white hover:shadow-md rounded-xl text-slate-400 hover:text-primary transition-all"
-                            title="Xem chi tiết"
+                            title={t(
+                              'ClinicStaffMedicalRecords.actions.view',
+                              'Xem chi tiết'
+                            )}
                           >
                             <Eye className="w-5 h-5" />
                           </button>
@@ -222,7 +278,10 @@ export default function MedicalRecordsManagementPage() {
                               rel="noopener noreferrer"
                               className="p-2 hover:bg-white hover:shadow-md rounded-xl text-slate-400 hover:text-emerald-500 transition-all"
                               onClick={(e) => e.stopPropagation()}
-                              title="Tải PDF"
+                              title={t(
+                                'ClinicStaffMedicalRecords.actions.downloadPdf',
+                                'Tải PDF'
+                              )}
                             >
                               <Download className="w-5 h-5" />
                             </a>
@@ -242,7 +301,14 @@ export default function MedicalRecordsManagementPage() {
           {/* PAGINATION */}
           <div className="px-8 py-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
             <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">
-              Trang {pageNumber} / {pagedData?.totalPages || 1}
+              {t(
+                'ClinicStaffMedicalRecords.pagination.page',
+                'Trang {{page}} / {{total}}',
+                {
+                  page: pageNumber,
+                  total: pagedData?.totalPages || 1,
+                }
+              )}
             </span>
             <div className="flex gap-2">
               <button
@@ -252,14 +318,14 @@ export default function MedicalRecordsManagementPage() {
                 }
                 className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[11px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-all"
               >
-                Trước
+                {t('ClinicStaffMedicalRecords.pagination.previous', 'Trước')}
               </button>
               <button
                 disabled={pageNumber >= (pagedData?.totalPages || 1)}
                 onClick={() => setPageNumber((pNumber) => pNumber + 1)}
                 className="px-4 py-2 bg-slate-900 border border-slate-900 rounded-xl text-[11px] font-black uppercase tracking-widest text-white hover:bg-slate-800 disabled:opacity-50 transition-all"
               >
-                Sau
+                {t('ClinicStaffMedicalRecords.pagination.next', 'Sau')}
               </button>
             </div>
           </div>

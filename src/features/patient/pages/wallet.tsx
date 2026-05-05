@@ -21,15 +21,15 @@ import { useTranslation } from 'react-i18next';
 type FilterType = 'all' | 'completed' | 'pending' | 'cancelled';
 
 const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
-  Pending: 'Chờ thanh toán',
-  Confirmed: 'Đã xác nhận',
-  Processing: 'Đang xử lý',
-  Completed: 'Hoàn thành',
-  Cancelled: 'Đã hủy',
-  Refunded: 'Hoàn tiền',
-  FullyPaid: 'Đã tất toán',
-  PartiallyPaid: 'Đã thanh toán cọc',
-  CancellationRequested: 'Đang yêu cầu hoàn tiền',
+  Pending: 'PatientWallet.orderStatus.Pending',
+  Confirmed: 'PatientWallet.orderStatus.Confirmed',
+  Processing: 'PatientWallet.orderStatus.Processing',
+  Completed: 'PatientWallet.orderStatus.Completed',
+  Cancelled: 'PatientWallet.orderStatus.Cancelled',
+  Refunded: 'PatientWallet.orderStatus.Refunded',
+  FullyPaid: 'PatientWallet.orderStatus.FullyPaid',
+  PartiallyPaid: 'PatientWallet.orderStatus.PartiallyPaid',
+  CancellationRequested: 'PatientWallet.orderStatus.CancellationRequested',
 };
 
 const PAYMENT_STATUS_COLOR: Record<PaymentStatus, string> = {
@@ -220,7 +220,9 @@ export default function WalletPage() {
                 <CreditCard className="w-5 h-5 text-red-500" strokeWidth={2} />
               </div>
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                Chi tiêu
+                {t('PatientWallet.stats.spending', {
+                  defaultValue: 'Chi tiêu',
+                })}
               </span>
             </div>
             <div className="relative z-10">
@@ -247,7 +249,7 @@ export default function WalletPage() {
                 />
               </div>
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                Hoàn tiền
+                {t('PatientWallet.stats.refund', { defaultValue: 'Hoàn tiền' })}
               </span>
             </div>
             <div className="relative z-10">
@@ -483,7 +485,9 @@ export default function WalletPage() {
                                     strokeWidth={2}
                                   />
                                 )}
-                                {ORDER_STATUS_LABEL[order.status]}
+                                {t(ORDER_STATUS_LABEL[order.status], {
+                                  defaultValue: order.status,
+                                })}
                               </span>
                             </div>
 

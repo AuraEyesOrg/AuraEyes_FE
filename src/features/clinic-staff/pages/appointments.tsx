@@ -800,7 +800,7 @@ export default function ClinicStaffAppointmentsPage() {
           {/* Stats Card */}
           <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <p className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-              {formatDate(selectedDate, 'short')}
+              {formatDate(selectedDate, 'short', currentLocale)}
             </p>
             <div className="grid grid-cols-1 gap-3">
               {[
@@ -860,7 +860,7 @@ export default function ClinicStaffAppointmentsPage() {
           <div className="mb-6 flex flex-col justify-between gap-4 px-2 md:flex-row md:items-center">
             <div className="space-y-1">
               <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-                {formatDate(selectedDate, 'long')}
+                {formatDate(selectedDate, 'long', currentLocale)}
               </h2>
               <div className="flex items-center gap-2">
                 <button
