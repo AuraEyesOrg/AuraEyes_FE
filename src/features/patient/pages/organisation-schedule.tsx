@@ -33,6 +33,7 @@ import {
   isPast,
   isToday,
 } from 'date-fns';
+import { vi, enUS } from 'date-fns/locale';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import {
@@ -44,24 +45,37 @@ import { toast } from 'react-toastify';
 import { mapClinicPatientErrorMessage } from '@/lib/api-error';
 import { resolveAvatarUrl } from '@/lib/user-avatar';
 import { useNavigate } from 'react-router-dom';
+import { toIntlLocale } from '@/lib/date-utils';
 import type {
   AggregatedSlotDto,
   DoctorSlotDetailDto,
 } from '../types/clinic-booking.types';
-
-const REASON_SUGGESTIONS = [
-  'Routine follow-up',
-  'Blurred vision',
-  'Eye pressure check',
-  'Eye pain or discomfort',
-  'First-time visit',
-];
-
 export default function OrganisationSchedulePage() {
-  const { t: i18nT } = useTranslation();
+  const { t: i18nT, i18n } = useTranslation();
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
   const navigate = useNavigate();
+
+  const REASON_SUGGESTIONS = useMemo(
+    () => [
+      t('PatientAppointments.clinicBooking.reasons.routine', {
+        defaultValue: 'Routine follow-up',
+      }),
+      t('PatientAppointments.clinicBooking.reasons.blurred', {
+        defaultValue: 'Blurred vision',
+      }),
+      t('PatientAppointments.clinicBooking.reasons.pressure', {
+        defaultValue: 'Eye pressure check',
+      }),
+      t('PatientAppointments.clinicBooking.reasons.pain', {
+        defaultValue: 'Eye pain or discomfort',
+      }),
+      t('PatientAppointments.clinicBooking.reasons.first', {
+        defaultValue: 'First-time visit',
+      }),
+    ],
+    [t]
+  );
 
   // 1. Logic
   const [selectedDate, setSelectedDate] = useState<Date>(
@@ -136,7 +150,7 @@ export default function OrganisationSchedulePage() {
     if (!selectedDoctorSlot) {
       toast.warn(
         t('PatientAppointments.clinicBooking.selectDoctorFirst', {
-          defaultValue: 'Vui lòng chọn bác sĩ để tiếp tục.',
+          defaultValue: 'Please select a doctor to continue.',
         })
       );
       return;
@@ -153,7 +167,7 @@ export default function OrganisationSchedulePage() {
         toast.error(
           t('PatientAppointments.clinicBooking.slotUnavailable', {
             defaultValue:
-              'Slot này đã quá gần giờ bắt đầu. Vui lòng chọn slot khác cách ít nhất 30 phút.',
+              'This slot is too close to the start time. Please select another slot at least 30 minutes in advance.',
           })
         );
         return;
@@ -163,7 +177,11 @@ export default function OrganisationSchedulePage() {
     createBooking(
       {
         slotId: selectedDoctorSlot.slotId,
-        visitReason: visitReason || 'Regular eye checkup',
+        visitReason:
+          visitReason ||
+          t('PatientAppointments.clinicBooking.reasons.routine', {
+            defaultValue: 'Routine follow-up',
+          }),
       },
       {
         onSuccess: (data) => {
@@ -171,7 +189,7 @@ export default function OrganisationSchedulePage() {
             toast.success(
               t('PatientAppointments.clinicBooking.bookingSuccess', {
                 defaultValue:
-                  'Đặt lịch thành công! Đang chuyển đến trang thanh toán...',
+                  'Booking successful! Redirecting to payment page...',
               })
             );
             setTimeout(() => {
@@ -214,7 +232,7 @@ export default function OrganisationSchedulePage() {
               })}
               :{' '}
               <span className="font-bold text-slate-700 dark:text-slate-300">
-                {schedule?.name || 'Aura Eyes Clinic'}
+                {schedule?.name || 'Aura Eyes'}
               </span>
             </p>
           </div>
@@ -238,7 +256,9 @@ export default function OrganisationSchedulePage() {
                     <ChevronLeft size={18} className="text-slate-600" />
                   </button>
                   <h3 className="font-bold text-slate-900 dark:text-white capitalize">
-                    {format(viewDate, 'MMMM yyyy')}
+                    {format(viewDate, 'MMMM yyyy', {
+                      locale: i18n.language === 'vi' ? vi : enUS,
+                    })}
                   </h3>
                   <button
                     onClick={() => setViewDate(addMonths(viewDate, 1))}
@@ -251,7 +271,10 @@ export default function OrganisationSchedulePage() {
 
               <div className="p-6">
                 <div className="grid grid-cols-7 gap-1 mb-2">
-                  {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
+                  {(i18n.language === 'vi'
+                    ? ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
+                    : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+                  ).map((day) => (
                     <div
                       key={day}
                       className="text-center text-[10px] font-bold text-slate-400 py-2"
@@ -307,7 +330,10 @@ export default function OrganisationSchedulePage() {
                   type="text"
                   value={visitReason}
                   onChange={(e) => setVisitReason(e.target.value)}
-                  placeholder="Blurred vision, routine follow-up..."
+                  placeholder={t(
+                    'PatientAppointments.clinicBooking.visitReasonPlaceholder',
+                    { defaultValue: 'Blurred vision, routine follow-up...' }
+                  )}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all"
                 />
                 <div className="flex flex-wrap gap-2">
@@ -333,7 +359,9 @@ export default function OrganisationSchedulePage() {
           <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm p-8 min-h-[600px] flex flex-col">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-xl font-black text-slate-900 dark:text-white">
-                {format(selectedDate, 'MMM d, yyyy')}
+                {format(selectedDate, 'MMM d, yyyy', {
+                  locale: i18n.language === 'vi' ? vi : enUS,
+                })}
               </h2>
               {upcomingAggregatedSlots.length > 0 && (
                 <span className="text-xs font-bold text-slate-400">
@@ -451,7 +479,7 @@ export default function OrganisationSchedulePage() {
                                   ];
                                 setSelectedDoctorSlot(randomDoc);
                                 toast.info(
-                                  `${t('PatientAppointments.clinicBooking.randomDoctorAssigned', { defaultValue: 'Đã chọn ngẫu nhiên bác sĩ' })}: ${randomDoc.doctorName}`
+                                  `${t('PatientAppointments.clinicBooking.randomDoctorAssigned', { defaultValue: 'Random doctor assigned' })}: ${randomDoc.doctorName}`
                                 );
                               }
                             }}
@@ -467,7 +495,7 @@ export default function OrganisationSchedulePage() {
                               <h4 className="text-sm font-bold text-cyan-900 dark:text-cyan-100">
                                 {t(
                                   'PatientAppointments.clinicBooking.anyDoctor',
-                                  { defaultValue: 'Bất kỳ bác sĩ nào' }
+                                  { defaultValue: 'Any available doctor' }
                                 )}
                               </h4>
                               <p className="text-[10px] text-cyan-600/70 dark:text-cyan-400/70 font-medium">
@@ -475,7 +503,7 @@ export default function OrganisationSchedulePage() {
                                   'PatientAppointments.clinicBooking.anyDoctorDesc',
                                   {
                                     defaultValue:
-                                      'Hệ thống sẽ chọn ngẫu nhiên 1 bác sĩ còn rảnh cho bạn',
+                                      'System will randomly select an available doctor for you',
                                   }
                                 )}
                               </p>
@@ -552,7 +580,10 @@ export default function OrganisationSchedulePage() {
                     <Spinner size={20} />
                   ) : (
                     <>
-                      Confirm Booking <ArrowRight size={18} />
+                      {t('PatientAppointments.clinicBooking.confirmBooking', {
+                        defaultValue: 'Confirm Booking',
+                      })}{' '}
+                      <ArrowRight size={18} />
                     </>
                   )}
                 </button>
@@ -580,6 +611,10 @@ function DoctorDetailsModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const { t: i18nT, i18n } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   if (!doctor) return null;
 
   // Real data from doctor object
@@ -633,7 +668,9 @@ function DoctorDetailsModal({
                       </h3>
                       <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-bold uppercase tracking-widest text-xs">
                         <Stethoscope size={14} />
-                        Chuyên gia nhãn khoa
+                        {t('PatientAppointments.clinicBooking.specialist', {
+                          defaultValue: 'Ophthalmologist Specialist',
+                        })}
                       </div>
                     </div>
                   </div>
@@ -641,11 +678,14 @@ function DoctorDetailsModal({
                   {/* Section 2: Bio */}
                   <div className="space-y-4">
                     <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                      <FileText size={14} /> Giới thiệu & Kinh nghiệm
+                      <FileText size={14} />{' '}
+                      {t('PatientAppointments.clinicBooking.bio', {
+                        defaultValue: 'Bio & Experience',
+                      })}
                     </h4>
                     <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed font-medium">
                       {doctor.bio ||
-                        `Bác sĩ ${doctor.doctorName} là chuyên gia đầu ngành trong lĩnh vực Phẫu thuật Phaco và điều trị các bệnh lý về võng mạc. Với nhiều năm kinh nghiệm làm việc tại các bệnh viện mắt lớn, bác sĩ đã thực hiện thành công hàng ngàn ca phẫu thuật, mang lại thị lực cho rất nhiều bệnh nhân.`}
+                        `Dr. ${doctor.doctorName} is a leading specialist in Phaco surgery and retinal disease treatment. With years of experience in major eye hospitals, the doctor has successfully performed thousands of surgeries, restoring vision to many patients.`}
                     </p>
                   </div>
 
@@ -653,7 +693,10 @@ function DoctorDetailsModal({
                   {(degrees.length > 0 || licenses.length > 0) && (
                     <div className="space-y-4">
                       <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                        <GraduationCap size={16} /> Bằng cấp & Chứng chỉ
+                        <GraduationCap size={16} />{' '}
+                        {t('PatientAppointments.clinicBooking.credentials', {
+                          defaultValue: 'Degrees & Certificates',
+                        })}
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {degrees.map((degree, idx) => (
@@ -780,7 +823,9 @@ function DoctorDetailsModal({
                             {doctor.ratingAverage}
                           </div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                            Rating
+                            {t('PatientAppointments.clinicBooking.rating', {
+                              defaultValue: 'Rating',
+                            })}
                           </p>
                         </div>
                         <div className="text-center sm:text-left">
@@ -788,7 +833,9 @@ function DoctorDetailsModal({
                             {doctor.ratingCount}
                           </div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                            Bệnh nhân
+                            {t('PatientAppointments.clinicBooking.patients', {
+                              defaultValue: 'Patients',
+                            })}
                           </p>
                         </div>
                       </div>
@@ -799,10 +846,18 @@ function DoctorDetailsModal({
                         <MapPin size={12} /> Aura Eyes Clinic
                       </div>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                        Phí khám
+                        {t(
+                          'PatientAppointments.clinicBooking.consultationFee',
+                          {
+                            defaultValue: 'Consultation Fee',
+                          }
+                        )}
                       </p>
                       <p className="text-3xl font-black text-cyan-600 dark:text-cyan-400">
-                        {doctor.price.toLocaleString('vi-VN')}₫
+                        {doctor.price.toLocaleString(
+                          toIntlLocale(i18n.language)
+                        )}
+                        ₫
                       </p>
                     </div>
                   </div>
@@ -825,6 +880,10 @@ function AggregatedSlotCard({
   isSelected: boolean;
   onClick: () => void;
 }) {
+  const { t: i18nT, i18n } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const availableCount = slot.doctors.filter((d) => !d.isBooked).length;
   const isFull = availableCount === 0;
 
@@ -849,7 +908,11 @@ function AggregatedSlotCard({
         <span
           className={`text-[10px] font-bold ${isSelected ? 'text-cyan-100' : isFull ? 'text-red-400' : 'text-slate-400'}`}
         >
-          {isFull ? 'Full' : `${availableCount}/${slot.doctors.length} Dr.`}
+          {isFull
+            ? t('PatientAppointments.clinicBooking.slotStatus.full', {
+                defaultValue: 'Full',
+              })
+            : `${availableCount}/${slot.doctors.length} ${t('PatientAppointments.clinicBooking.slotStatus.doctors', { defaultValue: 'Dr.' })}`}
         </span>
       </div>
 
@@ -876,6 +939,10 @@ function DoctorCard({
   onClick: () => void;
   onViewDetails: () => void;
 }) {
+  const { t: i18nT, i18n } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   return (
     <button
       disabled={doctor.isBooked}
@@ -911,7 +978,7 @@ function DoctorCard({
             onViewDetails();
           }}
           className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity cursor-pointer"
-          title="Xem chi tiết"
+          title="View details"
         >
           <Eye size={16} className="text-white" />
         </div>
@@ -938,22 +1005,29 @@ function DoctorCard({
               }}
               className="text-[10px] font-bold text-cyan-600 hover:text-cyan-700 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
             >
-              <Eye size={10} /> Xem chi tiết
+              <Eye size={10} />{' '}
+              {t('PatientAppointments.clinicBooking.viewDetails', {
+                defaultValue: 'View details',
+              })}
             </button>
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5">
           {doctor.isBooked ? (
             <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider">
-              Booked
+              {t('PatientAppointments.clinicBooking.slotStatus.booked', {
+                defaultValue: 'Booked',
+              })}
             </span>
           ) : (
             <>
               <span className="text-[10px] font-medium text-slate-400">
-                Consultation
+                {t('PatientAppointments.clinicBooking.consultation', {
+                  defaultValue: 'Consultation',
+                })}
               </span>
               <span className="text-[10px] font-black text-amber-600 dark:text-amber-400">
-                {doctor.price.toLocaleString('vi-VN')}₫
+                {doctor.price.toLocaleString(toIntlLocale(i18n.language))}₫
               </span>
             </>
           )}
