@@ -40,6 +40,13 @@ export default function PatientHeader() {
       settings: t('PatientHeader.pages.settings', 'Settings'),
       security: t('PatientHeader.pages.security', 'Security'),
       notifications: t('PatientHeader.pages.notifications', 'Notifications'),
+      'care-plan': t('PatientHeader.pages.carePlan', 'Care Plan'),
+      schedule: t('PatientHeader.pages.schedule', 'Schedule'),
+      'medical-history': t(
+        'PatientHeader.pages.medicalHistory',
+        'Medical History'
+      ),
+      'help-feedback': t('PatientHeader.pages.helpFeedback', 'Help & Feedback'),
     };
 
     return (

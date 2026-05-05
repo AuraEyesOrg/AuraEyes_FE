@@ -152,7 +152,7 @@ export default function PatientSidebar() {
           <AuraLogo
             size="md"
             subtitle={t('PatientSidebar.portalSubtitle', 'Patient Portal')}
-            to="/patient/dashboard"
+            to={resolvePathWithLocale('/patient/dashboard')}
           />
         </div>
 
@@ -198,7 +198,7 @@ export default function PatientSidebar() {
         <div className="mt-auto pt-6 border-t border-gray-700">
           <div className="flex items-center gap-2 px-1">
             <NavLink
-              to="/patient/profile"
+              to={resolvePathWithLocale('/patient/profile')}
               className="flex items-center gap-3 flex-1 min-w-0 group cursor-pointer"
             >
               <div className="relative shrink-0">
