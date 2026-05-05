@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  CheckCircle,
+  CheckCircle2,
   ShoppingCart,
   Clock3,
   Calendar,
@@ -159,7 +159,10 @@ export default function CashflowPage() {
       );
     if (activeFilter === 'pending')
       return orders.filter(
-        (o) => o.status === 'Pending' || o.status === 'Processing'
+        (o) =>
+          o.status === 'Pending' ||
+          o.status === 'Processing' ||
+          o.status === 'CancellationRequested'
       );
     if (activeFilter === 'cancelled')
       return orders.filter(
@@ -196,20 +199,31 @@ export default function CashflowPage() {
     };
   }, [query.data]);
 
-  const getOrderStatusIcon = (status: OrderStatus) => {
+  const getOrderStatusIcon = (
+    status: OrderStatus,
+    paymentStatus?: PaymentStatus
+  ) => {
     if (
       status === 'Completed' ||
       status === 'Confirmed' ||
-      status === 'FullyPaid'
+      status === 'FullyPaid' ||
+      status === 'PartiallyPaid' ||
+      paymentStatus === 'Completed'
     )
       return (
-        <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+        <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
       );
-    if (status === 'Refunded')
+    if (status === 'Refunded' || paymentStatus === 'Refunded')
       return (
         <History className="w-5 h-5 text-purple-600 dark:text-purple-400" />
       );
-    if (status === 'Cancelled') return <X className="w-5 h-5 text-slate-400" />;
+    if (
+      status === 'Cancelled' ||
+      paymentStatus === 'Cancelled' ||
+      paymentStatus === 'Failed'
+    )
+      return <X className="w-5 h-5 text-slate-400" />;
+
     return <ShoppingCart className="w-5 h-5 text-amber-500" />;
   };
 
@@ -362,12 +376,24 @@ export default function CashflowPage() {
                     const payment = tx.currentPayment;
 
                     const isCompleted =
-                      (payment?.status ?? order.status) === 'Completed' ||
-                      order.status === 'Confirmed';
+                      payment?.status === 'Completed' ||
+                      order.status === 'Completed' ||
+                      order.status === 'FullyPaid' ||
+                      order.status === 'Confirmed' ||
+                      order.status === 'PartiallyPaid';
+
                     const isRefunded =
-                      (payment?.status ?? order.status) === 'Refunded';
+                      payment?.status === 'Refunded' ||
+                      order.status === 'Refunded';
+
                     const isCancelled =
-                      (payment?.status ?? order.status) === 'Cancelled';
+                      payment?.status === 'Cancelled' ||
+                      payment?.status === 'Failed' ||
+                      order.status === 'Cancelled';
+
+                    const isPending =
+                      !isCompleted && !isRefunded && !isCancelled;
+
                     const isOnlineDeposit =
                       payment?.description?.includes('Đặt cọc') ||
                       (order.depositAmount != null && tx.paymentIndex === 0);
@@ -381,7 +407,8 @@ export default function CashflowPage() {
                           <div className="flex min-w-0 items-center gap-4">
                             <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-slate-50 dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700">
                               {getOrderStatusIcon(
-                                (payment?.status ?? order.status) as OrderStatus
+                                order.status as OrderStatus,
+                                payment?.status as PaymentStatus
                               )}
                             </div>
 
@@ -462,12 +489,14 @@ export default function CashflowPage() {
                                   ? 'text-rose-600'
                                   : isCancelled
                                     ? 'text-slate-400'
-                                    : 'text-green-600 dark:text-green-400'
+                                    : isPending
+                                      ? 'text-amber-500'
+                                      : 'text-green-600 dark:text-green-400'
                               }`}
                             >
                               {isRefunded
                                 ? '-'
-                                : isCancelled || payment?.status === 'Pending'
+                                : isCancelled || isPending
                                   ? ''
                                   : '+'}
                               {formatCurrency(

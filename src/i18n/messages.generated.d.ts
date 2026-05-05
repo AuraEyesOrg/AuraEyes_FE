@@ -2640,6 +2640,8 @@ declare module 'i18next' {
         cancelled: string;
         noShow: string;
         cancellationRequested: string;
+        fullyPaid: string;
+        awaitingPayment: string;
       };
       empty: {
         clinicAll: string;

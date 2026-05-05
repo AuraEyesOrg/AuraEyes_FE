@@ -39,4 +39,12 @@ export const appointmentsApi = {
     );
     return response.data;
   },
+
+  async rejectRefund(id: string, adminNote?: string) {
+    const response = await api.post<ApiResponse<void>>(
+      API_ENDPOINTS.SYSTEM_ADMIN.APPOINTMENTS.REJECT_REFUND(id),
+      { adminNote }
+    );
+    return response.data;
+  },
 };
