@@ -13,6 +13,15 @@
 const EN_US = 'en-US';
 const VI_VN = 'vi-VN';
 
+/** Maps 'en'/'vi' to standard BCP 47 locale tags for Intl */
+export function toIntlLocale(appLocale?: string): string {
+  if (!appLocale) return VI_VN;
+  const normalized = appLocale.toLowerCase().split('-')[0];
+  if (normalized === 'vi') return VI_VN;
+  if (normalized === 'en') return EN_US;
+  return appLocale;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. LOCAL DATE KEY  (YYYY-MM-DD, local timezone — safe for <input type="date">)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -153,7 +162,11 @@ export function formatShortDate(
   preset: DateDisplayPreset = 'medium',
   locale: string = EN_US
 ): string {
-  return new Date(isoString).toLocaleDateString(locale, DATE_PRESETS[preset]);
+  const isVi = (locale || '').startsWith('vi');
+  return new Date(isoString).toLocaleDateString(
+    locale || (isVi ? VI_VN : EN_US),
+    DATE_PRESETS[preset]
+  );
 }
 
 /**
@@ -288,16 +301,22 @@ export function formatViDate(isoOrDateStr: string): string {
 }
 
 /**
- * Formats an ISO datetime string for notifications: `"31/03/2026 14:30"` (dd/MM/yyyy HH:mm).
- * Vietnamese standard notification format - consistent across all notifications.
+ * Formats an ISO datetime string for notifications.
+ * Vietnamese: "31/03/2026 14:30" (dd/MM/yyyy HH:mm)
+ * English: "03/31/2026 02:30 PM" (MM/dd/yyyy hh:mm AM/PM)
  */
-export function formatNotificationDateTime(isoString: string): string {
-  return new Date(isoString).toLocaleString(VI_VN, {
+export function formatNotificationDateTime(
+  isoString: string,
+  locale: string = VI_VN
+): string {
+  const isVi = (locale || '').startsWith('vi');
+  return new Date(isoString).toLocaleString(locale, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
+    hour12: !isVi,
   });
 }
 
