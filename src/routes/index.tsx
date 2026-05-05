@@ -1828,9 +1828,7 @@ const Router = () => (
         <Route
           path="/clinic-staff/notifications"
           element={
-            <PrivateRoute
-              allowedRoles={['ClinicStaff', 'OrgAdmin', 'Organization']}
-            >
+            <PrivateRoute allowedRoles={['ClinicStaff']}>
               <ClinicStaffNotificationsPage />
             </PrivateRoute>
           }

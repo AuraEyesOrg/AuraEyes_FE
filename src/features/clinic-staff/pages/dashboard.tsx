@@ -314,7 +314,7 @@ export default function ClinicStaffDashboardPage() {
         <p className="text-sm text-gray-400 mt-1">
           {t(
             'ClinicStaffDashboard.subtitle',
-            'AURA Clinic • Real-time operational overview'
+            'Aura Eyes • Real-time operational overview'
           )}
         </p>
       </div>
