@@ -43,34 +43,14 @@ export default function CreateWalkInPatientModal({
     mutationFn: createClinicWalkInPatient,
     onSuccess: (data) => {
       void queryClient.invalidateQueries({
-        queryKey: ['clinic-staff', 'patients'],
+        queryKey: ['clinic-patients', 'recent'],
       });
-      if (data.emailSent) {
-        toast.success(
-          t(
-            'ClinicStaff.walkInPatientModal.toast.accountCreatedEmailSent',
-            'Account created and login details were sent by email.'
-          )
-        );
-      } else if (data.temporaryPassword) {
-        toast.info(
-          t(
-            'ClinicStaff.walkInPatientModal.toast.accountCreatedTempPassword',
-            'Account created. Login email: {{loginEmail}} | Temporary password: {{temporaryPassword}}',
-            {
-              loginEmail: data.loginEmail ?? '-',
-              temporaryPassword: data.temporaryPassword ?? '-',
-            }
-          )
-        );
-      } else {
-        toast.success(
-          t(
-            'ClinicStaff.walkInPatientModal.toast.createSuccess',
-            'Walk-in patient created successfully!'
-          )
-        );
-      }
+      toast.success(
+        t(
+          'ClinicStaff.walkInPatientModal.toast.createSuccess',
+          'Walk-in patient created successfully!'
+        )
+      );
       onSuccess(data.patientId);
     },
     onError: (error) => {
@@ -145,6 +125,15 @@ export default function CreateWalkInPatientModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.citizenId && formData.citizenId.length !== 12) {
+      toast.error(
+        t(
+          'ClinicStaff.walkInPatientModal.toast.invalidCitizenId',
+          'Citizen ID must be exactly 12 digits.'
+        )
+      );
+      return;
+    }
     mutation.mutate({
       ...formData,
       email: formData.email.trim() || undefined,
@@ -228,7 +217,6 @@ export default function CreateWalkInPatientModal({
             </div>
           )}
 
-          {/* Citizen ID */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {t(
@@ -238,23 +226,39 @@ export default function CreateWalkInPatientModal({
             </label>
             <input
               type="text"
+              maxLength={12}
               value={formData.citizenId}
-              onChange={(e) =>
-                setFormData({ ...formData, citizenId: e.target.value })
-              }
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-600 dark:focus:ring-emerald-900/50"
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                setFormData({ ...formData, citizenId: val });
+              }}
+              className={[
+                'w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition focus:ring-2',
+                formData.citizenId && formData.citizenId.length !== 12
+                  ? 'border-rose-400 bg-rose-50/50 text-rose-900 focus:border-rose-500 focus:ring-rose-100 dark:border-rose-800 dark:bg-rose-950/20 dark:text-rose-200 dark:focus:ring-rose-900/50'
+                  : 'border-slate-300 bg-white text-slate-900 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-600 dark:focus:ring-emerald-900/50',
+              ].join(' ')}
               placeholder={t(
                 'ClinicStaff.walkInPatientModal.form.citizenIdPlaceholder',
                 'e.g. 001099000000'
               )}
             />
+            {formData.citizenId && formData.citizenId.length !== 12 && (
+              <p className="text-[10px] font-bold text-rose-500 uppercase tracking-tight">
+                {t(
+                  'ClinicStaff.walkInPatientModal.form.citizenIdInvalid',
+                  'Citizen ID must be exactly 12 digits'
+                )}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {t('ClinicStaff.walkInPatientModal.form.email', 'Email')}
+              {t('ClinicStaff.walkInPatientModal.form.email', 'Email *')}
             </label>
             <input
+              required
               type="email"
               value={formData.email}
               onChange={(e) =>
@@ -263,7 +267,7 @@ export default function CreateWalkInPatientModal({
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-600 dark:focus:ring-emerald-900/50"
               placeholder={t(
                 'ClinicStaff.walkInPatientModal.form.emailPlaceholder',
-                'patient@example.com (optional)'
+                'patient@example.com'
               )}
             />
           </div>

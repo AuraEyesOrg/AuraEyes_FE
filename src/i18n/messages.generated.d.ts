@@ -7767,6 +7767,7 @@ declare module 'i18next' {
           calendar: {
             actions: {
               collectCashDeposit: string;
+              collectCashPayment: string;
               completeVisit: string;
               newWalkIn: string;
               noShow: string;
@@ -7819,6 +7820,7 @@ declare module 'i18next' {
             };
             toast: {
               depositRequiredBeforeCheckIn: string;
+              paymentRequiredBeforeCheckIn: string;
               consultationStarted: string;
               invalidQr: string;
               markedNoShow: string;
@@ -7853,6 +7855,10 @@ declare module 'i18next' {
               date: {
                 label: string;
               };
+              morning: string;
+              afternoon: string;
+              selectDoctor: string;
+              consultation: string;
               slot: {
                 title: string;
                 loading: string;

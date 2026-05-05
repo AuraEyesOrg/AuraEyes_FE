@@ -3487,8 +3487,8 @@
         "citizenId": "Citizen ID (CCCD)",
         "citizenIdPlaceholder": "e.g. 001099000000",
         "dateOfBirth": "Date of Birth *",
-        "email": "Email",
-        "emailPlaceholder": "patient@example.com (optional)",
+        "email": "Email *",
+        "emailPlaceholder": "patient@example.com",
         "fullName": "Full Name *",
         "fullNamePlaceholder": "e.g. John Doe",
         "gender": "Gender *",
@@ -3646,6 +3646,10 @@
         "date": {
           "label": "Appointment date"
         },
+        "morning": "Morning",
+        "afternoon": "Afternoon",
+        "selectDoctor": "Select Ophthalmologist",
+        "consultation": "Specialist Consultation",
         "slot": {
           "title": "Available slot",
           "loading": "Loading slots...",
@@ -7544,8 +7548,8 @@
         "citizenId": "Citizen ID (CCCD)",
         "citizenIdPlaceholder": "e.g. 001099000000",
         "dateOfBirth": "Date of Birth *",
-        "email": "Email",
-        "emailPlaceholder": "patient@example.com (optional)",
+        "email": "Email *",
+        "emailPlaceholder": "patient@example.com",
         "fullName": "Full Name *",
         "fullNamePlaceholder": "e.g. John Doe",
         "gender": "Gender *",

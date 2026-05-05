@@ -8,6 +8,7 @@ export interface OrganisationClinicAppointmentDto {
   patientId: string;
   patientName?: string | null;
   patientAvatarUrl?: string | null;
+  isWalkIn?: boolean;
   organisationId: string;
   organisationName?: string | null;
   slotId: string;
@@ -65,6 +66,42 @@ export interface ClinicStaffAvailableSlotDto {
   bookedCount: number;
   availableCapacity: number;
   cost?: number | null;
+  // New fields for doctor info
+  ophthalId?: string;
+  ophthalFullName?: string | null;
+  ophthalAvatarUrl?: string | null;
+}
+
+export interface DoctorSlotDetailDto {
+  slotId: string;
+  doctorId: string;
+  doctorName: string;
+  doctorAvatar?: string | null;
+  isBooked: boolean;
+  price: number;
+  bio?: string | null;
+  ratingAverage: number;
+  ratingCount: number;
+}
+
+export interface AggregatedSlotDto {
+  date: string;
+  startTime: string;
+  endTime: string;
+  doctors: DoctorSlotDetailDto[];
+  totalMaxCapacity: number;
+  totalBookedCount: number;
+  isAvailable: boolean;
+}
+
+export interface ClinicScheduleDto {
+  id: string;
+  name: string;
+  address?: string | null;
+  description?: string | null;
+  ratingAverage: number;
+  ratingCount: number;
+  aggregatedSlots: AggregatedSlotDto[];
 }
 
 export interface CreateClinicStaffAppointmentRequest {
@@ -129,8 +166,37 @@ export const getClinicStaffAvailableSlots = async (
     },
   });
 
-  return unwrapApiData<PagedResult<ClinicStaffAvailableSlotDto>>(response.data)
-    .items;
+  const data = unwrapApiData<any>(response.data);
+  const items = Array.isArray(data) ? data : (data.items ?? []);
+
+  return items.map((item: any) => ({
+    id: item.slotId ?? item.id,
+    date: item.date,
+    startTime: item.startTime,
+    endTime: item.endTime,
+    status: item.status ?? 'Available',
+    maxCapacity: item.maxCapacity,
+    bookedCount: item.bookedCount ?? item.maxCapacity - (item.remaining ?? 0),
+    availableCapacity: item.remaining ?? item.availableCapacity ?? 0,
+    cost: item.cost,
+    ophthalId: item.ophthalId,
+    ophthalFullName: item.ophthalFullName,
+    ophthalAvatarUrl: item.ophthalAvatarUrl,
+  }));
+};
+
+export const getClinicSchedule = async (
+  fromDate?: string,
+  toDate?: string
+): Promise<ClinicScheduleDto> => {
+  const response = await api.get<ApiResponse<ClinicScheduleDto>>(
+    API_ENDPOINTS.CLINIC_BOOKING.ORGANISATION_SCHEDULE(),
+    {
+      params: { fromDate, toDate },
+    }
+  );
+
+  return unwrapApiData<ClinicScheduleDto>(response.data);
 };
 
 export const createClinicStaffAppointment = async (
