@@ -5098,6 +5098,10 @@
       "remaining": "Còn lại",
       "bottlenecks": "Cảnh báo điểm nghẽn",
       "noBottlenecks": "Không phát hiện điểm nghẽn. Hoạt động diễn ra bình thường.",
+      "clinicRatings": "Phản hồi & Đánh giá phòng khám",
+      "noRatings": "Chưa có đánh giá phòng khám nào.",
+      "reviews": "đánh giá",
+      "anonymous": "Ẩn danh",
       "quickActions": "Thao tác nhanh",
       "actions": {
         "createSlot": "Tạo lượt khám",
@@ -5108,6 +5112,17 @@
         "viewScheduleDesc": "Xem toàn bộ lịch trình hôm nay",
         "addWalkIn": "Thêm bệnh nhân vãng lai",
         "addWalkInDesc": "Đăng ký bệnh nhân vãng lai mới"
+      },
+      "transactionChart": {
+        "title": "Tổng quan giao dịch",
+        "subtitle": "Theo dõi khối lượng và hoạt động qua các kỳ",
+        "daily": "7 ngày qua",
+        "weekly": "4 tuần qua",
+        "monthly": "Năm nay",
+        "volume": "Khối lượng",
+        "count": "Số lượng",
+        "noData": "Không tìm thấy giao dịch trong kỳ này.",
+        "loadError": "Không thể tải dữ liệu biểu đồ."
       }
     },
     "common": {

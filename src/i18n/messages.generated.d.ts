@@ -5101,6 +5101,10 @@ declare module 'i18next' {
         remaining: string;
         bottlenecks: string;
         noBottlenecks: string;
+        clinicRatings: string;
+        noRatings: string;
+        reviews: string;
+        anonymous: string;
         quickActions: string;
         actions: {
           createSlot: string;

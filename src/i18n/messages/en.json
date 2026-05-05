@@ -5195,6 +5195,10 @@
       "remaining": "Remaining",
       "bottlenecks": "Bottleneck Alerts",
       "noBottlenecks": "No bottlenecks detected. Operations running smoothly.",
+      "clinicRatings": "Clinic Feedback & Rating",
+      "noRatings": "No clinic ratings available yet.",
+      "reviews": "reviews",
+      "anonymous": "Anonymous",
       "quickActions": "Quick Actions",
       "actions": {
         "createSlot": "Create Slot",
@@ -5205,6 +5209,17 @@
         "viewScheduleDesc": "See today's full schedule",
         "addWalkIn": "Add Walk-in",
         "addWalkInDesc": "Register a new walk-in patient"
+      },
+      "transactionChart": {
+        "title": "Transaction Overview",
+        "subtitle": "Monitor volume and activity across periods",
+        "daily": "Last 7 Days",
+        "weekly": "Last 4 Weeks",
+        "monthly": "This Year",
+        "volume": "Volume",
+        "count": "Count",
+        "noData": "No transactions found for this period.",
+        "loadError": "Failed to load chart data."
       }
     },
     "actions": {
