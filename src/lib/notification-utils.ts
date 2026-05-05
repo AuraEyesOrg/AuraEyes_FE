@@ -92,6 +92,33 @@ function tryLocalize(
     }
   }
 
+  // Handle SystemAlert which can have multiple operational actions
+  if (normalizedType === NotificationType.SystemAlert) {
+    const action = payload.action || '';
+    if (action) {
+      const actionKey = `Notifications.SystemAlert.${action}.${part}`;
+      if (i18n.exists(actionKey)) {
+        return i18n.t(actionKey, formatPayloadVars(payload));
+      }
+    }
+
+    // Try to detect specific clinic scenarios even without explicit action
+    if (!action) {
+      if (payload.visitId && payload.patientId) {
+        const checkedInKey = `Notifications.SystemAlert.patient_checked_in.${part}`;
+        if (i18n.exists(checkedInKey)) {
+          return i18n.t(checkedInKey, formatPayloadVars(payload));
+        }
+      }
+      if (payload.medicalRecordId) {
+        const archivedKey = `Notifications.SystemAlert.record_finalized.${part}`;
+        if (i18n.exists(archivedKey)) {
+          return i18n.t(archivedKey, formatPayloadVars(payload));
+        }
+      }
+    }
+  }
+
   // Standard mapping for other types
   const key = `Notifications.${typeStr}.${part}`;
   if (i18n.exists(key)) {
@@ -123,9 +150,11 @@ function formatPayloadVars(payload: any): any {
     vars.amount = Number(vars.amount).toLocaleString();
   }
 
-  // Common aliases
+  // Common aliases and fallbacks
   vars.reason = vars.reason || vars.Reason || '';
   vars.resultStatus = vars.resultStatus || vars.ResultStatus || '';
+  vars.patientName = vars.patientName || vars.PatientName || 'Patient';
+  vars.doctorName = vars.doctorName || vars.DoctorName || 'Doctor';
 
   return vars;
 }
