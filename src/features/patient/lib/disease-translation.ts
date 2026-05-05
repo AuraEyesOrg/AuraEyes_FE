@@ -52,6 +52,43 @@ const DISEASE_NAME_VI_BY_LOWER = Object.fromEntries(
   ])
 );
 
+/** Expand common abbreviations used by the AI model to full disease names. */
+const ABBREVIATION_MAP: Record<string, string> = {
+  CME: 'Cystoid Macular Edema',
+  HR: 'Retinal Hemorrhage',
+  ODC: 'Optic Disc Cupping',
+  DN: 'Drusen',
+  ERM: 'Epiretinal Membrane',
+  MH: 'Macular Hole',
+  BRVO: 'Branch Retinal Vein Occlusion',
+  CRVO: 'Central Retinal Vein Occlusion',
+  RAO: 'Retinal Artery Occlusion',
+  VKH: 'Vogt-Koyanagi-Harada Disease',
+  CSCR: 'Central Serous Chorioretinopathy',
+  RD: 'Retinal Detachment',
+  PDR: 'Proliferative Diabetic Retinopathy',
+  PVD: 'Posterior Vitreous Detachment',
+  WML: 'White Matter Lesion',
+  CWS: 'Cotton-Wool Spots',
+  HE: 'Hard Exudates',
+  SE: 'Soft Exudates',
+  IRMA: 'Intraretinal Microvascular Abnormality',
+  NVD: 'Neovascularization of the Disc',
+  NVE: 'Neovascularization Elsewhere',
+  PCV: 'Polypoidal Choroidal Vasculopathy',
+  CNV: 'Choroidal Neovascularization',
+  ARMD: 'Age-related Macular Degeneration',
+  AMD: 'Age-related Macular Degeneration',
+  RP: 'Retinitis Pigmentosa',
+  CMV: 'Cytomegalovirus Retinitis',
+};
+
+function expandAbbreviations(name: string): string {
+  const trimmed = name.trim();
+  const upper = trimmed.toUpperCase();
+  return ABBREVIATION_MAP[upper] ?? ABBREVIATION_MAP[trimmed] ?? name;
+}
+
 function normalizeDiseaseName(name: string): string {
   return name.replace(/\s*\([^)]*\)\s*$/, '').trim();
 }
@@ -65,13 +102,14 @@ export function toDisplayDiseaseName(
   diseaseName: string,
   language: string
 ): string {
+  const expanded = expandAbbreviations(diseaseName);
   const isVietnamese = language.toLowerCase().startsWith('vi');
-  if (!isVietnamese) return diseaseName;
+  if (!isVietnamese) return expanded;
 
   return (
-    DISEASE_NAME_VI[diseaseName] ??
-    DISEASE_NAME_VI_BY_LOWER[diseaseName.toLowerCase().trim()] ??
-    diseaseName
+    DISEASE_NAME_VI[expanded] ??
+    DISEASE_NAME_VI_BY_LOWER[expanded.toLowerCase().trim()] ??
+    expanded
   );
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useId } from 'react';
+import { type ReactNode, useEffect, useId } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 
@@ -7,7 +7,7 @@ type ConfirmModalTone = 'danger' | 'default';
 interface ConfirmModalProps {
   open: boolean;
   title: string;
-  message: string;
+  message: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   isLoading?: boolean;
@@ -93,12 +93,12 @@ export default function ConfirmModal({
         </div>
 
         <div className="px-6 py-5">
-          <p
+          <div
             id={descriptionId}
-            className="text-sm leading-6 text-slate-600 dark:text-slate-300"
+            className="whitespace-pre-line text-sm leading-6 text-slate-600 dark:text-slate-300"
           >
             {message}
-          </p>
+          </div>
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-800/50">
