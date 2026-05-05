@@ -15,6 +15,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { resolveAvatarUrl, getUserAvatarMeta } from '@/lib/user-avatar';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { userApi } from '../api';
@@ -362,19 +363,34 @@ export default function StaffManagementPage() {
         'Staff Member'
       ),
       accessor: 'name',
-      render: (_, row) => (
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black shadow-sm">
-            {row.name?.charAt(0) || t('SystemAdmin.common.initialStaff', 'S')}
+      render: (_, row) => {
+        const avatarUrl = resolveAvatarUrl(
+          row.avatarUrl,
+          row.providerAvatarUrl
+        );
+        const { initials } = getUserAvatarMeta(row.name);
+        return (
+          <div className="flex items-center gap-4">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={row.name}
+                className="w-10 h-10 rounded-2xl object-cover shadow-sm"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black shadow-sm">
+                {initials}
+              </div>
+            )}
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-slate-900 dark:text-white">
+                {row.name}
+              </span>
+              <span className="text-xs text-slate-500">{row.email}</span>
+            </div>
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold text-slate-900 dark:text-white">
-              {row.name}
-            </span>
-            <span className="text-xs text-slate-500">{row.email}</span>
-          </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       header: t('SystemAdmin.staffManagement.table.role', 'Role'),
@@ -552,9 +568,25 @@ export default function StaffManagementPage() {
             <div className="flex-1 overflow-y-auto px-8 py-8 space-y-10 scrollbar-thin">
               {/* Profile Card */}
               <div className="p-6 rounded-[2rem] bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 flex items-center gap-6">
-                <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center text-primary text-2xl font-black">
-                  {selectedUser.name?.charAt(0)}
-                </div>
+                {resolveAvatarUrl(
+                  selectedUser.avatarUrl,
+                  selectedUser.providerAvatarUrl
+                ) ? (
+                  <img
+                    src={
+                      resolveAvatarUrl(
+                        selectedUser.avatarUrl,
+                        selectedUser.providerAvatarUrl
+                      )!
+                    }
+                    alt={selectedUser.name}
+                    className="w-20 h-20 rounded-3xl object-cover shadow-lg"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center text-primary text-2xl font-black">
+                    {getUserAvatarMeta(selectedUser.name).initials}
+                  </div>
+                )}
                 <div className="flex-1">
                   <h4 className="text-xl font-black text-slate-900 dark:text-white">
                     {selectedUser.name}

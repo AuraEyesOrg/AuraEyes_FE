@@ -241,11 +241,6 @@ const WelcomeOnboardingPage = () => {
         formData.append('citizenId', data.citizenId || '');
         formData.append('bio', data.bio || '');
 
-        if (isPasswordChanged) {
-          formData.append('currentPassword', data.currentPassword || '');
-          formData.append('newPassword', data.newPassword || '');
-        }
-
         data.degrees.forEach((item, index) => {
           formData.append(`Degrees[${index}].Name`, item.name);
           formData.append(
@@ -305,8 +300,6 @@ const WelcomeOnboardingPage = () => {
             : undefined,
           gender: Number(data.gender || 1),
           citizenId: data.citizenId,
-          currentPassword: isPasswordChanged ? data.currentPassword : undefined,
-          newPassword: isPasswordChanged ? data.newPassword : undefined,
         };
         await onboardClinicStaff(staffPayload);
       }

@@ -1,4 +1,6 @@
 import { useEffect, useRef, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { renderBilingualContent } from '@/lib/notification-utils';
 import {
   HubConnectionBuilder,
   HubConnection,
@@ -42,6 +44,7 @@ export function useSignalRNotification(): {
   const reconnectAttemptRef = useRef(0);
   const userRolesRef = useRef<string[]>([]);
   const queryClient = useQueryClient();
+  const { i18n } = useTranslation();
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   // Stable selector: extract roles array, fall back to a module-level empty array
@@ -166,10 +169,21 @@ export function useSignalRNotification(): {
 
       // Show toast notification with navigation action
       // Use unique toastId based on notification content to prevent duplicates
+      const currentLang = i18n.language;
+      const displayTitle = renderBilingualContent(
+        notification.title,
+        currentLang,
+        notification.payload
+      );
+      const displayMessage = renderBilingualContent(
+        notification.message,
+        currentLang,
+        notification.payload
+      );
       const toastId =
         notification.id || `noti-${notification.type}-${notification.message}`;
 
-      toast.info(notification.title + '\n' + notification.message, {
+      toast.info(displayTitle + '\n' + displayMessage, {
         toastId,
         onClick: () => {
           const route = getNotificationRoute(

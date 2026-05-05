@@ -659,27 +659,40 @@ function DoctorDetailsModal({
                         {degrees.map((degree, idx) => (
                           <div
                             key={degree.id || idx}
-                            className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800"
+                            className="flex flex-col gap-2 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800"
                           >
-                            <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-white">
-                              {degree.certificateUrl ? (
-                                <img
-                                  src={getDocThumbnail(degree.certificateUrl)!}
-                                  alt={degree.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-cyan-600">
-                                  <GraduationCap size={20} />
-                                </div>
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <h5 className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center text-cyan-600">
+                                <GraduationCap size={18} />
+                              </div>
+                              <h5 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                                 {degree.name}
                               </h5>
-                              <p className="text-[10px] text-slate-500 truncate">
+                            </div>
+                            <div className="space-y-1.5 ml-11">
+                              <p className="text-[11px] text-slate-500 font-medium">
+                                <span className="text-slate-400">Issuer:</span>{' '}
                                 {degree.issuingAuthority}
+                              </p>
+                              <p className="text-[11px] text-slate-500 font-medium">
+                                <span className="text-slate-400">Issued:</span>{' '}
+                                {format(
+                                  new Date(degree.issuedDate),
+                                  'MMM yyyy'
+                                )}
+                                {degree.expiryDate && (
+                                  <>
+                                    {' '}
+                                    -{' '}
+                                    <span className="text-slate-400">
+                                      Exp:
+                                    </span>{' '}
+                                    {format(
+                                      new Date(degree.expiryDate),
+                                      'MMM yyyy'
+                                    )}
+                                  </>
+                                )}
                               </p>
                             </div>
                           </div>
@@ -687,27 +700,44 @@ function DoctorDetailsModal({
                         {licenses.map((cert, idx) => (
                           <div
                             key={cert.id || idx}
-                            className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800"
+                            className="flex flex-col gap-2 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800"
                           >
-                            <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-white">
-                              {cert.certificateUrl ? (
-                                <img
-                                  src={getDocThumbnail(cert.certificateUrl)!}
-                                  alt={cert.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-emerald-600">
-                                  <Award size={20} />
-                                </div>
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <h5 className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
+                                <Award size={18} />
+                              </div>
+                              <h5 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                                 {cert.name}
                               </h5>
-                              <p className="text-[10px] text-slate-500 truncate">
+                            </div>
+                            <div className="space-y-1.5 ml-11">
+                              {cert.licenseNumber && (
+                                <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                  <span className="text-slate-400 font-medium">
+                                    ID:
+                                  </span>{' '}
+                                  {cert.licenseNumber}
+                                </p>
+                              )}
+                              <p className="text-[11px] text-slate-500 font-medium">
+                                <span className="text-slate-400">
+                                  Authority:
+                                </span>{' '}
                                 {cert.issuingAuthority}
+                              </p>
+                              <p className="text-[11px] text-slate-500 font-medium">
+                                <span className="text-slate-400">Period:</span>{' '}
+                                {format(new Date(cert.issuedDate), 'MMM yyyy')}
+                                {cert.expiryDate && (
+                                  <>
+                                    {' '}
+                                    -{' '}
+                                    {format(
+                                      new Date(cert.expiryDate),
+                                      'MMM yyyy'
+                                    )}
+                                  </>
+                                )}
                               </p>
                             </div>
                           </div>
@@ -721,9 +751,15 @@ function DoctorDetailsModal({
                     <div className="flex items-center gap-6">
                       <div className="relative">
                         <div className="w-24 h-24 rounded-3xl overflow-hidden border-4 border-white dark:border-slate-700 shadow-2xl">
-                          {resolveAvatarUrl(doctor.doctorAvatar) ? (
+                          {resolveAvatarUrl(
+                            doctor.doctorAvatar,
+                            doctor.providerAvatarUrl
+                          ) ? (
                             <img
-                              src={resolveAvatarUrl(doctor.doctorAvatar)}
+                              src={resolveAvatarUrl(
+                                doctor.doctorAvatar,
+                                doctor.providerAvatarUrl
+                              )}
                               alt={doctor.doctorName}
                               className="w-full h-full object-cover"
                             />
@@ -853,9 +889,12 @@ function DoctorCard({
       }`}
     >
       <div className="relative group/avatar">
-        {resolveAvatarUrl(doctor.doctorAvatar) ? (
+        {resolveAvatarUrl(doctor.doctorAvatar, doctor.providerAvatarUrl) ? (
           <img
-            src={resolveAvatarUrl(doctor.doctorAvatar)}
+            src={resolveAvatarUrl(
+              doctor.doctorAvatar,
+              doctor.providerAvatarUrl
+            )}
             alt={doctor.doctorName}
             className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
           />
