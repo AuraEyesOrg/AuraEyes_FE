@@ -6,6 +6,9 @@ import {
   MessageCircle,
   Calendar,
   Wallet,
+  Users,
+  RefreshCw,
+  Pill,
 } from 'lucide-react';
 
 interface NotificationIconProps {
@@ -32,6 +35,12 @@ export function NotificationIcon({
       return <Calendar size={size} className={className} />;
     case 'wallet':
       return <Wallet size={size} className={className} />;
+    case 'users':
+      return <Users size={size} className={className} />;
+    case 'refresh-cw':
+      return <RefreshCw size={size} className={className} />;
+    case 'pill':
+      return <Pill size={size} className={className} />;
     default:
       return <Bell size={size} className={className} />;
   }

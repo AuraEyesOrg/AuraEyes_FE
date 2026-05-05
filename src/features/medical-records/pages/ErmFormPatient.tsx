@@ -242,7 +242,10 @@ export default function ErmFormPatient() {
             };
 
             // Normalize nationality
-            if (mergedData.nationality === 'Vietnam') {
+            if (
+              mergedData.nationality === 'Vietnam' ||
+              mergedData.nationality === 'vietnam'
+            ) {
               mergedData.nationality = 'Việt Nam';
             }
 

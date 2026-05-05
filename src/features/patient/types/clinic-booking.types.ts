@@ -26,6 +26,7 @@ export interface DoctorSlotDetailDto {
   doctorId: string;
   doctorName: string;
   doctorAvatar?: string | null;
+  providerAvatarUrl?: string | null;
   isBooked: boolean;
   price: number;
   bio?: string | null;
@@ -43,6 +44,7 @@ export interface CertificateDto {
   issuedDate: string;
   expiryDate?: string | null;
   certificateUrl?: string | null;
+  licenseNumber?: string | null;
 }
 
 export interface AggregatedSlotDto {

@@ -382,6 +382,8 @@ export default function ErmForm() {
   const [wards, setWards] = useState<Ward[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
   const [isLoadingGeo, setIsLoadingGeo] = useState(false);
+  const [isRecordHydrated, setIsRecordHydrated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [aiResult, setAiResult] = useState<any>(null);
   const [screeningId, setScreeningId] = useState<string | null>(null);
   const [showAiResult, setShowAiResult] = useState(false);
@@ -470,6 +472,34 @@ export default function ErmForm() {
   } = useForm<FullEmrFormData>({
     defaultValues: INITIAL_VALUES as FullEmrFormData,
   });
+
+  // Reset states when ID changes to prevent stale data from previous records
+  useEffect(() => {
+    if (id) {
+      setIsRecordHydrated(false);
+      setIsLoading(true);
+      setDistricts([]);
+      setWards([]);
+      setRecordStatus(MedicalRecordStatus.DraftAdmin);
+      setAiResult(null);
+      setScreeningId(null);
+      setShowAiResult(false);
+      reset(INITIAL_VALUES);
+    }
+  }, [id, reset]);
+
+  // Loading state coordination - match ErmFormPatient behavior
+  useEffect(() => {
+    if (id && id !== 'new') {
+      // Only wait for record data and its local hydration (districts/wards)
+      if (isRecordHydrated && !isLoadingRecord) {
+        setIsLoading(false);
+      }
+    } else {
+      // For new records, hide loading immediately
+      setIsLoading(false);
+    }
+  }, [id, isRecordHydrated, isLoadingRecord]);
 
   // Pre-fill administrative data from patient profile if fields are empty
   useEffect(() => {
@@ -602,6 +632,15 @@ export default function ErmForm() {
 
       // Format all date fields
       const formattedAdmin = { ...adminData };
+
+      // Normalize nationality
+      if (
+        formattedAdmin.nationality === 'Vietnam' ||
+        formattedAdmin.nationality === 'vietnam'
+      ) {
+        formattedAdmin.nationality = 'Việt Nam';
+      }
+
       ['birthDate', 'admissionDate', 'dischargeDate', 'bhytExpiry'].forEach(
         (key) => {
           if (formattedAdmin[key])
@@ -680,33 +719,38 @@ export default function ErmForm() {
 
       // Explicitly load geographic data and set values to ensure they aren't lost
       const loadLocations = async () => {
-        if (!adminData.provinceCode) return;
+        if (!adminData.provinceCode) {
+          setIsRecordHydrated(true);
+          return;
+        }
         setIsLoadingGeo(true);
         try {
-          // Fetch districts
-          const districtsRes = await masterDataApi.getDistricts(
-            adminData.provinceCode
-          );
-          setDistricts(districtsRes);
-
-          // Re-set values after options are loaded to prevent RHF from clearing them
-          if (adminData.districtCode) {
-            setValue('districtCode', adminData.districtCode);
-
-            // Fetch wards
-            const wardsRes = await masterDataApi.getWards(
-              adminData.districtCode
-            );
+          // If we have both province and district, fetch in parallel with Promise.all
+          if (adminData.provinceCode && adminData.districtCode) {
+            const [districtsRes, wardsRes] = await Promise.all([
+              masterDataApi.getDistricts(adminData.provinceCode),
+              masterDataApi.getWards(adminData.districtCode),
+            ]);
+            setDistricts(districtsRes);
             setWards(wardsRes);
 
+            // Re-set values after options are loaded
+            setValue('districtCode', adminData.districtCode);
             if (adminData.wardCode) {
               setValue('wardCode', adminData.wardCode);
             }
+          } else {
+            // Only provinceCode exists
+            const districtsRes = await masterDataApi.getDistricts(
+              adminData.provinceCode
+            );
+            setDistricts(districtsRes);
           }
         } catch (err) {
           console.error('Error loading locations:', err);
         } finally {
           setIsLoadingGeo(false);
+          setIsRecordHydrated(true);
         }
       };
 
@@ -1248,7 +1292,16 @@ export default function ErmForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans pb-20 selection:bg-cyan-500/20">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans pb-20 selection:bg-cyan-500/20 relative">
+      {/* LOADING OVERLAY */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-[100] flex flex-col items-center justify-center gap-4">
+          <AuraLogo size="lg" variant="dark" className="animate-pulse" />
+          <p className="text-sm font-bold text-slate-500 animate-bounce">
+            ĐANG TẢI THÔNG TIN BỆNH ÁN...
+          </p>
+        </div>
+      )}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-5">
           <AuraLogo size="sm" variant="dark" />
