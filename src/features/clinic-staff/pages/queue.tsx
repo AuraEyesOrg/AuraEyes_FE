@@ -303,6 +303,15 @@ export default function ClinicStaffQueuePage() {
       return;
     }
 
+    if (item.assignedDoctorId) {
+      sendToDoctorMutation.mutate({
+        visitId: item.visitId,
+        screeningId: item.screeningId,
+        doctorId: item.assignedDoctorId,
+      });
+      return;
+    }
+
     setSendModalItem(item);
     setSendDoctorNotes('');
     setSelectedDoctorId('');
