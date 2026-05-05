@@ -7,6 +7,38 @@ import {
 } from '@/features/ophthalmologist/components/PrescriptionTable';
 import type { RxItem } from '@/features/ophthalmologist/types/drug.type';
 
+function parseAdministrativeDataJson(record: any): Record<string, any> {
+  const raw =
+    record?.administrativeDataJson ?? record?.AdministrativeDataJson ?? '{}';
+  try {
+    return JSON.parse(raw || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function normalizeLocationName(name?: string): string {
+  if (!name) return '';
+  const ascii = name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase();
+
+  return ascii
+    .replace(/^tinh\s+/i, '')
+    .replace(/^thanh pho\s+/i, '')
+    .replace(/^quan\s+/i, '')
+    .replace(/^huyen\s+/i, '')
+    .replace(/^thi xa\s+/i, '')
+    .replace(/^thi tran\s+/i, '')
+    .replace(/^phuong\s+/i, '')
+    .replace(/^xa\s+/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function buildPrescriptionFingerprint(
   items: RxItem[],
   note: string,
@@ -64,12 +96,11 @@ import {
 } from '@/features/consultation/hooks/use-consultation';
 import { ConsultationSessionType, SessionStatus } from '@/types/consultation';
 import {
-  masterDataApi,
-  Province,
-  District,
-  Ward,
-  Country,
-} from '../api/master-data.api';
+  useCountries,
+  useProvinces,
+  useDistricts,
+  useWards,
+} from '../hooks/useMasterData';
 import { toLocalDateKey } from '@/lib/date-utils';
 
 /**
@@ -374,16 +405,12 @@ export default function ErmForm() {
   const location = useLocation();
   const { id } = useParams();
   const { user } = useAuthStore();
-  const { theme } = useTheme();
+  const { theme: _theme } = useTheme();
 
   const [recordStatus, setRecordStatus] = useState<MedicalRecordStatus>(
     MedicalRecordStatus.DraftAdmin
   );
-  const [provinces, setProvinces] = useState<Province[]>([]);
-  const [districts, setDistricts] = useState<District[]>([]);
-  const [wards, setWards] = useState<Ward[]>([]);
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [isLoadingGeo, setIsLoadingGeo] = useState(false);
+  const { data: countries = [] } = useCountries();
   const [isRecordHydrated, setIsRecordHydrated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [aiResult, setAiResult] = useState<any>(null);
@@ -417,6 +444,31 @@ export default function ErmForm() {
   const startConsultationMutation = useStartConsultation();
   const updateAdministrativeMutation = useUpdateAdministrative();
   const submitVerificationReportMutation = useSubmitVerificationReport();
+
+  // Parse geographic codes from record early to trigger fetches immediately
+  const recordGeoData = useMemo(() => {
+    const parsed = parseAdministrativeDataJson(record);
+    return { p: parsed.provinceCode || null, d: parsed.districtCode || null };
+  }, [record]);
+
+  const recordHasCompleteGeo = useMemo(() => {
+    if (!record) return false;
+    const parsed = parseAdministrativeDataJson(record);
+    return Boolean(
+      parsed.provinceCode &&
+      parsed.districtCode &&
+      parsed.wardCode &&
+      parsed.province &&
+      parsed.district &&
+      parsed.ward
+    );
+  }, [record]);
+
+  const shouldFetchGeoMaster = id === 'new' || !recordHasCompleteGeo;
+
+  // Master data queries - only fetch geo lists when record is missing geo details
+  const { data: provinces = [], isLoading: isLoadingProvinces } =
+    useProvinces(shouldFetchGeoMaster);
 
   // Fetch patient profile if needed
   const patientIdFromRecord =
@@ -487,8 +539,6 @@ export default function ErmForm() {
     if (id) {
       setIsRecordHydrated(false);
       setIsLoading(true);
-      setDistricts([]);
-      setWards([]);
       setRecordStatus(MedicalRecordStatus.DraftAdmin);
       setAiResult(null);
       setScreeningId(null);
@@ -497,18 +547,61 @@ export default function ErmForm() {
     }
   }, [id, reset]);
 
+  // Geographic Data — driven by React Query hooks (cached, no duplicate fetches)
+  const provinceCode = useWatch({ control, name: 'provinceCode' });
+  const districtCode = useWatch({ control, name: 'districtCode' });
+  const formData = useWatch({ control });
+
+  // Drive queries with EITHER the form value OR the record value (for early fetching)
+  const activeProvinceCode = provinceCode || recordGeoData.p;
+  const activeDistrictCode = districtCode || recordGeoData.d;
+
+  const { data: districts = [], isLoading: isLoadingDistricts } = useDistricts(
+    activeProvinceCode,
+    shouldFetchGeoMaster
+  );
+  const { data: wards = [], isLoading: isLoadingWards } = useWards(
+    activeDistrictCode,
+    shouldFetchGeoMaster
+  );
+
   // Loading state coordination - match ErmFormPatient behavior
   useEffect(() => {
     if (id && id !== 'new') {
-      // Only wait for record data and its local hydration (districts/wards)
-      if (isRecordHydrated && !isLoadingRecord) {
+      // Check if geographic data is still fetching for the codes we currently have
+      const isGeoFetching =
+        (activeProvinceCode && isLoadingDistricts) ||
+        (activeDistrictCode && isLoadingWards);
+
+      // Only hide loading if:
+      // 1. Basic record data is loaded (isLoadingRecord is false)
+      // 2. We've tried to hydrate the form (isRecordHydrated is true)
+      // 3. We're not waiting for provinces list
+      // 4. We're not waiting for districts/wards based on the hydrated codes
+      if (
+        isRecordHydrated &&
+        !isLoadingRecord &&
+        !isLoadingProvinces &&
+        !isGeoFetching
+      ) {
         setIsLoading(false);
       }
     } else {
-      // For new records, hide loading immediately
-      setIsLoading(false);
+      // For new records, hide loading once provinces are available
+      if (!isLoadingProvinces) {
+        setIsLoading(false);
+      }
     }
-  }, [id, isRecordHydrated, isLoadingRecord]);
+  }, [
+    id,
+    isRecordHydrated,
+    isLoadingRecord,
+    isLoadingProvinces,
+    isLoadingDistricts,
+    isLoadingWards,
+    activeProvinceCode,
+    activeDistrictCode,
+  ]);
 
   // Pre-fill administrative data from patient profile if fields are empty
   useEffect(() => {
@@ -540,24 +633,7 @@ export default function ErmForm() {
     }
   }, [patientProfile, setValue, control]);
 
-  // Auto-calculate age from birthDate
-  const birthDateValue = useWatch({ control, name: 'birthDate' });
-  useEffect(() => {
-    if (birthDateValue) {
-      const birth = new Date(birthDateValue);
-      if (!isNaN(birth.getTime())) {
-        const today = new Date();
-        let age = today.getFullYear() - birth.getFullYear();
-        const m = today.getMonth() - birth.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-          age--;
-        }
-        if (age >= 0) {
-          setValue('age', age.toString());
-        }
-      }
-    }
-  }, [birthDateValue, setValue]);
+  // Auto-calculate age from birthDate (single declaration — used below too)
 
   // Auto-transition to PendingClinical if opened by Doctor (Run only once)
   useEffect(() => {
@@ -636,7 +712,7 @@ export default function ErmForm() {
 
   useEffect(() => {
     if (record) {
-      const adminData = JSON.parse(record.administrativeDataJson || '{}');
+      const adminData = parseAdministrativeDataJson(record);
       const clinicalData = JSON.parse(record.clinicalDataJson || '{}');
 
       // Helper to format date for input[type="date"]
@@ -735,44 +811,26 @@ export default function ErmForm() {
         setPrescriptionBaselineFingerprint(null);
       }
 
-      // Explicitly load geographic data and set values to ensure they aren't lost
-      const loadLocations = async () => {
+      // Hydrate geographic form values - React Query hooks (useDistricts/useWards)
+      // will automatically fetch districts and wards based on the set codes.
+      const hydrateLocations = () => {
         if (!adminData.provinceCode) {
           setIsRecordHydrated(true);
           return;
         }
-        setIsLoadingGeo(true);
-        try {
-          // If we have both province and district, fetch in parallel with Promise.all
-          if (adminData.provinceCode && adminData.districtCode) {
-            const [districtsRes, wardsRes] = await Promise.all([
-              masterDataApi.getDistricts(adminData.provinceCode),
-              masterDataApi.getWards(adminData.districtCode),
-            ]);
-            setDistricts(districtsRes);
-            setWards(wardsRes);
-
-            // Re-set values after options are loaded
-            setValue('districtCode', adminData.districtCode);
-            if (adminData.wardCode) {
-              setValue('wardCode', adminData.wardCode);
-            }
-          } else {
-            // Only provinceCode exists
-            const districtsRes = await masterDataApi.getDistricts(
-              adminData.provinceCode
-            );
-            setDistricts(districtsRes);
-          }
-        } catch (err) {
-          console.error('Error loading locations:', err);
-        } finally {
-          setIsLoadingGeo(false);
-          setIsRecordHydrated(true);
+        // Values are already set via reset() above. Ensure codes are explicitly set
+        // so that useDistricts/useWards queries are triggered reactively.
+        setValue('provinceCode', adminData.provinceCode);
+        if (adminData.districtCode) {
+          setValue('districtCode', adminData.districtCode);
         }
+        if (adminData.wardCode) {
+          setValue('wardCode', adminData.wardCode);
+        }
+        setIsRecordHydrated(true);
       };
 
-      void loadLocations();
+      hydrateLocations();
 
       setRecordStatus(record.status as MedicalRecordStatus);
 
@@ -843,90 +901,76 @@ export default function ErmForm() {
     }
   }, [record, location.state, reset, setValue, isOphthalmologist]);
 
+  useEffect(() => {
+    if (provinceCode || !formData.province || provinces.length === 0) return;
+    const target = normalizeLocationName(formData.province);
+    const matched = provinces.find(
+      (p) => normalizeLocationName(p.name) === target
+    );
+    if (matched) {
+      setValue('provinceCode', matched.code, { shouldDirty: false });
+    }
+  }, [provinceCode, formData.province, provinces, setValue]);
+
+  useEffect(() => {
+    if (!activeProvinceCode || districtCode || !formData.district) return;
+    if (districts.length === 0) return;
+    const target = normalizeLocationName(formData.district);
+    const matched = districts.find(
+      (d) => normalizeLocationName(d.name) === target
+    );
+    if (matched) {
+      setValue('districtCode', matched.code, { shouldDirty: false });
+    }
+  }, [
+    activeProvinceCode,
+    districtCode,
+    formData.district,
+    districts,
+    setValue,
+  ]);
+
+  useEffect(() => {
+    const wardCode = getValues('wardCode');
+    if (!activeDistrictCode || wardCode || !formData.ward) return;
+    if (wards.length === 0) return;
+    const target = normalizeLocationName(formData.ward);
+    const matched = wards.find((w) => normalizeLocationName(w.name) === target);
+    if (matched) {
+      setValue('wardCode', matched.code, { shouldDirty: false });
+    }
+  }, [activeDistrictCode, formData.ward, wards, getValues, setValue]);
+
+  useEffect(() => {
+    if (!districtCode || !districts.length) return;
+    const selectedDistrict = districts.find((d) => d.code === districtCode);
+    if (selectedDistrict && !getValues('district')) {
+      setValue('district', selectedDistrict.name, { shouldDirty: false });
+    }
+  }, [districtCode, districts, getValues, setValue]);
+
+  useEffect(() => {
+    const wardCode = getValues('wardCode');
+    if (!wardCode || !wards.length) return;
+    const selectedWard = wards.find((w) => w.code === wardCode);
+    if (selectedWard && !getValues('ward')) {
+      setValue('ward', selectedWard.name, { shouldDirty: false });
+    }
+  }, [wards, getValues, setValue]);
+
   // Age calculation effect
   const birthDate = useWatch({ control, name: 'birthDate' });
   useEffect(() => {
-    if (birthDate) {
-      const birth = new Date(birthDate);
-      if (!isNaN(birth.getTime())) {
-        const today = new Date();
-        let age = today.getFullYear() - birth.getFullYear();
-        const m = today.getMonth() - birth.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-          age--;
-        }
-        if (age >= 0) {
-          setValue('age', age.toString());
-        }
-      }
-    }
+    if (!birthDate) return;
+    const birth = new Date(birthDate);
+    if (isNaN(birth.getTime())) return;
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    if (age >= 0) setValue('age', age.toString());
   }, [birthDate, setValue]);
 
-  // Geographic Data Effects
-  const provinceCode = useWatch({ control, name: 'provinceCode' });
-  const districtCode = useWatch({ control, name: 'districtCode' });
-
-  // 1. Initial Load of Master Data (Provinces & Countries)
-  useEffect(() => {
-    const initMasterData = async () => {
-      if (provinces.length > 0 && countries.length > 0) return;
-      setIsLoadingGeo(true);
-      try {
-        const [pData, cData] = await Promise.all([
-          masterDataApi.getProvinces(),
-          masterDataApi.getCountries(),
-        ]);
-        setProvinces(pData);
-        setCountries(cData);
-      } catch (err) {
-        console.error('Failed to load initial master data:', err);
-      } finally {
-        setIsLoadingGeo(false);
-      }
-    };
-    void initMasterData();
-  }, []);
-
-  // 2. Fetch Districts when provinceCode changes
-  useEffect(() => {
-    if (provinceCode && provinces.length > 0) {
-      masterDataApi
-        .getDistricts(provinceCode)
-        .then((data: District[]) => {
-          setDistricts(data);
-          // If we have a pending value from the record, ensure it stays
-          const currentDistrict = getValues('districtCode');
-          if (currentDistrict && data.some((d) => d.code === currentDistrict)) {
-            setValue('districtCode', currentDistrict);
-          }
-        })
-        .catch(console.error);
-    } else {
-      setDistricts([]);
-      setWards([]);
-    }
-  }, [provinceCode, provinces.length, setValue, getValues]);
-
-  // 3. Fetch Wards when districtCode changes
-  useEffect(() => {
-    if (districtCode && districts.length > 0) {
-      masterDataApi
-        .getWards(districtCode)
-        .then((data: Ward[]) => {
-          setWards(data);
-          // If we have a pending value from the record, ensure it stays
-          const currentWard = getValues('wardCode');
-          if (currentWard && data.some((w) => w.code === currentWard)) {
-            setValue('wardCode', currentWard);
-          }
-        })
-        .catch(console.error);
-    } else {
-      setWards([]);
-    }
-  }, [districtCode, districts.length, setValue, getValues]);
-
-  const formData = useWatch({ control });
   const rightEyeData = formData.rightEye;
   const leftEyeData = formData.leftEye;
 
@@ -1777,7 +1821,7 @@ export default function ErmForm() {
                           className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium appearance-none"
                         >
                           <option value="">
-                            {isLoadingGeo && provinces.length === 0
+                            {isLoadingProvinces && provinces.length === 0
                               ? 'Đang tải tỉnh thành...'
                               : 'Chọn Tỉnh/Thành phố'}
                           </option>
@@ -1786,8 +1830,17 @@ export default function ErmForm() {
                               {p.name}
                             </option>
                           ))}
+                          {/* Fallback for the current value if the list is still loading */}
+                          {formData.provinceCode &&
+                            !provinces.find(
+                              (p) => p.code === formData.provinceCode
+                            ) && (
+                              <option value={formData.provinceCode}>
+                                {formData.province || 'Đang tải tỉnh thành...'}
+                              </option>
+                            )}
                         </select>
-                        {isLoadingGeo && provinces.length === 0 && (
+                        {isLoadingProvinces && provinces.length === 0 && (
                           <div className="absolute right-10 top-1/2 -translate-y-1/2">
                             <div className="w-3 h-3 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
                           </div>
@@ -1819,13 +1872,13 @@ export default function ErmForm() {
                             setValue('wardCode', undefined);
                             setValue('ward', '');
                           }}
-                          disabled={isReadOnlyAdmin || !provinceCode}
+                          disabled={isReadOnlyAdmin || !activeProvinceCode}
                           className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium appearance-none"
                         >
                           <option value="">
-                            {isLoadingGeo &&
+                            {isLoadingDistricts &&
                             districts.length === 0 &&
-                            provinceCode
+                            activeProvinceCode
                               ? 'Đang tải quận huyện...'
                               : 'Chọn Quận/Huyện'}
                           </option>
@@ -1834,8 +1887,17 @@ export default function ErmForm() {
                               {d.name}
                             </option>
                           ))}
+                          {/* Fallback for the current value if the list is still loading */}
+                          {formData.districtCode &&
+                            !districts.find(
+                              (d) => d.code === formData.districtCode
+                            ) && (
+                              <option value={formData.districtCode}>
+                                {formData.district || 'Đang tải quận huyện...'}
+                              </option>
+                            )}
                         </select>
-                        {isLoadingGeo &&
+                        {isLoadingDistricts &&
                           districts.length === 0 &&
                           provinceCode && (
                             <div className="absolute right-10 top-1/2 -translate-y-1/2">
@@ -1864,11 +1926,13 @@ export default function ErmForm() {
                             setValue('wardCode', code);
                             setValue('ward', name);
                           }}
-                          disabled={isReadOnlyAdmin || !districtCode}
+                          disabled={isReadOnlyAdmin || !activeDistrictCode}
                           className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-medium appearance-none"
                         >
                           <option value="">
-                            {isLoadingGeo && wards.length === 0 && districtCode
+                            {isLoadingWards &&
+                            wards.length === 0 &&
+                            activeDistrictCode
                               ? 'Đang tải phường xã...'
                               : 'Chọn Phường/Xã'}
                           </option>
@@ -1877,12 +1941,23 @@ export default function ErmForm() {
                               {w.name}
                             </option>
                           ))}
+                          {/* Fallback for the current value if the list is still loading */}
+                          {formData.wardCode &&
+                            !wards.find(
+                              (w) => w.code === formData.wardCode
+                            ) && (
+                              <option value={formData.wardCode}>
+                                {formData.ward || 'Đang tải phường xã...'}
+                              </option>
+                            )}
                         </select>
-                        {isLoadingGeo && wards.length === 0 && districtCode && (
-                          <div className="absolute right-10 top-1/2 -translate-y-1/2">
-                            <div className="w-3 h-3 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-                          </div>
-                        )}
+                        {isLoadingWards &&
+                          wards.length === 0 &&
+                          activeDistrictCode && (
+                            <div className="absolute right-10 top-1/2 -translate-y-1/2">
+                              <div className="w-3 h-3 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                            </div>
+                          )}
                       </div>
                     </div>
                   </div>
