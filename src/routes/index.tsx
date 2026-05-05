@@ -770,8 +770,7 @@ const Router = () => (
                 'SystemAdmin',
                 'Ophthalmologist',
                 'ClinicStaff',
-                'OrgAdmin',
-                'Organization',
+                'Patient',
               ]}
               element={<ViewAllNotificationsPage />}
             />
@@ -1525,59 +1524,31 @@ const Router = () => (
         {/* ============ PATIENT ROUTES ============ */}
         <Route
           path="/patient/dashboard"
-          element={
-            <PrivateRoute allowedRoles={['Patient']}>
-              <PatientDashboard />
-            </PrivateRoute>
-          }
+          element={<LocalizedRedirect target="/patient/dashboard" />}
         />
         <Route
           path="/patient/screening"
-          element={
-            <PrivateRoute allowedRoles={['Patient']}>
-              <ScreeningPage />
-            </PrivateRoute>
-          }
+          element={<LocalizedRedirect target="/patient/screening" />}
         />
         <Route
           path="/patient/screening/new"
-          element={
-            <PrivateRoute allowedRoles={['Patient']}>
-              <ScreeningNewPage />
-            </PrivateRoute>
-          }
+          element={<LocalizedRedirect target="/patient/screening/new" />}
         />
         <Route
           path="/patient/analysis"
-          element={
-            <PrivateRoute allowedRoles={['Patient']}>
-              <RetinalAnalysisPage />
-            </PrivateRoute>
-          }
+          element={<LocalizedRedirect target="/patient/analysis" />}
         />
         <Route
           path="/patient/analysis/details"
-          element={
-            <PrivateRoute allowedRoles={['Patient']}>
-              <AnalysisDetailPage />
-            </PrivateRoute>
-          }
+          element={<LocalizedRedirect target="/patient/analysis/details" />}
         />
         <Route
           path="/patient/screening/review"
-          element={
-            <PrivateRoute allowedRoles={['Patient']}>
-              <ReviewPage />
-            </PrivateRoute>
-          }
+          element={<LocalizedRedirect target="/patient/screening/review" />}
         />
         <Route
           path="/patient/notifications"
-          element={
-            <PrivateRoute allowedRoles={['Patient']}>
-              <NotificationsPage />
-            </PrivateRoute>
-          }
+          element={<LocalizedRedirect target="/patient/notifications" />}
         />
         <Route
           path="/notifications"
@@ -1605,11 +1576,7 @@ const Router = () => (
         />
         <Route
           path="/patient/appointments"
-          element={
-            <PrivateRoute allowedRoles={['Patient']}>
-              <AppointmentsPage />
-            </PrivateRoute>
-          }
+          element={<LocalizedRedirect target="/patient/appointments" />}
         />
         <Route
           path="/patient/book"
@@ -1629,11 +1596,7 @@ const Router = () => (
         />
         <Route
           path="/patient/profile"
-          element={
-            <PrivateRoute allowedRoles={['Patient']}>
-              <ProfilePage />
-            </PrivateRoute>
-          }
+          element={<LocalizedRedirect target="/patient/profile" />}
         />
         <Route
           path="/patient/settings"
