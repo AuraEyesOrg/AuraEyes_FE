@@ -107,12 +107,12 @@ export default function PaymentConfirmationModal({
               <div className="flex items-center justify-between mt-1">
                 <span className="text-sm font-medium text-slate-500">
                   {t(
-                    'ClinicStaff.paymentConfirmationModal.summary.depositPaid',
-                    'Deposit paid (Online)'
+                    'ClinicStaff.paymentConfirmationModal.summary.alreadyPaid',
+                    'Already paid'
                   )}
                 </span>
                 <span className="text-sm font-bold text-emerald-600">
-                  -{formatCurrency(appointment.depositAmount || 0)}
+                  -{formatCurrency(appointment.paidAmount || 0)}
                 </span>
               </div>
               <div className="flex items-center justify-between mt-3 pt-3 border-t-2 border-dashed border-slate-200 dark:border-slate-700">
