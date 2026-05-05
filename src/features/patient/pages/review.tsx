@@ -872,20 +872,6 @@ export default function ReviewPage() {
                   })}
             </div>
           </section>
-
-          <footer className="pb-6 pt-4 border-t border-(--border-color)">
-            <div className="text-center text-sm text-(--text-muted) space-y-1">
-              <p>
-                <strong className="text-(--text-secondary)">Important:</strong>{' '}
-                {t('PatientReview.footer.importantDisclaimer')}
-              </p>
-              <p>
-                {t('PatientReview.footer.copyright', {
-                  year: new Date().getFullYear(),
-                })}
-              </p>
-            </div>
-          </footer>
         </div>
       </div>
       {!hasBookedOrConsultedThisCase ? (

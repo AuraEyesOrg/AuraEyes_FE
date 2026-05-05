@@ -469,6 +469,7 @@ async function mapSavedAnomaliesFromRaw(
 
 function mapPersistedFindingsToAnomalies(findings?: string): Anomaly[] {
   if (!findings) return [];
+  const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
   const items = findings
     .split(',')
     .map((item) => item.trim())
@@ -476,16 +477,17 @@ function mapPersistedFindingsToAnomalies(findings?: string): Anomaly[] {
 
   return items.map((item, idx) => {
     const urgency = getDiseaseUrgency(item);
+    const displayName = toDisplayDiseaseName(item, currentLanguage);
     return {
       id: `persisted-${idx + 1}`,
       name: item,
       code: undefined,
       confidence: 0,
-      description: item,
+      description: displayName,
       color: urgencyToColorClass(urgency),
       type: urgencyToAnomalyType(urgency),
-      friendlyName: item,
-      friendlyDescription: item,
+      friendlyName: displayName,
+      friendlyDescription: displayName,
       isHighest: idx === 0,
     } as Anomaly;
   });

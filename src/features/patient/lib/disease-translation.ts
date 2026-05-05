@@ -43,6 +43,18 @@ const DISEASE_NAME_VI: Record<string, string> = {
   'Silicon Oil in Eye': 'Dầu silicone trong mắt',
   'Blur Fundus Without PDR': 'Đáy mắt mờ, chưa ghi nhận PDR',
   'Blur Fundus With Suspected PDR': 'Đáy mắt mờ, nghi ngờ PDR',
+  'Proliferative Diabetic Retinopathy':
+    'Bệnh võng mạc đái tháo đường tăng sinh',
+  'Diabetic Retinopathy': 'Bệnh võng mạc đái tháo đường',
+  'Central Serous Retinopathy': 'Bong thanh dịch hắc võng mạc trung tâm',
+  'Macular Edema': 'Phù hoàng điểm',
+  'Central Retinal Artery Occlusion': 'Tắc động mạch võng mạc trung tâm',
+  'Branch Retinal Artery Occlusion': 'Tắc động mạch võng mạc nhánh',
+  'Giant Retinal Tear': 'Vết rách võng mạc lớn',
+  'Vitreous Hemorrhage': 'Xuất huyết dịch kính',
+  'Anterior Ischemic Optic Neuropathy':
+    'Bệnh lý thần kinh thị do thiếu máu trước',
+  'Idiopathic Intracranial Hypertension': 'Tăng áp lực nội sọ vô căn',
 };
 
 const DISEASE_NAME_VI_BY_LOWER = Object.fromEntries(
@@ -81,6 +93,25 @@ const ABBREVIATION_MAP: Record<string, string> = {
   AMD: 'Age-related Macular Degeneration',
   RP: 'Retinitis Pigmentosa',
   CMV: 'Cytomegalovirus Retinitis',
+  PRDB: 'Proliferative Diabetic Retinopathy',
+  DR: 'Diabetic Retinopathy',
+  CSR: 'Central Serous Retinopathy',
+  ME: 'Macular Edema',
+  GLC: 'Glaucoma',
+  CRAO: 'Central Retinal Artery Occlusion',
+  BRAO: 'Branch Retinal Artery Occlusion',
+  GRT: 'Giant Retinal Tear',
+  PRH: 'Preretinal Hemorrhage',
+  VH: 'Vitreous Hemorrhage',
+  MHE: 'Massive Hard Exudates',
+  FN: 'Fundus Neoplasm',
+  AION: 'Anterior Ischemic Optic Neuropathy',
+  IIH: 'Idiopathic Intracranial Hypertension',
+  LS: 'Laser Spots',
+  CDA: 'Congenital Disc Abnormality',
+  DD: 'Dragged Disc',
+  FIB: 'Fibrosis',
+  BCD: 'Bietti Crystalline Dystrophy',
 };
 
 function expandAbbreviations(name: string): string {
