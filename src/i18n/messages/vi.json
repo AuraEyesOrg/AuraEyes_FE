@@ -8975,6 +8975,7 @@
       "transactions": "Lịch sử giao dịch",
       "wallet": "Ví điện tử",
       "settings": "Cài đặt",
+      "network": "Aura Network",
       "profile": "Hồ sơ của tôi"
     },
     "actions": {
@@ -10678,7 +10679,6 @@
             "invalidQr": "Mã QR không hợp lệ hoặc không đúng định dạng CCCD/VNeID.",
             "qrExtractSuccess": "Trích xuất hồ sơ công dân thành công!"
           }
-
         },
         "email": {
           "walkInHint": "B?nh nhân vãng lai: nh?p email ngu?i nh?n d? g?i k?t qu?.",

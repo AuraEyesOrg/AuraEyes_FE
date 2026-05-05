@@ -58,11 +58,7 @@ export interface Certificate {
 // ============ POST TYPES ============
 
 // Maps to BE PostCategory enum
-export type PostCategory =
-  | 'CasePresentation'
-  | 'PeerDiscussion'
-  | 'KnowledgeShare'
-  | 'Announcement';
+export type PostCategory = 'PeerDiscussion' | 'KnowledgeShare' | 'Announcement';
 
 // Maps to BE AuthorType enum
 export type AuthorType = 'Ophthalmologist' | 'Organisation';
@@ -148,6 +144,7 @@ export interface UserProfileDto {
   avatarUrl?: string;
   bio?: string;
   postCount: number;
+  roles: string[];
   certificates: UserProfileCertificate[];
 }
 

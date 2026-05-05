@@ -6,7 +6,7 @@
  */
 
 import { Link, useLocation } from 'react-router-dom';
-import { FileText, FlaskConical, HelpingHand, Newspaper } from 'lucide-react';
+import { FileText, HelpingHand, Newspaper } from 'lucide-react';
 import type { ProfessionalPost } from '../../types';
 import { InitialsAvatar } from '../professional/InitialsAvatar';
 import {
@@ -17,12 +17,6 @@ import {
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 const postTypeConfig = {
-  CasePresentation: {
-    icon: FlaskConical,
-    labelKey: 'ProfessionalNetwork.postTypes.casePresentation',
-    labelFallback: 'Case Presentation',
-    color: 'text-purple-500 bg-purple-50',
-  },
   PeerDiscussion: {
     icon: HelpingHand,
     labelKey: 'ProfessionalNetwork.postTypes.peerDiscussion',

@@ -44,11 +44,6 @@ const categories = [
     labelFallback: 'All',
   },
   {
-    value: 'CasePresentation',
-    labelKey: 'ProfessionalNetwork.postTypes.casePresentation',
-    labelFallback: 'Case Presentation',
-  },
-  {
     value: 'PeerDiscussion',
     labelKey: 'ProfessionalNetwork.postTypes.peerDiscussion',
     labelFallback: 'Peer Discussion',

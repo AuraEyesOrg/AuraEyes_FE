@@ -10,4 +10,5 @@ export {
   CaseSnapshotAiThumbnail,
   ScreeningReviewLink,
 } from './CaseSnapshotAiThumbnail';
+export { ShareCaseModal } from './ShareCaseModal';
 export { default as UploadCredentialsModal } from './UploadCredentialsModal';
