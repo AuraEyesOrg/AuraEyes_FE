@@ -7,9 +7,7 @@ import N8nChatWidget from '../components/N8nChatWidget';
 import {
   ShieldCheck,
   AlertTriangle,
-  CalendarCheck,
   FileDown,
-  ImagePlus,
   ChevronRight,
   FileText,
   Star,
@@ -18,6 +16,7 @@ import {
   ZoomIn,
   ArrowLeft,
   ExternalLink,
+  CalendarCheck,
 } from 'lucide-react';
 import { SecondaryActionCard, FeedbackModal } from '../components';
 import { useCreateClinicFeedback } from '@/features/patient/hooks/use-feedback';
@@ -438,6 +437,7 @@ export default function ReviewPage() {
         exitPath="/patient/screening"
         showQuotaBadge={false}
         showBreadcrumb={false}
+        showStepper={false}
       >
         <div className="flex-1 flex items-center justify-center bg-[var(--bg-primary)]">
           <div className="text-center space-y-4 max-w-sm">
@@ -464,6 +464,7 @@ export default function ReviewPage() {
       exitPath="/patient/screening"
       showQuotaBadge={false}
       showBreadcrumb={false}
+      showStepper={false}
     >
       <div className="flex-1 overflow-y-auto bg-[var(--bg-primary)]">
         <div className="w-full max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -475,19 +476,6 @@ export default function ReviewPage() {
               <p className="text-(--text-secondary) font-medium text-lg">
                 {t('PatientReview.page.subtitle')}
               </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate('/patient/doctors')}
-                className="inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-3 font-bold text-white shadow-sm transition-all hover:bg-brand/90 hover:shadow-md active:scale-95"
-              >
-                <CalendarCheck className="w-5 h-5" />
-                {t(
-                  'PatientDashboard.actions.bookNewAppointment',
-                  'Book Appointment'
-                )}
-              </button>
             </div>
           </div>
 
@@ -767,12 +755,20 @@ export default function ReviewPage() {
                   </div>
 
                   <SecondaryActionCard
-                    icon={<ImagePlus className="w-5 h-5" />}
-                    iconBg="bg-emerald-50 text-emerald-600"
-                    title={t('PatientReview.actions.newScan')}
-                    subtitle={t('PatientReview.descriptions.startNewAnalysis')}
+                    icon={<CalendarCheck className="w-5 h-5" />}
+                    iconBg="bg-cyan-50 text-cyan-600"
+                    title={t(
+                      'PatientReview.actions.bookConsultation',
+                      'Đặt lịch tư vấn'
+                    )}
+                    subtitle={t(
+                      'PatientReview.descriptions.bookConsultation',
+                      'Trao đổi kết quả này với bác sĩ chuyên khoa.'
+                    )}
                     actionIcon={<ChevronRight className="w-4 h-4" />}
-                    onClick={() => navigate('/patient/screening/new')}
+                    onClick={() =>
+                      navigate(resolvePathWithLocale('/patient/schedule'))
+                    }
                   />
                 </div>
               </div>
