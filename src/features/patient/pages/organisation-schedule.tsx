@@ -849,7 +849,7 @@ function DoctorDetailsModal({
 
                     <div className="text-center sm:text-right space-y-1">
                       <div className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest justify-center sm:justify-end">
-                        <MapPin size={12} /> Aura Eyes Clinic
+                        <MapPin size={12} /> Aura Eyes
                       </div>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                         {t(

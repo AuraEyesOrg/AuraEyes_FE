@@ -18,12 +18,12 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { postsApi } from '@/features/professional-network/api/network.api';
 import { resolveAuthorType } from '@/features/professional-network/utils/authorType';
 import { getDiseaseUrgency } from '@/features/patient/mock/disease-mapping';
-import i18n from '@/i18n/i18n';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { aiCoreClient } from '@/lib/axios';
 import useAuthStore from '@/store/auth-store';
 import { unwrapApiData } from '@/types/api-response';
+import { formatNotificationDateTime } from '@/lib/date-utils';
 
 import { clinicScreeningApi } from '../api/screening.api';
 import { clinicQueueApi, type ClinicFlowState } from '../api/queue.api';
@@ -76,7 +76,7 @@ export default function ClinicStaffScreeningResultPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useSafeTranslation();
+  const { t, i18n } = useSafeTranslation();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const screeningId = searchParams.get('id');
@@ -214,6 +214,18 @@ export default function ClinicStaffScreeningResultPage() {
         return Math.min(currentIndex, maxIndex);
       });
 
+      // Prepare localized fallbacks from the raw JSON output
+      const { boxes } = extractVisualArtifactsFromRaw(
+        detail.rawJsonOutput,
+        0,
+        0,
+        currentLanguage
+      );
+      const findingsFromBoxes = buildFindingsFromBoxes(
+        boxes,
+        translateResultText
+      );
+
       if (detail.latestResult) {
         const normalizedRiskLevel = normalizeRiskLevel(
           detail.latestResult.riskLevel
@@ -226,31 +238,41 @@ export default function ClinicStaffScreeningResultPage() {
           mappedFindings[0]?.localizedName,
           translateResultText
         );
-        const fallbackFindings =
-          generatedFindings ||
-          translateResultText(
-            'ClinicStaff.screeningResult.findings.emptyFallback',
-            'No significant AI findings were identified.'
-          );
 
         const savedSummary = detail.latestResult.summary?.trim() ?? '';
         const savedFindings = parsedSavedFindings.findings?.trim() ?? '';
 
+        // If the saved findings/summary look like the default English templates,
+        // or if we are in a non-English locale, prefer the re-generated localized version.
+        const shouldPreferLocalizedFindings =
+          currentLanguage !== 'en' ||
+          !savedFindings ||
+          hasTemplateToken(savedFindings);
+
+        const shouldPreferLocalizedSummary =
+          currentLanguage !== 'en' ||
+          !savedSummary ||
+          hasTemplateToken(savedSummary);
+
         setDraft({
           riskLevel: normalizedRiskLevel,
           confidenceScore: clampConfidence(detail.latestResult.confidenceScore),
-          summary:
-            savedSummary.length > 0 && !hasTemplateToken(savedSummary)
-              ? savedSummary
-              : fallbackSummary,
-          findings:
-            savedFindings.length > 0 && !hasTemplateToken(savedFindings)
-              ? savedFindings
-              : fallbackFindings,
+          summary: shouldPreferLocalizedSummary
+            ? fallbackSummary
+            : savedSummary,
+          findings: shouldPreferLocalizedFindings
+            ? findingsFromBoxes || generatedFindings || savedFindings
+            : savedFindings,
         });
+
+        // Always preserve the note regardless of localization preference
+        if (parsedSavedFindings.note) {
+          setConsultationNote(parsedSavedFindings.note);
+        }
         return;
       }
 
+      // No saved result yet: Initialize from AI analysis
       if (mappedFindings.length === 0) {
         setDraft(null);
         return;
@@ -271,6 +293,7 @@ export default function ClinicStaffScreeningResultPage() {
           translateResultText
         ),
         findings:
+          findingsFromBoxes ||
           generatedFindings ||
           translateResultText(
             'ClinicStaff.screeningResult.findings.emptyFallback',
@@ -631,7 +654,10 @@ export default function ClinicStaffScreeningResultPage() {
         id: sessionData.screeningId.slice(0, 8),
       }),
       t('ClinicStaff.screeningResult.network.risk', 'Risk level: {{risk}}', {
-        risk: draft.riskLevel,
+        risk: t(
+          `ClinicStaff.screeningResult.riskCard.levels.${draft.riskLevel.toLowerCase()}`,
+          draft.riskLevel
+        ),
       }),
       '',
       t('ClinicStaff.screeningResult.network.summaryLabel', 'Summary:'),
@@ -764,7 +790,7 @@ export default function ClinicStaffScreeningResultPage() {
     }
     void loadSession(true);
     void hydrateQueueContext();
-  }, [screeningId, loadSession, hydrateQueueContext]);
+  }, [screeningId, loadSession, hydrateQueueContext, currentLanguage]);
 
   useEffect(() => {
     window.addEventListener('resize', updateImageLayout);
@@ -888,7 +914,10 @@ export default function ClinicStaffScreeningResultPage() {
                 {patientDisplayName} ·{' '}
                 {t('ClinicStaff.screeningResult.header.session', 'Session')}{' '}
                 {sessionData.screeningId.slice(0, 8)}... ·{' '}
-                {new Date(sessionData.createdAt).toLocaleString('vi-VN')}
+                {formatNotificationDateTime(
+                  sessionData.createdAt,
+                  i18n.language
+                )}
               </p>
             </div>
 
@@ -1046,7 +1075,10 @@ export default function ClinicStaffScreeningResultPage() {
                     )}
                   </p>
                   <p className={`text-2xl font-bold ${risk.color}`}>
-                    {riskLevel}
+                    {t(
+                      `ClinicStaff.screeningResult.riskCard.levels.${riskLevel.toLowerCase()}`,
+                      riskLevel
+                    )}
                   </p>
                 </div>
               </div>
@@ -1147,8 +1179,9 @@ export default function ClinicStaffScreeningResultPage() {
                     )}
                   </span>
                   <span className="font-medium text-(--text-primary)">
-                    {new Date(sessionData.createdAt).toLocaleDateString(
-                      'vi-VN'
+                    {formatNotificationDateTime(
+                      sessionData.createdAt,
+                      i18n.language
                     )}
                   </span>
                 </div>
@@ -1161,9 +1194,10 @@ export default function ClinicStaffScreeningResultPage() {
                       )}
                     </span>
                     <span className="font-medium text-(--text-primary)">
-                      {new Date(
-                        sessionData.latestResult.assessedAt
-                      ).toLocaleDateString('vi-VN')}
+                      {formatNotificationDateTime(
+                        sessionData.latestResult.assessedAt,
+                        i18n.language
+                      )}
                     </span>
                   </div>
                 )}
@@ -1349,7 +1383,10 @@ export default function ClinicStaffScreeningResultPage() {
                             'Risk level:'
                           )}
                         </span>{' '}
-                        {draft.riskLevel}
+                        {t(
+                          `ClinicStaff.screeningResult.riskCard.levels.${draft.riskLevel.toLowerCase()}`,
+                          draft.riskLevel
+                        )}
                       </p>
                       <p className="line-clamp-2">
                         <span className="font-semibold text-(--text-primary)">

@@ -23,7 +23,7 @@ import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import ClinicStaffLayout from '../components/ClinicStaffLayout';
-import { useTranslation } from 'react-i18next';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
   clinicQueueApi,
   type ClinicQueueItem,
@@ -99,7 +99,7 @@ function DoctorSelect({
   onChange: (val: string) => void;
   placeholder?: string;
 }) {
-  const { t } = useTranslation();
+  const { t } = useSafeTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const selectedDoctor = doctors.find((d) => d.id === value);
   const selectedDoctorName =
@@ -186,9 +186,7 @@ function DoctorSelect({
 
 export default function ClinicStaffQueuePage() {
   const navigate = useNavigate();
-  const { t: i18nT, i18n } = useTranslation();
-  const t = (key: string, defaultValue?: string, options?: any) =>
-    i18nT(key as any, { defaultValue, ...options } as any) as string;
+  const { t, i18n } = useSafeTranslation();
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<QueueTab>('all');
@@ -581,7 +579,11 @@ export default function ClinicStaffQueuePage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-(--text-secondary)">
-                            {formatShortDate(item.checkedInAt)}
+                            {formatShortDate(
+                              item.checkedInAt,
+                              'medium',
+                              i18n.language
+                            )}
                           </div>
                           <div className="text-xs text-(--text-tertiary)">
                             {new Date(item.checkedInAt).toLocaleTimeString(
@@ -601,6 +603,7 @@ export default function ClinicStaffQueuePage() {
                             )}
                           </span>
                         </td>
+                        inli{' '}
                         <td className="px-6 py-4">
                           {item.screeningId ? (
                             <div>
@@ -847,7 +850,7 @@ export default function ClinicStaffQueuePage() {
         </div>
 
         {sendModalItem && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/45 px-4">
+          <div className="fixed inset-0 z-120 flex items-center justify-center bg-slate-950/45 px-4">
             <div className="w-full max-w-xl rounded-2xl border border-(--border-primary) bg-(--bg-secondary) p-5 shadow-2xl">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
