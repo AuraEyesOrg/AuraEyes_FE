@@ -6621,7 +6621,7 @@
       "requiresAction": "Require action",
       "completedToday": "Completed"
     },
-    "subtitle": "AURA Clinic • Real-time operational overview",
+    "subtitle": "Aura Eyes • Real-time operational overview",
     "activity": {
       "title": "Recent Activity",
       "subtitle": "Live patient check-ins and appointment updates",
@@ -6995,7 +6995,13 @@
       },
       "riskCard": {
         "title": "Risk level",
-        "confidence": "Confidence score: {{score}}%"
+        "confidence": "Confidence score: {{score}}%",
+        "levels": {
+          "low": "Low",
+          "medium": "Medium",
+          "moderate": "Moderate",
+          "high": "High"
+        }
       },
       "cards": {
         "summaryTitle": "AI Summary",
@@ -7184,9 +7190,10 @@
         "action": "Action"
       },
       "risk": {
-        "low": "low",
-        "medium": "medium",
-        "high": "high"
+        "low": "Low",
+        "medium": "Medium",
+        "moderate": "Moderate",
+        "high": "High"
       },
       "types": {
         "walkIn": "Walk-in",
@@ -7414,11 +7421,9 @@
     },
     "filter": {
       "all": "All statuses",
-      "draft": "Pending Examination",
-      "clinicFilling": "Clinic Filling",
-      "doctorFilling": "Doctor Examining",
-      "completed": "Completed",
-      "locked": "Finalized"
+      "draft_admin": "Draft (Admin)",
+      "pending_clinical": "Pending Clinical",
+      "finalized": "Finalized"
     },
     "table": {
       "recordNumber": "Record Number",
@@ -7428,11 +7433,9 @@
       "actions": "Actions"
     },
     "status": {
-      "draft": "Pending Examination",
-      "clinicFilling": "Clinic Filling",
-      "doctorFilling": "Doctor Examining",
-      "completed": "Completed",
-      "locked": "Finalized"
+      "draft_admin": "Draft (Admin)",
+      "pending_clinical": "Pending Clinical",
+      "finalized": "Finalized"
     },
     "actions": {
       "view": "View details",
@@ -8030,6 +8033,188 @@
         "title": "About",
         "location": "Location",
         "accreditations": "Accreditations"
+      }
+    }
+  },
+  "Notifications": {
+    "AiScreeningCompleted": {
+      "title": "AI Screening Results Ready",
+      "message": "Your AI fundus screening results are available. Please view details in the app."
+    },
+    "NewAppointmentBooked": {
+      "title": "Appointment Booked Successfully",
+      "message": "You have successfully booked an appointment at {{appointmentTime}}. Please complete the deposit payment."
+    },
+    "ScheduleChanged": {
+      "RefundRejected": {
+        "title": "Refund Request Rejected",
+        "message": "The refund request for your appointment has been rejected. Reason: {{reason}}."
+      },
+      "RefundApproved": {
+        "title": "Refund Request Approved",
+        "message": "The refund request for your appointment has been accepted."
+      },
+      "default": {
+        "title": "Appointment Changed",
+        "message": "There has been a change to your scheduled appointment."
+      }
+    },
+    "WalletDepositSuccess": {
+      "title": "Deposit Successful",
+      "message": "Successfully deposited {{amount}} VND into your wallet."
+    },
+    "RefundProcessed": {
+      "title": "Refund Successful",
+      "message": "The refund request has been processed successfully."
+    },
+    "SystemAlert": {
+      "cashier_payment_ready": {
+        "title": "Ready for Payment",
+        "message": "Consultation finished. Patient {{patientName}} is waiting for payment."
+      },
+      "patient_checked_in": {
+        "title": "New Patient in Queue",
+        "message": "{{patientName}} has checked in and is waiting for screening."
+      },
+      "record_finalized": {
+        "title": "Medical Record Finalized",
+        "message": "Patient 's medical record ({{medicalRecordId}}) has been locked and archived."
+      }
+    }
+  },
+  "NotificationDropdown": {
+    "aria": {
+      "label": "Notifications"
+    },
+    "status": {
+      "online": "Online"
+    },
+    "actions": {
+      "markAllAsRead": "Mark all as read"
+    },
+    "loading": "Loading notifications...",
+    "empty": {
+      "title": "No notifications yet",
+      "description": "We'll notify you when something happens"
+    },
+    "viewAll": "View all notifications"
+  },
+  "notification": {
+    "types": {
+      "screening": "Screening",
+      "consultation": "Consultation",
+      "message": "Message",
+      "appointment": "Appointment",
+      "wallet": "Wallet",
+      "notification": "Notification"
+    }
+  },
+  "Organisation": {
+    "screeningResult": {
+      "summary": {
+        "high": {
+          "withPrimary": "Findings need attention from an ophthalmologist ({{primaryLabel}}).",
+          "default": "Findings need attention from an ophthalmologist."
+        },
+        "moderate": {
+          "withPrimary": "Some findings may need specialist review ({{primaryLabel}}).",
+          "default": "Some findings may need specialist review."
+        },
+        "low": {
+          "withPrimary": "Low-risk findings detected ({{primaryLabel}}). Routine specialist follow-up is recommended.",
+          "default": "Low-risk findings detected. Routine specialist follow-up is recommended."
+        }
+      },
+      "findings": {
+        "primaryOnly": "Primary Finding: {{primaryFinding}}",
+        "primaryAndRelated": "Primary Finding: {{primaryFinding}}\nRelated Findings: {{relatedFindings}}",
+        "relatedOnly": "Related Findings: {{relatedFindings}}",
+        "manualAnnotations": "Manual Annotations: {{manualNames}}"
+      }
+    },
+    "calendar": {
+      "title": "Clinic Appointments",
+      "subtitle": "Manage visits and real-time queues",
+      "stats": {
+        "todayAppointments": "Today's Appointments",
+        "scheduled": "Scheduled",
+        "patientsCheckedIn": "Checked-in",
+        "today": "Today",
+        "pendingTasks": "Pending Tasks",
+        "requiresAction": "Require action",
+        "completedToday": "Completed"
+      },
+      "walkInModal": {
+        "title": "Create Walk-in Appointment",
+        "subtitle": "The patient will be checked in and added to the clinic queue immediately.",
+        "patient": {
+          "title": "Patient",
+          "hint": "Search by name, phone, citizen ID, or email.",
+          "create": "New patient",
+          "search": "Search patient...",
+          "loading": "Loading patients...",
+          "empty": "No matching patients. Create a new patient first."
+        },
+        "date": {
+          "label": "Appointment date"
+        },
+        "slot": {
+          "title": "Available Slots",
+          "loading": "Syncing schedule...",
+          "empty": "No slots available for this date."
+        },
+        "morning": "Morning",
+        "afternoon": "Afternoon",
+        "selectDoctor": "Select Ophthalmologist",
+        "consultation": "Consultation",
+        "reason": {
+          "label": "Visit reason",
+          "placeholder": "Optional notes for screening staff...",
+          "regular": "Regular eye checkup"
+        },
+        "summary": {
+          "ready": "{{patient}} will enter the queue at {{time}}.",
+          "pending": "Choose a patient and slot to create the visit lifecycle."
+        },
+        "actions": {
+          "create": "Create and check in",
+          "checkIn": "Check-in",
+          "scanQrCheckIn": "Scan QR check-in",
+          "payRemaining": "Pay Balance",
+          "collectCashPayment": "Collect cash payment",
+          "collectCashDeposit": "Collect cash deposit",
+          "lateArrival": "LATE ARRIVAL"
+        },
+        "toast": {
+          "checkInSuccess": "Check-in successful.",
+          "paymentSynced": "Payment status synced",
+          "paymentSyncFailed": "Failed to sync payment status",
+          "qrBeforeAppointmentDate": "Cannot check in before the appointment date.",
+          "paymentRequiredBeforeCheckIn": "Collect full payment before check-in.",
+          "depositRequiredBeforeCheckIn": "Collect the deposit before check-in."
+        },
+        "states": {
+          "billing": {
+            "fullyPaid": "Fully Paid"
+          }
+        },
+        "status": {
+          "cancelled": "Cancelled"
+        },
+        "bento": {
+          "totalBill": "Total Bill",
+          "paidAmount": "Paid Amount",
+          "balance": "Balance",
+          "remaining": "Remaining"
+        }
+      }
+    },
+    "screening": {
+      "stepper": {
+        "selectPatient": "Patient Verification",
+        "uploadImages": "Upload Images",
+        "launchAi": "Launch AI",
+        "reviewAndSave": "Review & Save"
       }
     }
   }
