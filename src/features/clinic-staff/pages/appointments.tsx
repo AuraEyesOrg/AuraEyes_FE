@@ -128,6 +128,8 @@ const statusBadge: Record<string, string> = {
     'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800/30',
   DepositPaid:
     'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800/30',
+  CancellationRequested:
+    'bg-amber-100/50 text-amber-700 border border-amber-200/50 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800/30',
 };
 
 const cardAccent: Record<string, string> = {
@@ -140,6 +142,7 @@ const cardAccent: Record<string, string> = {
   Cancelled: 'before:bg-rose-400',
   NoShow: 'before:bg-slate-400',
   Booked: 'before:bg-blue-500',
+  CancellationRequested: 'before:bg-amber-400',
 };
 
 const avatarColors: Record<string, string> = {
@@ -161,6 +164,8 @@ const avatarColors: Record<string, string> = {
     'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500 dark:from-slate-800/60 dark:to-slate-800/80 dark:text-slate-400',
   Booked:
     'bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 dark:from-blue-900/40 dark:to-blue-900/60 dark:text-blue-300',
+  CancellationRequested:
+    'bg-gradient-to-br from-amber-50 to-amber-100 text-amber-700 dark:from-amber-900/40 dark:to-amber-900/60 dark:text-amber-300',
 };
 
 function getInitials(value: string) {
@@ -317,9 +322,14 @@ export default function ClinicStaffAppointmentsPage() {
   const appointmentsError = selectedDayQuery?.error;
 
   const visibleAppointments = useMemo(() => {
-    if (!patientSearchQuery.trim()) return rawAppointments;
+    // Ẩn các ca đã hủy hoặc vắng mặt để danh sách gọn gàng
+    const activeOnly = rawAppointments.filter(
+      (a) => !['Cancelled', 'NoShow'].includes(a.status)
+    );
+
+    if (!patientSearchQuery.trim()) return activeOnly;
     const query = patientSearchQuery.toLowerCase();
-    return rawAppointments.filter((appt) => {
+    return activeOnly.filter((appt) => {
       const searchFields = [appt.patientName, appt.id]
         .filter(Boolean)
         .join(' ')
@@ -440,10 +450,10 @@ export default function ClinicStaffAppointmentsPage() {
         appointment.orderStatus === 'FullyPaid' ||
         (appointment.remainingAmount ?? 0) <= 0;
       if (fullyPaid) {
-        return t('Organisation.calendar.status.completed', 'Completed');
+        return t('PatientAppointments.clinicStatus.completed', 'Completed');
       }
       return t(
-        'Organisation.calendar.status.waitingForPayment',
+        'PatientAppointments.clinicStatus.awaitingPayment',
         'Waiting for payment'
       );
     }
@@ -454,36 +464,41 @@ export default function ClinicStaffAppointmentsPage() {
       case 'Confirmed':
         if (appointment.isWalkIn) {
           return isPaidDeposit
-            ? t('Organisation.calendar.status.fullyPaid', 'Fully Paid')
+            ? t('PatientAppointments.clinicStatus.fullyPaid', 'Fully Paid')
             : t(
                 'Organisation.calendar.states.billing.pending',
                 'Awaiting payment'
               );
         }
         return isPaidDeposit
-          ? t('Organisation.calendar.status.depositPaid', 'Deposit Paid')
-          : t('Organisation.calendar.status.pending', 'Pending');
+          ? t('PatientAppointments.clinicStatus.depositPaid', 'Deposit Paid')
+          : t('PatientAppointments.clinicStatus.pending', 'Pending');
       case 'CheckedIn':
-        return t('Organisation.calendar.status.checkedIn', 'Checked in');
+        return t('PatientAppointments.clinicStatus.checkedIn', 'Checked in');
       case 'InProgress':
-        return t('Organisation.calendar.status.inProgress', 'In progress');
+        return t('PatientAppointments.clinicStatus.inProgress', 'In progress');
       case 'WaitingForPayment':
         if (
           appointment.orderStatus === 'FullyPaid' ||
           (appointment.remainingAmount ?? 0) <= 0
         ) {
-          return t('Organisation.calendar.status.completed', 'Completed');
+          return t('PatientAppointments.clinicStatus.completed', 'Completed');
         }
         return t(
-          'Organisation.calendar.status.waitingForPayment',
+          'PatientAppointments.clinicStatus.awaitingPayment',
           'Waiting for payment'
         );
       case 'Completed':
-        return t('Organisation.calendar.status.completed', 'Completed');
+        return t('PatientAppointments.clinicStatus.completed', 'Completed');
       case 'Cancelled':
-        return t('Organisation.calendar.status.cancelled', 'Cancelled');
+        return t('PatientAppointments.clinicStatus.cancelled', 'Cancelled');
       case 'NoShow':
-        return t('Organisation.calendar.status.noShow', 'No-show');
+        return t('PatientAppointments.clinicStatus.noShow', 'No-show');
+      case 'CancellationRequested':
+        return t(
+          'PatientAppointments.clinicStatus.cancellationRequested',
+          'Refund Requested'
+        );
       default:
         return status;
     }

@@ -291,8 +291,8 @@ export default function ClinicStaffScreeningNewPage() {
                   {selectedPatient.name}
                 </p>
                 <p className="text-xs text-(--text-secondary) mt-0.5">
-                  {selectedPatient.gender === 'M' ? 'Male' : 'Female'} ·{' '}
-                  {selectedPatient.age} yrs
+                  {selectedPatient.gender === 'M' ? 'Male' : 'Female'}
+                  {selectedPatient.age > 0 && ` · ${selectedPatient.age} yrs`}
                 </p>
               </div>
             </div>
@@ -566,7 +566,7 @@ export default function ClinicStaffScreeningNewPage() {
                 <p className="text-sm text-(--text-secondary) mt-2">
                   {i18nT('ClinicStaff.screeningNew.launch.readyCount', {
                     count: readyImages.length,
-                    defaultValue: `Ready to analyse ${readyImages.length} scan(s). This will consume 1 AI screening credit.`,
+                    defaultValue: `Ready to analyse ${readyImages.length} scan(s).`,
                   })}
                 </p>
               </div>
