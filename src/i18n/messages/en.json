@@ -423,7 +423,8 @@
         "registrationError": "An error occurred during registration",
         "googleError": "An error occurred during Google login",
         "captchaRequired": "Please complete the CAPTCHA verification.",
-        "turnstileRequired": "Please complete the Turnstile verification."
+        "turnstileRequired": "Please complete the Turnstile verification.",
+        "invalidCredentials": "Invalid email or password."
       },
       "loginForm": {
         "heading": "Welcome Back",

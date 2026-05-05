@@ -426,7 +426,8 @@
         "registrationError": "Đã xảy ra lỗi khi đăng ký",
         "googleError": "Đã xảy ra lỗi khi đăng nhập Google",
         "captchaRequired": "Vui lòng hoàn tất xác minh CAPTCHA.",
-        "turnstileRequired": "Vui lòng hoàn tất xác minh Turnstile."
+        "turnstileRequired": "Vui lòng hoàn tất xác minh Turnstile.",
+        "invalidCredentials": "Email hoặc mật khẩu không đúng."
       },
       "loginForm": {
         "heading": "Chào mừng quay lại",
