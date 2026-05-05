@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useMedicalRecords } from '@/features/medical-records/hooks/useMedicalRecords';
 import ClinicStaffLayout from '../components/ClinicStaffLayout';
 import {
@@ -12,44 +12,29 @@ import {
   Clock,
   CheckCircle2,
 } from 'lucide-react';
-import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { MedicalRecordDto } from '@/features/medical-records/api/medical-record.api';
-import { useTranslation } from 'react-i18next';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { formatShortDate } from '@/lib/date-utils';
 
 const StatusBadge = ({ status }: { status: string }) => {
-  const { t: i18nT } = useTranslation();
-  const t = (key: string, defaultValue?: string, options?: any) =>
-    i18nT(key as any, { defaultValue, ...options } as any) as string;
-
-  const statusKey = `ClinicStaffMedicalRecords.status.${status.charAt(0).toLowerCase() + status.slice(1)}`;
+  const { t, i18n } = useSafeTranslation();
+  const statusKey = `ClinicStaffMedicalRecords.status.${status.toLowerCase()}`;
 
   switch (status) {
-    case 'Draft':
+    case 'Draft_Admin':
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-slate-100 text-slate-500">
-          <Clock className="w-3 h-3" /> {t(statusKey, 'Pending Examination')}
+          <Clock className="w-3 h-3" /> {t(statusKey, 'Draft (Admin)')}
         </span>
       );
-    case 'ClinicFilling':
-      return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-600">
-          <Clock className="w-3 h-3" /> {t(statusKey, 'Clinic Filling')}
-        </span>
-      );
-    case 'DoctorFilling':
+    case 'Pending_Clinical':
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-600">
-          <Clock className="w-3 h-3" /> {t(statusKey, 'Doctor Examining')}
+          <Clock className="w-3 h-3" /> {t(statusKey, 'Pending Clinical')}
         </span>
       );
-    case 'Completed':
-      return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-50 text-emerald-600">
-          <FileText className="w-3 h-3" /> {t(statusKey, 'Completed')}
-        </span>
-      );
-    case 'Locked':
+    case 'Finalized':
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-50 text-emerald-600">
           <CheckCircle2 className="w-3 h-3" /> {t(statusKey, 'Finalized')}
@@ -66,9 +51,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 export default function MedicalRecordsManagementPage() {
   const navigate = useNavigate();
-  const { t: i18nT } = useTranslation();
-  const t = (key: string, defaultValue?: string, options?: any) =>
-    i18nT(key as any, { defaultValue, ...options } as any) as string;
+  const { t, i18n } = useSafeTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [pageNumber, setPageNumber] = useState(1);
@@ -131,29 +114,20 @@ export default function MedicalRecordsManagementPage() {
                     'Tất cả trạng thái'
                   )}
                 </option>
-                <option value="Draft">
-                  {t('ClinicStaffMedicalRecords.filter.draft', 'Chờ khám')}
-                </option>
-                <option value="ClinicFilling">
+                <option value="Draft_Admin">
                   {t(
-                    'ClinicStaffMedicalRecords.filter.clinicFilling',
-                    'Đang điền HC'
+                    'ClinicStaffMedicalRecords.filter.draft_admin',
+                    'Nháp (HC)'
                   )}
                 </option>
-                <option value="DoctorFilling">
+                <option value="Pending_Clinical">
                   {t(
-                    'ClinicStaffMedicalRecords.filter.doctorFilling',
-                    'Bác sĩ khám'
+                    'ClinicStaffMedicalRecords.filter.pending_clinical',
+                    'Chờ khám'
                   )}
                 </option>
-                <option value="Completed">
-                  {t(
-                    'ClinicStaffMedicalRecords.filter.completed',
-                    'Hoàn thành'
-                  )}
-                </option>
-                <option value="Locked">
-                  {t('ClinicStaffMedicalRecords.filter.locked', 'Hoàn tất')}
+                <option value="Finalized">
+                  {t('ClinicStaffMedicalRecords.filter.finalized', 'Hoàn tất')}
                 </option>
               </select>
               <button className="p-3 bg-slate-900 text-white rounded-2xl hover:scale-105 active:scale-95 transition-all">
@@ -251,9 +225,10 @@ export default function MedicalRecordsManagementPage() {
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-2 text-slate-500 font-medium">
                           <Calendar className="w-4 h-4 text-slate-300" />
-                          {format(
-                            new Date(record.createdAt),
-                            'dd/MM/yyyy HH:mm'
+                          {formatShortDate(
+                            record.createdAt,
+                            'medium',
+                            i18n.language
                           )}
                         </div>
                       </td>
