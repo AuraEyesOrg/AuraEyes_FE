@@ -18,6 +18,7 @@ import Spinner from '@/components/ui/spinner';
 import { formatDate, formatMonthYear } from '@/lib/date-utils';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { resolveAvatarUrl } from '@/lib/user-avatar';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import ClinicStaffLayout from '../components/ClinicStaffLayout';
 import {
   useClinicStaffProfile,
@@ -33,6 +34,7 @@ const fieldInputClass =
   'w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] px-4 py-3 text-[var(--text-primary)] outline-none transition focus:border-brand/60 focus:ring-2 focus:ring-brand/30';
 
 export default function ClinicStaffProfilePage() {
+  const { t } = useSafeTranslation();
   const { data: profile, isLoading, error } = useClinicStaffProfile();
   const updateMutation = useUpdateClinicStaffProfile();
   const uploadAvatarMutation = useUploadClinicStaffAvatar();
@@ -98,7 +100,12 @@ export default function ClinicStaffProfilePage() {
       },
       {
         onSuccess: () => {
-          toast.success('Profile updated successfully');
+          toast.success(
+            t(
+              'ClinicStaff.profile.toast.updateSuccess',
+              'Profile updated successfully'
+            )
+          );
           setIsEditing(false);
         },
         onError: (err) => {
@@ -111,11 +118,21 @@ export default function ClinicStaffProfilePage() {
   const onAvatarFileChange = (file: File | null) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      toast.error('Please choose an image file');
+      toast.error(
+        t(
+          'ClinicStaff.profile.toast.imageTypeError',
+          'Please choose an image file'
+        )
+      );
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be smaller than 5MB');
+      toast.error(
+        t(
+          'ClinicStaff.profile.toast.imageSizeError',
+          'Image must be smaller than 5MB'
+        )
+      );
       return;
     }
 
@@ -128,7 +145,12 @@ export default function ClinicStaffProfilePage() {
 
     uploadAvatarMutation.mutate(avatarFile, {
       onSuccess: () => {
-        toast.success('Avatar updated successfully');
+        toast.success(
+          t(
+            'ClinicStaff.profile.toast.avatarUpdated',
+            'Avatar updated successfully'
+          )
+        );
         setShowAvatarModal(false);
         setAvatarFile(null);
         setPreviewUrl(null);

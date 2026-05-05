@@ -72,7 +72,7 @@ function ActivityItem({
   time,
   status,
 }: ActivityItemProps) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const currentLocale = i18n.language === 'vi' ? vi : enUS;
 
   const statusConfig = {
@@ -93,6 +93,36 @@ function ActivityItem({
     },
   };
 
+  // Normalize API action string to a camelCase key for translation lookup
+  const normalizeActionKey = (raw: string): string => {
+    const map: Record<string, string> = {
+      'checked in': 'checkedIn',
+      'checked-in': 'checkedIn',
+      'patient checked in at counter': 'checkedInAtCounter',
+      'appointment created': 'appointmentCreated',
+      'appointment cancelled': 'appointmentCancelled',
+      'appointment canceled': 'appointmentCancelled',
+      'new appointment booked': 'newAppointmentBooked',
+      'screening completed': 'screeningCompleted',
+      'sent to doctor': 'sentToDoctor',
+      'consultation started': 'consultationStarted',
+      'consultation in progress': 'consultationInProgress',
+      'payment completed': 'paymentCompleted',
+      'patient registered': 'patientRegistered',
+      'erm filled': 'ermFilled',
+      'erm record filled': 'ermFilled',
+    };
+    return map[raw.toLowerCase().trim()] ?? '';
+  };
+
+  const actionKey = normalizeActionKey(action);
+  const translatedAction = actionKey
+    ? t(
+        `ClinicStaffDashboard.activityActions.${actionKey}` as never,
+        { defaultValue: action } as never
+      )
+    : action;
+
   const { icon: StatusIcon, color, bg } = statusConfig[status];
   const date = new Date(time);
 
@@ -107,7 +137,9 @@ function ActivityItem({
         <p className="text-sm font-bold text-(--text-primary) group-hover/activity:text-brand transition-colors truncate">
           {patientName}
         </p>
-        <p className="text-xs text-(--text-secondary) font-medium">{action}</p>
+        <p className="text-xs text-(--text-secondary) font-medium">
+          {translatedAction}
+        </p>
       </div>
       <div className="text-right shrink-0">
         <p className="text-sm font-bold text-(--text-primary) tabular-nums">

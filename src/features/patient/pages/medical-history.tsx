@@ -19,7 +19,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { MedicalRecordDto } from '@/features/medical-records/api/medical-record.api';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 
-const HistoryCard = ({ record }: { record: MedicalRecordDto }) => {
+const HistoryCard = ({
+  record,
+  t,
+}: {
+  record: MedicalRecordDto;
+  t: (key: string, options?: Record<string, unknown>) => string;
+}) => {
   const navigate = useNavigate();
   const isLocked =
     record.status === 'Finalized' ||
@@ -43,16 +49,25 @@ const HistoryCard = ({ record }: { record: MedicalRecordDto }) => {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                Mã hồ sơ: {record.medicalRecordNumber}
+                {t('PatientMedicalHistory.record.code', {
+                  defaultValue: 'Mã hồ sơ',
+                })}
+                : {record.medicalRecordNumber}
               </span>
               {isLocked && (
                 <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase">
-                  <ShieldCheck className="w-2.5 h-2.5" /> Official
+                  <ShieldCheck className="w-2.5 h-2.5" />{' '}
+                  {t('PatientMedicalHistory.record.statusOfficial', {
+                    defaultValue: 'Official',
+                  })}
                 </span>
               )}
             </div>
             <h3 className="text-xl font-black text-slate-900 tracking-tight group-hover:text-primary transition-colors">
-              {record.finalDiagnosis || 'Đang cập nhật chẩn đoán...'}
+              {record.finalDiagnosis ||
+                t('PatientMedicalHistory.record.diagnosisUpdating', {
+                  defaultValue: 'Đang cập nhật chẩn đoán...',
+                })}
             </h3>
             <div className="flex flex-wrap items-center gap-4 pt-1">
               <div className="flex items-center gap-2 text-slate-500 text-sm font-medium">
@@ -61,7 +76,13 @@ const HistoryCard = ({ record }: { record: MedicalRecordDto }) => {
               </div>
               <div className="flex items-center gap-2 text-slate-500 text-sm font-medium">
                 <Activity className="w-4 h-4 text-slate-300" />
-                {isLocked ? 'Đã hoàn tất' : 'Đang xử lý'}
+                {isLocked
+                  ? t('PatientMedicalHistory.record.completed', {
+                      defaultValue: 'Đã hoàn tất',
+                    })
+                  : t('PatientMedicalHistory.record.processing', {
+                      defaultValue: 'Đang xử lý',
+                    })}
               </div>
             </div>
           </div>
@@ -77,7 +98,10 @@ const HistoryCard = ({ record }: { record: MedicalRecordDto }) => {
             }}
             className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-tighter transition-all bg-slate-900 text-white hover:bg-primary shadow-lg shadow-black/5 active:scale-95"
           >
-            <Eye className="w-4 h-4" /> Xem chi tiết
+            <Eye className="w-4 h-4" />{' '}
+            {t('PatientMedicalHistory.record.viewDetails', {
+              defaultValue: 'Xem chi tiết',
+            })}
           </button>
           <div className="w-10 h-10 rounded-full border border-slate-100 flex items-center justify-center text-slate-300 group-hover:text-primary group-hover:border-primary/20 transition-all">
             <ChevronRight className="w-5 h-5" />
@@ -111,11 +135,15 @@ export default function MedicalHistoryPage() {
     <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="space-y-1">
         <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-          Bệnh án Điện tử
+          {t('PatientMedicalHistory.page.title', {
+            defaultValue: 'Bệnh án Điện tử',
+          })}
         </h1>
         <p className="text-sm font-medium text-slate-500">
-          Theo dõi toàn bộ lịch sử khám bệnh, chẩn đoán và hướng dẫn điều trị
-          của bác sĩ chuyên khoa.
+          {t('PatientMedicalHistory.page.subtitle', {
+            defaultValue:
+              'Theo dõi toàn bộ lịch sử khám bệnh, chẩn đoán và hướng dẫn điều trị của bác sĩ chuyên khoa.',
+          })}
         </p>
       </div>
 
@@ -140,14 +168,18 @@ export default function MedicalHistoryPage() {
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               type="text"
-              placeholder="Tìm kiếm theo ngày hoặc chẩn đoán..."
+              placeholder={t('PatientMedicalHistory.search.placeholder', {
+                defaultValue: 'Tìm kiếm theo ngày hoặc chẩn đoán...',
+              })}
               className="w-full pl-14 pr-6 py-5 bg-white border border-slate-100 rounded-3xl outline-none shadow-sm focus:ring-2 focus:ring-primary/20 transition-all font-medium"
             />
           </div>
           <div className="bg-primary/5 rounded-3xl p-5 flex items-center justify-between border border-primary/10">
             <div className="space-y-1">
               <p className="text-[10px] font-black text-primary uppercase tracking-widest">
-                Tổng số lượt khám
+                {t('PatientMedicalHistory.stats.totalVisits', {
+                  defaultValue: 'Tổng số lượt khám',
+                })}
               </p>
               <p className="text-2xl font-black text-slate-900">
                 {records?.length || 0}
@@ -175,20 +207,26 @@ export default function MedicalHistoryPage() {
               </div>
               <div className="space-y-2">
                 <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">
-                  Chưa có lịch sử khám
+                  {t('PatientMedicalHistory.empty.title', {
+                    defaultValue: 'Chưa có lịch sử khám',
+                  })}
                 </h3>
                 <p className="text-slate-400 font-medium">
-                  Hồ sơ bệnh án của bạn sẽ xuất hiện tại đây sau khi hoàn tất
-                  lượt khám.
+                  {t('PatientMedicalHistory.empty.description', {
+                    defaultValue:
+                      'Hồ sơ bệnh án của bạn sẽ xuất hiện tại đây sau khi hoàn tất lượt khám.',
+                  })}
                 </p>
               </div>
               <button className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-tighter hover:bg-primary transition-all">
-                Đặt lịch khám ngay
+                {t('PatientMedicalHistory.cta.bookNow', {
+                  defaultValue: 'Đặt lịch khám ngay',
+                })}
               </button>
             </div>
           ) : (
             records.map((record) => (
-              <HistoryCard key={record.id} record={record} />
+              <HistoryCard key={record.id} record={record} t={t} />
             ))
           )}
         </div>
@@ -200,15 +238,21 @@ export default function MedicalHistoryPage() {
           </div>
           <div className="flex-1 text-center md:text-left space-y-1">
             <h4 className="font-black text-slate-800 uppercase tracking-tight">
-              Cần hỗ trợ về kết quả khám?
+              {t('PatientMedicalHistory.help.title', {
+                defaultValue: 'Cần hỗ trợ về kết quả khám?',
+              })}
             </h4>
             <p className="text-slate-500 text-sm font-medium">
-              Nếu có thắc mắc về chẩn đoán hoặc thuốc điều trị, hãy liên hệ ngay
-              với đội ngũ bác sĩ.
+              {t('PatientMedicalHistory.help.description', {
+                defaultValue:
+                  'Nếu có thắc mắc về chẩn đoán hoặc thuốc điều trị, hãy liên hệ ngay với đội ngũ bác sĩ.',
+              })}
             </p>
           </div>
           <button className="whitespace-nowrap px-6 py-3 border-2 border-slate-200 rounded-2xl font-black text-xs uppercase tracking-tighter hover:bg-white hover:border-primary transition-all">
-            Yêu cầu tư vấn
+            {t('PatientMedicalHistory.help.cta', {
+              defaultValue: 'Yêu cầu tư vấn',
+            })}
           </button>
         </div>
       </div>

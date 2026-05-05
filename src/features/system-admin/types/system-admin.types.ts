@@ -143,6 +143,12 @@ export interface SystemAdminDashboardMetrics {
   topOrganisationsByRating: SystemAdminTopOrganisation[];
 }
 
+export interface SystemAdminTransactionStat {
+  Date: string;
+  Amount: number;
+  Count: number;
+}
+
 // ─── Real-Time Clinic Operations Dashboard Types ──────────────────────────────
 
 export interface TodaySummary {

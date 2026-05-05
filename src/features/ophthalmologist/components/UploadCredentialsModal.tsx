@@ -258,8 +258,14 @@ export default function UploadCredentialsModal({
     onSuccess: () => {
       toast.success(
         isEditMode
-          ? 'Credential updated successfully.'
-          : 'Credentials uploaded successfully.'
+          ? t(
+              'Ophthalmologist.credentials.toast.updateSuccess',
+              'Credential updated successfully.'
+            )
+          : t(
+              'Ophthalmologist.credentials.toast.uploadSuccess',
+              'Credentials uploaded successfully.'
+            )
       );
       queryClient.invalidateQueries({
         queryKey: ophthalmologistProfileKeys.all,
@@ -274,13 +280,25 @@ export default function UploadCredentialsModal({
       setSubmitError(
         apiError?.response?.data?.message ||
           (isEditMode
-            ? 'Failed to update credential'
-            : 'Failed to upload credentials')
+            ? t(
+                'Ophthalmologist.credentials.toast.updateFailed',
+                'Failed to update credential'
+              )
+            : t(
+                'Ophthalmologist.credentials.toast.uploadFailed',
+                'Failed to upload credentials'
+              ))
       );
       toast.error(
         isEditMode
-          ? 'Failed to update credential'
-          : 'Failed to upload credentials'
+          ? t(
+              'Ophthalmologist.credentials.toast.updateFailed',
+              'Failed to update credential'
+            )
+          : t(
+              'Ophthalmologist.credentials.toast.uploadFailed',
+              'Failed to upload credentials'
+            )
       );
     },
   });
@@ -295,7 +313,10 @@ export default function UploadCredentialsModal({
 
     if (!isEditMode && !hasOneFile) {
       setSubmitError(
-        'Please attach at least one file (Degree or License/Certificate).'
+        t(
+          'Ophthalmologist.credentials.validation.atLeastOneFile',
+          'Please attach at least one file (Degree or License/Certificate).'
+        )
       );
       return;
     }
@@ -380,7 +401,7 @@ export default function UploadCredentialsModal({
                         <input
                           type="text"
                           {...register(`degrees.${index}.name`, {
-                            required: 'Required',
+                            required: t('Validation.Required', 'Required'),
                           })}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
                         />
@@ -395,7 +416,7 @@ export default function UploadCredentialsModal({
                         </label>
                         <select
                           {...register(`degrees.${index}.degreeLevel`, {
-                            required: 'Required',
+                            required: t('Validation.Required', 'Required'),
                           })}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
                         >
@@ -408,7 +429,10 @@ export default function UploadCredentialsModal({
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Issuing Authority
+                          {t(
+                            'Ophthalmologist.credentials.issuingAuthority',
+                            'Issuing Authority'
+                          )}
                         </label>
                         <input
                           type="text"
@@ -418,12 +442,16 @@ export default function UploadCredentialsModal({
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Issued Date <span className="text-red-500">*</span>
+                          {t(
+                            'Ophthalmologist.credentials.issuedDate',
+                            'Issued Date'
+                          )}{' '}
+                          <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="date"
                           {...register(`degrees.${index}.issuedDate`, {
-                            required: 'Required',
+                            required: t('Validation.Required', 'Required'),
                           })}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
                         />
@@ -432,7 +460,11 @@ export default function UploadCredentialsModal({
 
                     <div className="mt-4">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Upload Document <span className="text-red-500">*</span>
+                        {t(
+                          'Ophthalmologist.credentials.uploadDocument',
+                          'Upload Document'
+                        )}{' '}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="file"
@@ -449,7 +481,11 @@ export default function UploadCredentialsModal({
                     onClick={() => appendDegree(createDefaultDegree())}
                     className="flex items-center gap-2 text-cyan-600 hover:text-cyan-700 text-sm font-medium"
                   >
-                    <Plus className="w-4 h-4" /> Add Another Degree
+                    <Plus className="w-4 h-4" />{' '}
+                    {t(
+                      'Ophthalmologist.credentials.addAnotherDegree',
+                      'Add Another Degree'
+                    )}
                   </button>
                 )}
               </section>
@@ -495,7 +531,7 @@ export default function UploadCredentialsModal({
                         <input
                           type="text"
                           {...register(`certificates.${index}.name`, {
-                            required: 'Required',
+                            required: t('Validation.Required', 'Required'),
                           })}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
                         />
@@ -526,10 +562,7 @@ export default function UploadCredentialsModal({
                         <input
                           type="date"
                           {...register(`certificates.${index}.issuedDate`, {
-                            required: t(
-                              'Ophthalmologist.common.required',
-                              'Required'
-                            ),
+                            required: t('Validation.Required', 'Required'),
                           })}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
                         />
@@ -551,7 +584,11 @@ export default function UploadCredentialsModal({
 
                     <div className="mt-4">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Upload Document <span className="text-red-500">*</span>
+                        {t(
+                          'Ophthalmologist.credentials.uploadDocument',
+                          'Upload Document'
+                        )}{' '}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="file"

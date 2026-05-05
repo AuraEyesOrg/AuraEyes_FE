@@ -59,6 +59,10 @@ const mapToUiPatient = (item: PatientListItem): Patient => ({
   emailVerified: item.emailConfirmed,
 });
 
+// ── Cache to prevent re-fetch on locale-switch remount ──
+let patientsCacheTimestamp = 0;
+const PATIENTS_CACHE_TTL = 10_000;
+
 export default function PatientsPage() {
   const { t } = useSafeTranslation();
   const { i18n } = useTranslation();
@@ -85,6 +89,9 @@ export default function PatientsPage() {
 
   // Load data from real API
   const loadData = useCallback(async () => {
+    const now = Date.now();
+    if (now - patientsCacheTimestamp < PATIENTS_CACHE_TTL) return;
+    patientsCacheTimestamp = now;
     setLoading(true);
     try {
       const apiStatus = statusFilter === 'all' ? undefined : statusFilter;
@@ -161,7 +168,7 @@ export default function PatientsPage() {
           'Patient has been activated successfully.'
         )
       );
-      loadData();
+      forceReload();
     } catch (error) {
       console.error('Failed to toggle patient lock status:', error);
       toast.error(
@@ -171,6 +178,11 @@ export default function PatientsPage() {
         )
       );
     }
+  };
+
+  const forceReload = () => {
+    patientsCacheTimestamp = 0;
+    loadData();
   };
 
   const confirmLockPatient = async () => {
@@ -187,7 +199,7 @@ export default function PatientsPage() {
           'Patient has been locked successfully.'
         )
       );
-      await loadData();
+      await forceReload();
     } catch (error) {
       console.error('Failed to lock patient:', error);
       toast.error(

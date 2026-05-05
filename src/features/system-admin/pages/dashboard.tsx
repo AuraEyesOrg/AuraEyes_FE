@@ -11,12 +11,16 @@ import {
   Stethoscope,
   UserPlus,
   RefreshCw,
+  Star,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import StatsCard from '../components/StatsCard';
 import { dashboardApi } from '../api';
+import { listClinicFeedback } from '@/features/patient/api/feedback.api';
+import type { ClinicFeedbackItem } from '@/features/patient/types/feedback.types';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { TransactionVolumeChart } from '@/components/admin/transactions/TransactionVolumeChart';
 
 const POLLING_INTERVAL = 60000;
 const WAITING_THRESHOLD_MINUTES = 20;
@@ -68,6 +72,18 @@ export default function SystemAdminDashboard() {
     refetchInterval: POLLING_INTERVAL,
   });
 
+  const { data: feedbackData, isLoading: feedbackLoading } = useQuery({
+    queryKey: ['system-admin', 'clinic-feedback'],
+    queryFn: () => listClinicFeedback(1, 5),
+  });
+  const feedbackItems: ClinicFeedbackItem[] = feedbackData?.items ?? [];
+
+  const avgRating = useMemo(() => {
+    if (feedbackItems.length === 0) return 0;
+    const sum = feedbackItems.reduce((acc, item) => acc + item.rating, 0);
+    return sum / feedbackItems.length;
+  }, [feedbackItems]);
+
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
@@ -83,6 +99,9 @@ export default function SystemAdminDashboard() {
         }),
         queryClient.invalidateQueries({
           queryKey: ['system-admin', 'doctor-status'],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['system-admin', 'clinic-feedback'],
         }),
       ]);
     } finally {
@@ -119,59 +138,6 @@ export default function SystemAdminDashboard() {
     ],
     [todaySummary, t]
   );
-
-  const bottleneckAlerts = useMemo(() => {
-    const alerts: { message: string; severity: 'critical' | 'warning' }[] = [];
-
-    const longWaits = liveQueue.filter(
-      (q) =>
-        q.waitingTimeMinutes > WAITING_THRESHOLD_MINUTES &&
-        q.status === 'WAITING'
-    );
-    if (longWaits.length > 0) {
-      alerts.push({
-        message: t(
-          `${T}.bottleneckLongWait`,
-          '{{count}} patient(s) waiting over {{minutes}} min',
-          {
-            count: longWaits.length,
-            minutes: WAITING_THRESHOLD_MINUTES,
-          }
-        ),
-        severity: 'critical',
-      });
-    }
-
-    if (
-      slotUtilization &&
-      slotUtilization.bookedSlots >= slotUtilization.totalSlots &&
-      slotUtilization.totalSlots > 0
-    ) {
-      alerts.push({
-        message: t(
-          `${T}.bottleneckFullCapacity`,
-          'Slots at full capacity for today'
-        ),
-        severity: 'warning',
-      });
-    }
-
-    const overloadedDoctors = doctorStatus.filter((d) => d.activeLoad > 3);
-    if (overloadedDoctors.length > 0) {
-      alerts.push({
-        message: t(
-          `${T}.bottleneckOverloaded`,
-          '{{count}} doctor(s) overloaded (>3 active)',
-          {
-            count: overloadedDoctors.length,
-          }
-        ),
-        severity: 'warning',
-      });
-    }
-
-    return alerts;
-  }, [liveQueue, slotUtilization, doctorStatus, t]);
 
   const isLoading =
     summaryLoading || slotsLoading || queueLoading || doctorsLoading;
@@ -465,39 +431,71 @@ export default function SystemAdminDashboard() {
               )}
             </div>
 
-            {/* Bottleneck Alerts */}
+            {/* Clinic Feedback / Rating */}
             <div className="rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm p-5">
               <h2 className="text-base font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-red-500" />
-                {t(`${T}.bottlenecks`, 'Bottleneck Alerts')}
+                <Star className="w-4 h-4 text-amber-500" />
+                {t(`${T}.clinicRatings`, 'Clinic Feedback & Rating')}
+                {feedbackItems.length > 0 && (
+                  <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-bold">
+                    <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                    {avgRating.toFixed(1)}
+                  </span>
+                )}
               </h2>
 
-              {bottleneckAlerts.length === 0 ? (
+              {feedbackLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Spinner size={28} />
+                </div>
+              ) : feedbackItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center text-gray-400 dark:text-slate-500 text-sm">
-                  <CheckCircle className="w-8 h-8 mb-2 text-green-500 dark:text-green-400" />
-                  {t(
-                    `${T}.noBottlenecks`,
-                    'No bottlenecks detected. Operations running smoothly.'
-                  )}
+                  <Star className="w-8 h-8 mb-2 text-gray-300 dark:text-slate-600" />
+                  {t(`${T}.noRatings`, 'No clinic ratings available yet.')}
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {bottleneckAlerts.map((alert, idx) => (
+                <div className="space-y-3">
+                  {feedbackItems.map((item) => (
                     <div
-                      key={idx}
-                      className={`flex items-start gap-3 p-3 rounded-xl border ${
-                        alert.severity === 'critical'
-                          ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400'
-                          : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400'
-                      }`}
+                      key={item.id}
+                      className="flex flex-col gap-2 p-3 rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700"
                     >
-                      <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-                      <p className="text-sm">{alert.message}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {item.patientFullName ??
+                            t(`${T}.anonymous`, 'Anonymous')}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3.5 h-3.5 ${
+                                i < item.rating
+                                  ? 'text-amber-500 fill-amber-500'
+                                  : 'text-gray-300 dark:text-slate-600'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      {item.comment && (
+                        <p className="text-xs text-gray-500 dark:text-slate-400 italic">
+                          “{item.comment}”
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-400 dark:text-slate-500">
+                        {new Date(item.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
                   ))}
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Transactions Chart Section */}
+          <div className="mb-6">
+            <TransactionVolumeChart />
           </div>
 
           {/* Quick Actions */}
