@@ -18,6 +18,10 @@ import {
   RefreshCw,
   AlertTriangle,
   Search,
+  Sun,
+  Moon,
+  User,
+  UserCheck,
 } from 'lucide-react';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -34,7 +38,7 @@ import type { OrganisationClinicAppointmentDto } from '@/features/organisation/a
 import {
   organisationClinicBookingKeys,
   useCheckInClinicAppointment,
-  useClinicStaffAvailableSlots,
+  useClinicSchedule,
   useCreateClinicStaffAppointment,
   useMarkNoShowClinicAppointment,
   useCompleteOrderPayment,
@@ -332,7 +336,8 @@ export default function ClinicStaffAppointmentsPage() {
     enabled: isWalkInModalOpen,
     staleTime: 30_000,
   });
-  const availableSlotsQuery = useClinicStaffAvailableSlots(
+  const clinicScheduleQuery = useClinicSchedule(
+    walkInDate,
     walkInDate,
     isWalkInModalOpen
   );
@@ -377,19 +382,36 @@ export default function ClinicStaffAppointmentsPage() {
     [recentPatientsQuery.data, selectedWalkInPatientId]
   );
 
-  const availableWalkInSlots = useMemo(
-    () =>
-      (availableSlotsQuery.data ?? []).filter(
-        (s) => s.status === 'Available' && s.availableCapacity > 0
-      ),
-    [availableSlotsQuery.data]
-  );
+  const scheduleGrouping = useMemo(() => {
+    const slots = clinicScheduleQuery.data?.aggregatedSlots ?? [];
+    const morning = slots.filter((s) => {
+      const hour = parseInt(s.startTime.split(':')[0]);
+      return hour < 12;
+    });
+    const afternoon = slots.filter((s) => {
+      const hour = parseInt(s.startTime.split(':')[0]);
+      return hour >= 12;
+    });
+    return { morning, afternoon, totalCount: slots.length };
+  }, [clinicScheduleQuery.data]);
 
-  const selectedWalkInSlot = useMemo(
-    () =>
-      availableWalkInSlots.find((s) => s.id === selectedWalkInSlotId) ?? null,
-    [availableWalkInSlots, selectedWalkInSlotId]
-  );
+  const selectedTimeBlock = useMemo(() => {
+    const all = [...scheduleGrouping.morning, ...scheduleGrouping.afternoon];
+    return (
+      all.find((b) =>
+        b.doctors.some((d) => d.slotId === selectedWalkInSlotId)
+      ) ?? null
+    );
+  }, [scheduleGrouping, selectedWalkInSlotId]);
+
+  const selectedWalkInSlot = useMemo(() => {
+    if (!selectedTimeBlock) return null;
+    return (
+      selectedTimeBlock.doctors.find(
+        (d) => d.slotId === selectedWalkInSlotId
+      ) ?? null
+    );
+  }, [selectedTimeBlock, selectedWalkInSlotId]);
 
   const stats = useMemo(
     () => ({
@@ -429,13 +451,18 @@ export default function ClinicStaffAppointmentsPage() {
     const { status, isPaidDeposit } = appointment;
     switch (status) {
       case 'Pending':
+      case 'Confirmed':
+        if (appointment.isWalkIn) {
+          return isPaidDeposit
+            ? t('Organisation.calendar.status.fullyPaid', 'Fully Paid')
+            : t(
+                'Organisation.calendar.states.billing.pending',
+                'Awaiting payment'
+              );
+        }
         return isPaidDeposit
           ? t('Organisation.calendar.status.depositPaid', 'Deposit Paid')
           : t('Organisation.calendar.status.pending', 'Pending');
-      case 'Confirmed':
-        return isPaidDeposit
-          ? t('Organisation.calendar.status.depositPaid', 'Deposit Paid')
-          : t('Organisation.calendar.status.confirmed', 'Confirmed');
       case 'CheckedIn':
         return t('Organisation.calendar.status.checkedIn', 'Checked in');
       case 'InProgress':
@@ -750,7 +777,7 @@ export default function ClinicStaffAppointmentsPage() {
             <div className="border-t border-slate-100 p-4 dark:border-slate-800">
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   setCurrentWeekOffset(0);
                   setSelectedDate(todayKey);
                 }}
@@ -968,7 +995,7 @@ export default function ClinicStaffAppointmentsPage() {
                                 {status === 'Pending' &&
                                   (isPastOneThirdDuration(appt) ? (
                                     <button
-                                      onClick={() => {
+                                      onClick={async () => {
                                         setSelectedLatePatientAppointmentId(
                                           appt.id
                                         );
@@ -1033,8 +1060,14 @@ export default function ClinicStaffAppointmentsPage() {
                         </div>
 
                         <div className="min-w-0 space-y-1">
-                          <h3 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
+                          <h3 className="flex items-center gap-2 text-xl font-black tracking-tight text-slate-900 dark:text-white">
                             {patientDisplayName}
+                            {appt.isWalkIn && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-tighter text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
+                                <UserPlus className="h-2.5 w-2.5" />
+                                WALK-IN
+                              </span>
+                            )}
                           </h3>
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold uppercase tracking-widest text-slate-400">
                             <div className="flex items-center gap-2 rounded-full border border-brand/10 bg-brand/5 px-3 py-1 text-brand">
@@ -1112,10 +1145,25 @@ export default function ClinicStaffAppointmentsPage() {
                           <div className="flex flex-wrap justify-end gap-2">
                             {appt.orderStatus === 'Pending' && (
                               <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-amber-600">
-                                <Clock className="h-3.5 w-3.5" />
-                                {t(
-                                  'Organisation.calendar.states.billing.pending',
-                                  'Pending Payment'
+                                {appt.isWalkIn ? (
+                                  <span className="flex items-center gap-1.5">
+                                    <Banknote className="h-3.5 w-3.5" />
+                                    {t(
+                                      'Organisation.calendar.states.billing.pending',
+                                      'Pending Payment'
+                                    )}
+                                    <span className="ml-1 opacity-60 text-[8px] tracking-normal font-medium">
+                                      (FULL)
+                                    </span>
+                                  </span>
+                                ) : (
+                                  <>
+                                    <Clock className="h-3.5 w-3.5" />
+                                    {t(
+                                      'Organisation.calendar.states.billing.pending',
+                                      'Pending Payment'
+                                    )}
+                                  </>
                                 )}
                               </div>
                             )}
@@ -1255,30 +1303,35 @@ export default function ClinicStaffAppointmentsPage() {
                     {/* Actions Row */}
                     <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-6 dark:border-slate-800">
                       <div className="flex flex-wrap items-center gap-3">
-                        {['Pending', 'Confirmed'].includes(appt.status) ? (
+                        {['Pending', 'Confirmed'].includes(appt.status) && (
                           <div className="flex flex-wrap items-center gap-3">
                             {!appt.isPaidDeposit && appt.orderId ? (
                               <button
                                 type="button"
                                 disabled={isMutating || selectedDate > todayKey}
-                                onClick={() => {
+                                onClick={async () => {
                                   setAppointmentToPay(appt);
                                   setIsPaymentModalOpen(true);
                                 }}
                                 className="inline-flex h-11 items-center gap-2 rounded-2xl border-2 border-amber-500 bg-amber-500/10 px-6 text-xs font-black uppercase tracking-widest text-amber-800 transition-all hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:text-amber-200"
                               >
                                 <Banknote className="h-4 w-4" />
-                                {t(
-                                  'Organisation.calendar.actions.collectCashDeposit',
-                                  'Collect cash deposit'
-                                )}
+                                {appt.isWalkIn
+                                  ? t(
+                                      'Organisation.calendar.actions.collectCashPayment',
+                                      'Collect cash payment'
+                                    )
+                                  : t(
+                                      'Organisation.calendar.actions.collectCashDeposit',
+                                      'Collect cash deposit'
+                                    )}
                               </button>
                             ) : null}
                             {isPastOneThirdDuration(appt) ? (
                               <button
                                 type="button"
                                 disabled={isMutating}
-                                onClick={() => {
+                                onClick={async () => {
                                   setSelectedLatePatientAppointmentId(appt.id);
                                   setIsLatePatientModalOpen(true);
                                 }}
@@ -1298,7 +1351,8 @@ export default function ClinicStaffAppointmentsPage() {
                                   selectedDate > todayKey ||
                                   (!appt.isPaidDeposit && !!appt.orderId)
                                 }
-                                onClick={() => {
+                                hidden={appt.isWalkIn}
+                                onClick={async () => {
                                   if (selectedDate > todayKey) {
                                     toast.error(
                                       t(
@@ -1309,10 +1363,26 @@ export default function ClinicStaffAppointmentsPage() {
                                     return;
                                   }
                                   if (!appt.isPaidDeposit && appt.orderId) {
-                                    toast.warning(
+                                    const msg = appt.isWalkIn
+                                      ? t(
+                                          'Organisation.calendar.toast.paymentRequiredBeforeCheckIn',
+                                          'Collect full payment before check-in.'
+                                        )
+                                      : t(
+                                          'Organisation.calendar.toast.depositRequiredBeforeCheckIn',
+                                          'Collect the deposit before check-in.'
+                                        );
+                                    toast.warning(msg);
+                                    return;
+                                  }
+                                  if (appt.isWalkIn) {
+                                    // Walk-ins don't need QR, just check-in directly
+                                    await runAction(
+                                      () =>
+                                        checkInMutation.mutateAsync(appt.id),
                                       t(
-                                        'Organisation.calendar.toast.depositRequiredBeforeCheckIn',
-                                        'Collect the deposit before check-in.'
+                                        'Organisation.calendar.toast.checkInSuccess',
+                                        'Check-in successful.'
                                       )
                                     );
                                     return;
@@ -1322,15 +1392,28 @@ export default function ClinicStaffAppointmentsPage() {
                                 }}
                                 className="inline-flex h-11 items-center gap-2 rounded-2xl bg-emerald-600 px-6 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                               >
-                                <QrCode className="h-4 w-4" />
-                                {t(
-                                  'Organisation.calendar.actions.scanQrCheckIn',
-                                  'Scan QR check-in'
+                                {appt.isWalkIn ? (
+                                  <>
+                                    <UserCheck className="h-4 w-4" />
+                                    {t(
+                                      'Organisation.calendar.actions.checkIn',
+                                      'Check-in'
+                                    )}
+                                  </>
+                                ) : (
+                                  <>
+                                    <QrCode className="h-4 w-4" />
+                                    {t(
+                                      'Organisation.calendar.actions.scanQrCheckIn',
+                                      'Scan QR check-in'
+                                    )}
+                                  </>
                                 )}
                               </button>
                             )}
                           </div>
-                        ) : !isTerminal && appt.flowState ? (
+                        )}
+                        {!isTerminal && appt.flowState && (
                           <div className="inline-flex h-11 max-w-full items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-5 dark:border-slate-700 dark:bg-slate-800/80">
                             <span className="truncate text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
                               {t(
@@ -1339,7 +1422,7 @@ export default function ClinicStaffAppointmentsPage() {
                               )}
                             </span>
                           </div>
-                        ) : null}
+                        )}
 
                         {appt.orderId &&
                           (appt.remainingAmount ?? 0) > 0 &&
@@ -1352,7 +1435,7 @@ export default function ClinicStaffAppointmentsPage() {
                               <button
                                 type="button"
                                 disabled={isMutating}
-                                onClick={() => {
+                                onClick={async () => {
                                   setAppointmentToPay(appt);
                                   setIsPaymentModalOpen(true);
                                 }}
@@ -1603,73 +1686,205 @@ export default function ClinicStaffAppointmentsPage() {
                   />
                 </div>
 
-                <div className="rounded-xl border border-(--border-color) bg-(--bg-secondary) p-4">
-                  <p className="mb-3 text-sm font-bold text-(--text-primary)">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-5 dark:border-slate-800 dark:bg-slate-900/40">
+                  <p className="mb-4 text-xs font-black uppercase tracking-widest text-slate-400">
                     {t(
                       'Organisation.calendar.walkInModal.slot.title',
-                      'Available slot'
+                      'Available Slots'
                     )}
                   </p>
-                  <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-                    {availableSlotsQuery.isLoading ? (
-                      <div className="flex items-center gap-2 py-6 text-sm text-(--text-secondary)">
-                        <Spinner />
+
+                  {clinicScheduleQuery.isLoading ? (
+                    <div className="flex items-center gap-2 py-8 text-sm text-slate-400">
+                      <Spinner />
+                      {t(
+                        'Organisation.calendar.walkInModal.slot.loading',
+                        'Syncing schedule...'
+                      )}
+                    </div>
+                  ) : scheduleGrouping.totalCount === 0 ? (
+                    <p className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400 dark:border-slate-800">
+                      {t(
+                        'Organisation.calendar.walkInModal.slot.empty',
+                        'No slots available for this date.'
+                      )}
+                    </p>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Morning */}
+                      {scheduleGrouping.morning.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-emerald-600/80 dark:text-emerald-400/80">
+                            <Sun className="h-3 w-3" />
+                            {t(
+                              'Organisation.calendar.walkInModal.morning',
+                              'Morning'
+                            )}
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            {scheduleGrouping.morning.map((block) => {
+                              const isBlockSelected =
+                                selectedTimeBlock?.startTime ===
+                                block.startTime;
+                              return (
+                                <button
+                                  key={block.startTime}
+                                  type="button"
+                                  onClick={async () => {
+                                    // Select first available doctor by default if not already selected
+                                    if (block.doctors.length > 0) {
+                                      setSelectedWalkInSlotId(
+                                        block.doctors[0].slotId
+                                      );
+                                    }
+                                  }}
+                                  className={`rounded-xl border p-2.5 transition-all ${
+                                    isBlockSelected
+                                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm dark:bg-emerald-950/30 dark:text-emerald-400'
+                                      : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:bg-emerald-50/30 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400'
+                                  }`}
+                                >
+                                  <div className="text-xs font-bold">
+                                    {formatSlotTime(block.startTime)}
+                                  </div>
+                                  <div className="mt-0.5 text-[10px] opacity-70">
+                                    {block.doctors.length} Dr.
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Afternoon */}
+                      {scheduleGrouping.afternoon.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-amber-600/80 dark:text-amber-400/80">
+                            <Moon className="h-3 w-3" />
+                            {t(
+                              'Organisation.calendar.walkInModal.afternoon',
+                              'Afternoon'
+                            )}
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            {scheduleGrouping.afternoon.map((block) => {
+                              const isBlockSelected =
+                                selectedTimeBlock?.startTime ===
+                                block.startTime;
+                              return (
+                                <button
+                                  key={block.startTime}
+                                  type="button"
+                                  onClick={async () => {
+                                    if (block.doctors.length > 0) {
+                                      setSelectedWalkInSlotId(
+                                        block.doctors[0].slotId
+                                      );
+                                    }
+                                  }}
+                                  className={`rounded-xl border p-2.5 transition-all ${
+                                    isBlockSelected
+                                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm dark:bg-emerald-950/30 dark:text-emerald-400'
+                                      : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:bg-emerald-50/30 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400'
+                                  }`}
+                                >
+                                  <div className="text-xs font-bold">
+                                    {formatSlotTime(block.startTime)}
+                                  </div>
+                                  <div className="mt-0.5 text-[10px] opacity-70">
+                                    {block.doctors.length} Dr.
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Doctor Selection */}
+                {selectedTimeBlock && (
+                  <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-4">
+                    <div className="flex items-center justify-between px-1">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                         {t(
-                          'Organisation.calendar.walkInModal.slot.loading',
-                          'Loading slots...'
-                        )}
-                      </div>
-                    ) : availableWalkInSlots.length === 0 ? (
-                      <p className="rounded-xl border border-dashed border-(--border-color) p-4 text-sm text-(--text-muted)">
-                        {t(
-                          'Organisation.calendar.walkInModal.slot.empty',
-                          'No available slots for this date.'
+                          'Organisation.calendar.walkInModal.selectDoctor',
+                          'Select Ophthalmologist'
                         )}
                       </p>
-                    ) : (
-                      availableWalkInSlots.map((slot) => {
-                        const isSelected = selectedWalkInSlotId === slot.id;
+                      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full dark:bg-emerald-950/30 dark:text-emerald-400">
+                        {formatSlotTime(selectedTimeBlock.startTime)} -{' '}
+                        {formatSlotTime(selectedTimeBlock.endTime)}
+                      </span>
+                    </div>
+
+                    <div className="grid gap-3">
+                      {selectedTimeBlock.doctors.map((doc) => {
+                        const isDocSelected =
+                          selectedWalkInSlotId === doc.slotId;
                         return (
                           <button
-                            key={slot.id}
+                            key={doc.slotId}
                             type="button"
-                            onClick={() => setSelectedWalkInSlotId(slot.id)}
-                            className={[
-                              'flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition',
-                              isSelected
-                                ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
-                                : 'border-(--border-color) bg-(--bg-primary) hover:border-emerald-200',
-                            ].join(' ')}
+                            disabled={doc.isBooked}
+                            onClick={() => setSelectedWalkInSlotId(doc.slotId)}
+                            className={`flex items-center justify-between gap-4 rounded-2xl border p-4 transition-all ${
+                              doc.isBooked
+                                ? 'opacity-40 grayscale cursor-not-allowed'
+                                : isDocSelected
+                                  ? 'border-emerald-500 bg-emerald-50/50 shadow-sm dark:bg-emerald-950/20'
+                                  : 'border-slate-200 bg-white hover:border-emerald-200 dark:border-slate-800 dark:bg-slate-900'
+                            }`}
                           >
-                            <div>
-                              <p className="font-semibold text-(--text-primary)">
-                                {formatSlotTime(slot.startTime)} -{' '}
-                                {formatSlotTime(slot.endTime)}
-                              </p>
-                              <p className="mt-1 text-xs text-(--text-muted)">
-                                {t(
-                                  'Organisation.calendar.walkInModal.slot.remaining',
-                                  '{{count}} seats left',
-                                  {
-                                    count: slot.availableCapacity,
-                                  }
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                {doc.doctorAvatar ? (
+                                  <img
+                                    src={doc.doctorAvatar}
+                                    alt={doc.doctorName}
+                                    className="h-10 w-10 rounded-xl object-cover border border-slate-100 dark:border-slate-800"
+                                  />
+                                ) : (
+                                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-400 dark:bg-slate-800">
+                                    <User className="h-5 w-5" />
+                                  </div>
                                 )}
-                              </p>
+                                {isDocSelected && (
+                                  <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center dark:border-slate-900">
+                                    <CheckCircle className="h-2.5 w-2.5 text-white" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-left">
+                                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                                  {doc.doctorName}
+                                </p>
+                                <p className="text-[10px] text-slate-400 font-medium">
+                                  {t(
+                                    'Organisation.calendar.walkInModal.consultation',
+                                    'Consultation'
+                                  )}
+                                </p>
+                              </div>
                             </div>
-                            {slot.cost ? (
-                              <span className="text-xs font-bold text-emerald-600">
+                            <div className="text-right">
+                              <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">
                                 {new Intl.NumberFormat(currentLocale, {
                                   style: 'currency',
                                   currency: 'VND',
-                                }).format(slot.cost)}
-                              </span>
-                            ) : null}
+                                  maximumFractionDigits: 0,
+                                }).format(doc.price)}
+                              </p>
+                            </div>
                           </button>
                         );
-                      })
-                    )}
+                      })}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="rounded-xl border border-(--border-color) bg-(--bg-secondary) p-4">
                   <label className="text-sm font-bold text-(--text-primary)">
@@ -1691,13 +1906,15 @@ export default function ClinicStaffAppointmentsPage() {
                 </div>
 
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-900/20 dark:text-emerald-300">
-                  {selectedWalkInPatient && selectedWalkInSlot
+                  {selectedWalkInPatient &&
+                  selectedWalkInSlot &&
+                  selectedTimeBlock
                     ? t(
                         'Organisation.calendar.walkInModal.summary.ready',
                         '{{patient}} will enter the queue at {{time}}.',
                         {
                           patient: selectedWalkInPatient.name,
-                          time: `${formatSlotTime(selectedWalkInSlot.startTime, currentLocale)} - ${formatSlotTime(selectedWalkInSlot.endTime, currentLocale)}`,
+                          time: `${formatSlotTime(selectedTimeBlock.startTime, currentLocale)} - ${formatSlotTime(selectedTimeBlock.endTime, currentLocale)}`,
                         }
                       )
                     : t(
@@ -1784,12 +2001,24 @@ export default function ClinicStaffAppointmentsPage() {
         onConfirm={async (method) => {
           if (!appointmentToPay?.orderId) return;
           const localePrefix = i18nObj.language === 'en' ? '/en' : '/vi';
-          return payRemainingMutation.mutateAsync({
+
+          await payRemainingMutation.mutateAsync({
             orderId: appointmentToPay.orderId,
             method,
             returnUrl: `${window.location.origin}${localePrefix}/payment/success`,
             cancelUrl: `${window.location.origin}${localePrefix}/payment/cancel`,
           });
+
+          // For walk-ins with cash payment, the backend now handles auto-check-in
+          // in ClinicVisitService.ProcessPaymentCompletionAsync.
+          if (method === 'Cash' && appointmentToPay.isWalkIn) {
+            toast.success(
+              t(
+                'Organisation.calendar.toast.walkInCheckedIn',
+                'Walk-in patient checked-in automatically.'
+              )
+            );
+          }
         }}
       />
     </ClinicStaffLayout>

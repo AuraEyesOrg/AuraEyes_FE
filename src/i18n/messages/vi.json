@@ -3638,8 +3638,8 @@
         "citizenId": "CCCD",
         "citizenIdPlaceholder": "vd. 001099000000",
         "dateOfBirth": "Ngày sinh *",
-        "email": "Email",
-        "emailPlaceholder": "benhnhan@example.com (không bắt buộc)",
+        "email": "Email *",
+        "emailPlaceholder": "benhnhan@example.com",
         "fullName": "Họ và tên *",
         "fullNamePlaceholder": "vd. Nguyễn Văn A",
         "gender": "Giới tính *",
@@ -5686,8 +5686,8 @@
             "citizenId": "CCCD",
             "citizenIdPlaceholder": "vd. 001099000000",
             "dateOfBirth": "Ngày sinh *",
-            "email": "Email",
-            "emailPlaceholder": "benhnhan@example.com (không bắt buộc)",
+            "email": "Email *",
+            "emailPlaceholder": "benhnhan@example.com",
             "fullName": "Họ và tên *",
             "fullNamePlaceholder": "vd. Nguyễn Văn A",
             "gender": "Giới tính *",
@@ -5759,6 +5759,7 @@
         "calendar": {
           "actions": {
             "collectCashDeposit": "Thu cọc tiền mặt",
+            "collectCashPayment": "Thu tiền mặt (Full)",
             "completeVisit": "Hoàn tất khám",
             "newWalkIn": "Bệnh nhân mới",
             "noShow": "Vắng mặt",
@@ -5811,6 +5812,7 @@
           },
           "toast": {
             "depositRequiredBeforeCheckIn": "Vui lòng thu tiền cọc trước khi check-in.",
+            "paymentRequiredBeforeCheckIn": "Vui lòng tất toán phí dịch vụ (Full) trước khi check-in.",
             "consultationStarted": "Đã bắt đầu tư vấn.",
             "invalidQr": "Mã QR check-in không hợp lệ.",
             "markedNoShow": "Đã đánh dấu vắng mặt.",
@@ -5845,6 +5847,10 @@
             "date": {
               "label": "Ngày hẹn"
             },
+            "morning": "Buổi sáng",
+            "afternoon": "Buổi chiều",
+            "selectDoctor": "Chọn Bác sĩ tư vấn",
+            "consultation": "Tư vấn chuyên khoa",
             "slot": {
               "title": "Khung giờ trống",
               "loading": "Đang tải khung giờ...",
@@ -8093,6 +8099,7 @@
             "pending": "Đang chờ"
           },
           "states": {
+            "ermPending": "Chờ nhập ERM",
             "checkedIn": "Đã check-in",
             "screeningPending": "Chờ sàng lọc",
             "aiCompleted": "AI đã hoàn thành",
@@ -8190,8 +8197,8 @@
             "citizenId": "CCCD",
             "citizenIdPlaceholder": "vd. 001099000000",
             "dateOfBirth": "Ngày sinh *",
-            "email": "Email",
-            "emailPlaceholder": "benhnhan@example.com (không bắt buộc)",
+            "email": "Email *",
+            "emailPlaceholder": "benhnhan@example.com",
             "fullName": "Họ và tên *",
             "fullNamePlaceholder": "vd. Nguyễn Văn A",
             "gender": "Giới tính *",
