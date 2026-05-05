@@ -9157,6 +9157,7 @@ declare module 'i18next' {
         transactions: string;
         wallet: string;
         settings: string;
+        network: string;
         profile: string;
       };
       actions: {

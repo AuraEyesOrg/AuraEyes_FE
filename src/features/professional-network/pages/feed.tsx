@@ -26,10 +26,6 @@ const postCategoryLabelConfig: Record<
   PostCategory,
   { labelKey: string; labelFallback: string }
 > = {
-  CasePresentation: {
-    labelKey: 'ProfessionalNetwork.postTypes.casePresentation',
-    labelFallback: 'Case Presentation',
-  },
   PeerDiscussion: {
     labelKey: 'ProfessionalNetwork.postTypes.peerDiscussion',
     labelFallback: 'Peer Discussion',

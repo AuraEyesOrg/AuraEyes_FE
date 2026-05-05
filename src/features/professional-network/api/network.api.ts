@@ -149,10 +149,15 @@ export const postsApi = {
   /**
    * One-click share of an internal consultation case.
    */
-  async shareConsultationCase(consultationSessionId: string) {
+  async shareConsultationCase(data: {
+    consultationSessionId: string;
+    doctorNote?: string;
+    aiSummary?: string;
+    finalDiagnosis?: string;
+  }) {
     const response = await api.post<ApiResponse<string>>(
       NETWORK_ENDPOINTS.POSTS.SHARE_CONSULTATION,
-      { consultationSessionId }
+      data
     );
     return response.data.data;
   },

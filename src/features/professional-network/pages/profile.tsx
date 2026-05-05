@@ -3,7 +3,7 @@
  * Page for viewing user/professional profiles - fetches data from API
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   useParams,
   Link,
@@ -16,7 +16,6 @@ import {
   BadgeCheck,
   Users,
   FileText,
-  Award,
   MoreHorizontal,
   Edit3,
   Eye,
@@ -78,15 +77,23 @@ function ProfilePage() {
   const isSystemAdminUser = currentUserRoles.includes('SystemAdmin');
   const isOrganisationUser = currentUserRoles.includes('OrgAdmin');
 
-  const [activeTab, setActiveTab] = useState<TabType>('posts');
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
-
   // Phase 3: Fetch profile from API
   const {
     data: profile,
     isLoading: profileLoading,
     isError: profileError,
   } = useUserProfile(id ?? '');
+
+  const isClinicStaffProfile = profile?.roles?.includes('ClinicStaff');
+  const [activeTab, setActiveTab] = useState<TabType>('posts');
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  // Switch to 'about' tab if it's a clinic staff profile and we're on 'posts'
+  useEffect(() => {
+    if (isClinicStaffProfile && activeTab === 'posts') {
+      setActiveTab('about');
+    }
+  }, [isClinicStaffProfile, activeTab]);
 
   // Phase 4: Fetch user's posts from API
   const { data: postsData, isLoading: postsLoading } = useUserPosts(id ?? '');
@@ -102,7 +109,9 @@ function ProfilePage() {
     (item) => item.type === 'License'
   );
 
-  const availableTabs: TabType[] = ['posts', 'about'];
+  const availableTabs: TabType[] = isClinicStaffProfile
+    ? ['about']
+    : ['posts', 'about'];
 
   // ── Loading state ────────────────────────────────────────────────────────
   if (profileLoading) {
@@ -199,15 +208,17 @@ function ProfilePage() {
             <h2 className="text-xl font-bold text-text-main truncate">
               {profile.fullName}
             </h2>
-            <p className="text-[13px] text-text-muted">
-              {t(
-                'ProfessionalNetwork.profile.stats.postsCount',
-                '{{count}} posts',
-                {
-                  count: profile.postCount,
-                }
-              )}
-            </p>
+            {!isClinicStaffProfile && (
+              <p className="text-[13px] text-text-muted">
+                {t(
+                  'ProfessionalNetwork.profile.stats.postsCount',
+                  '{{count}} posts',
+                  {
+                    count: profile.postCount,
+                  }
+                )}
+              </p>
+            )}
           </div>
           {isOwnProfile && (
             <Link
@@ -349,38 +360,42 @@ function ProfilePage() {
         <div className="flex flex-wrap items-center gap-4 mt-3 text-[13px] text-text-muted"></div>
 
         {/* Stats */}
-        <div className="flex items-center gap-6 mt-4 text-[15px]">
-          <div>
-            <span className="font-bold text-text-main">
-              {profile.postCount}
-            </span>
-            <span className="text-text-muted ml-1">
-              {t('ProfessionalNetwork.organisation.tabs.posts', 'Posts')}
-            </span>
+        {!isClinicStaffProfile && (
+          <div className="flex items-center gap-6 mt-4 text-[15px]">
+            <div>
+              <span className="font-bold text-text-main">
+                {profile.postCount}
+              </span>
+              <span className="text-text-muted ml-1">
+                {t('ProfessionalNetwork.organisation.tabs.posts', 'Posts')}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Tabs */}
-        <div className="flex border-b border-light-border mt-6 -mx-2">
-          {availableTabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-4 text-[15px] font-medium hover-animation hover:bg-black/[0.03] relative ${
-                activeTab === tab
-                  ? 'text-text-main font-bold'
-                  : 'text-text-muted'
-              }`}
-            >
-              {tab === 'posts'
-                ? t('ProfessionalNetwork.organisation.tabs.posts', 'Posts')
-                : t('ProfessionalNetwork.organisation.tabs.about', 'About')}
-              {activeTab === tab && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-1 bg-brand-primary rounded-full" />
-              )}
-            </button>
-          ))}
-        </div>
+        {availableTabs.length > 1 && (
+          <div className="flex border-b border-light-border mt-6 -mx-2">
+            {availableTabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-4 text-[15px] font-medium hover-animation hover:bg-black/[0.03] relative ${
+                  activeTab === tab
+                    ? 'text-text-main font-bold'
+                    : 'text-text-muted'
+                }`}
+              >
+                {tab === 'posts'
+                  ? t('ProfessionalNetwork.organisation.tabs.posts', 'Posts')
+                  : t('ProfessionalNetwork.organisation.tabs.about', 'About')}
+                {activeTab === tab && (
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-1 bg-brand-primary rounded-full" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Tab Content */}
@@ -546,21 +561,6 @@ function ProfilePage() {
                       )}
                     </p>
                   )}
-                </div>
-                <div>
-                  <h3 className="font-bold text-[15px] text-text-main mb-2">
-                    {t(
-                      'ProfessionalNetwork.profile.about.experienceTitle',
-                      'Experience'
-                    )}
-                  </h3>
-                  <div className="flex items-center gap-2 text-[15px] text-text-main">
-                    <Award className="w-4 h-4 text-brand-primary" />
-                    {t(
-                      'ProfessionalNetwork.profile.about.experienceValue',
-                      'Ophthalmologist'
-                    )}
-                  </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">

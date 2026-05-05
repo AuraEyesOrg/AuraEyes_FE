@@ -720,9 +720,16 @@ export default function OphthalmologistProfilePage() {
                                   <p className="font-bold text-[var(--text-primary)]">
                                     {degree.name}
                                   </p>
-                                  <p className="text-sm text-brand">
-                                    {degree.issuingAuthority}
-                                  </p>
+                                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
+                                    <p className="text-brand font-medium">
+                                      {degree.issuingAuthority}
+                                    </p>
+                                    {degree.degreeLevel && (
+                                      <p className="text-[var(--text-secondary)]">
+                                        • {degree.degreeLevel}
+                                      </p>
+                                    )}
+                                  </div>
                                   <div className="mt-2 flex items-center gap-4 text-xs text-[var(--text-secondary)]">
                                     <span className="flex items-center gap-1">
                                       <Calendar className="h-3 w-3" />
@@ -867,9 +874,16 @@ export default function OphthalmologistProfilePage() {
                                       </span>
                                     )}
                                   </div>
-                                  <p className="text-sm text-brand">
-                                    {cert.issuingAuthority}
-                                  </p>
+                                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
+                                    <p className="text-brand font-medium">
+                                      {cert.issuingAuthority}
+                                    </p>
+                                    {cert.licenseNumber && (
+                                      <p className="text-[var(--text-secondary)] font-mono">
+                                        • ID: {cert.licenseNumber}
+                                      </p>
+                                    )}
+                                  </div>
                                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--text-secondary)]">
                                     <span className="flex items-center gap-1">
                                       <Calendar className="h-3 w-3" />
