@@ -35,12 +35,20 @@ function getRiskBadge(riskLevel?: string) {
   return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
 }
 
-function getStatusBadge(item: ClinicScreeningHistoryItem) {
+function StatusBadge({
+  item,
+  t,
+}: {
+  item: ClinicScreeningHistoryItem;
+  t: (key: string, defaultValue?: string) => string;
+}) {
   if (item.status === 'completed' || item.status === 'saved') {
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
         <CheckCircle className="w-3 h-3" />
-        {item.status === 'saved' ? 'Saved' : 'Completed'}
+        {item.status === 'saved'
+          ? t('ClinicStaff.screenings.status.saved', 'Saved')
+          : t('ClinicStaff.screenings.status.completed', 'Completed')}
       </span>
     );
   }
@@ -48,14 +56,14 @@ function getStatusBadge(item: ClinicScreeningHistoryItem) {
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
         <Clock className="w-3 h-3 animate-pulse" />
-        Pending
+        {t('ClinicStaff.screenings.status.pending', 'Pending')}
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
       <AlertTriangle className="w-3 h-3" />
-      Unknown
+      {t('ClinicStaff.screenings.status.unknown', 'Unknown')}
     </span>
   );
 }
@@ -249,7 +257,11 @@ export default function ClinicStaffScreeningsPage() {
 
         {/* Results count */}
         <p className="text-sm text-(--text-tertiary) mb-3 px-1">
-          {filteredScreenings.length} screening(s) found
+          {t(
+            'ClinicStaff.screenings.labels.countFound',
+            '{{count}} screening(s) found',
+            { count: filteredScreenings.length }
+          )}
         </p>
 
         {/* Screenings Table */}
@@ -305,7 +317,11 @@ export default function ClinicStaffScreeningsPage() {
                           {item.patientName}
                         </div>
                         <div className="text-xs text-(--text-tertiary)">
-                          {item.imagesCount} image(s)
+                          {t(
+                            'ClinicStaff.screenings.labels.imagesCount',
+                            '{{count}} image(s)',
+                            { count: item.imagesCount }
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -319,7 +335,11 @@ export default function ClinicStaffScreeningsPage() {
                         </div>
                         {item.confidenceScore != null && (
                           <div className="text-xs text-(--text-tertiary)">
-                            {item.confidenceScore}% confidence
+                            {t(
+                              'ClinicStaff.screenings.labels.confidence',
+                              '{{score}}% confidence',
+                              { score: item.confidenceScore }
+                            )}
                           </div>
                         )}
                       </td>
@@ -336,7 +356,9 @@ export default function ClinicStaffScreeningsPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4">{getStatusBadge(item)}</td>
+                      <td className="px-6 py-4">
+                        <StatusBadge item={item} t={t} />
+                      </td>
                       <td className="px-6 py-4 text-right">
                         <button
                           type="button"

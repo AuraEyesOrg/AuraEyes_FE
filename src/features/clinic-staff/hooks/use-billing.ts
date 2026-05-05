@@ -17,11 +17,11 @@ export const useCompleteOrder = () => {
     mutationFn: (orderId: string) => completeOrder(orderId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clinic-staff-orders'] });
-      toast.success('Thanh toán hoàn tất');
+      toast.success('Payment completed');
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || 'Lỗi khi hoàn tất thanh toán'
+        error?.response?.data?.message || 'Failed to complete payment'
       );
     },
   });

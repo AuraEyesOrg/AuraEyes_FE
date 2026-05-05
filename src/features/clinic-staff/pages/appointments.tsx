@@ -800,7 +800,7 @@ export default function ClinicStaffAppointmentsPage() {
           {/* Stats Card */}
           <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <p className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-              {formatDate(selectedDate, 'short')}
+              {formatDate(selectedDate, 'short', currentLocale)}
             </p>
             <div className="grid grid-cols-1 gap-3">
               {[
@@ -860,7 +860,7 @@ export default function ClinicStaffAppointmentsPage() {
           <div className="mb-6 flex flex-col justify-between gap-4 px-2 md:flex-row md:items-center">
             <div className="space-y-1">
               <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-                {formatDate(selectedDate, 'long')}
+                {formatDate(selectedDate, 'long', currentLocale)}
               </h2>
               <div className="flex items-center gap-2">
                 <button
@@ -993,7 +993,8 @@ export default function ClinicStaffAppointmentsPage() {
                             {i === stepIdx && (
                               <span className="absolute -top-4 text-[8px] font-black uppercase tracking-tighter text-brand">
                                 {status === 'Pending' &&
-                                  (isPastOneThirdDuration(appt) ? (
+                                  (isPastOneThirdDuration(appt) &&
+                                  appt.status === 'Confirmed' ? (
                                     <button
                                       onClick={async () => {
                                         setSelectedLatePatientAppointmentId(
@@ -1006,7 +1007,7 @@ export default function ClinicStaffAppointmentsPage() {
                                     >
                                       <AlertTriangle className="w-3.5 h-3.5" />
                                       {t(
-                                        'Appointments.lateArrival',
+                                        'Organisation.calendar.actions.lateArrival',
                                         'ĐẾN MUỘN'
                                       )}
                                     </button>
@@ -1327,7 +1328,8 @@ export default function ClinicStaffAppointmentsPage() {
                                     )}
                               </button>
                             ) : null}
-                            {isPastOneThirdDuration(appt) ? (
+                            {isPastOneThirdDuration(appt) &&
+                            appt.status === 'Confirmed' ? (
                               <button
                                 type="button"
                                 disabled={isMutating}
@@ -1507,28 +1509,31 @@ export default function ClinicStaffAppointmentsPage() {
                             </span>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-3">
-                            <button
-                              type="button"
-                              disabled={isMutating}
-                              onClick={() =>
-                                void runAction(
-                                  () => noShowMutation.mutateAsync(appt.id),
-                                  t(
-                                    'Organisation.calendar.toast.noShowMarked',
-                                    'Marked as no-show.'
+                          isPastOneThirdDuration(appt) &&
+                          appt.status === 'Confirmed' && (
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                disabled={isMutating}
+                                onClick={() =>
+                                  void runAction(
+                                    () => noShowMutation.mutateAsync(appt.id),
+                                    t(
+                                      'Organisation.calendar.toast.noShowMarked',
+                                      'Marked as no-show.'
+                                    )
                                   )
-                                )
-                              }
-                              className="inline-flex h-11 items-center gap-2 rounded-2xl px-4 text-[10px] font-black uppercase tracking-widest text-rose-500 transition-all hover:bg-rose-500/10 disabled:opacity-50"
-                            >
-                              <UserX className="h-4 w-4" />
-                              {t(
-                                'Organisation.calendar.actions.markNoShow',
-                                'No-show'
-                              )}
-                            </button>
-                          </div>
+                                }
+                                className="inline-flex h-11 items-center gap-2 rounded-2xl px-4 text-[10px] font-black uppercase tracking-widest text-rose-500 transition-all hover:bg-rose-500/10 disabled:opacity-50"
+                              >
+                                <UserX className="h-4 w-4" />
+                                {t(
+                                  'Organisation.calendar.actions.markNoShow',
+                                  'No-show'
+                                )}
+                              </button>
+                            </div>
+                          )
                         )}
                       </div>
                     </div>

@@ -46,6 +46,10 @@ const roleColors: Record<string, string> = {
     'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
 };
 
+// Cooldown to prevent re-fetch on locale-switch remount
+let staffCacheTimestamp = 0;
+const STAFF_CACHE_TTL = 10_000;
+
 type StaffUser = BaseUser & {
   phoneNumber?: string | null;
   isActive?: boolean;
@@ -131,6 +135,9 @@ export default function StaffManagementPage() {
   };
 
   const loadData = useCallback(async () => {
+    const now = Date.now();
+    if (now - staffCacheTimestamp < STAFF_CACHE_TTL) return;
+    staffCacheTimestamp = now;
     try {
       setLoading(true);
       const usersData = await userApi.getUsers(1, 1000);
@@ -151,6 +158,11 @@ export default function StaffManagementPage() {
       setLoading(false);
     }
   }, []);
+
+  const reloadData = useCallback(async () => {
+    staffCacheTimestamp = 0;
+    await loadData();
+  }, [loadData]);
 
   useEffect(() => {
     loadData();
@@ -185,12 +197,22 @@ export default function StaffManagementPage() {
     try {
       if (isLockedStatus(currentStatus)) {
         await userApi.unlockUser(userId);
-        toast.success('Account unlocked successfully.');
+        toast.success(
+          t(
+            'SystemAdmin.staffManagement.toasts.accountUnlocked',
+            'Account unlocked successfully.'
+          )
+        );
       } else {
         await userApi.lockUser(userId);
-        toast.success('Account locked successfully.');
+        toast.success(
+          t(
+            'SystemAdmin.staffManagement.toasts.accountLocked',
+            'Account locked successfully.'
+          )
+        );
       }
-      await loadData();
+      await reloadData();
       if (selectedUser && selectedUser.id === userId) {
         setSelectedUser((prev) =>
           prev
@@ -202,7 +224,12 @@ export default function StaffManagementPage() {
         );
       }
     } catch {
-      toast.error('Failed to update account status.');
+      toast.error(
+        t(
+          'SystemAdmin.staffManagement.toasts.updateStatusError',
+          'Failed to update account status.'
+        )
+      );
     }
   };
 
@@ -216,14 +243,24 @@ export default function StaffManagementPage() {
         employmentType: (selectedUser as any).employmentType || 'FullTime',
         consultationFee: feeValue,
       });
-      toast.success('Consultation fee updated.');
+      toast.success(
+        t(
+          'SystemAdmin.staffManagement.toasts.feeUpdated',
+          'Consultation fee updated.'
+        )
+      );
       setEditingFee(false);
-      await loadData();
+      await reloadData();
       setSelectedUser((prev) =>
         prev ? { ...prev, consultationFee: feeValue } : null
       );
     } catch {
-      toast.error('Failed to update fee.');
+      toast.error(
+        t(
+          'SystemAdmin.staffManagement.toasts.updateFeeError',
+          'Failed to update fee.'
+        )
+      );
     } finally {
       setIsUpdatingFee(false);
     }
@@ -237,14 +274,24 @@ export default function StaffManagementPage() {
         subRoles: subRolesValue,
         phone: selectedUser.phoneNumber || undefined,
       });
-      toast.success('Functional roles updated.');
+      toast.success(
+        t(
+          'SystemAdmin.staffManagement.toasts.rolesUpdated',
+          'Functional roles updated.'
+        )
+      );
       setEditingSubRoles(false);
-      await loadData();
+      await reloadData();
       setSelectedUser((prev) =>
         prev ? { ...prev, subRoles: subRolesValue } : null
       );
     } catch {
-      toast.error('Failed to update roles.');
+      toast.error(
+        t(
+          'SystemAdmin.staffManagement.toasts.updateRolesError',
+          'Failed to update roles.'
+        )
+      );
     } finally {
       setIsUpdatingSubRoles(false);
     }
@@ -257,20 +304,32 @@ export default function StaffManagementPage() {
     try {
       setIsApplyingPolicy(true);
       await leavePoliciesApi.apply(selectedPolicyId, ophthalmologistId);
-      toast.success('Policy applied: Leave fund increased.');
+      toast.success(
+        t(
+          'SystemAdmin.staffManagement.toasts.policyApplied',
+          'Policy applied: Leave fund increased.'
+        )
+      );
       const docDetail =
         await ophthalmologistApi.getOphthalmologistDetail(ophthalmologistId);
       setAvailableLeaveDays(docDetail.availableLeaveDays ?? 0);
       setSelectedPolicyId('');
     } catch {
-      toast.error('Failed to apply policy.');
+      toast.error(
+        t(
+          'SystemAdmin.staffManagement.toasts.applyPolicyError',
+          'Failed to apply policy.'
+        )
+      );
     } finally {
       setIsApplyingPolicy(false);
     }
   };
 
   const renderStatusBadge = (status?: string) => {
-    const s = (status || 'Active').toLowerCase();
+    const s = (
+      status || t('SystemAdmin.common.active', 'Active')
+    ).toLowerCase();
     let variant: 'success' | 'warning' | 'error' | 'info' | 'processing' =
       'info';
 
@@ -279,7 +338,12 @@ export default function StaffManagementPage() {
       variant = 'error';
     else if (s === 'pending') variant = 'warning';
 
-    return <StatusBadge status={variant} label={status || 'Active'} />;
+    return (
+      <StatusBadge
+        status={variant}
+        label={status || t('SystemAdmin.common.active', 'Active')}
+      />
+    );
   };
 
   const filteredUsers = users.filter((user) => {
@@ -293,12 +357,15 @@ export default function StaffManagementPage() {
 
   const userColumns: TableColumn<StaffUser>[] = [
     {
-      header: 'Staff Member',
+      header: t(
+        'SystemAdmin.staffManagement.table.staffMember',
+        'Staff Member'
+      ),
       accessor: 'name',
       render: (_, row) => (
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black shadow-sm">
-            {row.name?.charAt(0) || 'S'}
+            {row.name?.charAt(0) || t('SystemAdmin.common.initialStaff', 'S')}
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-bold text-slate-900 dark:text-white">
@@ -310,7 +377,7 @@ export default function StaffManagementPage() {
       ),
     },
     {
-      header: 'Role',
+      header: t('SystemAdmin.staffManagement.table.role', 'Role'),
       accessor: 'role',
       render: (val) => (
         <span
@@ -321,12 +388,12 @@ export default function StaffManagementPage() {
       ),
     },
     {
-      header: 'Status',
+      header: t('SystemAdmin.staffManagement.table.status', 'Status'),
       accessor: 'status',
       render: (val) => renderStatusBadge(val as string),
     },
     {
-      header: 'Actions',
+      header: t('SystemAdmin.staffManagement.table.actions', 'Actions'),
       accessor: () => null,
       render: (_, row) => (
         <div className="flex items-center gap-1">
@@ -445,7 +512,7 @@ export default function StaffManagementPage() {
       <CreateStaffModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={loadData}
+        onSuccess={reloadData}
       />
 
       {/* Detail Modal */}
@@ -460,10 +527,16 @@ export default function StaffManagementPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                    Staff Details
+                    {t(
+                      'SystemAdmin.staffManagement.modal.title',
+                      'Staff Details'
+                    )}
                   </h3>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    Management Overview
+                    {t(
+                      'SystemAdmin.staffManagement.modal.subtitle',
+                      'Management Overview'
+                    )}
                   </p>
                 </div>
               </div>
@@ -490,7 +563,7 @@ export default function StaffManagementPage() {
                     <span
                       className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${roleColors[selectedUser.role]}`}
                     >
-                      {selectedUser.role}
+                      {getRoleLabel(selectedUser.role)}
                     </span>
                     <span className="text-[10px] font-bold text-slate-400">
                       ID: {selectedUser.id.slice(0, 8)}...
@@ -507,13 +580,16 @@ export default function StaffManagementPage() {
                   <div className="flex items-center gap-2 px-1">
                     <Mail className="w-4 h-4 text-primary" />
                     <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
-                      Contact Info
+                      {t(
+                        'SystemAdmin.staffManagement.modal.contactInfo',
+                        'Contact Info'
+                      )}
                     </h5>
                   </div>
                   <div className="space-y-4 p-6 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
                     <div className="flex flex-col gap-1">
                       <span className="text-[10px] font-bold text-slate-400 uppercase">
-                        Email
+                        {t('SystemAdmin.staffManagement.modal.email', 'Email')}
                       </span>
                       <span className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
                         {selectedUser.email}
@@ -524,7 +600,7 @@ export default function StaffManagementPage() {
                         Phone
                       </span>
                       <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                        {selectedUser.phoneNumber || 'N/A'}
+                        {selectedUser.phoneNumber || notAvailableLabel}
                       </span>
                     </div>
                   </div>
@@ -535,13 +611,19 @@ export default function StaffManagementPage() {
                   <div className="flex items-center gap-2 px-1">
                     <ShieldCheck className="w-4 h-4 text-primary" />
                     <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
-                      Security
+                      {t(
+                        'SystemAdmin.staffManagement.modal.security',
+                        'Security'
+                      )}
                     </h5>
                   </div>
                   <div className="space-y-4 p-6 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
                     <div className="flex flex-col gap-1">
                       <span className="text-[10px] font-bold text-slate-400 uppercase">
-                        Last Activity
+                        {t(
+                          'SystemAdmin.staffManagement.modal.lastActivity',
+                          'Last Activity'
+                        )}
                       </span>
                       <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
                         {formatDateTime(selectedUser.lastLoginAt)}
@@ -554,8 +636,14 @@ export default function StaffManagementPage() {
                       className={`w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isLockedStatus(selectedUser.status) ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-rose-50 text-rose-600 hover:bg-rose-100'}`}
                     >
                       {isLockedStatus(selectedUser.status)
-                        ? 'Unlock Account'
-                        : 'Lock Account'}
+                        ? t(
+                            'SystemAdmin.staffManagement.modal.unlockAccount',
+                            'Unlock Account'
+                          )
+                        : t(
+                            'SystemAdmin.staffManagement.modal.lockAccount',
+                            'Lock Account'
+                          )}
                     </button>
                   </div>
                 </div>
@@ -567,7 +655,10 @@ export default function StaffManagementPage() {
                   <div className="flex items-center gap-2 px-1">
                     <Stethoscope className="w-4 h-4 text-primary" />
                     <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
-                      Professional Settings
+                      {t(
+                        'SystemAdmin.staffManagement.modal.professionalSettings',
+                        'Professional Settings'
+                      )}
                     </h5>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -575,7 +666,10 @@ export default function StaffManagementPage() {
                     <div className="p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                          Consultation Fee
+                          {t(
+                            'SystemAdmin.staffManagement.modal.consultationFee',
+                            'Consultation Fee'
+                          )}
                         </span>
                         <button
                           onClick={() => {
@@ -602,13 +696,19 @@ export default function StaffManagementPage() {
                               onClick={() => setEditingFee(false)}
                               className="flex-1 py-2 text-[10px] font-bold text-slate-400"
                             >
-                              Cancel
+                              {t(
+                                'SystemAdmin.staffManagement.actions.cancel',
+                                'Cancel'
+                              )}
                             </button>
                             <button
                               onClick={handleUpdateFee}
                               className="flex-1 py-2 bg-primary rounded-xl text-[10px] font-black uppercase"
                             >
-                              Save
+                              {t(
+                                'SystemAdmin.staffManagement.actions.save',
+                                'Save'
+                              )}
                             </button>
                           </div>
                         </div>
@@ -625,7 +725,10 @@ export default function StaffManagementPage() {
                     <div className="p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                          Leave Fund
+                          {t(
+                            'SystemAdmin.staffManagement.modal.leaveFund',
+                            'Leave Fund'
+                          )}
                         </span>
                         <Gift className="w-4 h-4 text-emerald-500" />
                       </div>
@@ -634,7 +737,7 @@ export default function StaffManagementPage() {
                           {availableLeaveDays ?? '...'}
                         </span>
                         <span className="text-[10px] font-bold text-slate-400 uppercase">
-                          Days
+                          {t('SystemAdmin.staffManagement.modal.days', 'Days')}
                         </span>
                       </div>
                       <div className="pt-2">
@@ -643,7 +746,12 @@ export default function StaffManagementPage() {
                           onChange={(e) => setSelectedPolicyId(e.target.value)}
                           className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 rounded-xl text-[10px] font-bold outline-none"
                         >
-                          <option value="">Apply Policy...</option>
+                          <option value="">
+                            {t(
+                              'SystemAdmin.staffManagement.modal.applyPolicyPlaceholder',
+                              'Apply Policy...'
+                            )}
+                          </option>
                           {leavePolicies.map((p) => (
                             <option key={p.id} value={p.id}>
                               {p.name} (+{p.additionalDays})
@@ -656,7 +764,15 @@ export default function StaffManagementPage() {
                             disabled={isApplyingPolicy}
                             className="w-full mt-2 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
                           >
-                            {isApplyingPolicy ? 'Applying...' : 'Apply'}
+                            {isApplyingPolicy
+                              ? t(
+                                  'SystemAdmin.staffManagement.modal.applying',
+                                  'Applying...'
+                                )
+                              : t(
+                                  'SystemAdmin.staffManagement.actions.apply',
+                                  'Apply'
+                                )}
                           </button>
                         )}
                       </div>
@@ -671,13 +787,19 @@ export default function StaffManagementPage() {
                   <div className="flex items-center gap-2 px-1">
                     <Activity className="w-4 h-4 text-primary" />
                     <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
-                      Functional Roles
+                      {t(
+                        'SystemAdmin.staffManagement.modal.functionalRoles',
+                        'Functional Roles'
+                      )}
                     </h5>
                   </div>
                   <div className="p-6 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-[10px] font-bold text-slate-400 uppercase">
-                        Sub-roles
+                        {t(
+                          'SystemAdmin.staffManagement.modal.subRolesLabel',
+                          'Sub-roles'
+                        )}
                       </span>
                       <button
                         onClick={() => {
@@ -703,29 +825,53 @@ export default function StaffManagementPage() {
                       <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200">
                         <div className="grid grid-cols-2 gap-3">
                           {[
-                            'Registration',
-                            'Screening',
-                            'Payment',
-                            'ConsultationSupport',
-                          ].map((role) => (
+                            {
+                              key: 'Registration',
+                              label: t(
+                                'SystemAdmin.staffManagement.modal.subRoles.Registration',
+                                'Registration'
+                              ),
+                            },
+                            {
+                              key: 'Screening',
+                              label: t(
+                                'SystemAdmin.staffManagement.modal.subRoles.Screening',
+                                'Screening'
+                              ),
+                            },
+                            {
+                              key: 'Payment',
+                              label: t(
+                                'SystemAdmin.staffManagement.modal.subRoles.Payment',
+                                'Payment'
+                              ),
+                            },
+                            {
+                              key: 'ConsultationSupport',
+                              label: t(
+                                'SystemAdmin.staffManagement.modal.subRoles.ConsultationSupport',
+                                'ConsultationSupport'
+                              ),
+                            },
+                          ].map(({ key, label }) => (
                             <label
-                              key={role}
+                              key={key}
                               className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 cursor-pointer hover:bg-white transition-all"
                             >
                               <input
                                 type="checkbox"
-                                checked={subRolesValue.includes(role)}
+                                checked={subRolesValue.includes(key)}
                                 onChange={(e) =>
                                   e.target.checked
-                                    ? setSubRolesValue([...subRolesValue, role])
+                                    ? setSubRolesValue([...subRolesValue, key])
                                     : setSubRolesValue(
-                                        subRolesValue.filter((r) => r !== role)
+                                        subRolesValue.filter((r) => r !== key)
                                       )
                                 }
                                 className="w-4 h-4 rounded text-primary focus:ring-primary"
                               />
                               <span className="text-[10px] font-bold text-slate-600">
-                                {role}
+                                {label}
                               </span>
                             </label>
                           ))}
@@ -735,13 +881,19 @@ export default function StaffManagementPage() {
                             onClick={() => setEditingSubRoles(false)}
                             className="flex-1 py-2 text-[10px] font-bold text-slate-400"
                           >
-                            Cancel
+                            {t(
+                              'SystemAdmin.staffManagement.actions.cancel',
+                              'Cancel'
+                            )}
                           </button>
                           <button
                             onClick={handleUpdateSubRoles}
                             className="flex-1 py-2 bg-primary rounded-xl text-[10px] font-black uppercase"
                           >
-                            Update
+                            {t(
+                              'SystemAdmin.staffManagement.actions.update',
+                              'Update'
+                            )}
                           </button>
                         </div>
                       </div>
@@ -757,7 +909,10 @@ export default function StaffManagementPage() {
                 onClick={() => setSelectedUser(null)}
                 className="px-8 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all"
               >
-                Close Profile
+                {t(
+                  'SystemAdmin.staffManagement.actions.closeProfile',
+                  'Close Profile'
+                )}
               </button>
             </div>
           </div>

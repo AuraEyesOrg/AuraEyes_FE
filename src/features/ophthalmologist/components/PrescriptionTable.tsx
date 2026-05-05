@@ -6,6 +6,7 @@ import {
   KeyboardEvent,
   ChangeEvent,
 } from 'react';
+import type { TFunction } from 'i18next';
 import { PlusSquare, X, AlertCircle } from 'lucide-react';
 import type { PrescriptionItemRequest } from '@/types/consultation';
 import { DrugEntry, RxItem } from '../types/drug.type';
@@ -19,7 +20,7 @@ export interface PrescriptionTableProps {
   onNoteChange: (val: string) => void;
   locked?: boolean;
   validationErrors?: Record<string, (keyof Omit<RxItem, 'id'>)[]>;
-  t: (key: string, fallback?: string) => string;
+  t: TFunction;
 }
 
 // ─── Drug catalogue ───────────────────────────────────────────────────────────
@@ -173,9 +174,7 @@ const slugify = (str: string) =>
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
 
-const getTranslatedDrugCatalogue = (
-  t: (key: string, fallback?: string) => string
-): DrugEntry[] =>
+const getTranslatedDrugCatalogue = (t: TFunction): DrugEntry[] =>
   DRUG_CATALOGUE.map((drug) => {
     const key = `Ophthalmologist.drug.${slugify(drug.label)}`;
     return {
@@ -288,7 +287,7 @@ interface RowProps {
     field: keyof Omit<RxItem, 'id'>,
     el: HTMLInputElement | null
   ) => void;
-  t: (key: string, fallback?: string) => string;
+  t: TFunction;
 }
 
 function RxRow({
