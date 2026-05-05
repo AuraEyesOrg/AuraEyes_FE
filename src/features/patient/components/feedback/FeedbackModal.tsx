@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { X } from 'lucide-react';
+import { X, CheckCircle2 } from 'lucide-react';
 import { Controller, type Resolver, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import type {
@@ -9,12 +9,14 @@ import type {
 } from '../../types/feedback.types';
 import StarRatingInput from './StarRatingInput';
 
+type TargetType = 'CLINIC' | 'DOCTOR' | 'STAFF';
+
 type ModalFormValues = {
   rating: number;
   comment?: string;
   category: WebsiteFeedbackCategory;
   targetId?: string;
-  targetType: 'CLINIC' | 'DOCTOR' | 'STAFF';
+  targetType: TargetType;
 };
 
 const feedbackSchema: yup.ObjectSchema<ModalFormValues> = yup
@@ -31,7 +33,7 @@ const feedbackSchema: yup.ObjectSchema<ModalFormValues> = yup
       .required(),
     targetId: yup.string().optional(),
     targetType: yup
-      .mixed<'CLINIC' | 'DOCTOR' | 'STAFF'>()
+      .mixed<TargetType>()
       .oneOf(['CLINIC', 'DOCTOR', 'STAFF'])
       .required(),
   })
@@ -45,6 +47,8 @@ interface FeedbackModalProps {
   contextLabel?: string;
   isSubmitting?: boolean;
   showCategory?: boolean;
+  /** Target types that have already been submitted before opening the modal (from server). */
+  alreadySubmittedTargets?: string[];
   initialValues?: Partial<
     FeedbackFormValues & { category: WebsiteFeedbackCategory }
   >;
@@ -78,7 +82,7 @@ interface FeedbackModalProps {
   onSubmit: (
     values: FeedbackFormValues & {
       category?: WebsiteFeedbackCategory;
-      targetType?: 'CLINIC' | 'DOCTOR' | 'STAFF';
+      targetType?: TargetType;
       targetId?: string;
     }
   ) => Promise<void> | void;
@@ -99,6 +103,7 @@ export const FeedbackModal = ({
   contextLabel,
   isSubmitting = false,
   showCategory = false,
+  alreadySubmittedTargets = [],
   initialValues,
   labels,
   targets,
@@ -106,13 +111,42 @@ export const FeedbackModal = ({
   onSubmit,
 }: FeedbackModalProps) => {
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  /**
+   * Track which targets have been submitted **during this modal session**.
+   * Merged with alreadySubmittedTargets to build the full "done" set.
+   */
+  const [sessionSubmitted, setSessionSubmitted] = useState<Set<TargetType>>(
+    new Set()
+  );
+
+  /** Combined set of submitted targets (server + this session). */
+  const allSubmitted = useMemo<Set<string>>(() => {
+    const merged = new Set(alreadySubmittedTargets.map((t) => t.toUpperCase()));
+    sessionSubmitted.forEach((t) => merged.add(t));
+    return merged;
+  }, [alreadySubmittedTargets, sessionSubmitted]);
+
+  /** Whether a specific target can still be submitted. */
+  const isTargetDone = (type: TargetType) => allSubmitted.has(type);
+
+  /** Which targets exist at all (have data from the appointment). */
+  const availableTargets = useMemo<TargetType[]>(() => {
+    const list: TargetType[] = ['CLINIC'];
+    if (targets?.doctorId) list.push('DOCTOR');
+    if (targets?.staffId) list.push('STAFF');
+    return list;
+  }, [targets]);
+
+  /** Whether ALL available targets have been submitted. */
+  const allDone = availableTargets.every((t) => allSubmitted.has(t));
 
   const defaults = useMemo(
     () => ({
       rating: initialValues?.rating ?? 0,
       comment: initialValues?.comment ?? '',
       category: initialValues?.category ?? 'UX',
-      targetType: (initialValues as any)?.targetType ?? 'CLINIC',
+      targetType:
+        (initialValues as any)?.targetType ?? ('CLINIC' as TargetType),
       targetId: (initialValues as any)?.targetId ?? targets?.clinicId,
     }),
     [initialValues, targets]
@@ -131,20 +165,44 @@ export const FeedbackModal = ({
     defaultValues: defaults,
   });
 
+  const currentTargetType = watch('targetType');
+
   useEffect(() => {
     if (open) {
       reset(defaults);
+      setSessionSubmitted(new Set());
+      setShowDiscardConfirm(false);
     }
-  }, [defaults, open, reset]);
+  }, [open]);
+
+  // When the user switches target type, update targetId & reset rating/comment
+  const handleSelectTarget = (type: TargetType) => {
+    if (isTargetDone(type) || isSubmitting) return;
+    let targetId: string | undefined;
+    if (type === 'CLINIC') targetId = targets?.clinicId;
+    else if (type === 'DOCTOR') targetId = targets?.doctorId;
+    else if (type === 'STAFF') targetId = targets?.staffId;
+    setValue('targetType', type);
+    setValue('targetId', targetId);
+    setValue('rating', 0);
+    setValue('comment', '');
+  };
 
   const commentLength = watch('comment')?.length ?? 0;
 
   const handleAttemptClose = () => {
-    if (isSubmitting) {
+    if (isSubmitting) return;
+
+    // If they have already submitted at least one target in this session,
+    // let them close freely (it's like 'Finish early').
+    if (sessionSubmitted.size > 0) {
+      onClose();
       return;
     }
 
-    if (isDirty) {
+    // Only show discard confirm if they have unsaved changes on the VERY FIRST target they are rating
+    const hasUnsavedWork = watch('rating') > 0 || watch('comment')?.trim();
+    if (hasUnsavedWork) {
       setShowDiscardConfirm(true);
       return;
     }
@@ -152,18 +210,14 @@ export const FeedbackModal = ({
     onClose();
   };
 
-  const handleKeepEditing = () => {
-    setShowDiscardConfirm(false);
-  };
+  const handleKeepEditing = () => setShowDiscardConfirm(false);
 
   const handleDiscardDraft = () => {
     setShowDiscardConfirm(false);
     onClose();
   };
 
-  if (!open) {
-    return null;
-  }
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -189,196 +243,272 @@ export const FeedbackModal = ({
           </button>
         </div>
 
-        <form
-          onSubmit={handleSubmit(async (values) => {
-            await onSubmit({
-              rating: values.rating,
-              comment: values.comment || undefined,
-              category: values.category,
-              targetType: values.targetType,
-              targetId: values.targetId,
-            });
-          })}
-          className="space-y-6 px-6 py-5"
-        >
-          {targets && (
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-(--text-primary)">
-                {labels?.targetTitle ?? 'Bạn muốn đánh giá đối tượng nào?'}
-              </p>
-              <Controller
-                control={control}
-                name="targetType"
-                render={({ field }) => (
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        field.onChange('CLINIC');
-                        setValue('targetId', targets.clinicId);
-                      }}
-                      className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all ${
-                        field.value === 'CLINIC'
-                          ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-(--border-color) bg-(--bg-secondary)/30 text-(--text-secondary) hover:bg-(--bg-secondary)'
-                      }`}
-                    >
-                      <span className="text-[10px] font-bold uppercase tracking-wider">
-                        {labels?.targetClinic ?? 'Phòng khám'}
-                      </span>
-                      <span className="truncate text-xs opacity-70">
-                        {targets.clinicName ?? 'Hệ thống'}
-                      </span>
-                    </button>
-
-                    {targets.doctorId && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          field.onChange('DOCTOR');
-                          setValue('targetId', targets.doctorId);
-                        }}
-                        className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all ${
-                          field.value === 'DOCTOR'
-                            ? 'border-primary bg-primary/5 text-primary'
-                            : 'border-(--border-color) bg-(--bg-secondary)/30 text-(--text-secondary) hover:bg-(--bg-secondary)'
-                        }`}
-                      >
-                        <span className="text-[10px] font-bold uppercase tracking-wider">
-                          {labels?.targetDoctor ?? 'Bác sĩ'}
-                        </span>
-                        <span className="truncate text-xs opacity-70">
-                          {targets.doctorName}
-                        </span>
-                      </button>
-                    )}
-
-                    {targets.staffId && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          field.onChange('STAFF');
-                          setValue('targetId', targets.staffId);
-                        }}
-                        className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all ${
-                          field.value === 'STAFF'
-                            ? 'border-primary bg-primary/5 text-primary'
-                            : 'border-(--border-color) bg-(--bg-secondary)/30 text-(--text-secondary) hover:bg-(--bg-secondary)'
-                        }`}
-                      >
-                        <span className="text-[10px] font-bold uppercase tracking-wider">
-                          {labels?.targetStaff ?? 'Nhân viên'}
-                        </span>
-                        <span className="truncate text-xs opacity-70">
-                          {targets.staffName}
-                        </span>
-                      </button>
-                    )}
-                  </div>
-                )}
-              />
+        {/* All-done success banner */}
+        {allDone ? (
+          <div className="px-6 py-8 flex flex-col items-center gap-4 text-center">
+            <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+              <CheckCircle2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
             </div>
-          )}
-          <div>
-            <p className="mb-2 text-sm font-semibold text-(--text-primary)">
-              {labels?.rating ?? 'Rating'}
-            </p>
-            <Controller
-              control={control}
-              name="rating"
-              render={({ field }) => (
-                <StarRatingInput
-                  value={field.value}
-                  onChange={field.onChange}
-                  disabled={isSubmitting}
-                />
-              )}
-            />
-            {errors.rating?.message && (
-              <p className="mt-2 text-xs text-red-500">
-                {labels?.ratingValidation ??
-                  'Please select a rating from 1 to 5.'}
-              </p>
-            )}
-          </div>
-
-          {showCategory && (
             <div>
-              <p className="mb-2 text-sm font-semibold text-(--text-primary)">
-                {labels?.category ?? 'Category'}
+              <p className="text-base font-bold text-(--text-primary)">
+                Cảm ơn đánh giá của bạn!
               </p>
-              <Controller
-                control={control}
-                name="category"
-                render={({ field }) => (
-                  <div className="flex flex-wrap gap-2">
-                    {categoryOptions.map((category) => (
-                      <button
-                        key={category}
-                        type="button"
-                        onClick={() => field.onChange(category)}
-                        className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
-                          field.value === category
-                            ? 'border-primary bg-primary/10 text-primary'
-                            : 'border-(--border-color) text-(--text-secondary) hover:bg-(--bg-secondary)'
-                        }`}
-                      >
-                        {labels?.categories?.[category] ?? category}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              />
-            </div>
-          )}
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-(--text-primary)">
-              {labels?.commentOptional ?? 'Comment (optional)'}
-            </label>
-            <textarea
-              {...register('comment')}
-              rows={4}
-              maxLength={2000}
-              disabled={isSubmitting}
-              placeholder={
-                labels?.commentPlaceholder ??
-                'Tell us more about your experience'
-              }
-              className="w-full rounded-xl border border-(--border-color) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary) outline-none transition-colors placeholder:text-(--text-muted) focus:border-primary"
-            />
-            <div className="mt-1 flex items-center justify-between">
-              {errors.comment?.message ? (
-                <p className="text-xs text-red-500">{errors.comment.message}</p>
-              ) : (
-                <span />
-              )}
-              <p className="text-xs text-(--text-muted)">
-                {commentLength}/2000
+              <p className="mt-1 text-sm text-(--text-secondary)">
+                Bạn đã hoàn thành tất cả đánh giá cho lượt khám này.
               </p>
             </div>
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-2">
             <button
               type="button"
-              onClick={handleAttemptClose}
-              disabled={isSubmitting}
-              className="rounded-lg border border-(--border-color) px-4 py-2 text-sm font-medium text-(--text-secondary) transition-colors hover:bg-(--bg-secondary) disabled:opacity-60"
+              onClick={onClose}
+              className="mt-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500"
             >
-              {labels?.cancel ?? 'Not now'}
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
-            >
-              {isSubmitting
-                ? (labels?.submitting ?? 'Submitting...')
-                : submitLabel}
+              Đóng
             </button>
           </div>
-        </form>
+        ) : (
+          <form
+            onSubmit={handleSubmit(async (values) => {
+              await onSubmit({
+                rating: values.rating,
+                comment: values.comment || undefined,
+                category: values.category,
+                targetType: values.targetType,
+                targetId: values.targetId,
+              });
+              // Mark current target as submitted in this session
+              setSessionSubmitted((prev) => {
+                const next = new Set(prev);
+                next.add(values.targetType);
+                return next;
+              });
+              // Auto-switch to next pending target (if any)
+              const nextPending = availableTargets.find(
+                (t) => t !== values.targetType && !allSubmitted.has(t)
+              );
+              if (nextPending) {
+                handleSelectTarget(nextPending);
+              } else {
+                reset(defaults);
+              }
+            })}
+            className="space-y-6 px-6 py-5"
+          >
+            {targets && (
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-(--text-primary)">
+                  {labels?.targetTitle ?? 'Bạn muốn đánh giá đối tượng nào?'}
+                </p>
+                <Controller
+                  control={control}
+                  name="targetType"
+                  render={({ field }) => (
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      {/* Clinic button */}
+                      <button
+                        type="button"
+                        onClick={() => handleSelectTarget('CLINIC')}
+                        disabled={isTargetDone('CLINIC') || isSubmitting}
+                        className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                          isTargetDone('CLINIC')
+                            ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20 text-emerald-600'
+                            : field.value === 'CLINIC'
+                              ? 'border-primary bg-primary/5 text-primary'
+                              : 'border-(--border-color) bg-(--bg-secondary)/30 text-(--text-secondary) hover:bg-(--bg-secondary)'
+                        }`}
+                      >
+                        {isTargetDone('CLINIC') && (
+                          <CheckCircle2 className="absolute top-1.5 right-1.5 h-3.5 w-3.5 text-emerald-500" />
+                        )}
+                        <span className="text-[10px] font-bold uppercase tracking-wider">
+                          {labels?.targetClinic ?? 'Phòng khám'}
+                        </span>
+                        <span className="truncate text-xs opacity-70">
+                          {targets.clinicName ?? 'Hệ thống'}
+                        </span>
+                      </button>
+
+                      {targets.doctorId && (
+                        <button
+                          type="button"
+                          onClick={() => handleSelectTarget('DOCTOR')}
+                          disabled={isTargetDone('DOCTOR') || isSubmitting}
+                          className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                            isTargetDone('DOCTOR')
+                              ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20 text-emerald-600'
+                              : field.value === 'DOCTOR'
+                                ? 'border-primary bg-primary/5 text-primary'
+                                : 'border-(--border-color) bg-(--bg-secondary)/30 text-(--text-secondary) hover:bg-(--bg-secondary)'
+                          }`}
+                        >
+                          {isTargetDone('DOCTOR') && (
+                            <CheckCircle2 className="absolute top-1.5 right-1.5 h-3.5 w-3.5 text-emerald-500" />
+                          )}
+                          <span className="text-[10px] font-bold uppercase tracking-wider">
+                            {labels?.targetDoctor ?? 'Bác sĩ'}
+                          </span>
+                          <span className="truncate text-xs opacity-70">
+                            {targets.doctorName}
+                          </span>
+                        </button>
+                      )}
+
+                      {targets.staffId && (
+                        <button
+                          type="button"
+                          onClick={() => handleSelectTarget('STAFF')}
+                          disabled={isTargetDone('STAFF') || isSubmitting}
+                          className={`relative flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                            isTargetDone('STAFF')
+                              ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20 text-emerald-600'
+                              : field.value === 'STAFF'
+                                ? 'border-primary bg-primary/5 text-primary'
+                                : 'border-(--border-color) bg-(--bg-secondary)/30 text-(--text-secondary) hover:bg-(--bg-secondary)'
+                          }`}
+                        >
+                          {isTargetDone('STAFF') && (
+                            <CheckCircle2 className="absolute top-1.5 right-1.5 h-3.5 w-3.5 text-emerald-500" />
+                          )}
+                          <span className="text-[10px] font-bold uppercase tracking-wider">
+                            {labels?.targetStaff ?? 'Nhân viên'}
+                          </span>
+                          <span className="truncate text-xs opacity-70">
+                            {targets.staffName}
+                          </span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                />
+                {/* Per-target submitted success notice */}
+                {sessionSubmitted.size > 0 && !allDone && (
+                  <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800">
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-2">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Đã gửi đánh giá cho{' '}
+                      {[...sessionSubmitted]
+                        .map((t) =>
+                          t === 'CLINIC'
+                            ? (labels?.targetClinic ?? 'Phòng khám')
+                            : t === 'DOCTOR'
+                              ? (labels?.targetDoctor ?? 'Bác sĩ')
+                              : (labels?.targetStaff ?? 'Nhân viên')
+                        )
+                        .join(', ')}
+                      .
+                    </p>
+                    <p className="mt-1 text-[11px] text-emerald-600/80 dark:text-emerald-500/80">
+                      Bạn có thể tiếp tục đánh giá các đối tượng khác hoặc nhấn{' '}
+                      <strong>"Hoàn tất"</strong> để kết thúc.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+            <div>
+              <p className="mb-2 text-sm font-semibold text-(--text-primary)">
+                {labels?.rating ?? 'Rating'}
+              </p>
+              <Controller
+                control={control}
+                name="rating"
+                render={({ field }) => (
+                  <StarRatingInput
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isSubmitting}
+                  />
+                )}
+              />
+              {errors.rating?.message && (
+                <p className="mt-2 text-xs text-red-500">
+                  {labels?.ratingValidation ??
+                    'Please select a rating from 1 to 5.'}
+                </p>
+              )}
+            </div>
+
+            {showCategory && (
+              <div>
+                <p className="mb-2 text-sm font-semibold text-(--text-primary)">
+                  {labels?.category ?? 'Category'}
+                </p>
+                <Controller
+                  control={control}
+                  name="category"
+                  render={({ field }) => (
+                    <div className="flex flex-wrap gap-2">
+                      {categoryOptions.map((category) => (
+                        <button
+                          key={category}
+                          type="button"
+                          onClick={() => field.onChange(category)}
+                          className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                            field.value === category
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-(--border-color) text-(--text-secondary) hover:bg-(--bg-secondary)'
+                          }`}
+                        >
+                          {labels?.categories?.[category] ?? category}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-(--text-primary)">
+                {labels?.commentOptional ?? 'Comment (optional)'}
+              </label>
+              <textarea
+                {...register('comment')}
+                rows={4}
+                maxLength={2000}
+                disabled={isSubmitting}
+                placeholder={
+                  labels?.commentPlaceholder ??
+                  'Tell us more about your experience'
+                }
+                className="w-full rounded-xl border border-(--border-color) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary) outline-none transition-colors placeholder:text-(--text-muted) focus:border-primary"
+              />
+              <div className="mt-1 flex items-center justify-between">
+                {errors.comment?.message ? (
+                  <p className="text-xs text-red-500">
+                    {errors.comment.message}
+                  </p>
+                ) : (
+                  <span />
+                )}
+                <p className="text-xs text-(--text-muted)">
+                  {commentLength}/2000
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={handleAttemptClose}
+                disabled={isSubmitting}
+                className="rounded-lg border border-(--border-color) px-4 py-2 text-sm font-medium text-(--text-secondary) transition-colors hover:bg-(--bg-secondary) disabled:opacity-60"
+              >
+                {sessionSubmitted.size > 0
+                  ? (labels?.cancel ?? 'Hoàn tất')
+                  : (labels?.cancel ?? 'Để sau')}
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
+              >
+                {isSubmitting
+                  ? (labels?.submitting ?? 'Submitting...')
+                  : submitLabel}
+              </button>
+            </div>
+          </form>
+        )}
 
         {showDiscardConfirm && (
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-black/45 p-4">

@@ -14,6 +14,8 @@ interface FocusModeLayoutProps {
   exitPath?: string;
   showBreadcrumb?: boolean;
   breadcrumbItems?: { label: string; path?: string }[];
+  showQuotaBadge?: boolean;
+  showStepper?: boolean;
 }
 
 export default function FocusModeLayout({
@@ -24,6 +26,8 @@ export default function FocusModeLayout({
   exitPath = '/patient/screening',
   showBreadcrumb = true,
   breadcrumbItems,
+  showQuotaBadge = true,
+  showStepper = true,
 }: FocusModeLayoutProps) {
   const navigate = useNavigate();
   const { t } = useSafeTranslation();
@@ -92,105 +96,106 @@ export default function FocusModeLayout({
               )}
             </div>
 
-            {/* Center: Step Progress */}
-            <div className="flex-1 max-w-2xl mx-8">
-              {/* Row 1: circles + connectors */}
-              <div className="flex items-center">
-                {steps.map((step, index) => {
-                  const currentIndex = steps.findIndex(
-                    (s) => s.key === currentStep
-                  );
-                  const isCompleted = currentIndex > index;
-                  const isCurrent = step.key === currentStep;
+            {showStepper && (
+              <div className="flex-1 max-w-2xl mx-8">
+                {/* Row 1: circles + connectors */}
+                <div className="flex items-center">
+                  {steps.map((step, index) => {
+                    const currentIndex = steps.findIndex(
+                      (s) => s.key === currentStep
+                    );
+                    const isCompleted = currentIndex > index;
+                    const isCurrent = step.key === currentStep;
 
-                  return (
-                    <div
-                      key={step.key}
-                      className="flex items-center flex-1 last:flex-none"
-                    >
-                      {/* Step Circle */}
-                      <div className="relative flex-shrink-0">
-                        <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md ring-4 ring-[var(--bg-primary)] transition-all duration-300 ${
-                            isCompleted
-                              ? 'bg-brand text-white'
-                              : isCurrent
+                    return (
+                      <div
+                        key={step.key}
+                        className="flex items-center flex-1 last:flex-none"
+                      >
+                        {/* Step Circle */}
+                        <div className="relative flex-shrink-0">
+                          <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md ring-4 ring-[var(--bg-primary)] transition-all duration-300 ${
+                              isCompleted
                                 ? 'bg-brand text-white'
-                                : 'bg-[var(--bg-secondary)] border-2 border-[var(--border-color)] text-[var(--text-muted)]'
-                          }`}
-                        >
-                          {isCompleted ? (
-                            <CheckCircle className="w-5 h-5" />
-                          ) : (
-                            <span className="text-sm font-bold">
-                              {step.number}
-                            </span>
+                                : isCurrent
+                                  ? 'bg-brand text-white'
+                                  : 'bg-[var(--bg-secondary)] border-2 border-[var(--border-color)] text-[var(--text-muted)]'
+                            }`}
+                          >
+                            {isCompleted ? (
+                              <CheckCircle className="w-5 h-5" />
+                            ) : (
+                              <span className="text-sm font-bold">
+                                {step.number}
+                              </span>
+                            )}
+                          </div>
+                          {/* Ping animation for current step */}
+                          {isCurrent && (
+                            <span className="absolute -inset-1 rounded-full border border-brand animate-ping opacity-30 pointer-events-none" />
                           )}
                         </div>
-                        {/* Ping animation for current step */}
-                        {isCurrent && (
-                          <span className="absolute -inset-1 rounded-full border border-brand animate-ping opacity-30 pointer-events-none" />
+
+                        {/* Connector line (not rendered after last node) */}
+                        {index < steps.length - 1 && (
+                          <div className="relative flex-1 h-[3px] mx-1 rounded-full overflow-hidden bg-[var(--border-color)]">
+                            <div
+                              className="absolute inset-y-0 left-0 bg-brand rounded-full transition-all duration-500"
+                              style={{
+                                width: currentIndex > index ? '100%' : '0%',
+                              }}
+                            />
+                          </div>
                         )}
                       </div>
+                    );
+                  })}
+                </div>
 
-                      {/* Connector line (not rendered after last node) */}
-                      {index < steps.length - 1 && (
-                        <div className="relative flex-1 h-[3px] mx-1 rounded-full overflow-hidden bg-[var(--border-color)]">
-                          <div
-                            className="absolute inset-y-0 left-0 bg-brand rounded-full transition-all duration-500"
-                            style={{
-                              width: currentIndex > index ? '100%' : '0%',
-                            }}
-                          />
+                {/* Row 2: labels aligned under each circle */}
+                <div className="flex items-start mt-2">
+                  {steps.map((step, index) => {
+                    const currentIndex = steps.findIndex(
+                      (s) => s.key === currentStep
+                    );
+                    const isCompleted = currentIndex > index;
+                    const isCurrent = step.key === currentStep;
+                    const isPending = currentIndex < index;
+
+                    return (
+                      <div
+                        key={step.key}
+                        className="flex items-start flex-1 last:flex-none"
+                      >
+                        {/* Label centered under the 40px circle */}
+                        <div className="w-10 flex-shrink-0 flex justify-center">
+                          <span
+                            className={`text-[10px] font-bold uppercase tracking-wide text-center whitespace-nowrap ${
+                              isCurrent
+                                ? 'text-[var(--text-primary)]'
+                                : isPending
+                                  ? 'text-[var(--text-muted)]'
+                                  : 'text-brand'
+                            }`}
+                          >
+                            {step.label}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Row 2: labels aligned under each circle */}
-              <div className="flex items-start mt-2">
-                {steps.map((step, index) => {
-                  const currentIndex = steps.findIndex(
-                    (s) => s.key === currentStep
-                  );
-                  const isCompleted = currentIndex > index;
-                  const isCurrent = step.key === currentStep;
-                  const isPending = currentIndex < index;
-
-                  return (
-                    <div
-                      key={step.key}
-                      className="flex items-start flex-1 last:flex-none"
-                    >
-                      {/* Label centered under the 40px circle */}
-                      <div className="w-10 flex-shrink-0 flex justify-center">
-                        <span
-                          className={`text-[10px] font-bold uppercase tracking-wide text-center whitespace-nowrap ${
-                            isCurrent
-                              ? 'text-[var(--text-primary)]'
-                              : isPending
-                                ? 'text-[var(--text-muted)]'
-                                : 'text-brand'
-                          }`}
-                        >
-                          {step.label}
-                        </span>
+                        {/* Spacer to match connector width */}
+                        {index < steps.length - 1 && (
+                          <div className="flex-1 mx-1" />
+                        )}
                       </div>
-                      {/* Spacer to match connector width */}
-                      {index < steps.length - 1 && (
-                        <div className="flex-1 mx-1" />
-                      )}
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Right: Quota Badge */}
             <div className="flex justify-end w-32">
-              <QuotaBadge />
+              {showQuotaBadge && <QuotaBadge />}
             </div>
           </div>
         </div>

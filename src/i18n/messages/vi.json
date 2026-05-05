@@ -405,7 +405,7 @@
       "leftPanel": {
         "titleLine": "Bệnh viện Kỹ thuật số",
         "titleHighlight": "ứng dụng AI.",
-        "description": "Trải nghiệm y tế số hiện đại cho bệnh nhân và bác sĩ với công nghệ chẩn đoán AI tiên tiến, độ chính xác lâm sàng 99.2%.",
+        "description": "Trải nghiệm y tế số hiện đại cho bệnh nhân và bác sĩ với công nghệ chẩn đoán AI tiên tiến, độ chính xác lâm sàng.",
         "hipaa": "Tiêu chuẩn Y tế số",
         "encryption": "Bảo mật đa tầng",
         "systemStatus": "Trạng thái hệ thống:",
@@ -426,7 +426,8 @@
         "registrationError": "Đã xảy ra lỗi khi đăng ký",
         "googleError": "Đã xảy ra lỗi khi đăng nhập Google",
         "captchaRequired": "Vui lòng hoàn tất xác minh CAPTCHA.",
-        "turnstileRequired": "Vui lòng hoàn tất xác minh Turnstile."
+        "turnstileRequired": "Vui lòng hoàn tất xác minh Turnstile.",
+        "invalidCredentials": "Email hoặc mật khẩu không đúng."
       },
       "loginForm": {
         "heading": "Chào mừng quay lại",
@@ -1999,7 +2000,7 @@
         },
         "validation": {
           "title": "Thẩm định lâm sàng",
-          "description": "Đạt độ nhạy 99.2% trong thử nghiệm đa trung tâm. Kết quả đã được công bố trên các tạp chí y khoa uy tín.",
+          "description": "Đạt độ nhạy trong thử nghiệm đa trung tâm. Kết quả đã được công bố trên các tạp chí y khoa uy tín.",
           "cta": "Tải whitepaper"
         }
       }
@@ -3082,7 +3083,9 @@
       "phoneNumber": "Số điện thoại",
       "dateOfBirth": "Ngày sinh",
       "gender": "Giới tính",
-      "address": "Địa chỉ"
+      "address": "Địa chỉ",
+      "citizenId": "CCCD / Định danh",
+      "citizenIdPlaceholder": "Nhập số CCCD"
     },
     "gender": {
       "preferNotToSay": "Không muốn tiết lộ",
@@ -7978,7 +7981,7 @@
           "learnMore": "Tìm hiểu thêm"
         },
         "descriptions": {
-          "bookConsultation": "Trao đổi kết quả này với bác sĩ chuyên khoa để nhận được đánh giá chuyên môn và kế hoạch chăm sóc cá nhân hóa.",
+          "bookConsultation": "Trao đổi kết quả này với bác sĩ chuyên khoa.",
           "startNewAnalysis": "Bắt đầu một phân tích mới cho mắt khác hoặc kiểm tra lại."
         },
         "consultation": {

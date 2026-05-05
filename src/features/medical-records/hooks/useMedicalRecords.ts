@@ -131,12 +131,8 @@ export const useFinalizeRecord = () => {
   return useMutation({
     mutationFn: (id: string) => medicalRecordApi.finalize(id),
     onSuccess: (_, id) => {
-      toast.success('Hồ sơ đã được khóa và xuất bản!');
       queryClient.invalidateQueries({ queryKey: medicalRecordKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: medicalRecordKeys.lists() });
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Lỗi khi khóa hồ sơ');
     },
   });
 };
