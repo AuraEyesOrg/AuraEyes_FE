@@ -7,7 +7,6 @@ import {
 } from '@/features/ophthalmologist/components/PrescriptionTable';
 import type { RxItem } from '@/features/ophthalmologist/types/drug.type';
 
-/** Stable snapshot for IV. Đơn thuốc — RHF isDirty does not track prescription state. */
 function buildPrescriptionFingerprint(
   items: RxItem[],
   note: string,
@@ -71,6 +70,7 @@ import {
   Ward,
   Country,
 } from '../api/master-data.api';
+import { toLocalDateKey } from '@/lib/date-utils';
 
 /**
  * DETAILED EYE EXAM ITEM
@@ -160,6 +160,7 @@ interface FullEmrFormData {
   doctorName: string;
   finalDiagnosisMain: string;
   finalDiagnosisExtra: string;
+  followUpDate: string;
   patientId: string;
 }
 
@@ -260,6 +261,7 @@ const INITIAL_VALUES: Partial<FullEmrFormData> = {
   rightEye: createInitialEyeData(),
   leftEye: createInitialEyeData(),
   doctorName: '',
+  followUpDate: '',
 };
 
 const sectionConfig: Record<
@@ -391,7 +393,9 @@ export default function ErmForm() {
     'admin' | 'clinical' | 'prescription'
   >('admin');
   const [hasAutoSwitched, setHasAutoSwitched] = useState(false);
+  const [isDateFocused, setIsDateFocused] = useState(false);
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
+  const [isFinalizingFlow, setIsFinalizingFlow] = useState(false);
   const hasInitiatedConsultation = useRef(false);
 
   // ─── Prescription state ────────────────────────────────────────────────────
@@ -439,6 +443,11 @@ export default function ErmForm() {
       s.type === ConsultationSessionType.VideoCall
   );
   const reportableSessionId = reportableSession?.id ?? null;
+  const isFinalizeBusy =
+    isFinalizingFlow ||
+    finalizeMutation.isPending ||
+    updateDiagnosisMutation.isPending ||
+    submitVerificationReportMutation.isPending;
 
   // Role Detection
   const isOphthalmologist = user?.roles.includes('Ophthalmologist');
@@ -617,6 +626,14 @@ export default function ErmForm() {
   const hasUnsavedClinicalOrRx =
     isDirty || (isOphthalmologist && isPrescriptionDirty);
 
+  const minFollowUpDate = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 14); // At least 2 weeks from now
+    return toLocalDateKey(d);
+  }, []);
+
+  const followUpDateValue = useWatch({ control, name: 'followUpDate' });
+
   useEffect(() => {
     if (record) {
       const adminData = JSON.parse(record.administrativeDataJson || '{}');
@@ -674,6 +691,7 @@ export default function ErmForm() {
         ...INITIAL_VALUES,
         ...formattedAdmin,
         ...normalizedClinicalData,
+        followUpDate: formatDateForInput(clinicalData?.followUpDate) || '',
         maYT: record.medicalRecordNumber,
         finalDiagnosisMain: record.finalDiagnosis,
         finalDiagnosisExtra: record.treatmentPlan,
@@ -1066,6 +1084,7 @@ export default function ErmForm() {
           'rightEye',
           'leftEye',
           'doctorName',
+          'followUpDate',
         ];
         const clinicalData = clinicalFields.reduce((acc, field) => {
           acc[field] = (data as any)[field];
@@ -1109,12 +1128,13 @@ export default function ErmForm() {
   };
 
   const handleFinalize = () => {
-    if (!id) return;
+    if (!id || isFinalizeBusy) return;
     setShowFinalizeModal(true);
   };
 
   const onFinalizeConfirm = async () => {
-    if (!id) return;
+    if (!id || isFinalizeBusy) return;
+    setIsFinalizingFlow(true);
     try {
       if (isOphthalmologist) {
         // Validate prescription before finalizing
@@ -1152,6 +1172,7 @@ export default function ErmForm() {
           'rightEye',
           'leftEye',
           'doctorName',
+          'followUpDate',
           'finalDiagnosisMain',
           'finalDiagnosisExtra',
         ];
@@ -1176,7 +1197,6 @@ export default function ErmForm() {
           },
         });
 
-        // Submit the Diagnosis report to the Consultation Session so the Cashier can process it
         if (reportableSessionId) {
           const doctorId = user?.roleId || '';
           await submitVerificationReportMutation.mutateAsync({
@@ -1196,6 +1216,9 @@ export default function ErmForm() {
             noMedicationPrescribed,
             status: 'Finalized',
             finalizedAt: new Date().toISOString(),
+            followUpDate: currentValues.followUpDate
+              ? new Date(currentValues.followUpDate).toISOString()
+              : undefined,
           });
         } else {
           toast.warning(
@@ -1218,6 +1241,7 @@ export default function ErmForm() {
       console.error(error);
       toast.error('Lỗi khi khóa hồ sơ. Vui lòng thử lại.');
     } finally {
+      setIsFinalizingFlow(false);
       setShowFinalizeModal(false);
     }
   };
@@ -1354,9 +1378,7 @@ export default function ErmForm() {
               <button
                 onClick={handleFinalize}
                 disabled={
-                  isSubmitting ||
-                  finalizeMutation.isPending ||
-                  hasUnsavedClinicalOrRx
+                  isSubmitting || isFinalizeBusy || hasUnsavedClinicalOrRx
                 }
                 className={`flex items-center gap-2 px-6 py-2 rounded-xl font-black text-[10px] transition-all bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-600/20 disabled:opacity-50`}
               >
@@ -2468,7 +2490,7 @@ export default function ErmForm() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-600">
-                        Hướng điều trị
+                        Hướng điều trị / Lời dặn
                       </label>
                       <textarea
                         {...register('finalDiagnosisExtra')}
@@ -2476,6 +2498,25 @@ export default function ErmForm() {
                         className="h-32 w-full resize-none rounded-2xl border border-slate-300 bg-white p-4 text-sm font-medium text-slate-900 shadow-sm outline-none transition-colors placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-800"
                         placeholder="Lời dặn bác sĩ..."
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-600">
+                        Ngày tái khám
+                      </label>
+                      <div className="relative max-w-xs group">
+                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none z-10" />
+                        <input
+                          type={
+                            isDateFocused || followUpDateValue ? 'date' : 'text'
+                          }
+                          onFocus={() => setIsDateFocused(true)}
+                          min={minFollowUpDate}
+                          {...register('followUpDate')}
+                          disabled={isReadOnlyClinical}
+                          placeholder="dd/mm/yyyy"
+                          className="w-full rounded-2xl border border-slate-300 bg-white py-4 pl-12 pr-4 text-sm font-bold text-slate-900 shadow-sm outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-800"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -2499,12 +2540,12 @@ export default function ErmForm() {
                             onClick={handleFinalize}
                             disabled={
                               isSubmitting ||
-                              finalizeMutation.isPending ||
+                              isFinalizeBusy ||
                               hasUnsavedClinicalOrRx
                             }
                             className={`flex items-center gap-2 rounded-2xl px-8 py-4 text-xs font-black uppercase tracking-widest shadow-lg transition-all md:px-10 ${
                               isSubmitting ||
-                              finalizeMutation.isPending ||
+                              isFinalizeBusy ||
                               hasUnsavedClinicalOrRx
                                 ? 'cursor-not-allowed bg-slate-200 text-slate-700 ring-1 ring-inset ring-slate-300 shadow-none'
                                 : 'bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-700'
@@ -2578,12 +2619,12 @@ export default function ErmForm() {
                           onClick={handleFinalize}
                           disabled={
                             isSubmitting ||
-                            finalizeMutation.isPending ||
+                            isFinalizeBusy ||
                             hasUnsavedClinicalOrRx
                           }
                           className={`flex items-center gap-2 rounded-2xl px-8 py-4 text-xs font-black uppercase tracking-widest shadow-lg transition-all md:px-10 ${
                             isSubmitting ||
-                            finalizeMutation.isPending ||
+                            isFinalizeBusy ||
                             hasUnsavedClinicalOrRx
                               ? 'cursor-not-allowed bg-slate-200 text-slate-700 ring-1 ring-inset ring-slate-300 shadow-none'
                               : 'bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-700'
@@ -2617,12 +2658,15 @@ export default function ErmForm() {
       <ConfirmModal
         open={showFinalizeModal}
         title="Khóa hồ sơ & Gửi tới Thu ngân"
-        message="Thao tác này sẽ: (1) Lưu chẩn đoán và đơn thuốc, (2) Khóa hồ sơ bệnh án, (3) Gửi bệnh nhân đến quầy Thu ngân. Sau khi khóa sẽ không thể chỉnh sửa. Bạn có chắc chắn?"
-        confirmLabel="Xác nhận Finalize & Gửi Thu ngân"
+        message={`Thao tác này sẽ:
+(1) Lưu chẩn đoán và đơn thuốc
+(2) Khóa hồ sơ bệnh án
+(3) Gửi bệnh nhân đến quầy Thu ngân
+
+Sau khi khóa sẽ không thể chỉnh sửa. Bạn có chắc chắn?`}
+        confirmLabel="Xác nhận & Gửi Thu ngân"
         cancelLabel="Hủy"
-        isLoading={
-          finalizeMutation.isPending || updateDiagnosisMutation.isPending
-        }
+        isLoading={isFinalizeBusy}
         tone="danger"
         onConfirm={onFinalizeConfirm}
         onCancel={() => setShowFinalizeModal(false)}

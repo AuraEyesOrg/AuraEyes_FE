@@ -270,8 +270,14 @@ function mapV2ResponseToAnomalies(
       color: urgencyToColorClass(urgency),
       type: urgencyToAnomalyType(urgency),
       location,
-      friendlyName: useVietnamese ? pred.name_vi : pred.name_en,
-      friendlyDescription: useVietnamese ? pred.name_vi : pred.name_en,
+      friendlyName: toDisplayDiseaseName(
+        useVietnamese ? pred.name_vi : pred.name_en,
+        currentLanguage
+      ),
+      friendlyDescription: toDisplayDiseaseName(
+        useVietnamese ? pred.name_vi : pred.name_en,
+        currentLanguage
+      ),
       isHighest: isPrimary,
       groupDisplay: isPrimary ? groupDisplay : undefined,
     });
@@ -419,8 +425,14 @@ async function mapSavedAnomaliesFromRaw(
           description: useVietnamese ? pred.name_vi : pred.name_en,
           color: urgencyToColorClass(urgency),
           type: urgencyToAnomalyType(urgency),
-          friendlyName: useVietnamese ? pred.name_vi : pred.name_en,
-          friendlyDescription: useVietnamese ? pred.name_vi : pred.name_en,
+          friendlyName: toDisplayDiseaseName(
+            useVietnamese ? pred.name_vi : pred.name_en,
+            currentLanguage
+          ),
+          friendlyDescription: toDisplayDiseaseName(
+            useVietnamese ? pred.name_vi : pred.name_en,
+            currentLanguage
+          ),
           isHighest: isPrimary,
           groupDisplay: isPrimary ? groupDisplay : undefined,
         } as Anomaly;
@@ -457,6 +469,7 @@ async function mapSavedAnomaliesFromRaw(
 
 function mapPersistedFindingsToAnomalies(findings?: string): Anomaly[] {
   if (!findings) return [];
+  const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
   const items = findings
     .split(',')
     .map((item) => item.trim())
@@ -464,16 +477,17 @@ function mapPersistedFindingsToAnomalies(findings?: string): Anomaly[] {
 
   return items.map((item, idx) => {
     const urgency = getDiseaseUrgency(item);
+    const displayName = toDisplayDiseaseName(item, currentLanguage);
     return {
       id: `persisted-${idx + 1}`,
       name: item,
       code: undefined,
       confidence: 0,
-      description: item,
+      description: displayName,
       color: urgencyToColorClass(urgency),
       type: urgencyToAnomalyType(urgency),
-      friendlyName: item,
-      friendlyDescription: item,
+      friendlyName: displayName,
+      friendlyDescription: displayName,
       isHighest: idx === 0,
     } as Anomaly;
   });
@@ -522,8 +536,14 @@ function extractDoctorBboxOverrides(rawJsonOutput: string): Anomaly[] | null {
       code: s.name,
       confidence: s.confidence,
       description: s.description ?? s.name,
-      friendlyName: s.name,
-      friendlyDescription: s.description ?? s.name,
+      friendlyName: toDisplayDiseaseName(
+        s.name,
+        i18n.resolvedLanguage ?? i18n.language ?? 'vi'
+      ),
+      friendlyDescription: toDisplayDiseaseName(
+        s.description ?? s.name,
+        i18n.resolvedLanguage ?? i18n.language ?? 'vi'
+      ),
       color: '',
       type:
         s.severity === 'high'
@@ -602,8 +622,14 @@ export async function hydrateFullScreeningData(
           code: m.name,
           confidence: m.confidence,
           description: m.description ?? m.name,
-          friendlyName: m.name,
-          friendlyDescription: m.description ?? m.name,
+          friendlyName: toDisplayDiseaseName(
+            m.name,
+            i18n.resolvedLanguage ?? i18n.language ?? 'vi'
+          ),
+          friendlyDescription: toDisplayDiseaseName(
+            m.description ?? m.name,
+            i18n.resolvedLanguage ?? i18n.language ?? 'vi'
+          ),
           color: '',
           type:
             m.severity === 'high'

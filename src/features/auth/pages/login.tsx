@@ -196,6 +196,16 @@ const LoginPage = () => {
     ].some((keyword) => normalized.includes(keyword));
   };
 
+  const resolveBackendError = (message: string): string => {
+    const normalized = message.toLowerCase().trim();
+
+    if (normalized.includes('invalid email or password')) {
+      return t('AuthPages.login.messages.invalidCredentials');
+    }
+
+    return message;
+  };
+
   const redirectToEmailReminderScreen = (email: string) => {
     navigate(
       `${toLocalizedAuthPath('/email-verification-required')}?email=${encodeURIComponent(email)}`
@@ -298,7 +308,7 @@ const LoginPage = () => {
           return;
         }
 
-        setError(resolvedError);
+        setError(resolveBackendError(resolvedError));
       }
     } catch (err: unknown) {
       console.error('Login error:', err);
@@ -334,14 +344,14 @@ const LoginPage = () => {
           return;
         }
 
-        setError(resolvedError);
+        setError(resolveBackendError(resolvedError));
       } else {
         if (hasUnverifiedEmailError(errorMessage)) {
           redirectToEmailReminderScreen(data.email);
           return;
         }
 
-        setError(errorMessage);
+        setError(resolveBackendError(errorMessage));
       }
     } finally {
       setIsLoading(false);
@@ -476,7 +486,7 @@ const LoginPage = () => {
           return;
         }
 
-        setError(resolvedError);
+        setError(resolveBackendError(resolvedError));
       }
     } catch (err: unknown) {
       console.error('Google login error:', err);
@@ -511,14 +521,14 @@ const LoginPage = () => {
           return;
         }
 
-        setError(resolvedError);
+        setError(resolveBackendError(resolvedError));
       } else {
         if (hasUnverifiedEmailError(errorMessage)) {
           redirectToEmailReminderWithoutPrefill();
           return;
         }
 
-        setError(errorMessage);
+        setError(resolveBackendError(errorMessage));
       }
     } finally {
       setIsLoading(false);

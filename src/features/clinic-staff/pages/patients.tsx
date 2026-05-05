@@ -6,11 +6,9 @@ import {
   Search,
   XCircle,
   Plus,
-  ScanEye,
   Pencil,
   History,
   MoreHorizontal,
-  Loader2,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
@@ -478,23 +476,6 @@ export default function ClinicStaffPatientsPage() {
                       {/* Actions */}
                       <td className="px-6 py-4 text-right">
                         <div className="inline-flex items-center gap-2">
-                          <button
-                            type="button"
-                            disabled={screenVisitLoadingFor === patient.id}
-                            onClick={() => void handleScreenPatient(patient.id)}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20 disabled:opacity-50"
-                          >
-                            {screenVisitLoadingFor === patient.id ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <ScanEye className="h-3.5 w-3.5" />
-                            )}
-                            {t(
-                              'ClinicStaff.patients.actions.screenNow',
-                              'Screen Now'
-                            )}
-                          </button>
-
                           <button
                             ref={(el) => {
                               actionMenuTriggerRefs.current[patient.id] = el;

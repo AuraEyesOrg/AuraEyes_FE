@@ -89,9 +89,13 @@ export interface ClinicAppointmentDto {
   staffName?: string | null;
   cost?: number | null;
   /**
-   * True when the current patient has already submitted feedback for this
-   * appointment. Populated server-side so the client never has to run an
-   * N+1 existence-check across organisations.
+   * Target types ('CLINIC' | 'DOCTOR' | 'STAFF') for which the patient has already submitted feedback.
+   * Empty array means no feedback submitted yet.
+   */
+  submittedFeedbackTargets?: string[];
+  /**
+   * Convenience: True when the current patient has already submitted at least one feedback for this appointment.
+   * @deprecated use submittedFeedbackTargets to check per-target
    */
   hasFeedback?: boolean;
   orderId?: string | null;

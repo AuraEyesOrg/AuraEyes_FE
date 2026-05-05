@@ -1505,6 +1505,25 @@ export default function ErmFormPatient() {
                 </div>
               );
             })()}
+
+            {/* LỜI DẶN / TÁI KHÁM SECTION */}
+            {(data.finalDiagnosisExtra || data.followUpDate) && (
+              <div className="space-y-1 mt-6 px-2">
+                <p className="font-bold uppercase">V. LỜI DẶN / TÁI KHÁM</p>
+                {data.finalDiagnosisExtra && (
+                  <p className="ml-4 italic text-[13px]">
+                    <span className="font-bold not-italic">Lời dặn:</span>{' '}
+                    {data.finalDiagnosisExtra}
+                  </p>
+                )}
+                {data.followUpDate && (
+                  <p className="ml-4 italic text-[13px]">
+                    <span className="font-bold not-italic">Ngày tái khám:</span>{' '}
+                    {new Date(data.followUpDate).toLocaleDateString('vi-VN')}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
