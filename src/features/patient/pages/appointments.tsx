@@ -19,6 +19,7 @@ import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import { Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
+import ConfirmModal from '@/components/ui/confirm-modal';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import {
   usePatientClinicAppointments,
@@ -92,6 +93,8 @@ const AppointmentsPage = () => {
   const [qrTarget, setQrTarget] = useState<ClinicAppointmentDto | null>(null);
   const [cancellationTarget, setCancellationTarget] =
     useState<ClinicAppointmentDto | null>(null);
+  const [directCancelTarget, setDirectCancelTarget] =
+    useState<ClinicAppointmentDto | null>(null);
 
   const { user } = useAuthStore();
   const patientId = user?.roleId;
@@ -138,20 +141,26 @@ const AppointmentsPage = () => {
   const handleCancelClick = (appointment: ClinicAppointmentDto) => {
     // If not paid and pending, cancel directly (no refund needed)
     if (appointment.status === 'Pending' && !appointment.isPaidDeposit) {
-      if (window.confirm(t('PatientAppointments.cancellation.confirmDirect'))) {
-        cancelAppointmentMutation.mutate(appointment.id, {
-          onSuccess: () => {
-            toast.success(t('PatientAppointments.cancellation.successToast'));
-          },
-          onError: (error: any) => {
-            toast.error(mapClinicPatientErrorMessage(error));
-          },
-        });
-      }
+      setDirectCancelTarget(appointment);
     } else {
       // Refund request needed
       setCancellationTarget(appointment);
     }
+  };
+
+  const handleDirectCancel = () => {
+    if (!directCancelTarget) return;
+
+    cancelAppointmentMutation.mutate(directCancelTarget.id, {
+      onSuccess: () => {
+        toast.success(t('PatientAppointments.cancellation.successToast'));
+        setDirectCancelTarget(null);
+      },
+      onError: (error: any) => {
+        toast.error(mapClinicPatientErrorMessage(error));
+        setDirectCancelTarget(null);
+      },
+    });
   };
 
   const stats = useMemo(
@@ -513,6 +522,17 @@ const AppointmentsPage = () => {
         }}
         onClose={() => setCancellationTarget(null)}
         onSubmit={handleRequestCancellation}
+      />
+
+      <ConfirmModal
+        open={!!directCancelTarget}
+        title={t('PatientAppointments.cancellation.modalTitle')}
+        message={t('PatientAppointments.cancellation.confirmDirect')}
+        confirmLabel={t('PatientAppointments.cancellation.confirmLabel')}
+        cancelLabel={t('common.actions.cancel', { defaultValue: 'Hủy bỏ' })}
+        isLoading={cancelAppointmentMutation.isPending}
+        onConfirm={handleDirectCancel}
+        onCancel={() => setDirectCancelTarget(null)}
       />
     </PatientLayout>
   );
