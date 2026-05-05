@@ -34,13 +34,13 @@ import {
 } from '../api/patient.api';
 import { hydrateFullScreeningData } from './retinal-analysis';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
-import i18n from '@/i18n/i18n';
 import {
   isNormalDisease,
   toDisplayDiseaseName,
 } from '@/features/patient/lib/disease-translation';
 import useAuthStore from '@/store/auth-store';
 import { useConsultationSessions } from '@/features/consultation/hooks';
+import { toIntlLocale } from '@/lib/date-utils';
 
 interface LocationState {
   screeningId?: string;
@@ -106,7 +106,7 @@ const MOCK_EDUCATIONAL_RESOURCES: PatientEducationalResourceItem[] = [
 export default function ReviewPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useSafeTranslation();
+  const { t, i18n } = useSafeTranslation();
   const { user } = useAuthStore();
   const patientId = user?.roleId ?? undefined;
   const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
@@ -140,7 +140,11 @@ export default function ReviewPage() {
 
   const { data: hydratedSession, isLoading: isHydratedSessionLoading } =
     useQuery({
-      queryKey: ['patient-screening-review', screeningIdFromRouteOrStore],
+      queryKey: [
+        'patient-screening-review',
+        screeningIdFromRouteOrStore,
+        currentLanguage,
+      ],
       enabled: shouldHydrateFromApi,
       queryFn: async () => {
         if (!screeningIdFromRouteOrStore) return null;
@@ -445,7 +449,9 @@ export default function ReviewPage() {
               {t('PatientReview.empty.description')}
             </p>
             <button
-              onClick={() => navigate('/patient/screening/new')}
+              onClick={() =>
+                navigate(resolvePathWithLocale('/patient/screening/new'))
+              }
               className="inline-flex items-center gap-2 px-5 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-colors"
             >
               <Sparkles className="w-4 h-4" />
@@ -539,11 +545,14 @@ export default function ReviewPage() {
                     <div>
                       <p className="text-xs text-(--text-muted) font-medium">
                         {t('PatientReview.labels.capturedAt')}{' '}
-                        {new Date().toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
+                        {new Date().toLocaleDateString(
+                          toIntlLocale(currentLanguage),
+                          {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          }
+                        )}
                       </p>
                     </div>
                     <span
@@ -571,7 +580,7 @@ export default function ReviewPage() {
                           {patientFriendlyFindings.length > 4
                             ? t('PatientReview.findingsMore', {
                                 count: patientFriendlyFindings.length - 4,
-                                defaultValue: currentLanguage
+                                defaultValue: (currentLanguage || 'vi')
                                   .toLowerCase()
                                   .startsWith('vi')
                                   ? ' và {{count}} dấu hiệu khác'
@@ -589,19 +598,24 @@ export default function ReviewPage() {
                   <button
                     onClick={() => {
                       if (!screeningId && images.length === 0) {
-                        navigate('/patient/screening/new');
+                        navigate(
+                          resolvePathWithLocale('/patient/screening/new')
+                        );
                         return;
                       }
-                      navigate('/patient/analysis/details', {
-                        state: {
-                          screeningId,
-                          rawJsonOutput: rawJsonForAnalysis,
-                          resultsPersisted,
-                          images,
-                          anomalies,
-                          riskLevel: effectiveRiskLevel,
-                        },
-                      });
+                      navigate(
+                        resolvePathWithLocale('/patient/analysis/details'),
+                        {
+                          state: {
+                            screeningId,
+                            rawJsonOutput: rawJsonForAnalysis,
+                            resultsPersisted,
+                            images,
+                            anomalies,
+                            riskLevel: effectiveRiskLevel,
+                          },
+                        }
+                      );
                     }}
                     className="flex items-center gap-1.5 text-primary hover:text-primary/80 font-semibold text-sm transition-colors"
                   >

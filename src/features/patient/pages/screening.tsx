@@ -8,7 +8,6 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
-  Calendar,
   FileText,
   MoreVertical,
   Trash2,
@@ -20,13 +19,13 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
-import { resolvePathWithLocale } from '@/i18n/middleware';
-import { formatShortDate } from '@/lib/date-utils';
+import { formatShortDate, toIntlLocale } from '@/lib/date-utils';
 import { screeningApi } from '../api/screening.api';
 import { downloadReportPdf } from '../api/patient.api';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { localizeFindingsText } from '@/features/patient/lib/disease-translation';
 import i18n from '@/i18n/i18n';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 
 interface Scan {
   id: string;
@@ -89,7 +88,7 @@ export default function ScreeningPage() {
 
   const scans: Scan[] = (sessionsQuery.data ?? []).map((session) => ({
     id: session.screeningId,
-    name: `${t('PatientReview.sessionLabel', 'Session')} - ${formatShortDate(session.createdAt)}`,
+    name: `${t('PatientReview.sessionLabel', 'Session')} - ${formatShortDate(session.createdAt, 'medium', toIntlLocale(i18n.language))}`,
     eye: t('PatientScreening.labels.bothEyes', 'Both Eyes') as
       | 'Left Eye (OS)'
       | 'Right Eye (OD)'
@@ -128,8 +127,10 @@ export default function ScreeningPage() {
 
   const filteredScans = sortedScans.filter(
     (scan) =>
-      scan.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      scan.eye.toLowerCase().includes(searchQuery.toLowerCase())
+      (scan.name || '')
+        .toLowerCase()
+        .includes((searchQuery || '').toLowerCase()) ||
+      (scan.eye || '').toLowerCase().includes((searchQuery || '').toLowerCase())
   );
 
   const handleDownloadPdf = async (reportId: string) => {
@@ -405,9 +406,12 @@ export default function ScreeningPage() {
                   key={scan.id}
                   className="flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)]/50 transition-colors cursor-pointer group"
                   onClick={() => {
-                    navigate('/patient/screening/review', {
-                      state: { screeningId: scan.id },
-                    });
+                    navigate(
+                      resolvePathWithLocale('/patient/screening/review'),
+                      {
+                        state: { screeningId: scan.id },
+                      }
+                    );
                   }}
                 >
                   {/* Thumbnail */}
@@ -439,21 +443,12 @@ export default function ScreeningPage() {
                         {scan.eye}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {formatShortDate(scan.date)}
+                        {formatShortDate(
+                          scan.date,
+                          'medium',
+                          toIntlLocale(i18n.language)
+                        )}
                       </span>
-                      {scan.findingsText ? (
-                        <span className="truncate max-w-[200px]">
-                          {scan.findingsText}
-                        </span>
-                      ) : scan.findings !== undefined ? (
-                        <span>
-                          {scan.findings}{' '}
-                          {scan.findings === 1
-                            ? t('PatientScreening.labels.finding', 'finding')
-                            : t('PatientScreening.labels.findings', 'findings')}
-                        </span>
-                      ) : null}
                     </div>
                   </div>
 
@@ -479,9 +474,14 @@ export default function ScreeningPage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate('/patient/screening/review', {
-                              state: { screeningId: scan.id },
-                            });
+                            navigate(
+                              resolvePathWithLocale(
+                                '/patient/screening/review'
+                              ),
+                              {
+                                state: { screeningId: scan.id },
+                              }
+                            );
                           }}
                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
                         >
