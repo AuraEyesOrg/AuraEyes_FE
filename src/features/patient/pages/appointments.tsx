@@ -109,7 +109,7 @@ const AppointmentsPage = () => {
   const handleSync = (orderId: string) => {
     syncOrder(orderId, {
       onSuccess: () => {
-        toast.success('Đã cập nhật trạng thái mới nhất.');
+        toast.success(t('PatientAppointments.toast.statusUpdated'));
       },
     });
   };
@@ -789,7 +789,8 @@ const ClinicAppointmentCard = ({
                       {t('PatientAppointments.labels.consultingDoctor')}
                     </p>
                     <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-none">
-                      {appointment.ophthalFullName ?? 'Clinic Doctor'}
+                      {appointment.ophthalFullName ??
+                        t('PatientAppointments.labels.clinicDoctor')}
                     </h4>
                   </div>
                 </div>

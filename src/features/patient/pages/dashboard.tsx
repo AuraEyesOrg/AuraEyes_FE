@@ -18,7 +18,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import PatientLayout from '../components/PatientLayout';
 import { useDashboard } from '../hooks/useDashboard';
-import { formatShortDate } from '@/lib/date-utils';
+import { formatShortDate, toIntlLocale } from '@/lib/date-utils';
 import { screeningApi } from '../api/screening.api';
 import { usePatientMedicalRecords } from '@/features/medical-records/hooks/useMedicalRecords';
 
@@ -72,7 +72,7 @@ const looksLikeI18nKey = (value?: string) => {
 };
 
 export default function PatientDashboard() {
-  const { t: i18nT } = useTranslation();
+  const { t: i18nT, i18n } = useTranslation();
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
 
@@ -178,7 +178,11 @@ export default function PatientDashboard() {
     }
   };
 
-  const currentDate = formatShortDate(new Date().toISOString());
+  const currentDate = formatShortDate(
+    new Date().toISOString(),
+    'medium',
+    toIntlLocale(i18n.language)
+  );
   const latestReportRisk = latestReport?.riskLevel;
   const effectiveLatestRisk = latestSessionRisk ?? latestReportRisk;
   const hasLatestSession = Boolean(latestSession);
@@ -227,10 +231,12 @@ export default function PatientDashboard() {
     : latestReport?.id;
   const latestSessionHasResult = Boolean(latestSession?.latestRiskLevel);
   const latestSessionTargetPath = latestSessionHasResult
-    ? '/patient/screening/review'
+    ? resolvePathWithLocale('/patient/screening/review')
     : latestSession?.screeningId
-      ? `/patient/analysis?screeningId=${latestSession.screeningId}`
-      : '/patient/analysis';
+      ? resolvePathWithLocale(
+          `/patient/analysis?screeningId=${latestSession.screeningId}`
+        )
+      : resolvePathWithLocale('/patient/analysis');
   const latestSessionReportPath = latestMedicalRecord
     ? resolvePathWithLocale(
         `/medical-records/patient/${latestMedicalRecord.id}`
@@ -267,7 +273,11 @@ export default function PatientDashboard() {
       icon: Calendar,
       label: t('PatientDashboard.stats.nextAppointment'),
       value: nextAppointment
-        ? formatShortDate(nextAppointment.date)
+        ? formatShortDate(
+            nextAppointment.date,
+            'medium',
+            toIntlLocale(i18n.language)
+          )
         : t('PatientDashboard.stats.noneScheduled'),
       valueColor: 'text-[var(--text-primary)]',
       bgColor: 'icon-bg-pink',
@@ -393,7 +403,11 @@ export default function PatientDashboard() {
                         {t('PatientDashboard.hero.dateScanned')}
                       </p>
                       <p className="font-medium text-(--text-primary)">
-                        {formatShortDate(heroDate)}
+                        {formatShortDate(
+                          heroDate,
+                          'medium',
+                          toIntlLocale(i18n.language)
+                        )}
                       </p>
                     </div>
                   )}
@@ -403,7 +417,11 @@ export default function PatientDashboard() {
                         {t('PatientDashboard.hero.nextScreening')}
                       </p>
                       <p className="font-medium text-brand">
-                        {formatShortDate(nextAppointment.date)}
+                        {formatShortDate(
+                          nextAppointment.date,
+                          'medium',
+                          toIntlLocale(i18n.language)
+                        )}
                       </p>
                     </div>
                   )}
@@ -411,7 +429,7 @@ export default function PatientDashboard() {
                     <div className="flex items-center gap-3">
                       {latestSessionHasResult && (
                         <Link
-                          to={latestSessionReportPath}
+                          to={resolvePathWithLocale(latestSessionReportPath)}
                           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-(--border-color) text-sm font-semibold text-(--text-primary) hover:border-brand/50 hover:text-brand transition-colors"
                         >
                           {t('PatientDashboard.actions.viewFullReport')}
@@ -421,7 +439,7 @@ export default function PatientDashboard() {
                         to={
                           latestSession
                             ? latestSessionTargetPath
-                            : '/patient/medical-history'
+                            : resolvePathWithLocale('/patient/medical-history')
                         }
                         state={
                           latestSession
@@ -484,7 +502,7 @@ export default function PatientDashboard() {
                       </span>
                     )}
                     <Link
-                      to="/patient/analysis"
+                      to={resolvePathWithLocale('/patient/analysis')}
                       state={{ screeningId: latestSession?.screeningId }}
                       className="btn-primary inline-flex items-center gap-2"
                     >
@@ -528,7 +546,7 @@ export default function PatientDashboard() {
                   {t('PatientDashboard.history.title')}
                 </h3>
                 <Link
-                  to="/patient/screening"
+                  to={resolvePathWithLocale('/patient/screening')}
                   className="text-sm font-medium text-brand hover:underline"
                 >
                   {t('PatientDashboard.history.viewAll')}
@@ -566,7 +584,12 @@ export default function PatientDashboard() {
                               {t('PatientDashboard.history.sessionLabel')}
                             </p>
                             <p className="text-sm text-(--text-secondary)">
-                              {formatShortDate(session.createdAt)} •{' '}
+                              {formatShortDate(
+                                session.createdAt,
+                                'medium',
+                                toIntlLocale(i18n.language)
+                              )}{' '}
+                              •{' '}
                               {session.imagesCount === 1
                                 ? t('PatientDashboard.history.imagesSingle', {
                                     count: session.imagesCount,
@@ -610,7 +633,11 @@ export default function PatientDashboard() {
                                 : t('PatientDashboard.hero.title.aiScreening')}
                             </p>
                             <p className="text-sm text-(--text-secondary)">
-                              {formatShortDate(report.createdAt)}
+                              {formatShortDate(
+                                report.createdAt,
+                                'medium',
+                                toIntlLocale(i18n.language)
+                              )}
                               {report.verifiedBy &&
                                 ` • ${report.verifiedBy.fullName}`}
                             </p>
@@ -651,7 +678,7 @@ export default function PatientDashboard() {
               </h3>
 
               <Link
-                to="/patient/chat"
+                to={resolvePathWithLocale('/patient/chat')}
                 className="flex items-center justify-between w-full p-4 rounded-lg bg-(--bg-secondary) border border-(--border-color) text-(--text-primary) hover:border-brand/50 hover:bg-(--bg-tertiary) transition-all group"
               >
                 <div className="flex items-center gap-3">
@@ -664,7 +691,7 @@ export default function PatientDashboard() {
               </Link>
 
               <Link
-                to="/patient/schedule"
+                to={resolvePathWithLocale('/patient/schedule')}
                 className="flex items-center justify-between w-full p-4 rounded-lg bg-(--bg-secondary) border border-(--border-color) text-(--text-primary) hover:border-brand/50 hover:bg-(--bg-tertiary) transition-all group"
               >
                 <div className="flex items-center gap-3">
@@ -676,7 +703,7 @@ export default function PatientDashboard() {
                 <ChevronRight className="w-4 h-4 opacity-50 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
-                to="/patient/follow-up"
+                to={resolvePathWithLocale('/patient/follow-up')}
                 className="flex items-center justify-between w-full p-4 rounded-lg bg-(--bg-secondary) border border-(--border-color) text-(--text-primary) hover:border-brand/50 hover:bg-(--bg-tertiary) transition-all group"
               >
                 <div className="flex items-center gap-3">
