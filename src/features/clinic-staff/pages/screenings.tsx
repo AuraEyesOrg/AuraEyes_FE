@@ -15,7 +15,7 @@ import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import ClinicStaffLayout from '../components/ClinicStaffLayout';
-import { useTranslation } from 'react-i18next';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
   clinicScreeningApi,
   type ClinicScreeningHistoryItem,
@@ -70,9 +70,7 @@ function StatusBadge({
 
 export default function ClinicStaffScreeningsPage() {
   const navigate = useNavigate();
-  const { t: i18nT } = useTranslation();
-  const t = (key: string, defaultValue?: string, options?: any) =>
-    i18nT(key as any, { defaultValue, ...options } as any) as string;
+  const { t, i18n } = useSafeTranslation();
 
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -326,7 +324,11 @@ export default function ClinicStaffScreeningsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-(--text-secondary)">
-                          {formatShortDate(item.createdAt)}
+                          {formatShortDate(
+                            item.createdAt,
+                            'medium',
+                            i18n.language
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -348,7 +350,10 @@ export default function ClinicStaffScreeningsPage() {
                           <span
                             className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getRiskBadge(item.latestRiskLevel)}`}
                           >
-                            {item.latestRiskLevel}
+                            {t(
+                              `ClinicStaff.patients.risk.${(item.latestRiskLevel || 'low').toLowerCase()}`,
+                              item.latestRiskLevel || 'low'
+                            )}
                           </span>
                         ) : (
                           <span className="text-sm text-(--text-tertiary)">
