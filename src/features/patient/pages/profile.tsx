@@ -36,7 +36,9 @@ import { extractApiErrorMessage } from '@/lib/api-error';
 import { resolveAvatarUrl } from '@/lib/user-avatar';
 
 export default function ProfilePage() {
-  const { t: i18nT } = useTranslation();
+  const { t: i18nT, i18n } = useTranslation();
+  const currentLocale = i18n.language === 'vi' ? 'vi-VN' : 'en-US';
+
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
 
@@ -515,7 +517,7 @@ export default function ProfilePage() {
                 {t('PatientProfile.labels.memberSince')}
               </span>
               <span className="text-[var(--text-primary)] font-medium">
-                {formatMonthYear(profile.createdAt)}
+                {formatMonthYear(profile.createdAt, currentLocale)}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -672,7 +674,7 @@ export default function ProfilePage() {
                 ) : (
                   <p className="text-[var(--text-primary)] font-medium">
                     {profile.dateOfBirth
-                      ? formatDate(profile.dateOfBirth)
+                      ? formatDate(profile.dateOfBirth, 'medium', currentLocale)
                       : '\u2014'}
                   </p>
                 )}
@@ -689,10 +691,6 @@ export default function ProfilePage() {
                       {...register('gender')}
                       className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
                     >
-                      <option value="">Prefer not to say</option>
-                      <option value="">
-                        {t('PatientProfile.gender.preferNotToSay')}
-                      </option>
                       <option value="male">
                         {t('PatientProfile.gender.male')}
                       </option>
@@ -710,17 +708,18 @@ export default function ProfilePage() {
                     )}
                   </div>
                 ) : (
-                  <p className="text-[var(--text-primary)] font-medium capitalize">
-                    {profile.gender || '\u2014'}
+                  <p className="text-[var(--text-primary)] font-medium">
+                    {profile.gender
+                      ? t(`PatientProfile.gender.${profile.gender}`)
+                      : '\u2014'}
                   </p>
                 )}
               </div>
 
-              {/* Citizen ID */}
               <div>
                 <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
                   <Shield className="w-4 h-4" />
-                  Citizen ID (CCCD)
+                  {t('PatientProfile.fields.citizenId')}
                 </label>
                 {isEditing ? (
                   <div>
@@ -728,7 +727,9 @@ export default function ProfilePage() {
                       {...register('citizenId')}
                       type="text"
                       className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
-                      placeholder="Enter CCCD"
+                      placeholder={t(
+                        'PatientProfile.fields.citizenIdPlaceholder'
+                      )}
                     />
                     {formErrors.citizenId && (
                       <p className="text-sm text-red-500 mt-1">

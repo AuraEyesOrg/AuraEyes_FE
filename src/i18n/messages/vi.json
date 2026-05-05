@@ -3083,7 +3083,9 @@
       "phoneNumber": "Số điện thoại",
       "dateOfBirth": "Ngày sinh",
       "gender": "Giới tính",
-      "address": "Địa chỉ"
+      "address": "Địa chỉ",
+      "citizenId": "CCCD / Định danh",
+      "citizenIdPlaceholder": "Nhập số CCCD"
     },
     "gender": {
       "preferNotToSay": "Không muốn tiết lộ",

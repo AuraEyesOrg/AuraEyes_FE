@@ -2393,7 +2393,9 @@
       "phoneNumber": "Phone Number",
       "dateOfBirth": "Date of Birth",
       "gender": "Gender",
-      "address": "Address"
+      "address": "Address",
+      "citizenId": "Citizen ID (CCCD)",
+      "citizenIdPlaceholder": "Enter CCCD number"
     },
     "gender": {
       "preferNotToSay": "Prefer not to say",
