@@ -14,6 +14,7 @@ interface FocusModeLayoutProps {
   exitPath?: string;
   showBreadcrumb?: boolean;
   breadcrumbItems?: { label: string; path?: string }[];
+  showQuotaBadge?: boolean;
 }
 
 export default function FocusModeLayout({
@@ -24,6 +25,7 @@ export default function FocusModeLayout({
   exitPath = '/patient/screening',
   showBreadcrumb = true,
   breadcrumbItems,
+  showQuotaBadge = true,
 }: FocusModeLayoutProps) {
   const navigate = useNavigate();
   const { t } = useSafeTranslation();
@@ -190,7 +192,7 @@ export default function FocusModeLayout({
 
             {/* Right: Quota Badge */}
             <div className="flex justify-end w-32">
-              <QuotaBadge />
+              {showQuotaBadge && <QuotaBadge />}
             </div>
           </div>
         </div>

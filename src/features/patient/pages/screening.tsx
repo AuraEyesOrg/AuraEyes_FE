@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Eye,
@@ -16,7 +16,6 @@ import {
   Loader2,
   Share2,
   ChevronRight,
-  X,
   PlusCircle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -24,9 +23,10 @@ import PatientLayout from '../components/PatientLayout';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { formatShortDate } from '@/lib/date-utils';
 import { screeningApi } from '../api/screening.api';
-import { downloadReportPdf, getReport } from '../api/patient.api';
-import type { ScreeningReport } from '../types';
+import { downloadReportPdf } from '../api/patient.api';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { localizeFindingsText } from '@/features/patient/lib/disease-translation';
+import i18n from '@/i18n/i18n';
 
 interface Scan {
   id: string;
@@ -37,6 +37,7 @@ interface Scan {
   riskLevel?: 'low' | 'medium' | 'high' | 'critical';
   thumbnailUrl?: string;
   findings?: number;
+  findingsText?: string;
 }
 
 export default function ScreeningPage() {
@@ -45,94 +46,9 @@ export default function ScreeningPage() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [downloadingReportId, setDownloadingReportId] = useState<string | null>(
     null
   );
-  const [searchParams, setSearchParams] = useSearchParams();
-  const diagnosisNotAvailable = t(
-    'PatientScreening.diagnosis.notAvailable',
-    'N/A'
-  );
-
-  const getDiagnosisRiskBadge = (risk: ScreeningReport['riskLevel']) => {
-    switch (risk) {
-      case 'low':
-        return (
-          <span className="badge-risk-low flex items-center gap-1">
-            <CheckCircle className="w-3 h-3" />
-            {t('PatientScreening.risk.low', 'Low risk')}
-          </span>
-        );
-      case 'medium':
-        return (
-          <span className="badge-risk-medium flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            {t('PatientScreening.risk.medium', 'Medium risk')}
-          </span>
-        );
-      case 'high':
-        return (
-          <span className="badge-risk-high flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3" />
-            {t('PatientScreening.risk.high', 'High risk')}
-          </span>
-        );
-      case 'critical':
-        return (
-          <span className="badge-risk-high flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3" />
-            {t('PatientScreening.risk.critical', 'Critical risk')}
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const getDiagnosisTypeLabel = (type: ScreeningReport['type']) => {
-    switch (type) {
-      case 'AI_SCREENING':
-        return t(
-          'PatientScreening.diagnosis.type.aiScreening',
-          'Retinal Screening'
-        );
-      case 'OPHTHALMOLOGIST_VERIFIED':
-        return t(
-          'PatientScreening.diagnosis.type.verifiedResult',
-          'Verified Result'
-        );
-      default:
-        return type;
-    }
-  };
-
-  const getDiagnosisStatusBadge = (status: ScreeningReport['status']) => {
-    if (status === 'verified') {
-      return (
-        <span className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs">
-          <CheckCircle className="w-3 h-3" />
-          {t('PatientScreening.diagnosis.status.verified', 'Verified')}
-        </span>
-      );
-    }
-
-    if (status === 'pending') {
-      return (
-        <span className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 text-amber-400 rounded-full text-xs">
-          <Clock className="w-3 h-3" />
-          {t('PatientScreening.status.pending', 'Pending')}
-        </span>
-      );
-    }
-
-    return (
-      <span className="flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">
-        <CheckCircle className="w-3 h-3" />
-        {t('PatientScreening.status.completed', 'Completed')}
-      </span>
-    );
-  };
 
   const sessionsQuery = useQuery({
     queryKey: ['screening', 'recent', 'history'],
@@ -191,6 +107,15 @@ export default function ScreeningPage() {
             | undefined),
     thumbnailUrl: session.thumbnailUrl,
     findings: undefined,
+    findingsText: sessionDetailsQuery.data?.[session.screeningId]
+      ? localizeFindingsText(
+          sessionDetailsQuery.data[session.screeningId]!.replace(
+            /\r?\n/g,
+            ', '
+          ),
+          i18n.language
+        )
+      : undefined,
   }));
 
   const sortedScans = useMemo(
@@ -206,46 +131,6 @@ export default function ScreeningPage() {
       scan.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       scan.eye.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const selectedReportQuery = useQuery({
-    queryKey: ['patient', 'screening', 'diagnosis', selectedReportId],
-    queryFn: () => getReport(selectedReportId!),
-    enabled: Boolean(selectedReportId),
-  });
-
-  const selectedReport = selectedReportQuery.data ?? null;
-
-  const queryDiagnosisId =
-    searchParams.get('diagnosisId') ?? searchParams.get('screeningId');
-  const queryOpenDiagnosis = searchParams.get('openDiagnosis');
-
-  useEffect(() => {
-    if (!queryDiagnosisId && queryOpenDiagnosis !== 'latest') {
-      return;
-    }
-
-    if (queryDiagnosisId) {
-      setSelectedReportId(queryDiagnosisId);
-    } else if (sortedScans.length > 0) {
-      setSelectedReportId(sortedScans[0].id);
-    }
-
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.delete('diagnosisId');
-    nextParams.delete('screeningId');
-    nextParams.delete('openDiagnosis');
-    setSearchParams(nextParams, { replace: true });
-  }, [
-    queryDiagnosisId,
-    queryOpenDiagnosis,
-    searchParams,
-    setSearchParams,
-    sortedScans,
-  ]);
-
-  const closeDiagnosisModal = () => {
-    setSelectedReportId(null);
-  };
 
   const handleDownloadPdf = async (reportId: string) => {
     try {
@@ -557,14 +442,18 @@ export default function ScreeningPage() {
                         <Calendar className="w-3 h-3" />
                         {formatShortDate(scan.date)}
                       </span>
-                      {scan.findings !== undefined && (
+                      {scan.findingsText ? (
+                        <span className="truncate max-w-[200px]">
+                          {scan.findingsText}
+                        </span>
+                      ) : scan.findings !== undefined ? (
                         <span>
                           {scan.findings}{' '}
                           {scan.findings === 1
                             ? t('PatientScreening.labels.finding', 'finding')
                             : t('PatientScreening.labels.findings', 'findings')}
                         </span>
-                      )}
+                      ) : null}
                     </div>
                   </div>
 
@@ -600,20 +489,6 @@ export default function ScreeningPage() {
                           {t(
                             'PatientScreening.actions.viewReview',
                             'View Review'
-                          )}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveDropdown(null);
-                            setSelectedReportId(scan.id);
-                          }}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
-                        >
-                          <FileText className="w-4 h-4" />
-                          {t(
-                            'PatientScreening.actions.viewDiagnosis',
-                            'Medical Diagnosis'
                           )}
                         </button>
                         <button
@@ -663,325 +538,6 @@ export default function ScreeningPage() {
           )}
         </div>
       </div>
-
-      {selectedReportId && (
-        <div
-          className="fixed inset-0 z-50 bg-black/45 flex items-center justify-center p-4"
-          onClick={closeDiagnosisModal}
-        >
-          <div
-            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-(--bg-primary) border border-(--border-color) shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            {!selectedReport && (
-              <div className="p-8 text-center">
-                <Loader2 className="w-6 h-6 animate-spin mx-auto text-(--text-secondary)" />
-                <p className="text-sm text-(--text-secondary) mt-3">
-                  {t(
-                    'PatientScreening.diagnosis.loading',
-                    'Loading medical diagnosis details...'
-                  )}
-                </p>
-              </div>
-            )}
-
-            {selectedReport && (
-              <>
-                <div className="p-5 border-b border-(--border-color) flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-(--text-muted)">
-                      {t(
-                        'PatientScreening.diagnosis.title',
-                        'Medical Diagnosis'
-                      )}
-                    </p>
-                    <h3 className="text-xl font-bold text-(--text-primary) mt-1">
-                      {getDiagnosisTypeLabel(selectedReport.type)}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-2 mt-3">
-                      {getDiagnosisRiskBadge(selectedReport.riskLevel)}
-                      {getDiagnosisStatusBadge(selectedReport.status)}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={closeDiagnosisModal}
-                    className="p-2 rounded-lg hover:bg-(--bg-secondary) text-(--text-secondary)"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="p-5 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                    <div className="rounded-xl border border-(--border-color) p-3 bg-(--bg-secondary)">
-                      <p className="text-(--text-muted) text-xs uppercase tracking-wide">
-                        {t(
-                          'PatientScreening.diagnosis.fields.createdAt',
-                          'Created At'
-                        )}
-                      </p>
-                      <p className="text-(--text-primary) font-semibold mt-1">
-                        {formatShortDate(selectedReport.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {selectedReport.medicalDiagnosis && (
-                    <section className="rounded-xl border border-(--border-color) p-4">
-                      <h4 className="text-sm font-semibold text-(--text-primary) mb-3">
-                        {t(
-                          'PatientScreening.diagnosis.detailsTitle',
-                          'Medical Diagnosis Details'
-                        )}
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
-                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
-                            {t(
-                              'PatientScreening.diagnosis.fields.diagnosisCode',
-                              'Diagnosis Code'
-                            )}
-                          </p>
-                          <p className="text-(--text-primary) mt-1">
-                            {selectedReport.medicalDiagnosis?.diagnosisCode ||
-                              diagnosisNotAvailable}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
-                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
-                            {t(
-                              'PatientScreening.diagnosis.fields.codingSystem',
-                              'Coding System'
-                            )}
-                          </p>
-                          <p className="text-(--text-primary) mt-1">
-                            {selectedReport.medicalDiagnosis?.codingSystem ||
-                              diagnosisNotAvailable}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
-                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
-                            {t(
-                              'PatientScreening.diagnosis.fields.severityLevel',
-                              'Severity Level'
-                            )}
-                          </p>
-                          <p className="text-(--text-primary) mt-1 capitalize">
-                            {selectedReport.medicalDiagnosis?.severityLevel ||
-                              diagnosisNotAvailable}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
-                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
-                            {t(
-                              'PatientScreening.diagnosis.fields.clinicalStatus',
-                              'Clinical Status'
-                            )}
-                          </p>
-                          <p className="text-(--text-primary) mt-1">
-                            {selectedReport.medicalDiagnosis?.status ||
-                              diagnosisNotAvailable}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
-                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
-                            {t(
-                              'PatientScreening.diagnosis.fields.urgentCase',
-                              'Urgent Case'
-                            )}
-                          </p>
-                          <p className="text-(--text-primary) mt-1">
-                            {selectedReport.medicalDiagnosis
-                              ? selectedReport.medicalDiagnosis.isUrgent
-                                ? t('PatientScreening.diagnosis.yes', 'Yes')
-                                : t('PatientScreening.diagnosis.no', 'No')
-                              : diagnosisNotAvailable}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
-                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
-                            {t(
-                              'PatientScreening.diagnosis.fields.referralNeeded',
-                              'Referral Needed'
-                            )}
-                          </p>
-                          <p className="text-(--text-primary) mt-1">
-                            {selectedReport.medicalDiagnosis
-                              ? selectedReport.medicalDiagnosis.isReferralNeeded
-                                ? t('PatientScreening.diagnosis.yes', 'Yes')
-                                : t('PatientScreening.diagnosis.no', 'No')
-                              : diagnosisNotAvailable}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
-                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
-                            {t(
-                              'PatientScreening.diagnosis.fields.followUpDate',
-                              'Follow-up Date'
-                            )}
-                          </p>
-                          <p className="text-(--text-primary) mt-1">
-                            {selectedReport.medicalDiagnosis?.followUpDate
-                              ? formatShortDate(
-                                  selectedReport.medicalDiagnosis.followUpDate
-                                )
-                              : diagnosisNotAvailable}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
-                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
-                            {t(
-                              'PatientScreening.diagnosis.fields.finalizedAt',
-                              'Finalized At'
-                            )}
-                          </p>
-                          <p className="text-(--text-primary) mt-1">
-                            {selectedReport.medicalDiagnosis?.finalizedAt
-                              ? formatShortDate(
-                                  selectedReport.medicalDiagnosis.finalizedAt
-                                )
-                              : diagnosisNotAvailable}
-                          </p>
-                        </div>
-                      </div>
-                    </section>
-                  )}
-
-                  <section className="rounded-xl border border-(--border-color) p-4">
-                    <h4 className="text-sm font-semibold text-(--text-primary) mb-2">
-                      {t(
-                        'PatientScreening.diagnosis.sections.clinicalSummary',
-                        'Clinical Summary'
-                      )}
-                    </h4>
-                    <p className="text-sm text-(--text-secondary) leading-relaxed">
-                      {selectedReport.summary}
-                    </p>
-                  </section>
-
-                  <section className="rounded-xl border border-(--border-color) p-4">
-                    <h4 className="text-sm font-semibold text-(--text-primary) mb-2">
-                      {t(
-                        'PatientScreening.diagnosis.sections.findings',
-                        'Findings'
-                      )}
-                    </h4>
-                    {selectedReport.medicalDiagnosis?.clinicalFindings ? (
-                      <p className="text-sm text-(--text-secondary) whitespace-pre-wrap wrap-break-word leading-relaxed">
-                        {selectedReport.medicalDiagnosis.clinicalFindings}
-                      </p>
-                    ) : (
-                      <ul className="space-y-2">
-                        {selectedReport.findings.map((finding) => (
-                          <li
-                            key={finding.id}
-                            className="text-sm text-(--text-secondary) whitespace-pre-wrap wrap-break-word"
-                          >
-                            • {finding.description}
-                          </li>
-                        ))}
-                        {selectedReport.findings.length === 0 && (
-                          <li className="text-sm text-(--text-muted)">
-                            {t(
-                              'PatientScreening.diagnosis.empty.findings',
-                              'No detailed findings available.'
-                            )}
-                          </li>
-                        )}
-                      </ul>
-                    )}
-                  </section>
-
-                  {selectedReport.medicalDiagnosis?.treatmentPlan && (
-                    <section className="rounded-xl border border-(--border-color) p-4">
-                      <h4 className="text-sm font-semibold text-(--text-primary) mb-2">
-                        {t(
-                          'PatientScreening.diagnosis.sections.treatmentPlan',
-                          'Treatment Plan'
-                        )}
-                      </h4>
-                      <p className="text-sm text-(--text-secondary) whitespace-pre-wrap wrap-break-word leading-relaxed">
-                        {selectedReport.medicalDiagnosis.treatmentPlan}
-                      </p>
-                    </section>
-                  )}
-
-                  {selectedReport.medicalDiagnosis?.lifestyleAdvice && (
-                    <section className="rounded-xl border border-(--border-color) p-4">
-                      <h4 className="text-sm font-semibold text-(--text-primary) mb-2">
-                        {t(
-                          'PatientScreening.diagnosis.sections.lifestyleAdvice',
-                          'Lifestyle Advice'
-                        )}
-                      </h4>
-                      <p className="text-sm text-(--text-secondary) whitespace-pre-wrap wrap-break-word leading-relaxed">
-                        {selectedReport.medicalDiagnosis.lifestyleAdvice}
-                      </p>
-                    </section>
-                  )}
-
-                  <section className="rounded-xl border border-(--border-color) p-4">
-                    <h4 className="text-sm font-semibold text-(--text-primary) mb-2">
-                      {t(
-                        'PatientScreening.diagnosis.sections.recommendations',
-                        'Recommendations'
-                      )}
-                    </h4>
-                    <ul className="space-y-2">
-                      {selectedReport.recommendations.map((item) => (
-                        <li
-                          key={item}
-                          className="text-sm text-(--text-secondary)"
-                        >
-                          • {item}
-                        </li>
-                      ))}
-                      {selectedReport.recommendations.length === 0 && (
-                        <li className="text-sm text-(--text-muted)">
-                          {t(
-                            'PatientScreening.diagnosis.empty.recommendations',
-                            'No recommendations available.'
-                          )}
-                        </li>
-                      )}
-                    </ul>
-                  </section>
-
-                  {(selectedReport.verifiedAt || selectedReport.verifiedBy) && (
-                    <section className="rounded-xl border border-(--border-color) p-4 bg-brand-soft/40">
-                      {selectedReport.verifiedAt && (
-                        <p className="text-sm text-(--text-secondary)">
-                          <span className="font-semibold text-(--text-primary)">
-                            {t(
-                              'PatientScreening.diagnosis.fields.verifiedAt',
-                              'Verified At'
-                            )}
-                            :{' '}
-                          </span>
-                          {formatShortDate(selectedReport.verifiedAt)}
-                        </p>
-                      )}
-                      {selectedReport.verifiedBy?.fullName && (
-                        <p className="text-sm text-(--text-secondary) mt-2">
-                          <span className="font-semibold text-(--text-primary)">
-                            {t(
-                              'PatientScreening.diagnosis.fields.verifiedBy',
-                              'Verified By'
-                            )}
-                            :{' '}
-                          </span>
-                          {selectedReport.verifiedBy.fullName}
-                        </p>
-                      )}
-                    </section>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </PatientLayout>
   );
 }

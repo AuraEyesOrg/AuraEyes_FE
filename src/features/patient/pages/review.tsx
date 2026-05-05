@@ -325,15 +325,18 @@ export default function ReviewPage() {
       .map((a) => {
         if (isVietnamese) {
           const friendlyVi = a.friendlyName?.trim();
-          if (friendlyVi) return friendlyVi;
-          return toDisplayDiseaseName(a.name, currentLanguage).trim();
+          if (friendlyVi) {
+            return toDisplayDiseaseName(friendlyVi, currentLanguage).trim();
+          }
+          return toDisplayDiseaseName(a.name ?? '', currentLanguage).trim();
         }
 
         const friendlyEn = a.friendlyDescription?.trim();
-        if (friendlyEn) return friendlyEn;
+        if (friendlyEn) {
+          return toDisplayDiseaseName(friendlyEn, currentLanguage).trim();
+        }
 
-        const fallback = a.name?.trim();
-        return fallback ?? '';
+        return toDisplayDiseaseName(a.name ?? '', currentLanguage).trim();
       })
       .filter(Boolean);
 
@@ -440,6 +443,7 @@ export default function ReviewPage() {
         currentStep="review"
         title={t('PatientReview.page.title', 'Review & Next Steps')}
         exitPath="/patient/screening"
+        showQuotaBadge={false}
         showBreadcrumb={false}
       >
         <div className="flex-1 flex items-center justify-center bg-[var(--bg-primary)]">
@@ -465,6 +469,7 @@ export default function ReviewPage() {
       currentStep="review"
       title={t('PatientReview.page.title', 'Review & Next Steps')}
       exitPath="/patient/screening"
+      showQuotaBadge={false}
       showBreadcrumb={false}
     >
       <div className="flex-1 overflow-y-auto bg-[var(--bg-primary)]">

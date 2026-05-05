@@ -26,7 +26,7 @@ import Spinner from '@/components/ui/spinner';
 import useAuthStore from '@/store/auth-store';
 import PaymentConfirmationModal from '../components/PaymentConfirmationModal';
 import CreateWalkInPatientModal from '../components/CreateWalkInPatientModal';
-import QrScannerModal from '../components/QrScannerModal'; // <-- NEW IMPORT
+import QrScannerModal from '../components/QrScannerModal';
 import LatePatientModal from '@/features/organisation/components/LatePatientModal';
 import { getClinicPatients, type ClinicPatientDto } from '../api/patients.api';
 import { getCurrentClinicAppointments } from '@/features/organisation/api/organisation-clinic-booking.api';
