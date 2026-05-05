@@ -430,6 +430,7 @@ declare module 'i18next' {
           googleError: string;
           captchaRequired: string;
           turnstileRequired: string;
+          invalidCredentials: string;
         };
         loginForm: {
           heading: string;
@@ -2377,6 +2378,8 @@ declare module 'i18next' {
         cancelled: string;
         noShow: string;
         cancellationRequested: string;
+        fullyPaid: string;
+        awaitingPayment: string;
       };
       empty: {
         clinicAll: string;
@@ -3086,6 +3089,8 @@ declare module 'i18next' {
         dateOfBirth: string;
         gender: string;
         address: string;
+        citizenId: string;
+        citizenIdPlaceholder: string;
       };
       gender: {
         preferNotToSay: string;

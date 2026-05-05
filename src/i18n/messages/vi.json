@@ -2374,7 +2374,9 @@
       "completed": "Hoàn thành",
       "cancelled": "Đã hủy",
       "noShow": "Vắng mặt",
-      "cancellationRequested": "Chờ hoàn tiền"
+      "cancellationRequested": "Chờ hoàn tiền",
+      "fullyPaid": "Đã tất toán",
+      "awaitingPayment": "Chờ thanh toán"
     },
     "empty": {
       "clinicAll": "Chưa có lịch hẹn cơ sở y tế.",
@@ -7046,7 +7048,7 @@
       },
       "launch": {
         "title": "Chạy mô hình chẩn đoán AI",
-        "readyCount": "Sẵn sàng phân tích {{count}} ảnh. Quá trình này sẽ tiêu tốn 1 tín dụng sàng lọc AI.",
+        "readyCount": "Sẵn sàng phân tích {{count}} ảnh.",
         "advisory": {
           "title": "Cố vấn lâm sàng",
           "description": "Kết quả phân loại AI chỉ cung cấp xác suất sơ bộ. Chúng không nhằm mục đích thay thế chẩn đoán chính thức của chuyên gia lâm sàng."
@@ -8015,7 +8017,7 @@
           },
           "launch": {
             "title": "Chạy mô hình chẩn đoán AI",
-            "readyCount": "Sẵn sàng phân tích {{count}} ảnh. Quá trình này sẽ tiêu tốn 1 tín dụng sàng lọc AI.",
+            "readyCount": "Sẵn sàng phân tích {{count}} ảnh.",
             "advisory": {
               "title": "Cố vấn lâm sàng",
               "description": "Kết quả phân loại AI chỉ cung cấp xác suất sơ bộ. Chúng không nhằm mục đích thay thế chẩn đoán chính thức của chuyên gia lâm sàng."
