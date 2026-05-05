@@ -402,7 +402,7 @@
       "leftPanel": {
         "titleLine": "AI-Powered",
         "titleHighlight": "Eye Care Platform.",
-        "description": "Secure access for patients, ophthalmologists, and organizations to next-generation retinal screening tools with 99.2% clinical accuracy.",
+        "description": "Secure access for patients, ophthalmologists, and organizations to next-generation retinal screening tools with clinical accuracy.",
         "hipaa": "HIPAA Compliant",
         "encryption": "End-to-End Encryption",
         "systemStatus": "System Status:",
@@ -1458,7 +1458,7 @@
         },
         "validation": {
           "title": "Clinical Validation",
-          "description": "Verified 99.2% sensitivity in multi-center clinical trials. Peer-reviewed results published in top-tier medical journals.",
+          "description": "Verified sensitivity in multi-center clinical trials. Peer-reviewed results published in top-tier medical journals.",
           "cta": "Download Whitepaper"
         }
       }

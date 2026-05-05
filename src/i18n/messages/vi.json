@@ -405,7 +405,7 @@
       "leftPanel": {
         "titleLine": "Bệnh viện Kỹ thuật số",
         "titleHighlight": "ứng dụng AI.",
-        "description": "Trải nghiệm y tế số hiện đại cho bệnh nhân và bác sĩ với công nghệ chẩn đoán AI tiên tiến, độ chính xác lâm sàng 99.2%.",
+        "description": "Trải nghiệm y tế số hiện đại cho bệnh nhân và bác sĩ với công nghệ chẩn đoán AI tiên tiến, độ chính xác lâm sàng.",
         "hipaa": "Tiêu chuẩn Y tế số",
         "encryption": "Bảo mật đa tầng",
         "systemStatus": "Trạng thái hệ thống:",
@@ -2000,7 +2000,7 @@
         },
         "validation": {
           "title": "Thẩm định lâm sàng",
-          "description": "Đạt độ nhạy 99.2% trong thử nghiệm đa trung tâm. Kết quả đã được công bố trên các tạp chí y khoa uy tín.",
+          "description": "Đạt độ nhạy trong thử nghiệm đa trung tâm. Kết quả đã được công bố trên các tạp chí y khoa uy tín.",
           "cta": "Tải whitepaper"
         }
       }
