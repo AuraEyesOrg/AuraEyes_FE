@@ -25,9 +25,10 @@ import {
   getNotificationColor,
   getNotificationRoute,
 } from '@/types/notification';
-import type { Notification } from '@/types/notification';
-import { formatNotificationDateTime } from '@/lib/date-utils';
+import { Notification } from '@/types/notification';
+import { formatRelativeTime, toIntlLocale } from '@/lib/date-utils';
 import { renderBilingualContent } from '@/lib/notification-utils';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 
 interface NotificationDropdownProps {
   className?: string;
@@ -112,7 +113,7 @@ export default function NotificationDropdown({
       user?.roles ?? []
     ).trim();
     if (targetRoute && targetRoute !== '#') {
-      navigate(targetRoute);
+      navigate(resolvePathWithLocale(targetRoute));
     }
 
     setIsOpen(false);
@@ -136,7 +137,7 @@ export default function NotificationDropdown({
       <button
         onClick={handleToggleDropdown}
         className={`header-action-btn relative ${isOpen ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
-        aria-label="Notifications"
+        aria-label={t('NotificationDropdown.aria.label', 'Notifications')}
       >
         <Bell size={20} />
 
@@ -166,11 +167,11 @@ export default function NotificationDropdown({
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {t('Settings.profile.notifications.title', 'Notifications')}
+                {t('NotificationDropdown.aria.label', 'Notifications')}
               </h3>
               {connectionStatus === 'connected' && (
                 <p className="text-xs text-green-600 dark:text-green-400">
-                  ● Online
+                  ● {t('NotificationDropdown.status.online', 'Online')}
                 </p>
               )}
             </div>
@@ -180,7 +181,10 @@ export default function NotificationDropdown({
                 <button
                   onClick={handleMarkAllAsRead}
                   className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                  title="Mark all as read"
+                  title={t(
+                    'NotificationDropdown.actions.markAllAsRead',
+                    'Mark all as read'
+                  )}
                 >
                   <Eye size={16} />
                 </button>
@@ -198,14 +202,22 @@ export default function NotificationDropdown({
           <div className="max-h-80 overflow-y-auto">
             {isLoading ? (
               <div className="p-4 text-center text-gray-500">
-                Loading notifications...
+                {t('NotificationDropdown.loading', 'Loading notifications...')}
               </div>
             ) : recentNotifications.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 <Bell size={48} className="mx-auto mb-3 opacity-50" />
-                <p className="text-sm">No notifications yet</p>
+                <p className="text-sm">
+                  {t(
+                    'NotificationDropdown.empty.title',
+                    'No notifications yet'
+                  )}
+                </p>
                 <p className="text-xs mt-1">
-                  We'll notify you when something happens
+                  {t(
+                    'NotificationDropdown.empty.description',
+                    "We'll notify you when something happens"
+                  )}
                 </p>
               </div>
             ) : (
@@ -225,11 +237,11 @@ export default function NotificationDropdown({
           {recentNotifications.length > 0 && (
             <div className="p-3 border-t border-gray-200 dark:border-gray-700">
               <Link
-                to="/notifications/view-all"
+                to={resolvePathWithLocale('/patient/notifications')}
                 className="block text-center text-sm text-blue-600 dark:text-blue-400 hover:underline"
                 onClick={() => setIsOpen(false)}
               >
-                View all notifications
+                {t('NotificationDropdown.viewAll', 'View all notifications')}
                 <ExternalLink size={14} className="inline ml-1" />
               </Link>
             </div>
@@ -286,12 +298,16 @@ function NotificationItem({ notification, onClick }: NotificationItemProps) {
   const displayTitle = renderBilingualContent(
     notification.title,
     currentLang,
-    notification.payload
+    notification.payload,
+    notification.type,
+    true
   );
   const displayMessage = renderBilingualContent(
     notification.message,
     currentLang,
-    notification.payload
+    notification.payload,
+    notification.type,
+    false
   );
 
   return (
@@ -331,7 +347,11 @@ function NotificationItem({ notification, onClick }: NotificationItemProps) {
           </p>
 
           <p className="text-xs text-gray-500 dark:text-gray-300">
-            {formatNotificationDateTime(notification.createdAt)}
+            {formatRelativeTime(
+              notification.createdAt,
+              false,
+              toIntlLocale(i18n.language)
+            )}
           </p>
         </div>
       </div>

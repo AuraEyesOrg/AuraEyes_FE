@@ -186,12 +186,16 @@ export function useSignalRNotification(): {
       const displayTitle = renderBilingualContent(
         notification.title,
         currentLang,
-        notification.payload
+        notification.payload,
+        notification.type,
+        true
       );
       const displayMessage = renderBilingualContent(
         notification.message,
         currentLang,
-        notification.payload
+        notification.payload,
+        notification.type,
+        false
       );
       const toastId =
         notification.id || `noti-${notification.type}-${notification.message}`;
