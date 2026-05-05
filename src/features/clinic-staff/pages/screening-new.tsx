@@ -36,8 +36,8 @@ export default function ClinicStaffScreeningNewPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t: i18nT } = useTranslation();
-  const t = (key: string, defaultValue?: string) =>
-    i18nT(key as never, { defaultValue } as never) as unknown as string;
+  const t = (key: string, defaultValue?: string, options?: any) =>
+    i18nT(key as any, { defaultValue, ...options } as any) as string;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentStep, setCurrentStep] =
@@ -290,16 +290,19 @@ export default function ClinicStaffScreeningNewPage() {
                 <p className="text-sm font-semibold text-(--text-primary)">
                   {selectedPatient.name}
                 </p>
-<p className="text-xs text-(--text-secondary) mt-0.5">
+                <p className="text-xs text-(--text-secondary) mt-0.5">
                   {selectedPatient.age > 0
-                    ? i18nT('ClinicStaff.screeningNew.patientInfo.genderWithAge', {
-                        defaultValue: '{{gender}} · {{age}} yrs',
-                        gender:
-                          selectedPatient.gender === 'M'
-                            ? t('ClinicStaff.common.gender.male', 'Male')
-                            : t('ClinicStaff.common.gender.female', 'Female'),
-                        age: selectedPatient.age,
-                      })
+                    ? i18nT(
+                        'ClinicStaff.screeningNew.patientInfo.genderWithAge',
+                        {
+                          defaultValue: '{{gender}} · {{age}} yrs',
+                          gender:
+                            selectedPatient.gender === 'M'
+                              ? t('ClinicStaff.common.gender.male', 'Male')
+                              : t('ClinicStaff.common.gender.female', 'Female'),
+                          age: selectedPatient.age,
+                        }
+                      )
                     : t(
                         selectedPatient.gender === 'M'
                           ? 'ClinicStaff.common.gender.male'

@@ -19,8 +19,8 @@ import { useTranslation } from 'react-i18next';
 
 const StatusBadge = ({ status }: { status: string }) => {
   const { t: i18nT } = useTranslation();
-  const t = (key: string, defaultValue?: string) =>
-    i18nT(key as never, { defaultValue } as never) as unknown as string;
+  const t = (key: string, defaultValue?: string, options?: any) =>
+    i18nT(key as any, { defaultValue, ...options } as any) as string;
 
   const statusKey = `ClinicStaffMedicalRecords.status.${status.charAt(0).toLowerCase() + status.slice(1)}`;
 
@@ -67,8 +67,8 @@ const StatusBadge = ({ status }: { status: string }) => {
 export default function MedicalRecordsManagementPage() {
   const navigate = useNavigate();
   const { t: i18nT } = useTranslation();
-  const t = (key: string, defaultValue?: string) =>
-    i18nT(key as never, { defaultValue } as never) as unknown as string;
+  const t = (key: string, defaultValue?: string, options?: any) =>
+    i18nT(key as any, { defaultValue, ...options } as any) as string;
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [pageNumber, setPageNumber] = useState(1);
