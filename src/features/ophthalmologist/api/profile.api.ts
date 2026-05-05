@@ -19,6 +19,7 @@ export interface OphthalmologistProfileData {
   degrees: Array<{
     id: string;
     name: string;
+    degreeLevel?: string | null;
     issuingAuthority?: string | null;
     issuedDate: string;
     degreeUrl?: string | null;
@@ -28,6 +29,7 @@ export interface OphthalmologistProfileData {
     type?: string | null;
     name: string;
     issuingAuthority?: string | null;
+    licenseNumber?: string | null;
     issuedDate: string;
     expiryDate?: string | null;
     certificateUrl?: string | null;

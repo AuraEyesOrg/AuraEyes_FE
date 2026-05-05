@@ -32,6 +32,7 @@ export interface DoctorSlotDetailDto {
   bio?: string | null;
   ratingAverage: number;
   ratingCount: number;
+  completedPatientsCount: number;
   certificates: CertificateDto[];
 }
 

@@ -672,8 +672,14 @@ function DoctorDetailsModal({
                             <div className="space-y-1.5 ml-11">
                               <p className="text-[11px] text-slate-500 font-medium">
                                 <span className="text-slate-400">Issuer:</span>{' '}
-                                {degree.issuingAuthority}
+                                {degree.issuingAuthority || 'N/A'}
                               </p>
+                              {degree.degreeLevel && (
+                                <p className="text-[11px] text-slate-500 font-medium">
+                                  <span className="text-slate-400">Level:</span>{' '}
+                                  {degree.degreeLevel}
+                                </p>
+                              )}
                               <p className="text-[11px] text-slate-500 font-medium">
                                 <span className="text-slate-400">Issued:</span>{' '}
                                 {format(
@@ -723,7 +729,7 @@ function DoctorDetailsModal({
                                 <span className="text-slate-400">
                                   Authority:
                                 </span>{' '}
-                                {cert.issuingAuthority}
+                                {cert.issuingAuthority || 'N/A'}
                               </p>
                               <p className="text-[11px] text-slate-500 font-medium">
                                 <span className="text-slate-400">Period:</span>{' '}
@@ -785,7 +791,7 @@ function DoctorDetailsModal({
                         </div>
                         <div className="text-center sm:text-left">
                           <div className="text-xl font-black text-slate-900 dark:text-white">
-                            {doctor.ratingCount}
+                            {doctor.completedPatientsCount}
                           </div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             Bệnh nhân
