@@ -523,7 +523,7 @@ export default function SystemAdminScheduling() {
                     onClick={handleSetToday}
                     className="w-full py-2.5 rounded-xl border border-cyan-200 dark:border-cyan-800 text-cyan-600 dark:text-cyan-400 font-bold text-sm bg-cyan-50/50 dark:bg-cyan-900/10 hover:bg-cyan-100 dark:hover:bg-cyan-900/30 transition-colors"
                   >
-                    Today
+                    {t('SystemAdmin.scheduling.daily.today', 'Today')}
                   </button>
 
                   <div className="mt-4">
@@ -542,12 +542,19 @@ export default function SystemAdminScheduling() {
                 {/* Summary Card */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 rounded-2xl p-5 shadow-sm shadow-slate-200/20 dark:shadow-none">
                   <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4">
-                    {format(selectedDate, 'EEE, MMM d')} Summary
+                    {t(
+                      'SystemAdmin.scheduling.daily.summary',
+                      '{{date}} Summary',
+                      { date: format(selectedDate, 'EEE, MMM d') }
+                    )}
                   </h4>
                   <div className="grid grid-cols-2 gap-y-5 gap-x-4">
                     <div>
                       <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                        Total Slots
+                        {t(
+                          'SystemAdmin.scheduling.daily.totalSlots',
+                          'Total Slots'
+                        )}
                       </p>
                       <p className="text-xl font-bold text-slate-800 dark:text-slate-200">
                         {metrics.total}
@@ -555,7 +562,7 @@ export default function SystemAdminScheduling() {
                     </div>
                     <div>
                       <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                        Bookings
+                        {t('SystemAdmin.scheduling.daily.bookings', 'Bookings')}
                       </p>
                       <p className="text-xl font-bold text-blue-500">
                         {metrics.totalBookings}
@@ -564,7 +571,10 @@ export default function SystemAdminScheduling() {
                     <div className="col-span-2 border-t border-slate-50 dark:border-slate-800/50 my-1 pt-4 grid grid-cols-2 gap-y-4 gap-x-4">
                       <div>
                         <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                          Available
+                          {t(
+                            'SystemAdmin.scheduling.daily.available',
+                            'Available'
+                          )}
                         </p>
                         <p className="text-lg font-bold text-emerald-500">
                           {metrics.available}
@@ -572,7 +582,10 @@ export default function SystemAdminScheduling() {
                       </div>
                       <div>
                         <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                          Full/Partial
+                          {t(
+                            'SystemAdmin.scheduling.daily.fullPartial',
+                            'Full/Partial'
+                          )}
                         </p>
                         <p className="text-lg font-bold text-orange-500">
                           {metrics.full + metrics.partial}
@@ -580,7 +593,10 @@ export default function SystemAdminScheduling() {
                       </div>
                       <div>
                         <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                          Attended
+                          {t(
+                            'SystemAdmin.scheduling.daily.attended',
+                            'Attended'
+                          )}
                         </p>
                         <p className="text-lg font-bold text-blue-400">
                           {metrics.attended}
@@ -588,7 +604,7 @@ export default function SystemAdminScheduling() {
                       </div>
                       <div>
                         <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                          Expired
+                          {t('SystemAdmin.scheduling.daily.expired', 'Expired')}
                         </p>
                         <p className="text-lg font-bold text-slate-400">
                           {metrics.expired}
@@ -701,29 +717,48 @@ export default function SystemAdminScheduling() {
                         group.totalBooked >= group.totalCapacity;
                       const hasBookings = group.totalBooked > 0;
 
-                      let statusLabel = 'Available';
+                      let statusLabel: string;
                       let statusClass =
                         'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400';
                       let cardClass =
                         'border-emerald-100 dark:border-emerald-900/30';
 
                       if (group.isPast) {
-                        statusLabel = hasBookings ? 'Attended' : 'Expired';
+                        statusLabel = hasBookings
+                          ? t(
+                              'SystemAdmin.scheduling.status.attended',
+                              'Attended'
+                            )
+                          : t(
+                              'SystemAdmin.scheduling.status.expired',
+                              'Expired'
+                            );
                         statusClass =
                           'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500';
                         cardClass =
                           'border-slate-100 dark:border-slate-800 opacity-75';
                       } else if (isFullyBooked) {
-                        statusLabel = 'Full';
+                        statusLabel = t(
+                          'SystemAdmin.scheduling.status.full',
+                          'Fully Booked'
+                        );
                         statusClass =
                           'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400';
                         cardClass =
                           'border-orange-100 dark:border-orange-900/30';
                       } else if (hasBookings) {
-                        statusLabel = 'Partial';
+                        statusLabel = t(
+                          'SystemAdmin.scheduling.status.partial',
+                          'Partial Booked'
+                        );
                         statusClass =
                           'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400';
                         cardClass = 'border-amber-100 dark:border-amber-900/30';
+                      } else {
+                        statusLabel = t(
+                          'SystemAdmin.scheduling.status.available',
+                          'Available'
+                        );
                       }
 
                       return (
@@ -752,7 +787,10 @@ export default function SystemAdminScheduling() {
                                   </div>
                                   <span className="text-xs font-semibold text-slate-500">
                                     {group.totalBooked} / {group.totalCapacity}{' '}
-                                    Booked
+                                    {t(
+                                      'SystemAdmin.scheduling.daily.booked',
+                                      'Booked'
+                                    )}
                                   </span>
                                 </div>
                               </div>
@@ -773,21 +811,35 @@ export default function SystemAdminScheduling() {
                                         ?.split(' ')
                                         .map((n) => n[0])
                                         .join('')
-                                        .substring(0, 2) || 'Dr'}
+                                        .substring(0, 2) ||
+                                        t(
+                                          'SystemAdmin.scheduling.doctorInitials',
+                                          'Dr'
+                                        )}
                                     </div>
                                     <div>
                                       <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-[120px]">
-                                        {slot.ophthalFullName || 'Clinic Slot'}
+                                        {slot.ophthalFullName ||
+                                          t(
+                                            'SystemAdmin.scheduling.clinicSlot',
+                                            'Clinic Slot'
+                                          )}
                                       </p>
                                       <p className="text-[10px] text-slate-500">
                                         {slot.bookedCount}/{slot.maxCapacity}{' '}
-                                        Booked
+                                        {t(
+                                          'SystemAdmin.scheduling.daily.booked',
+                                          'Booked'
+                                        )}
                                       </p>
                                     </div>
                                   </div>
                                   {slot.status === 'Blocked' && (
                                     <span className="text-[8px] font-bold uppercase bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
-                                      Blocked
+                                      {t(
+                                        'SystemAdmin.scheduling.status.blocked',
+                                        'Blocked'
+                                      )}
                                     </span>
                                   )}
                                 </div>
@@ -805,7 +857,16 @@ export default function SystemAdminScheduling() {
                                         <span
                                           className={`text-[9px] font-bold uppercase tracking-wider ${b.status === 'Cancelled' || b.status === 'CancellationRequested' ? 'text-red-500' : 'text-blue-500'}`}
                                         >
-                                          {b.status}
+                                          {b.status === 'Cancelled' ||
+                                          b.status === 'CancellationRequested'
+                                            ? t(
+                                                'SystemAdmin.appointments.status.cancelled',
+                                                'Cancelled'
+                                              )
+                                            : t(
+                                                'SystemAdmin.appointments.status.confirmed',
+                                                'Confirmed'
+                                              )}
                                         </span>
                                       </div>
                                     ))}
@@ -916,7 +977,15 @@ export default function SystemAdminScheduling() {
                                 })
                               }
                               title={
-                                template.isActive ? 'Deactivate' : 'Activate'
+                                template.isActive
+                                  ? t(
+                                      'SystemAdmin.scheduling.actions.deactivate',
+                                      'Deactivate'
+                                    )
+                                  : t(
+                                      'SystemAdmin.scheduling.actions.activate',
+                                      'Activate'
+                                    )
                               }
                               className={`p-2 rounded-lg transition-all ${
                                 template.isActive
@@ -959,7 +1028,15 @@ export default function SystemAdminScheduling() {
                                 : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
                             }`}
                           >
-                            {template.isActive ? 'Active' : 'Inactive'}
+                            {template.isActive
+                              ? t(
+                                  'SystemAdmin.scheduling.states.active',
+                                  'Active'
+                                )
+                              : t(
+                                  'SystemAdmin.scheduling.states.inactive',
+                                  'Inactive'
+                                )}
                           </span>
                         </div>
 
@@ -972,7 +1049,11 @@ export default function SystemAdminScheduling() {
                               )}
                             </p>
                             <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                              {template.slotDuration} min
+                              {template.slotDuration}{' '}
+                              {t(
+                                'SystemAdmin.scheduling.templates.minutes',
+                                'min'
+                              )}
                             </p>
                           </div>
                           <div>
@@ -997,7 +1078,15 @@ export default function SystemAdminScheduling() {
                               className={`w-2 h-2 rounded-full ${template.isActive ? 'bg-green-500' : 'bg-slate-300'}`}
                             />
                             <span className="text-[10px] font-bold text-slate-400 uppercase">
-                              {template.isActive ? 'Active' : 'Inactive'}
+                              {template.isActive
+                                ? t(
+                                    'SystemAdmin.scheduling.states.active',
+                                    'Active'
+                                  )
+                                : t(
+                                    'SystemAdmin.scheduling.states.inactive',
+                                    'Inactive'
+                                  )}
                             </span>
                           </div>
                         </div>

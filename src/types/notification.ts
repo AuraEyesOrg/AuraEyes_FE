@@ -39,6 +39,21 @@ export enum NotificationType {
 
   /** Urgent consilium invitation for doctors */
   ConsiliumInvitation = 11,
+
+  /** New message in consilium chat */
+  ConsiliumNewMessage = 12,
+
+  /** Consilium group concluded */
+  ConsiliumConcluded = 13,
+
+  /** Refund successful */
+  RefundProcessed = 14,
+
+  /** Prescription issued */
+  PrescriptionIssued = 15,
+
+  /** EMR updated */
+  EMRUpdated = 16,
 }
 
 export type NotificationTypeValue = NotificationType | string | number;
@@ -55,6 +70,11 @@ const NOTIFICATION_TYPE_NAME_MAP: Record<string, NotificationType> = {
   walletpaymentprocessed: NotificationType.WalletPaymentProcessed,
   systemalert: NotificationType.SystemAlert,
   consiliuminvitation: NotificationType.ConsiliumInvitation,
+  consiliumnewmessage: NotificationType.ConsiliumNewMessage,
+  consiliumconcluded: NotificationType.ConsiliumConcluded,
+  refundprocessed: NotificationType.RefundProcessed,
+  prescriptionissued: NotificationType.PrescriptionIssued,
+  emrupdated: NotificationType.EMRUpdated,
 };
 
 function isKnownNotificationType(value: number): value is NotificationType {
@@ -248,7 +268,16 @@ export function getNotificationIcon(type: NotificationTypeValue): string {
     case NotificationType.SystemAlert:
       return 'bell';
     case NotificationType.ConsiliumInvitation:
+    case NotificationType.ConsiliumConcluded:
       return 'users';
+    case NotificationType.ConsiliumNewMessage:
+      return 'message-circle';
+    case NotificationType.RefundProcessed:
+      return 'refresh-cw';
+    case NotificationType.PrescriptionIssued:
+      return 'pill';
+    case NotificationType.EMRUpdated:
+      return 'file-text';
     default:
       return 'bell';
   }
@@ -278,6 +307,16 @@ export function getNotificationColor(type: NotificationTypeValue): string {
       return 'text-amber-500';
     case NotificationType.SystemAlert:
       return 'text-sky-500';
+    case NotificationType.ConsiliumInvitation:
+    case NotificationType.ConsiliumNewMessage:
+      return 'text-indigo-500';
+    case NotificationType.ConsiliumConcluded:
+      return 'text-slate-500';
+    case NotificationType.RefundProcessed:
+      return 'text-emerald-500';
+    case NotificationType.PrescriptionIssued:
+    case NotificationType.EMRUpdated:
+      return 'text-cyan-500';
     default:
       return 'text-gray-500';
   }
@@ -640,11 +679,24 @@ export function getNotificationRoute(
       return fallbackHome;
     }
 
-    case NotificationType.ConsiliumInvitation: {
+    case NotificationType.ConsiliumInvitation:
+    case NotificationType.ConsiliumNewMessage:
+    case NotificationType.ConsiliumConcluded: {
       const groupId =
         readString(payload, 'groupId', 'internalGroupId') ||
         fallbackReferenceId;
       return appendIdQuery('/network/collaboration', 'groupId', groupId);
+    }
+
+    case NotificationType.RefundProcessed: {
+      const base = isPatient ? '/patient/wallet' : fallbackHome;
+      return appendIdQuery(base, 'appointmentId', appointmentId);
+    }
+
+    case NotificationType.PrescriptionIssued:
+    case NotificationType.EMRUpdated: {
+      const base = isPatient ? '/patient/medical-history' : fallbackHome;
+      return base;
     }
 
     default:

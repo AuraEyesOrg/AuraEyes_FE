@@ -26,6 +26,7 @@ import { NotificationIcon } from '@/components/ui/notification';
 import { formatRelativeTime } from '@/lib/date-utils';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
+import { renderBilingualContent } from '@/lib/notification-utils';
 
 type NotificationFilter = 'all' | 'unread' | NotificationType;
 
@@ -37,7 +38,7 @@ const isNotificationTypeValue = (value: number): value is NotificationType => {
  * Notifications Page - Complete notification history with filtering & pagination
  */
 export default function NotificationsPage() {
-  const { t: i18nT } = useTranslation();
+  const { t: i18nT, i18n } = useTranslation();
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
 
@@ -72,9 +73,21 @@ export default function NotificationsPage() {
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
+      const currentLang = i18n.language;
+      const displayTitle = renderBilingualContent(
+        notification.title,
+        currentLang,
+        notification.payload
+      );
+      const displayMessage = renderBilingualContent(
+        notification.message,
+        currentLang,
+        notification.payload
+      );
+
       if (
-        !notification.title.toLowerCase().includes(query) &&
-        !notification.message.toLowerCase().includes(query)
+        !displayTitle.toLowerCase().includes(query) &&
+        !displayMessage.toLowerCase().includes(query)
       ) {
         return false;
       }
@@ -361,13 +374,25 @@ function NotificationListItem({
   notification,
   onClick,
 }: NotificationListItemProps) {
-  const { t: i18nT } = useTranslation();
+  const { t: i18nT, i18n } = useTranslation();
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
 
   const iconName = getNotificationIcon(notification.type);
   const colorClass = getNotificationColor(notification.type);
   const typeLabel = getNotificationTypeLabel(notification.type);
+  const currentLang = i18n.language;
+
+  const displayTitle = renderBilingualContent(
+    notification.title,
+    currentLang,
+    notification.payload
+  );
+  const displayMessage = renderBilingualContent(
+    notification.message,
+    currentLang,
+    notification.payload
+  );
 
   return (
     <button
@@ -410,11 +435,11 @@ function NotificationListItem({
                 : 'text-gray-700 dark:text-gray-300'
             }`}
           >
-            {notification.title}
+            {displayTitle}
           </h3>
 
           <p className="text-gray-600 dark:text-gray-200 leading-relaxed">
-            {notification.message}
+            {displayMessage}
           </p>
 
           {/* Action hint */}

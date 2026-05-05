@@ -11,6 +11,7 @@ import type {
   SystemAdminDoctorWorkloadQueryParams,
   SystemAdminDashboardMetrics,
   SystemAdminPartTimeSlotQuotaUsage,
+  SystemAdminTransactionStat,
 } from '../types/system-admin.types';
 
 interface AdminUserGrowthMetricDto {
@@ -401,5 +402,27 @@ export const dashboardApi = {
       patientsHandledToday: item.patientsHandledToday ?? 0,
       activeLoad: item.activeLoad ?? 0,
     }));
+  },
+
+  async getTransactionStats(
+    period: 'daily' | 'weekly' | 'monthly'
+  ): Promise<SystemAdminTransactionStat[]> {
+    try {
+      const response = await api.get<ApiResponse<SystemAdminTransactionStat[]>>(
+        API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.TRANSACTION_STATS,
+        { params: { period } }
+      );
+
+      const data = response.data.data ?? [];
+      // .NET System.Text.Json serializes to camelCase by default
+      return data.map((item: any) => ({
+        Date: item.date,
+        Amount: Number(item.amount ?? 0),
+        Count: Number(item.count ?? 0),
+      }));
+    } catch (error) {
+      console.error('Failed to fetch transaction stats:', error);
+      throw error;
+    }
   },
 };

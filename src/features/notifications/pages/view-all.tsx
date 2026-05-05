@@ -16,6 +16,7 @@ import {
 import type { Notification } from '@/types/notification';
 import { NotificationIcon } from '@/components/ui/notification';
 import { formatNotificationDateTime } from '@/lib/date-utils';
+import { renderBilingualContent } from '@/lib/notification-utils';
 import PatientLayout from '@/features/patient/components/PatientLayout';
 import {
   DoctorHeader,
@@ -67,6 +68,7 @@ const TYPE_GROUPS: Record<
 };
 
 export default function ViewAllNotificationsPage() {
+  const { i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -104,9 +106,21 @@ export default function ViewAllNotificationsPage() {
   const filteredNotifications = notifications.filter((notification) => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
+      const currentLang = i18n.language;
+      const displayTitle = renderBilingualContent(
+        notification.title,
+        currentLang,
+        notification.payload
+      );
+      const displayMessage = renderBilingualContent(
+        notification.message,
+        currentLang,
+        notification.payload
+      );
+
       if (
-        !notification.title.toLowerCase().includes(query) &&
-        !notification.message.toLowerCase().includes(query)
+        !displayTitle.toLowerCase().includes(query) &&
+        !displayMessage.toLowerCase().includes(query)
       ) {
         return false;
       }
@@ -419,10 +433,22 @@ function NotificationListItem({
   notification,
   onClick,
 }: NotificationListItemProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const iconName = getNotificationIcon(notification.type);
   const colorClass = getNotificationColor(notification.type);
   const typeLabel = getNotificationTypeLabel(notification.type, t);
+  const currentLang = i18n.language;
+
+  const displayTitle = renderBilingualContent(
+    notification.title,
+    currentLang,
+    notification.payload
+  );
+  const displayMessage = renderBilingualContent(
+    notification.message,
+    currentLang,
+    notification.payload
+  );
 
   return (
     <button
@@ -460,11 +486,11 @@ function NotificationListItem({
                 : 'text-gray-700 dark:text-gray-300'
             }`}
           >
-            {notification.title}
+            {displayTitle}
           </h3>
 
           <p className="leading-relaxed text-gray-600 dark:text-gray-400">
-            {notification.message}
+            {displayMessage}
           </p>
         </div>
 

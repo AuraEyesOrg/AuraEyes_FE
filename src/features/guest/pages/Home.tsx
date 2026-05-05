@@ -1286,7 +1286,10 @@ const HomePage = () => {
                     <Briefcase size={16} strokeWidth={2.5} />
                   </div>
                   <span className="uppercase tracking-widest text-[10px] font-bold text-gray-600">
-                    Thư mời hợp tác chuyên môn
+                    {t(
+                      'GuestHome.recruitmentPopup.badge',
+                      'Thư mời hợp tác chuyên môn'
+                    )}
                   </span>
                 </div>
 
@@ -1308,15 +1311,19 @@ const HomePage = () => {
                   <div className="flex items-center gap-3 bg-gray-50/80 p-3 lg:p-4 rounded-xl border border-gray-100 shadow-sm">
                     <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-primary)] shrink-0" />
                     <span className="text-gray-700 text-sm">
-                      Nâng cao hiệu suất với{' '}
-                      <strong>AI phân tích võng mạc</strong> độ chính xác lâm
-                      sàng.
+                      {t(
+                        'GuestHome.recruitmentPopup.benefit1',
+                        'Nâng cao hiệu suất với AI phân tích võng mạc độ chính xác lâm sàng.'
+                      )}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 bg-gray-50/80 p-3 lg:p-4 rounded-xl border border-gray-100 shadow-sm">
                     <CheckCircle2 className="w-5 h-5 text-[var(--color-brand-primary)] shrink-0" />
                     <span className="text-gray-700 text-sm">
-                      Tiếp cận nguồn bệnh nhân toàn cầu qua nền tảng khám từ xa.
+                      {t(
+                        'GuestHome.recruitmentPopup.benefit2',
+                        'Tiếp cận nguồn bệnh nhân toàn cầu qua nền tảng khám từ xa.'
+                      )}
                     </span>
                   </div>
                 </div>

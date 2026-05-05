@@ -27,6 +27,7 @@ import {
 } from '@/types/notification';
 import type { Notification } from '@/types/notification';
 import { formatNotificationDateTime } from '@/lib/date-utils';
+import { renderBilingualContent } from '@/lib/notification-utils';
 
 interface NotificationDropdownProps {
   className?: string;
@@ -276,10 +277,22 @@ interface NotificationItemProps {
 }
 
 function NotificationItem({ notification, onClick }: NotificationItemProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const iconName = getNotificationIcon(notification.type);
   const colorClass = getNotificationColor(notification.type);
   const typeLabel = getNotificationTypeLabel(notification.type, t);
+  const currentLang = i18n.language;
+
+  const displayTitle = renderBilingualContent(
+    notification.title,
+    currentLang,
+    notification.payload
+  );
+  const displayMessage = renderBilingualContent(
+    notification.message,
+    currentLang,
+    notification.payload
+  );
 
   return (
     <button
@@ -310,11 +323,11 @@ function NotificationItem({ notification, onClick }: NotificationItemProps) {
           </div>
 
           <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1 truncate">
-            {notification.title}
+            {displayTitle}
           </h4>
 
           <p className="text-sm text-gray-600 dark:text-gray-200 mb-2 line-clamp-2">
-            {notification.message}
+            {displayMessage}
           </p>
 
           <p className="text-xs text-gray-500 dark:text-gray-300">

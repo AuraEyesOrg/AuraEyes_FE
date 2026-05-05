@@ -307,10 +307,14 @@ export default function OphthalmologistProfilePage() {
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
           <AlertCircle className="h-10 w-10 text-red-500" />
           <p className="font-medium text-[var(--text-primary)]">
-            Could not load profile
+            {t('Ophthalmologist.profile.loadError', 'Could not load profile')}
           </p>
           <p className="text-sm text-[var(--text-secondary)]">
-            {(error as Error | null)?.message ?? 'Please try again later.'}
+            {(error as Error | null)?.message ??
+              t(
+                'Ophthalmologist.profile.tryAgainLater',
+                'Please try again later.'
+              )}
           </p>
         </div>
       </div>
@@ -322,16 +326,21 @@ export default function OphthalmologistProfilePage() {
       <DoctorSidebar pendingCount={0} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <DoctorHeader pageName="Profile" />
+        <DoctorHeader
+          pageName={t('Ophthalmologist.profile.title', 'Profile')}
+        />
 
         <main className="p-6">
           <div className="mx-auto max-w-5xl">
             <div className="mb-8">
               <h1 className="mb-2 text-3xl font-bold text-[var(--text-primary)]">
-                Profile
+                {t('Ophthalmologist.profile.title', 'Profile')}
               </h1>
               <p className="text-[var(--text-secondary)]">
-                Manage your personal information and professional details.
+                {t(
+                  'Ophthalmologist.profile.subtitle',
+                  'Manage your personal information and professional details.'
+                )}
               </p>
             </div>
 
@@ -372,7 +381,7 @@ export default function OphthalmologistProfilePage() {
                   </p>
 
                   <span className="mt-3 rounded-full border border-brand/30 bg-brand-soft px-3 py-1 text-xs font-semibold text-brand">
-                    Ophthalmologist
+                    {t('Ophthalmologist.common.role', 'Ophthalmologist')}
                   </span>
 
                   <hr className="my-6 w-full border-[var(--border-color)]" />
@@ -380,7 +389,7 @@ export default function OphthalmologistProfilePage() {
                   <div className="w-full space-y-3 text-left">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-[var(--text-secondary)]">
-                        Employment
+                        {t('Ophthalmologist.profile.employment', 'Employment')}
                       </span>
                       <span className="font-medium text-[var(--text-primary)]">
                         {profileData.employmentType ?? '—'}
@@ -388,7 +397,10 @@ export default function OphthalmologistProfilePage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-[var(--text-secondary)]">
-                        Member Since
+                        {t(
+                          'Ophthalmologist.profile.memberSince',
+                          'Member Since'
+                        )}
                       </span>
                       <span className="font-medium text-[var(--text-primary)]">
                         {formatMonthYear(profileData.createdAt)}
@@ -405,7 +417,10 @@ export default function OphthalmologistProfilePage() {
               >
                 <div className="mb-6 flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-                    Personal Information
+                    {t(
+                      'Ophthalmologist.profile.personalInformation',
+                      'Personal Information'
+                    )}
                   </h2>
                   {!isEditing ? (
                     <button
@@ -414,7 +429,7 @@ export default function OphthalmologistProfilePage() {
                       className="flex items-center gap-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] px-4 py-2 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-tertiary)]"
                     >
                       <Edit2 className="h-4 w-4" />
-                      Edit
+                      {t('Ophthalmologist.profile.edit', 'Edit')}
                     </button>
                   ) : (
                     <div className="flex items-center gap-2">
@@ -436,7 +451,7 @@ export default function OphthalmologistProfilePage() {
                         }}
                         className="px-3 py-2 text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
                       >
-                        Cancel
+                        {t('Ophthalmologist.common.cancel', 'Cancel')}
                       </button>
                       <button
                         type="submit"
@@ -448,15 +463,14 @@ export default function OphthalmologistProfilePage() {
                         ) : (
                           <Save className="h-4 w-4" />
                         )}
-                        Save
+                        {t('Shared.buttons.save', 'Save')}
                       </button>
                     </div>
                   )}
                 </div>
-
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <ProfileField
-                    label="Full Name"
+                    label={t('AuthPages.onboarding.form.fullName', 'Full Name')}
                     icon={<User className="h-4 w-4" />}
                     isEditing={isEditing}
                     error={errors.fullName?.message}
@@ -471,14 +485,17 @@ export default function OphthalmologistProfilePage() {
                   />
 
                   <ProfileField
-                    label="Email"
+                    label={t(
+                      'AuthPages.login.loginForm.emailLabel',
+                      'Email Address'
+                    )}
                     icon={<Mail className="h-4 w-4" />}
                     isEditing={false}
                     value={profileData.userEmail ?? '—'}
                   />
 
                   <ProfileField
-                    label="Phone"
+                    label={t('AuthPages.onboarding.form.phone', 'Phone Number')}
                     icon={<Phone className="h-4 w-4" />}
                     isEditing={isEditing}
                     error={errors.phone?.message}
@@ -493,7 +510,10 @@ export default function OphthalmologistProfilePage() {
                   />
 
                   <ProfileField
-                    label="Citizen ID"
+                    label={t(
+                      'AuthPages.onboarding.form.citizenId',
+                      'Citizen ID (CCCD)'
+                    )}
                     icon={<FileText className="h-4 w-4" />}
                     isEditing={isEditing}
                     error={errors.citizenId?.message}
@@ -508,7 +528,7 @@ export default function OphthalmologistProfilePage() {
                   />
 
                   <ProfileField
-                    label="Gender"
+                    label={t('Shared.gender.label', 'Gender')}
                     icon={<User className="h-4 w-4" />}
                     isEditing={isEditing}
                     error={errors.gender?.message}
@@ -517,22 +537,28 @@ export default function OphthalmologistProfilePage() {
                         {...register('gender')}
                         className={fieldInputClass}
                       >
-                        <option value={1}>Male</option>
-                        <option value={2}>Female</option>
-                        <option value={3}>Other</option>
+                        <option value={1}>
+                          {t('Shared.gender.male', 'Male')}
+                        </option>
+                        <option value={2}>
+                          {t('Shared.gender.female', 'Female')}
+                        </option>
+                        <option value={3}>
+                          {t('Shared.gender.other', 'Other')}
+                        </option>
                       </select>
                     }
                     value={
                       profileData.userGender === 1
-                        ? 'Male'
+                        ? t('Shared.gender.male', 'Male')
                         : profileData.userGender === 2
-                          ? 'Female'
-                          : 'Other'
+                          ? t('Shared.gender.female', 'Female')
+                          : t('Shared.gender.other', 'Other')
                     }
                   />
 
                   <ProfileField
-                    label="Date of Birth"
+                    label={t('AuthPages.onboarding.form.dob', 'Date of Birth')}
                     icon={<Calendar className="h-4 w-4" />}
                     isEditing={isEditing}
                     error={errors.dateOfBirth?.message}
@@ -552,7 +578,10 @@ export default function OphthalmologistProfilePage() {
 
                   <div className="md:col-span-2">
                     <ProfileField
-                      label="Address"
+                      label={t(
+                        'AuthPages.onboarding.form.address',
+                        'Primary Address'
+                      )}
                       icon={<MapPin className="h-4 w-4" />}
                       isEditing={isEditing}
                       error={errors.address?.message}
@@ -569,7 +598,7 @@ export default function OphthalmologistProfilePage() {
 
                   <div className="md:col-span-2">
                     <ProfileField
-                      label="Bio"
+                      label={t('Ophthalmologist.profile.bio', 'Bio')}
                       isEditing={isEditing}
                       error={errors.bio?.message}
                       input={
@@ -591,7 +620,10 @@ export default function OphthalmologistProfilePage() {
                   <div className="flex items-center gap-2">
                     <GraduationCap className="h-6 w-6 text-brand" />
                     <h2 className="text-xl font-bold text-[var(--text-primary)]">
-                      Professional Credentials
+                      {t(
+                        'Ophthalmologist.profile.professionalCredentials',
+                        'Professional Credentials'
+                      )}
                     </h2>
                   </div>
                   <button
@@ -600,7 +632,7 @@ export default function OphthalmologistProfilePage() {
                     className="flex items-center gap-1 text-sm font-medium text-brand transition hover:text-brand/80"
                   >
                     <Plus className="h-4 w-4" />
-                    Add New
+                    {t('Ophthalmologist.profile.addNew', 'Add New')}
                   </button>
                 </div>
 
@@ -610,7 +642,10 @@ export default function OphthalmologistProfilePage() {
                     <div className="mb-4 flex items-center justify-between">
                       <h3 className="flex items-center gap-2 font-semibold text-[var(--text-primary)]">
                         <Award className="h-4 w-4 text-brand" />
-                        Medical Degrees
+                        {t(
+                          'Ophthalmologist.profile.medicalDegrees',
+                          'Medical Degrees'
+                        )}
                       </h3>
                       {profileData.degrees &&
                         profileData.degrees.length > 1 && (
@@ -619,7 +654,12 @@ export default function OphthalmologistProfilePage() {
                             onClick={() => setShowAllDegrees(!showAllDegrees)}
                             className="text-xs font-medium text-brand transition hover:underline"
                           >
-                            {showAllDegrees ? 'Show Less' : 'See All'}
+                            {showAllDegrees
+                              ? t(
+                                  'Ophthalmologist.profile.showLess',
+                                  'Show Less'
+                                )
+                              : t('Ophthalmologist.profile.seeAll', 'See All')}
                           </button>
                         )}
                     </div>
@@ -693,7 +733,7 @@ export default function OphthalmologistProfilePage() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <button
-                                    title="Edit"
+                                    title={t('Shared.buttons.edit', 'Edit')}
                                     onClick={() =>
                                       handleEditCredential(degree, 'Degree')
                                     }
@@ -702,7 +742,7 @@ export default function OphthalmologistProfilePage() {
                                     <Edit2 className="h-4 w-4" />
                                   </button>
                                   <button
-                                    title="Delete"
+                                    title={t('Shared.buttons.delete', 'Delete')}
                                     onClick={() =>
                                       handleDeleteCertificate(
                                         degree.id,
@@ -722,7 +762,12 @@ export default function OphthalmologistProfilePage() {
                       ) : (
                         <div className="flex flex-col items-center justify-center py-8 text-center text-[var(--text-secondary)]">
                           <GraduationCap className="mb-2 h-8 w-8 opacity-20" />
-                          <p className="text-sm italic">No degrees listed</p>
+                          <p className="text-sm italic">
+                            {t(
+                              'Ophthalmologist.profile.noDegrees',
+                              'No degrees listed'
+                            )}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -733,7 +778,10 @@ export default function OphthalmologistProfilePage() {
                     <div className="mb-4 flex items-center justify-between">
                       <h3 className="flex items-center gap-2 font-semibold text-[var(--text-primary)]">
                         <FileText className="h-4 w-4 text-brand" />
-                        Professional Licenses
+                        {t(
+                          'Ophthalmologist.profile.professionalLicenses',
+                          'Professional Licenses'
+                        )}
                       </h3>
                       {profileData.certificates &&
                         profileData.certificates.length > 1 && (
@@ -744,7 +792,12 @@ export default function OphthalmologistProfilePage() {
                             }
                             className="text-xs font-medium text-brand transition hover:underline"
                           >
-                            {showAllCertificates ? 'Show Less' : 'See All'}
+                            {showAllCertificates
+                              ? t(
+                                  'Ophthalmologist.profile.showLess',
+                                  'Show Less'
+                                )
+                              : t('Ophthalmologist.profile.seeAll', 'See All')}
                           </button>
                         )}
                     </div>
@@ -833,7 +886,7 @@ export default function OphthalmologistProfilePage() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <button
-                                    title="Edit"
+                                    title={t('Shared.buttons.edit', 'Edit')}
                                     onClick={() =>
                                       handleEditCredential(cert, 'License')
                                     }
@@ -842,7 +895,7 @@ export default function OphthalmologistProfilePage() {
                                     <Edit2 className="h-4 w-4" />
                                   </button>
                                   <button
-                                    title="Delete"
+                                    title={t('Shared.buttons.delete', 'Delete')}
                                     onClick={() =>
                                       handleDeleteCertificate(
                                         cert.id,
@@ -862,7 +915,12 @@ export default function OphthalmologistProfilePage() {
                       ) : (
                         <div className="flex flex-col items-center justify-center py-8 text-center text-[var(--text-secondary)]">
                           <Award className="mb-2 h-8 w-8 opacity-20" />
-                          <p className="text-sm italic">No licenses listed</p>
+                          <p className="text-sm italic">
+                            {t(
+                              'Ophthalmologist.profile.noLicenses',
+                              'No licenses listed'
+                            )}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -879,7 +937,7 @@ export default function OphthalmologistProfilePage() {
           <div className="w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                Update Avatar
+                {t('Ophthalmologist.profile.updateAvatar', 'Update Avatar')}
               </h3>
               <button
                 type="button"
@@ -895,13 +953,19 @@ export default function OphthalmologistProfilePage() {
                 {previewUrl ? (
                   <img
                     src={previewUrl ?? undefined}
-                    alt="avatar-preview"
+                    alt={t(
+                      'Ophthalmologist.profile.avatarPreviewAlt',
+                      'Avatar preview'
+                    )}
                     className="h-full w-full object-cover"
                   />
                 ) : resolvedAvatarUrl && !avatarImageError ? (
                   <img
                     src={resolvedAvatarUrl ?? undefined}
-                    alt="current-avatar"
+                    alt={t(
+                      'Ophthalmologist.profile.currentAvatarAlt',
+                      'Current avatar'
+                    )}
                     className="h-full w-full object-cover"
                   />
                 ) : (
@@ -917,7 +981,7 @@ export default function OphthalmologistProfilePage() {
               onClick={() => fileInputRef.current?.click()}
               className="mb-4 w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] px-4 py-3 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-tertiary)]"
             >
-              Choose image
+              {t('Ophthalmologist.profile.chooseImage', 'Choose image')}
             </button>
             <input
               ref={fileInputRef}
@@ -930,7 +994,10 @@ export default function OphthalmologistProfilePage() {
             />
 
             <p className="mb-6 text-center text-xs text-[var(--text-muted)]">
-              Supports JPG, PNG, GIF, WebP. Maximum size 5MB.
+              {t(
+                'Ophthalmologist.profile.imageHint',
+                'Supports JPG, PNG, GIF, WebP. Maximum size 5MB.'
+              )}
             </p>
 
             <div className="flex gap-3">
@@ -939,7 +1006,7 @@ export default function OphthalmologistProfilePage() {
                 onClick={closeAvatarModal}
                 className="flex-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] px-4 py-3 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-tertiary)]"
               >
-                Cancel
+                {t('Ophthalmologist.common.cancel', 'Cancel')}
               </button>
               <button
                 type="button"
@@ -952,7 +1019,7 @@ export default function OphthalmologistProfilePage() {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                Save
+                {t('Shared.buttons.save', 'Save')}
               </button>
             </div>
           </div>
@@ -980,7 +1047,7 @@ export default function OphthalmologistProfilePage() {
           </button>
           <img
             src={selectedImage}
-            alt="Credential"
+            alt={t('Ophthalmologist.profile.credentialAlt', 'Credential')}
             className="max-h-[90vh] max-w-full rounded-lg shadow-2xl object-contain"
             onClick={(e) => e.stopPropagation()}
           />

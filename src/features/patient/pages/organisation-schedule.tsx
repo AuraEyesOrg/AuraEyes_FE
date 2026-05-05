@@ -134,7 +134,11 @@ export default function OrganisationSchedulePage() {
 
   const handleBook = () => {
     if (!selectedDoctorSlot) {
-      toast.warn('Vui lòng chọn bác sĩ để tiếp tục.');
+      toast.warn(
+        t('PatientAppointments.clinicBooking.selectDoctorFirst', {
+          defaultValue: 'Vui lòng chọn bác sĩ để tiếp tục.',
+        })
+      );
       return;
     }
 
@@ -147,7 +151,10 @@ export default function OrganisationSchedulePage() {
       const startAt = new Date(`${dateKey}T${normalizedTime}+07:00`).getTime();
       if (!Number.isNaN(startAt) && startAt < Date.now() + MIN_ADVANCE_MS) {
         toast.error(
-          'Slot này đã quá gần giờ bắt đầu. Vui lòng chọn slot khác cách ít nhất 30 phút.'
+          t('PatientAppointments.clinicBooking.slotUnavailable', {
+            defaultValue:
+              'Slot này đã quá gần giờ bắt đầu. Vui lòng chọn slot khác cách ít nhất 30 phút.',
+          })
         );
         return;
       }
@@ -161,8 +168,11 @@ export default function OrganisationSchedulePage() {
       {
         onSuccess: (data) => {
           if (data.paymentUrl) {
-            toast.info(
-              `Đặt lịch thành công! Đang chuyển đến trang thanh toán đặt cọc ${(data.depositAmount ?? 0).toLocaleString('vi-VN')} VND...`
+            toast.success(
+              t('PatientAppointments.clinicBooking.bookingSuccess', {
+                defaultValue:
+                  'Đặt lịch thành công! Đang chuyển đến trang thanh toán...',
+              })
             );
             setTimeout(() => {
               window.location.href = data.paymentUrl!;
@@ -199,7 +209,10 @@ export default function OrganisationSchedulePage() {
               {t('PatientAppointments.clinicBooking.page.title')}
             </h1>
             <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
-              Organisation:{' '}
+              {t('PatientAppointments.clinicBooking.page.organisationLabel', {
+                defaultValue: 'Organisation',
+              })}
+              :{' '}
               <span className="font-bold text-slate-700 dark:text-slate-300">
                 {schedule?.name || 'Aura Eyes Clinic'}
               </span>
@@ -213,7 +226,9 @@ export default function OrganisationSchedulePage() {
             <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
               <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col gap-1">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  Visit Date
+                  {t('PatientAppointments.clinicBooking.visitDate', {
+                    defaultValue: 'Visit Date',
+                  })}
                 </p>
                 <div className="flex items-center justify-between mt-2">
                   <button
@@ -283,7 +298,9 @@ export default function OrganisationSchedulePage() {
 
             <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 space-y-4">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                Visit Reason
+                {t('PatientAppointments.clinicBooking.visitReason', {
+                  defaultValue: 'Visit Reason',
+                })}
               </p>
               <div className="space-y-4">
                 <input
@@ -320,7 +337,10 @@ export default function OrganisationSchedulePage() {
               </h2>
               {upcomingAggregatedSlots.length > 0 && (
                 <span className="text-xs font-bold text-slate-400">
-                  {upcomingAggregatedSlots.length} time frame(s)
+                  {upcomingAggregatedSlots.length}{' '}
+                  {t('PatientAppointments.clinicBooking.timeFrames', {
+                    defaultValue: 'time frame(s)',
+                  })}
                 </span>
               )}
             </div>
@@ -329,14 +349,21 @@ export default function OrganisationSchedulePage() {
               {loadingSchedule ? (
                 <div className="flex flex-col items-center justify-center h-full py-20 text-slate-400">
                   <Spinner size={32} />
-                  <p className="mt-4 text-sm italic">Searching for slots...</p>
+                  <p className="mt-4 text-sm italic">
+                    {t('PatientAppointments.clinicBooking.searchingSlots', {
+                      defaultValue: 'Searching for slots...',
+                    })}
+                  </p>
                 </div>
               ) : upcomingAggregatedSlots.length > 0 ? (
                 <div className="space-y-10">
                   {groupedSlots.morning.length > 0 && (
                     <section className="space-y-4">
                       <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                        <Clock size={12} className="text-cyan-500" /> Morning
+                        <Clock size={12} className="text-cyan-500" />{' '}
+                        {t('PatientAppointments.clinicBooking.morning', {
+                          defaultValue: 'Morning',
+                        })}
                       </h4>
                       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
                         {groupedSlots.morning.map((slot) => (
@@ -357,7 +384,10 @@ export default function OrganisationSchedulePage() {
                   {groupedSlots.afternoon.length > 0 && (
                     <section className="space-y-4">
                       <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                        <Clock size={12} className="text-amber-500" /> Afternoon
+                        <Clock size={12} className="text-amber-500" />{' '}
+                        {t('PatientAppointments.clinicBooking.afternoon', {
+                          defaultValue: 'Afternoon',
+                        })}
                       </h4>
                       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
                         {groupedSlots.afternoon.map((slot) => (
@@ -386,12 +416,21 @@ export default function OrganisationSchedulePage() {
                         <div className="flex items-center justify-between">
                           <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                             <User size={20} className="text-cyan-600" />
-                            Select Ophthalmologist
+                            {t(
+                              'PatientAppointments.clinicBooking.selectOphthalmologist',
+                              { defaultValue: 'Select Ophthalmologist' }
+                            )}
                           </h3>
                           <span className="text-xs font-medium text-slate-400">
-                            For{' '}
-                            {formatSlotTime(selectedAggregatedSlot.startTime)} -{' '}
-                            {formatSlotTime(selectedAggregatedSlot.endTime)}
+                            {t('PatientAppointments.clinicBooking.forSlot', {
+                              defaultValue: 'For {{start}} - {{end}}',
+                              start: formatSlotTime(
+                                selectedAggregatedSlot.startTime
+                              ),
+                              end: formatSlotTime(
+                                selectedAggregatedSlot.endTime
+                              ),
+                            })}
                           </span>
                         </div>
 
@@ -412,7 +451,7 @@ export default function OrganisationSchedulePage() {
                                   ];
                                 setSelectedDoctorSlot(randomDoc);
                                 toast.info(
-                                  `Đã chọn ngẫu nhiên bác sĩ: ${randomDoc.doctorName}`
+                                  `${t('PatientAppointments.clinicBooking.randomDoctorAssigned', { defaultValue: 'Đã chọn ngẫu nhiên bác sĩ' })}: ${randomDoc.doctorName}`
                                 );
                               }
                             }}
@@ -426,11 +465,19 @@ export default function OrganisationSchedulePage() {
                             </div>
                             <div className="flex-1 text-left">
                               <h4 className="text-sm font-bold text-cyan-900 dark:text-cyan-100">
-                                Bất kỳ bác sĩ nào
+                                {t(
+                                  'PatientAppointments.clinicBooking.anyDoctor',
+                                  { defaultValue: 'Bất kỳ bác sĩ nào' }
+                                )}
                               </h4>
                               <p className="text-[10px] text-cyan-600/70 dark:text-cyan-400/70 font-medium">
-                                Hệ thống sẽ chọn ngẫu nhiên 1 bác sĩ còn rảnh
-                                cho bạn
+                                {t(
+                                  'PatientAppointments.clinicBooking.anyDoctorDesc',
+                                  {
+                                    defaultValue:
+                                      'Hệ thống sẽ chọn ngẫu nhiên 1 bác sĩ còn rảnh cho bạn',
+                                  }
+                                )}
                               </p>
                             </div>
                             <ArrowRight
@@ -470,11 +517,15 @@ export default function OrganisationSchedulePage() {
                   </div>
                   <div>
                     <h4 className="text-lg font-bold text-slate-700 dark:text-slate-300">
-                      No Slots Available
+                      {t('PatientAppointments.clinicBooking.noSlots', {
+                        defaultValue: 'No Slots Available',
+                      })}
                     </h4>
                     <p className="text-slate-400 text-sm max-w-xs mx-auto">
-                      There are no available slots for this date. Please select
-                      another day from the calendar.
+                      {t('PatientAppointments.clinicBooking.noSlotsDesc', {
+                        defaultValue:
+                          'There are no available slots for this date. Please select another day from the calendar.',
+                      })}
                     </p>
                   </div>
                 </div>
@@ -486,8 +537,10 @@ export default function OrganisationSchedulePage() {
                 <div className="flex-1 flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 px-4 py-3 rounded-2xl border border-blue-100 dark:border-blue-900/30">
                   <Info size={18} className="text-blue-500 shrink-0" />
                   <p className="text-[11px] text-blue-700 dark:text-blue-400 leading-tight">
-                    Appointment is subject to confirmation. Please arrive 15
-                    minutes before your time slot.
+                    {t('PatientAppointments.clinicBooking.infoText', {
+                      defaultValue:
+                        'Appointment is subject to confirmation. Please arrive 15 minutes before your time slot.',
+                    })}
                   </p>
                 </div>
                 <button
@@ -606,27 +659,40 @@ function DoctorDetailsModal({
                         {degrees.map((degree, idx) => (
                           <div
                             key={degree.id || idx}
-                            className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800"
+                            className="flex flex-col gap-2 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800"
                           >
-                            <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-white">
-                              {degree.certificateUrl ? (
-                                <img
-                                  src={getDocThumbnail(degree.certificateUrl)!}
-                                  alt={degree.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-cyan-600">
-                                  <GraduationCap size={20} />
-                                </div>
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <h5 className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center text-cyan-600">
+                                <GraduationCap size={18} />
+                              </div>
+                              <h5 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                                 {degree.name}
                               </h5>
-                              <p className="text-[10px] text-slate-500 truncate">
+                            </div>
+                            <div className="space-y-1.5 ml-11">
+                              <p className="text-[11px] text-slate-500 font-medium">
+                                <span className="text-slate-400">Issuer:</span>{' '}
                                 {degree.issuingAuthority}
+                              </p>
+                              <p className="text-[11px] text-slate-500 font-medium">
+                                <span className="text-slate-400">Issued:</span>{' '}
+                                {format(
+                                  new Date(degree.issuedDate),
+                                  'MMM yyyy'
+                                )}
+                                {degree.expiryDate && (
+                                  <>
+                                    {' '}
+                                    -{' '}
+                                    <span className="text-slate-400">
+                                      Exp:
+                                    </span>{' '}
+                                    {format(
+                                      new Date(degree.expiryDate),
+                                      'MMM yyyy'
+                                    )}
+                                  </>
+                                )}
                               </p>
                             </div>
                           </div>
@@ -634,27 +700,44 @@ function DoctorDetailsModal({
                         {licenses.map((cert, idx) => (
                           <div
                             key={cert.id || idx}
-                            className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800"
+                            className="flex flex-col gap-2 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800"
                           >
-                            <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-white">
-                              {cert.certificateUrl ? (
-                                <img
-                                  src={getDocThumbnail(cert.certificateUrl)!}
-                                  alt={cert.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-emerald-600">
-                                  <Award size={20} />
-                                </div>
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <h5 className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
+                                <Award size={18} />
+                              </div>
+                              <h5 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                                 {cert.name}
                               </h5>
-                              <p className="text-[10px] text-slate-500 truncate">
+                            </div>
+                            <div className="space-y-1.5 ml-11">
+                              {cert.licenseNumber && (
+                                <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                  <span className="text-slate-400 font-medium">
+                                    ID:
+                                  </span>{' '}
+                                  {cert.licenseNumber}
+                                </p>
+                              )}
+                              <p className="text-[11px] text-slate-500 font-medium">
+                                <span className="text-slate-400">
+                                  Authority:
+                                </span>{' '}
                                 {cert.issuingAuthority}
+                              </p>
+                              <p className="text-[11px] text-slate-500 font-medium">
+                                <span className="text-slate-400">Period:</span>{' '}
+                                {format(new Date(cert.issuedDate), 'MMM yyyy')}
+                                {cert.expiryDate && (
+                                  <>
+                                    {' '}
+                                    -{' '}
+                                    {format(
+                                      new Date(cert.expiryDate),
+                                      'MMM yyyy'
+                                    )}
+                                  </>
+                                )}
                               </p>
                             </div>
                           </div>
@@ -668,9 +751,15 @@ function DoctorDetailsModal({
                     <div className="flex items-center gap-6">
                       <div className="relative">
                         <div className="w-24 h-24 rounded-3xl overflow-hidden border-4 border-white dark:border-slate-700 shadow-2xl">
-                          {resolveAvatarUrl(doctor.doctorAvatar) ? (
+                          {resolveAvatarUrl(
+                            doctor.doctorAvatar,
+                            doctor.providerAvatarUrl
+                          ) ? (
                             <img
-                              src={resolveAvatarUrl(doctor.doctorAvatar)}
+                              src={resolveAvatarUrl(
+                                doctor.doctorAvatar,
+                                doctor.providerAvatarUrl
+                              )}
                               alt={doctor.doctorName}
                               className="w-full h-full object-cover"
                             />
@@ -800,9 +889,12 @@ function DoctorCard({
       }`}
     >
       <div className="relative group/avatar">
-        {resolveAvatarUrl(doctor.doctorAvatar) ? (
+        {resolveAvatarUrl(doctor.doctorAvatar, doctor.providerAvatarUrl) ? (
           <img
-            src={resolveAvatarUrl(doctor.doctorAvatar)}
+            src={resolveAvatarUrl(
+              doctor.doctorAvatar,
+              doctor.providerAvatarUrl
+            )}
             alt={doctor.doctorName}
             className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
           />
