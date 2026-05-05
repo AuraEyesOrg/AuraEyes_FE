@@ -992,41 +992,42 @@ export default function ClinicStaffAppointmentsPage() {
                             />
                             {i === stepIdx && (
                               <span className="absolute -top-4 text-[8px] font-black uppercase tracking-tighter text-brand">
-                                {status === 'Pending' &&
-                                  (isPastOneThirdDuration(appt) &&
-                                  appt.status === 'Confirmed' ? (
-                                    <button
-                                      onClick={async () => {
-                                        setSelectedLatePatientAppointmentId(
-                                          appt.id
-                                        );
-                                        setIsLatePatientModalOpen(true);
-                                      }}
-                                      disabled={isMutating}
-                                      className="px-3 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold flex items-center gap-1.5 transition"
-                                    >
-                                      <AlertTriangle className="w-3.5 h-3.5" />
-                                      {t(
-                                        'Organisation.calendar.actions.lateArrival',
-                                        'ĐẾN MUỘN'
-                                      )}
-                                    </button>
-                                  ) : (
-                                    <button
-                                      onClick={() =>
-                                        setScanTargetAppointmentId(
-                                          appt.id === scanTargetAppointmentId
-                                            ? null
-                                            : appt.id
-                                        )
-                                      }
-                                      disabled={isMutating}
-                                      className="px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 transition"
-                                    >
-                                      <QrCode className="w-3.5 h-3.5" />
-                                      {t('Appointments.scanQrCheckIn')}
-                                    </button>
-                                  ))}
+                                {appt.status === 'Confirmed' &&
+                                isPastOneThirdDuration(appt) ? (
+                                  <button
+                                    onClick={async () => {
+                                      setSelectedLatePatientAppointmentId(
+                                        appt.id
+                                      );
+                                      setIsLatePatientModalOpen(true);
+                                    }}
+                                    disabled={isMutating}
+                                    className="px-3 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold flex items-center gap-1.5 transition"
+                                  >
+                                    <AlertTriangle className="w-3.5 h-3.5" />
+                                    {t(
+                                      'Organisation.calendar.actions.lateArrival',
+                                      'ĐẾN MUỘN'
+                                    )}
+                                  </button>
+                                ) : ['Pending', 'Confirmed'].includes(
+                                    appt.status
+                                  ) ? (
+                                  <button
+                                    onClick={() =>
+                                      setScanTargetAppointmentId(
+                                        appt.id === scanTargetAppointmentId
+                                          ? null
+                                          : appt.id
+                                      )
+                                    }
+                                    disabled={isMutating}
+                                    className="px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 transition"
+                                  >
+                                    <QrCode className="w-3.5 h-3.5" />
+                                    {t('Appointments.scanQrCheckIn')}
+                                  </button>
+                                ) : null}
                               </span>
                             )}
                           </div>
