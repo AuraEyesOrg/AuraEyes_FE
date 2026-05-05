@@ -20,6 +20,7 @@ import PatientLayout from '../components/PatientLayout';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatShortDate } from '@/lib/date-utils';
 import { screeningApi } from '../api/screening.api';
+import { usePatientMedicalRecords } from '@/features/medical-records/hooks/useMedicalRecords';
 
 // ============ HELPERS ============
 
@@ -77,6 +78,16 @@ export default function PatientDashboard() {
 
   const { profile, latestReport, recentReports, nextAppointment, isLoading } =
     useDashboard();
+
+  const medicalRecordsQuery = usePatientMedicalRecords(profile?.id || '');
+  const latestMedicalRecord = useMemo(() => {
+    const records = medicalRecordsQuery.data ?? [];
+    if (records.length === 0) return null;
+    return [...records].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )[0];
+  }, [medicalRecordsQuery.data]);
 
   const firstName =
     profile?.fullName?.split(' ')[0] ??
@@ -220,9 +231,11 @@ export default function PatientDashboard() {
     : latestSession?.screeningId
       ? `/patient/analysis?screeningId=${latestSession.screeningId}`
       : '/patient/analysis';
-  const latestSessionReportPath = latestSession?.screeningId
-    ? `/patient/screening?diagnosisId=${encodeURIComponent(latestSession.screeningId)}`
-    : '/patient/screening?openDiagnosis=latest';
+  const latestSessionReportPath = latestMedicalRecord
+    ? resolvePathWithLocale(
+        `/medical-records/patient/${latestMedicalRecord.id}`
+      )
+    : resolvePathWithLocale('/patient/medical-history');
   const [isHeroImageLoaded, setIsHeroImageLoaded] = useState(false);
   const [isHeroImageErrored, setIsHeroImageErrored] = useState(false);
 
@@ -408,7 +421,7 @@ export default function PatientDashboard() {
                         to={
                           latestSession
                             ? latestSessionTargetPath
-                            : '/patient/screening?openDiagnosis=latest'
+                            : '/patient/medical-history'
                         }
                         state={
                           latestSession
@@ -570,7 +583,7 @@ export default function PatientDashboard() {
                               </span>
                             )}
                             <Link
-                              to={`/patient/screening?diagnosisId=${encodeURIComponent(session.screeningId)}`}
+                              to={latestSessionReportPath}
                               className="text-[var(--text-muted)] hover:text-brand transition-colors"
                             >
                               <FileText className="w-5 h-5" />
@@ -609,7 +622,7 @@ export default function PatientDashboard() {
                               {getRiskLabel(report.riskLevel, t)}
                             </span>
                             <Link
-                              to={`/patient/screening?diagnosisId=${encodeURIComponent(report.id)}`}
+                              to={latestSessionReportPath}
                               className="text-[var(--text-muted)] hover:text-brand transition-colors"
                             >
                               <FileText className="w-5 h-5" />
