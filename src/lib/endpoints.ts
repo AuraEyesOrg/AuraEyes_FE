@@ -202,6 +202,8 @@ export const API_ENDPOINTS = {
       PENDING_CANCELLATIONS: '/system-admin/appointments/pending-cancellations',
       CONFIRM_REFUND: (id: string) =>
         `/system-admin/appointments/${id}/confirm-refund`,
+      REJECT_REFUND: (id: string) =>
+        `/system-admin/appointments/${id}/reject-refund`,
     },
   },
 

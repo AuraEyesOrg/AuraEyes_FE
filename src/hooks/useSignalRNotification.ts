@@ -154,6 +154,19 @@ export function useSignalRNotification(): {
         });
       }
 
+      // Auto-refresh for refund actions
+      if (action === 'refundconfirmed' || action === 'refundrejected') {
+        console.log(
+          '[SignalR] Refund action detected, invalidating queries...'
+        );
+        void queryClient.invalidateQueries({
+          queryKey: ['patient', 'appointments'],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ['financial', 'my-orders'],
+        });
+      }
+
       // Automatic redirection for patients when record is finalized
       const type = parseNotificationType(notification.type);
       if (
