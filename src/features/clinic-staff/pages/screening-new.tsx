@@ -36,8 +36,8 @@ export default function ClinicStaffScreeningNewPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t: i18nT } = useTranslation();
-  const t = (key: string, defaultValue?: string) =>
-    i18nT(key as never, { defaultValue } as never) as unknown as string;
+  const t = (key: string, defaultValue?: string, options?: any) =>
+    i18nT(key as any, { defaultValue, ...options } as any) as string;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentStep, setCurrentStep] =
@@ -291,14 +291,24 @@ export default function ClinicStaffScreeningNewPage() {
                   {selectedPatient.name}
                 </p>
                 <p className="text-xs text-(--text-secondary) mt-0.5">
-                  {i18nT('ClinicStaff.screeningNew.patientInfo.gender', {
-                    defaultValue: '{{gender}} · {{age}} yrs',
-                    gender:
-                      selectedPatient.gender === 'M'
-                        ? t('ClinicStaff.common.gender.male', 'Male')
-                        : t('ClinicStaff.common.gender.female', 'Female'),
-                    age: selectedPatient.age,
-                  })}
+                  {selectedPatient.age > 0
+                    ? i18nT(
+                        'ClinicStaff.screeningNew.patientInfo.genderWithAge',
+                        {
+                          defaultValue: '{{gender}} · {{age}} yrs',
+                          gender:
+                            selectedPatient.gender === 'M'
+                              ? t('ClinicStaff.common.gender.male', 'Male')
+                              : t('ClinicStaff.common.gender.female', 'Female'),
+                          age: selectedPatient.age,
+                        }
+                      )
+                    : t(
+                        selectedPatient.gender === 'M'
+                          ? 'ClinicStaff.common.gender.male'
+                          : 'ClinicStaff.common.gender.female',
+                        selectedPatient.gender === 'M' ? 'Male' : 'Female'
+                      )}
                 </p>
               </div>
             </div>
@@ -587,7 +597,7 @@ export default function ClinicStaffScreeningNewPage() {
                 <p className="text-sm text-(--text-secondary) mt-2">
                   {i18nT('ClinicStaff.screeningNew.launch.readyCount', {
                     count: readyImages.length,
-                    defaultValue: `Ready to analyse ${readyImages.length} scan(s). This will consume 1 AI screening credit.`,
+                    defaultValue: `Ready to analyse ${readyImages.length} scan(s).`,
                   })}
                 </p>
               </div>

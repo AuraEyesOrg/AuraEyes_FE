@@ -24,7 +24,8 @@ export interface OrganisationClinicAppointmentDto {
     | 'WaitingForPayment'
     | 'Completed'
     | 'Cancelled'
-    | 'NoShow';
+    | 'NoShow'
+    | 'CancellationRequested';
   /** PatientVisit status when a visit exists */
   visitStatus?: string | null;
   /** Unified clinic pipeline step (matches queue flowState) */

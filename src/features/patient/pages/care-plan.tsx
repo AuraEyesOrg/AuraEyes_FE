@@ -19,8 +19,8 @@ import { resolvePathWithLocale } from '@/i18n/middleware';
  */
 export default function PatientCarePlanPage() {
   const { t: i18nT } = useTranslation();
-  const t = (key: string, defaultValue?: string) =>
-    i18nT(key as never, { defaultValue } as never) as unknown as string;
+  const t = (key: string, defaultValue?: string, options?: any) =>
+    i18nT(key as any, { defaultValue, ...options } as any) as string;
 
   const { user } = useAuthStore();
   const patientId = user?.roleId ?? '';

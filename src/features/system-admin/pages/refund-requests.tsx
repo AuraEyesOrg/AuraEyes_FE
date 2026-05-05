@@ -35,6 +35,7 @@ export default function RefundRequestsPage() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [refundTransactionId, setRefundTransactionId] = useState('');
   const [adminNote, setAdminNote] = useState('');
 
@@ -74,6 +75,35 @@ export default function RefundRequestsPage() {
           t(
             'SystemAdmin.refundRequests.toasts.confirmError',
             'Unable to confirm refund.'
+          )
+        )
+      );
+    },
+  });
+
+  const rejectRefundMutation = useMutation({
+    mutationFn: (id: string) =>
+      appointmentsApi.rejectRefund(id, adminNote.trim() || undefined),
+    onSuccess: () => {
+      toast.success(
+        t(
+          'SystemAdmin.refundRequests.toasts.rejectSuccess',
+          'Refund request rejected successfully.'
+        )
+      );
+      setRejectingId(null);
+      setAdminNote('');
+      queryClient.invalidateQueries({
+        queryKey: ['admin', 'pending-cancellations'],
+      });
+    },
+    onError: (error) => {
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.refundRequests.toasts.rejectError',
+            'Unable to reject refund.'
           )
         )
       );
@@ -268,10 +298,19 @@ export default function RefundRequestsPage() {
                       </div>
                     )}
 
-                    <div className="pt-2">
+                    <div className="pt-2 flex gap-3">
+                      <button
+                        onClick={() => setRejectingId(item.id)}
+                        className="flex-1 py-3.5 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95"
+                      >
+                        {t(
+                          'SystemAdmin.common.actions.reject',
+                          'Reject Request'
+                        )}
+                      </button>
                       <button
                         onClick={() => setConfirmingId(item.id)}
-                        className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                        className="flex-[2] py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                       >
                         <CheckCircle2 className="w-4 h-4" />
                         {t(
@@ -366,6 +405,70 @@ export default function RefundRequestsPage() {
                 {confirmRefundMutation.isPending
                   ? t('SystemAdmin.common.actions.processing', 'Processing...')
                   : t('SystemAdmin.common.actions.confirm', 'Confirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {rejectingId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-black/60 animate-in fade-in duration-200">
+          <div
+            className="absolute inset-0"
+            onClick={() => setRejectingId(null)}
+          />
+          <div className="relative z-10 w-full max-w-md rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-2xl space-y-6 animate-in zoom-in-95 duration-200">
+            <div className="space-y-2">
+              <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                {t(
+                  'SystemAdmin.refundRequests.modals.reject.title',
+                  'Reject Refund Request'
+                )}
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                {t(
+                  'SystemAdmin.refundRequests.modals.reject.subtitle',
+                  'Are you sure you want to reject this refund? The appointment will remain active.'
+                )}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                {t('SystemAdmin.common.rejectionReason', 'Rejection Reason')}
+              </label>
+              <textarea
+                value={adminNote}
+                onChange={(e) => setAdminNote(e.target.value)}
+                rows={3}
+                placeholder={t(
+                  'SystemAdmin.refundRequests.modals.reject.reasonPlaceholder',
+                  'e.g. Cancellation request submitted too late.'
+                )}
+                className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm text-slate-900 dark:text-white outline-none focus:border-red-500 transition-colors resize-none"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setRejectingId(null)}
+                className="flex-1 px-6 py-3.5 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95"
+              >
+                {t('SystemAdmin.common.actions.cancel', 'Cancel')}
+              </button>
+              <button
+                onClick={() => rejectRefundMutation.mutate(rejectingId)}
+                disabled={rejectRefundMutation.isPending}
+                className="flex-[1.5] px-6 py-3.5 bg-rose-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-rose-600 shadow-xl shadow-rose-500/20 transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {rejectRefundMutation.isPending ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <AlertCircle className="w-4 h-4" />
+                )}
+                {rejectRefundMutation.isPending
+                  ? t('SystemAdmin.common.actions.processing', 'Processing...')
+                  : t('SystemAdmin.common.actions.reject', 'Reject')}
               </button>
             </div>
           </div>

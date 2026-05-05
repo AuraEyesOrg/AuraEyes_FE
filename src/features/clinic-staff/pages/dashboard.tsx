@@ -117,10 +117,10 @@ function ActivityItem({
 
   const actionKey = normalizeActionKey(action);
   const translatedAction = actionKey
-    ? t(
+    ? (t(
         `ClinicStaffDashboard.activityActions.${actionKey}` as never,
         { defaultValue: action } as never
-      )
+      ) as unknown as string)
     : action;
 
   const { icon: StatusIcon, color, bg } = statusConfig[status];
@@ -200,8 +200,8 @@ function QuickAction({
 export default function ClinicStaffDashboardPage() {
   const navigate = useNavigate();
   const { t: i18nT } = useTranslation();
-  const t = (key: string, defaultValue?: string) =>
-    i18nT(key as never, { defaultValue } as never) as unknown as string;
+  const t = (key: string, defaultValue?: string, options?: any) =>
+    i18nT(key as any, { defaultValue, ...options } as any) as string;
 
   const { user } = useAuthStore();
   const { data: metrics, isLoading } = useClinicDashboardMetrics();

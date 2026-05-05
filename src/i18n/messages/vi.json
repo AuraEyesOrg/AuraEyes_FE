@@ -2636,7 +2636,9 @@
       "completed": "Hoàn thành",
       "cancelled": "Đã hủy",
       "noShow": "Vắng mặt",
-      "cancellationRequested": "Chờ hoàn tiền"
+      "cancellationRequested": "Chờ hoàn tiền",
+      "fullyPaid": "Đã tất toán",
+      "awaitingPayment": "Chờ thanh toán"
     },
     "empty": {
       "clinicAll": "Chưa có lịch hẹn cơ sở y tế.",
@@ -9118,7 +9120,7 @@
       },
       "launch": {
         "title": "Chạy mô hình chẩn đoán AI",
-        "readyCount": "Sẵn sàng phân tích {{count}} ảnh. Quá trình này sẽ tiêu tốn 1 tín dụng sàng lọc AI.",
+        "readyCount": "Sẵn sàng phân tích {{count}} ảnh.",
         "advisory": {
           "title": "Cố vấn lâm sàng",
           "description": "Kết quả phân loại AI chỉ cung cấp xác suất sơ bộ. Chúng không nhằm mục đích thay thế chẩn đoán chính thức của chuyên gia lâm sàng."
@@ -10444,42 +10446,239 @@
         "primary": "Phát hiện chính",
         "empty": "Kết quả phân tích sẽ hiển thị sau khi AI hoàn tất."
       },
-      "sessionInfo": {
-        "title": "Thông tin phiên",
-        "model": "Mô hình",
-        "imageCount": "Số lượng ảnh",
-        "createdAt": "Ngày tạo",
-        "assessedAt": "Đánh giá lần cuối",
-        "sessionCode": "Mã phiên"
-      },
-      "states": {
-        "missingId": "Thiếu mã sàng lọc.",
-        "loading": "Đang tải kết quả sàng lọc...",
-        "notFound": "Không tìm thấy phiên sàng lọc.",
-        "noDraft": "Chưa có kết quả AI. Nhấn nút Phân tích l?i d? t?o k?t qu?."
-      },
-      "toast": {
-        "loadFailed": "Không thể tải kết quả sàng lọc.",
-        "analyzing": "Đang phân tích ảnh võng mạc...",
-        "noPredictionData": "Dịch vụ AI không tr? v? d? li?u d? đoán.",
-        "analyzeSuccess": "Phân tích AI hoàn tất.",
-        "analyzeFailed": "Phân tích AI th?t b?i. Vui lòng th? l?i.",
-        "selectShareOption": "Vui lòng ch?n ít nh?t m?t m?c d? chia s?.",
-        "walkInEmailRequired": "Vui lòng nh?p email ngu?i nh?n cho b?nh nhân vãng lai.",
-        "shareEmailSuccess": "Đã g?i k?t qu? đ?n {{email}}.",
-        "shareEmailFailed": "Không th? chia s? k?t qu? lúc này.",
-        "shareNetworkSuccess": "Đã chia s? ca lên M?ng lu?i Chuyên môn.",
-        "shareNetworkFailed": "Không th? đăng lên M?ng lu?i Chuyên môn.",
-        "sendToDoctorRequiresAi": "Vui lòng hoàn t?t phân tích AI tru?c.",
-        "bookedDoctorMissing": "B?nh nhân chua có bác s? trong booking. Vui lòng ki?m tra l?i l?ch h?n.",
-        "sendToDoctorSuccess": "Đã g?i h? so cho bác s?.",
-        "sendToDoctorFailed": "Không th? g?i h? so cho bác s?."
-      },
-      "shareModal": {
-        "title": "Chia s? k?t qu? sàng l?c",
-        "tabs": {
-          "email": "G?i email",
-          "network": "Đăng lên m?ng"
+      "ClinicStaff": {
+        "screeningNew": {
+          "title": "Sàng lọc võng mạc mới",
+          "subtitle": "Tải ảnh quét võng mạc để phân loại chẩn đoán AI.",
+          "steps": {
+            "upload": "1. Tải ảnh",
+            "launch": "2. Chạy AI"
+          },
+          "quality": {
+            "title": "Tiêu chuẩn chất lượng ảnh",
+            "lighting": "Ánh sáng đồng đều",
+            "lightingDesc": "Tránh lóa và chiếu sáng không đều",
+            "focus": "Lấy nét sắc nét",
+            "focusDesc": "Ảnh phải rõ ràng và không bị nhòe",
+            "centered": "Đĩa thị trung tâm",
+            "centeredDesc": "Đĩa thị phải hiển thị rõ và nằm ở trung tâm",
+            "supportedFormats": "Định dạng hỗ trợ",
+            "supportedFormatsList": "JPG, PNG, TIFF, BMP"
+          },
+          "launch": {
+            "title": "Chạy mô hình chẩn đoán AI",
+            "readyCount": "Sẵn sàng phân tích {{count}} ảnh.",
+            "advisory": {
+              "title": "Cố vấn lâm sàng",
+              "description": "Kết quả phân loại AI chỉ cung cấp xác suất sơ bộ. Chúng không nhằm mục đích thay thế chẩn đoán chính thức của chuyên gia lâm sàng."
+            },
+            "scansIncluded": "Các ảnh tối ưu",
+            "scansWarning": "Các ảnh có cảnh báo (Vẫn có thể phân tích)"
+          },
+          "actions": {
+            "proceed": "Tiếp tục xem xét",
+            "launch": "Bắt đầu phân tích AI",
+            "cancel": "Hủy",
+            "back": "Quay lại",
+            "uploading": "Đang tải lên...",
+            "analyzing": "Đang chạy AI..."
+          },
+          "toast": {
+            "noPatient": "Chưa chọn bệnh nhân"
+          }
+        },
+        "queue": {
+          "toast": {
+            "sentToDoctorSuccess": "Đã gửi hồ sơ cho bác sĩ.",
+            "sentToDoctorFailed": "Không thể gửi hồ sơ cho bác sĩ.",
+            "missingBasicInfo": "Thiếu thông tin bệnh nhân cơ bản.",
+            "screeningRequired": "Vui lòng hoàn tất sàng lọc AI trước khi gửi bác sĩ.",
+            "loadDoctorsFailed": "Không thể tải danh sách bác sĩ.",
+            "copyDoctorConsultationLinkSuccess": "Đã sao chép liên kết tư vấn cho bác sĩ.",
+            "copyDoctorConsultationLinkFailed": "Không thể sao chép liên kết tư vấn.",
+            "ermSaveRequiredBeforeScreening": "Vui lòng lưu xong phần hành chính ERM (bấm Lưu) trước khi tạo sàng lọc."
+          },
+          "error": {
+            "title": "Lỗi tải hàng đợi",
+            "message": "Không thể lấy dữ liệu hàng đợi. Vui lòng thử lại."
+          },
+          "actions": {
+            "retry": "Thử lại",
+            "refresh": "Làm mới",
+            "fillErm": "Nhập ERM",
+            "fillErmRequired": "Phải hoàn tất và lưu phần hành chính ERM trước khi tạo sàng lọc.",
+            "openErm": "Hồ sơ ERM",
+            "openErmHint": "Mở ERM của lượt check-in này (mỗi ca khám một hồ sơ).",
+            "createScreeningDisabledHint": "Vui lòng lưu xong phần hành chính ERM trước khi tạo sàng lọc.",
+            "createScreening": "Tạo sàng lọc",
+            "viewScreening": "Xem sàng lọc",
+            "sending": "Đang gửi...",
+            "sendToDoctor": "Gửi bác sĩ",
+            "copyDoctorLink": "Copy link bác sĩ"
+          },
+          "page": {
+            "title": "Hàng đợi phòng khám",
+            "subtitle": "Theo dõi luồng bệnh nhân và phối hợp điều trị"
+          },
+          "tabs": {
+            "all": "Tất cả"
+          },
+          "empty": {
+            "title": "Không có bệnh nhân trong hàng đợi",
+            "message": "Bệnh nhân sẽ xuất hiện ở đây sau khi check-in"
+          },
+          "table": {
+            "patient": "Bệnh nhân",
+            "checkedIn": "Đã check-in",
+            "status": "Trạng thái",
+            "screening": "Sàng lọc AI",
+            "doctor": "Bác sĩ",
+            "action": "Thao tác"
+          },
+          "sendDoctorModal": {
+            "title": "Gửi hồ sơ cho bác sĩ",
+            "doctorLabel": "Bác sĩ hiện có",
+            "loadingDoctors": "Đang tìm bác sĩ...",
+            "selectDoctor": "Chọn bác sĩ tư vấn",
+            "noDoctors": "Không tìm thấy bác sĩ nào hiện có.",
+            "notesLabel": "Ghi chú",
+            "notesPlaceholder": "Thêm ghi chú cho bác sĩ (tuỳ chọn)",
+            "confirm": "Xác nhận gửi"
+          },
+          "doctor": {
+            "yearsExp": "{{count}} năm kinh nghiệm",
+            "notAssigned": "Chưa phân công"
+          },
+          "screening": {
+            "completed": "Đã hoàn thành",
+            "pending": "Đang chờ"
+          },
+          "states": {
+            "ermPending": "Chờ nhập ERM",
+            "checkedIn": "Đã check-in",
+            "screeningPending": "Chờ sàng lọc",
+            "aiCompleted": "AI đã hoàn thành",
+            "sentToDoctor": "Đã chuyển bác sĩ",
+            "consultationInProgress": "Đang khám",
+            "finalized": "Chờ thanh toán cuối",
+            "awaitingDoctor": "Chờ bác sĩ",
+            "inConsultation": "Đang tư vấn",
+            "completed": "Xong"
+          }
+        },
+        "patients": {
+          "summary": {
+            "countFound": "Tìm thấy {{count}} {{unit}}",
+            "patients": "bệnh nhân",
+            "patient": "bệnh nhân"
+          },
+          "risk": {
+            "low": "Thấp",
+            "medium": "Trung bình",
+            "high": "Cao"
+          }
+        },
+        "common": {
+          "gender": {
+            "male": "Nam",
+            "female": "Nữ"
+          },
+          "yearsAbbr": "tuổi",
+          "idLabel": "ID BN",
+          "close": "Đóng"
+        },
+        "latePatientModal": {
+          "actions": {
+            "cancelAndDiscount": "Hủy & Cấp giảm giá",
+            "createAndRebook": "Tạo slot & Đặt lại",
+            "rebook": "Đặt lại bệnh nhân"
+          },
+          "adhoc": {
+            "cost": "Chi phí (VND)",
+            "costPlaceholder": "Không bắt buộc",
+            "description": "Tạo một khung giờ tùy chỉnh cho bệnh nhân này.",
+            "doctor": "Chỉ định bác sĩ",
+            "endTime": "Giờ kết thúc",
+            "loadingDoctors": "Đang tải danh sách bác sĩ...",
+            "maxCapacity": "Sức chứa",
+            "noDoctor": "Tự động chỉ định / Không ưu tiên",
+            "startTime": "Giờ bắt đầu"
+          },
+          "cancel": {
+            "description": "Lịch hẹn hiện tại sẽ bị hủy và khung giờ được giải phóng.",
+            "discountDescription": "Giảm giá 20% sẽ tự động được áp dụng khi bệnh nhân đặt lịch khám online tiếp theo. Hiệu lực trong 30 ngày.",
+            "discountTitle": "Bệnh nhân nhận giảm giá 20%",
+            "title": "Hủy lịch hẹn này"
+          },
+          "checking": "Đang kiểm tra trạng thái lịch hẹn...",
+          "checkError": "Không thể kiểm tra trạng thái. Vui lòng thử lại.",
+          "error": {
+            "selectSlot": "Vui lòng chọn một khung giờ",
+            "timesRequired": "Giờ bắt đầu và giờ kết thúc là bắt buộc"
+          },
+          "existing": {
+            "anyDoctor": "Bất kỳ bác sĩ nào",
+            "anyDoctorDesc": "Hệ thống sẽ tự động chỉ định bác sĩ",
+            "autoAssign": "Tự động chỉ định: hệ thống sẽ chọn một bác sĩ khả dụng.",
+            "description": "Chọn một khung giờ khả dụng, sau đó chọn bác sĩ.",
+            "loadingDoctors": "Đang tải danh sách bác sĩ...",
+            "noDoctors": "Không có bác sĩ khả dụng cho khung giờ này.",
+            "noSlots": "Không có khung giờ khả dụng trong ngày này.",
+            "selectDoctor": "Chọn bác sĩ"
+          },
+          "header": {
+            "subtitle": "Đến muộn {{minutes}} phút so với ngưỡng {{threshold}} phút",
+            "title": "Bệnh nhân đến muộn"
+          },
+          "notLate": "Bệnh nhân chưa đến muộn hoặc lịch hẹn chưa đến giờ.",
+          "success": {
+            "adHocCreated": "Đã tạo slot ad-hoc và đặt lại bệnh nhân",
+            "cancelledWithDiscount": "Đã hủy lịch hẹn. Bệnh nhân nhận giảm giá {{rate}}% cho lần đặt tiếp theo.",
+            "rebooked": "Đã đặt lại bệnh nhân sang slot mới thành công"
+          },
+          "tabs": {
+            "adhoc": "Tạo Slot Tùy chỉnh",
+            "cancel": "Hủy & Giảm giá",
+            "existing": "Đặt Slot Khác"
+          }
+        },
+        "walkInPatientModal": {
+          "actions": {
+            "createPatient": "Tạo bệnh nhân"
+          },
+          "form": {
+            "address": "Địa chỉ",
+            "addressPlaceholder": "Số nhà, phường/xã, quận/huyện, tỉnh/thành phố",
+            "citizenId": "CCCD",
+            "citizenIdPlaceholder": "vd. 001099000000",
+            "dateOfBirth": "Ngày sinh *",
+            "email": "Email *",
+            "emailPlaceholder": "benhnhan@example.com",
+            "fullName": "Họ và tên *",
+            "fullNamePlaceholder": "vd. Nguyễn Văn A",
+            "gender": "Giới tính *",
+            "genderOther": "Khác",
+            "phoneNumber": "Số điện thoại",
+            "phonePlaceholder": "0901 234 567"
+          },
+          "header": {
+            "subtitle": "Đăng ký nhanh bệnh nhân mới",
+            "title": "Tạo bệnh nhân vãng lai"
+          },
+          "scan": {
+            "action": "Quét mã QR VNeID / CCCD",
+            "cancel": "Hủy quét",
+            "hint": "Tự động điền thông tin bệnh nhân chính xác",
+            "opening": "Đang mở trình quét camera..."
+          },
+          "toast": {
+            "accountCreatedEmailSent": "Đã tạo tài khoản và gửi thông tin đăng nhập qua email.",
+            "accountCreatedTempPassword": "Đã tạo tài khoản. Email đăng nhập: {{loginEmail}} | Mật khẩu tạm: {{temporaryPassword}}",
+            "createSuccess": "Tạo bệnh nhân vãng lai thành công!",
+            "invalidQr": "Mã QR không hợp lệ hoặc không đúng định dạng CCCD/VNeID.",
+            "qrExtractSuccess": "Trích xuất hồ sơ công dân thành công!"
+          }
+
         },
         "email": {
           "walkInHint": "B?nh nhân vãng lai: nh?p email ngu?i nh?n d? g?i k?t qu?.",

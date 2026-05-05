@@ -187,8 +187,8 @@ function DoctorSelect({
 export default function ClinicStaffQueuePage() {
   const navigate = useNavigate();
   const { t: i18nT, i18n } = useTranslation();
-  const t = (key: string, defaultValue?: string) =>
-    i18nT(key as never, { defaultValue } as never) as unknown as string;
+  const t = (key: string, defaultValue?: string, options?: any) =>
+    i18nT(key as any, { defaultValue, ...options } as any) as string;
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<QueueTab>('all');

@@ -2640,6 +2640,8 @@ declare module 'i18next' {
         cancelled: string;
         noShow: string;
         cancellationRequested: string;
+        fullyPaid: string;
+        awaitingPayment: string;
       };
       empty: {
         clinicAll: string;
@@ -10447,42 +10449,238 @@ declare module 'i18next' {
           primary: string;
           empty: string;
         };
-        sessionInfo: {
-          title: string;
-          model: string;
-          imageCount: string;
-          createdAt: string;
-          assessedAt: string;
-          sessionCode: string;
-        };
-        states: {
-          missingId: string;
-          loading: string;
-          notFound: string;
-          noDraft: string;
-        };
-        toast: {
-          loadFailed: string;
-          analyzing: string;
-          noPredictionData: string;
-          analyzeSuccess: string;
-          analyzeFailed: string;
-          selectShareOption: string;
-          walkInEmailRequired: string;
-          shareEmailSuccess: string;
-          shareEmailFailed: string;
-          shareNetworkSuccess: string;
-          shareNetworkFailed: string;
-          sendToDoctorRequiresAi: string;
-          bookedDoctorMissing: string;
-          sendToDoctorSuccess: string;
-          sendToDoctorFailed: string;
-        };
-        shareModal: {
-          title: string;
-          tabs: {
-            email: string;
-            network: string;
+        ClinicStaff: {
+          screeningNew: {
+            title: string;
+            subtitle: string;
+            steps: {
+              upload: string;
+              launch: string;
+            };
+            quality: {
+              title: string;
+              lighting: string;
+              lightingDesc: string;
+              focus: string;
+              focusDesc: string;
+              centered: string;
+              centeredDesc: string;
+              supportedFormats: string;
+              supportedFormatsList: string;
+            };
+            launch: {
+              title: string;
+              readyCount: string;
+              advisory: {
+                title: string;
+                description: string;
+              };
+              scansIncluded: string;
+              scansWarning: string;
+            };
+            actions: {
+              proceed: string;
+              launch: string;
+              cancel: string;
+              back: string;
+              uploading: string;
+              analyzing: string;
+            };
+            toast: {
+              noPatient: string;
+            };
+          };
+          queue: {
+            toast: {
+              sentToDoctorSuccess: string;
+              sentToDoctorFailed: string;
+              missingBasicInfo: string;
+              screeningRequired: string;
+              loadDoctorsFailed: string;
+              copyDoctorConsultationLinkSuccess: string;
+              copyDoctorConsultationLinkFailed: string;
+              ermSaveRequiredBeforeScreening: string;
+            };
+            error: {
+              title: string;
+              message: string;
+            };
+            actions: {
+              retry: string;
+              refresh: string;
+              fillErm: string;
+              fillErmRequired: string;
+              openErm: string;
+              openErmHint: string;
+              createScreeningDisabledHint: string;
+              createScreening: string;
+              viewScreening: string;
+              sending: string;
+              sendToDoctor: string;
+              copyDoctorLink: string;
+            };
+            page: {
+              title: string;
+              subtitle: string;
+            };
+            tabs: {
+              all: string;
+            };
+            empty: {
+              title: string;
+              message: string;
+            };
+            table: {
+              patient: string;
+              checkedIn: string;
+              status: string;
+              screening: string;
+              doctor: string;
+              action: string;
+            };
+            sendDoctorModal: {
+              title: string;
+              doctorLabel: string;
+              loadingDoctors: string;
+              selectDoctor: string;
+              noDoctors: string;
+              notesLabel: string;
+              notesPlaceholder: string;
+              confirm: string;
+            };
+            doctor: {
+              yearsExp: string;
+              notAssigned: string;
+            };
+            screening: {
+              completed: string;
+              pending: string;
+            };
+            states: {
+              ermPending: string;
+              checkedIn: string;
+              screeningPending: string;
+              aiCompleted: string;
+              sentToDoctor: string;
+              consultationInProgress: string;
+              finalized: string;
+              awaitingDoctor: string;
+              inConsultation: string;
+              completed: string;
+            };
+          };
+          patients: {
+            summary: {
+              countFound: string;
+              patients: string;
+              patient: string;
+            };
+            risk: {
+              low: string;
+              medium: string;
+              high: string;
+            };
+          };
+          common: {
+            gender: {
+              male: string;
+              female: string;
+            };
+            yearsAbbr: string;
+            idLabel: string;
+            close: string;
+          };
+          latePatientModal: {
+            actions: {
+              cancelAndDiscount: string;
+              createAndRebook: string;
+              rebook: string;
+            };
+            adhoc: {
+              cost: string;
+              costPlaceholder: string;
+              description: string;
+              doctor: string;
+              endTime: string;
+              loadingDoctors: string;
+              maxCapacity: string;
+              noDoctor: string;
+              startTime: string;
+            };
+            cancel: {
+              description: string;
+              discountDescription: string;
+              discountTitle: string;
+              title: string;
+            };
+            checking: string;
+            checkError: string;
+            error: {
+              selectSlot: string;
+              timesRequired: string;
+            };
+            existing: {
+              anyDoctor: string;
+              anyDoctorDesc: string;
+              autoAssign: string;
+              description: string;
+              loadingDoctors: string;
+              noDoctors: string;
+              noSlots: string;
+              selectDoctor: string;
+            };
+            header: {
+              subtitle: string;
+              title: string;
+            };
+            notLate: string;
+            success: {
+              adHocCreated: string;
+              cancelledWithDiscount: string;
+              rebooked: string;
+            };
+            tabs: {
+              adhoc: string;
+              cancel: string;
+              existing: string;
+            };
+          };
+          walkInPatientModal: {
+            actions: {
+              createPatient: string;
+            };
+            form: {
+              address: string;
+              addressPlaceholder: string;
+              citizenId: string;
+              citizenIdPlaceholder: string;
+              dateOfBirth: string;
+              email: string;
+              emailPlaceholder: string;
+              fullName: string;
+              fullNamePlaceholder: string;
+              gender: string;
+              genderOther: string;
+              phoneNumber: string;
+              phonePlaceholder: string;
+            };
+            header: {
+              subtitle: string;
+              title: string;
+            };
+            scan: {
+              action: string;
+              cancel: string;
+              hint: string;
+              opening: string;
+            };
+            toast: {
+              accountCreatedEmailSent: string;
+              accountCreatedTempPassword: string;
+              createSuccess: string;
+              invalidQr: string;
+              qrExtractSuccess: string;
+            };
           };
           email: {
             walkInHint: string;
