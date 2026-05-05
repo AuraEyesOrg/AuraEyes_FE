@@ -1,6 +1,8 @@
 import { type VitePWAOptions } from 'vite-plugin-pwa';
 
 export const PWAConfig: Partial<VitePWAOptions> = {
+  registerType: 'autoUpdate',
+
   includeAssets: [
     'favicon.svg',
     'favicon.ico',
@@ -8,64 +10,59 @@ export const PWAConfig: Partial<VitePWAOptions> = {
     'apple-touch-icon.png',
   ],
   manifest: {
-    name: 'React Query Zustand Boilerplate',
-    short_name: 'boilerplate',
-    description: 'Boilerplate with React, Zustand, and Vite',
-    theme_color: '#ffffff',
+    name: 'System for Retinal Vascular Health Screening',
+    short_name: 'AURA EYES',
+    description: 'AURA EYES - System for Retinal Vascular Health Screening',
+    theme_color: '#1A202C',
+    background_color: '#ffffff',
+    display: 'standalone',
     start_url: '/',
     scope: '/',
     icons: [
+      { src: 'icon_16x16.png', sizes: '16x16', type: 'image/png' },
+      { src: 'icon_32x32.png', sizes: '32x32', type: 'image/png' },
+      { src: 'icon_48x48.png', sizes: '48x48', type: 'image/png' },
+      { src: 'icon_64x64.png', sizes: '64x64', type: 'image/png' },
+      { src: 'icon_128x128.png', sizes: '128x128', type: 'image/png' },
+      { src: 'icon_256x256.png', sizes: '256x256', type: 'image/png' },
+      { src: 'icon_256x256.png', sizes: '384x384', type: 'image/png' },
       {
-        src: 'icon-48x48.png',
-        sizes: '48x48',
-        type: 'image/png',
-      },
-      {
-        src: 'icon-72x72.png',
-        sizes: '72x72',
-        type: 'image/png',
-      },
-      {
-        src: 'icon-96x96.png',
-        sizes: '96x96',
-        type: 'image/png',
-      },
-      {
-        src: 'icon-128x128.png',
-        sizes: '128x128',
-        type: 'image/png',
-      },
-      {
-        src: 'icon-144x144.png',
-        sizes: '144x144',
-        type: 'image/png',
-      },
-      {
-        src: 'icon-152x152.png',
-        sizes: '152x152',
-        type: 'image/png',
-      },
-      {
-        src: 'icon-192x192.png',
-        sizes: '192x192',
-        type: 'image/png',
-      },
-      {
-        src: 'icon-384x384.png',
-        sizes: '284x284',
-        type: 'image/png',
-      },
-      {
-        src: 'icon-512x512.png',
+        src: 'icon_512x512.png',
         sizes: '512x512',
         type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: 'icon_512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
       },
     ],
   },
   devOptions: {
-    enabled: true,
+    // Disable PWA in development to avoid cross-project cache collisions on localhost.
+    enabled: false,
   },
   workbox: {
     sourcemap: true,
+    cleanupOutdatedCaches: true,
+    clientsClaim: true,
+    skipWaiting: true,
+    globIgnores: ['**/stats.html'],
+    maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4MB limit
+    runtimeCaching: [
+      {
+        urlPattern: /\/icon_\d+x\d+\.png$/,
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'app-icons',
+          expiration: {
+            maxEntries: 20,
+            maxAgeSeconds: 60 * 60 * 24 * 365,
+          },
+        },
+      },
+    ],
   },
 };

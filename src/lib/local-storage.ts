@@ -7,7 +7,11 @@
 const getItem = <T = unknown>(key: string): T | null => {
   const value = window.localStorage.getItem(key);
   if (!value) return null;
-  return JSON.parse(value) as T;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return value as unknown as T;
+  }
 };
 
 /**
@@ -19,4 +23,8 @@ const setItem = (key: string, value: unknown) => {
   window.localStorage.setItem(key, JSON.stringify(value));
 };
 
-export { getItem, setItem };
+const removeItem = (key: string) => {
+  window.localStorage.removeItem(key);
+};
+
+export { getItem, setItem, removeItem };

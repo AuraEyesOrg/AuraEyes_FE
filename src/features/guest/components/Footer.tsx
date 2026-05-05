@@ -1,0 +1,205 @@
+import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Contact, Facebook, Mail, MapPin, Phone } from 'lucide-react';
+import { AuraLogo } from '@/components/ui/aura-logo';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
+
+export const Footer = () => {
+  const { t } = useTranslation();
+  const location = useLocation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const scrollToTopSmooth = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  return (
+    <footer className="border-t border-[#D2DCE8] bg-[#ECF1F7] dark:border-slate-700 dark:bg-[#0f172a]">
+      <div className="mx-auto max-w-7xl px-4 pb-8 pt-7 sm:px-6 lg:px-8">
+        <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {/* Brand */}
+          <div className="max-w-sm">
+            <div className="mb-5">
+              <AuraLogo
+                variant="auto"
+                size="sm"
+                to={withLocalePathname(locale)}
+              />
+            </div>
+            <p className="text-[15px] leading-8 text-[#4A5568] dark:text-slate-300">
+              {t('GuestHome.description')}
+            </p>
+            <div className="mt-6 flex items-center gap-5">
+              <a
+                aria-label={t('GuestFooter.facebookAriaLabel')}
+                className="rounded-md text-[#4E647D] transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+                href="https://www.facebook.com/profile.php?id=61582143393953"
+                rel="noreferrer"
+                target="_blank"
+              >
+                <Facebook className="h-5 w-5" />
+              </a>
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h4 className="mb-4 text-xl font-semibold leading-tight text-[#1A202C] dark:text-slate-100">
+              {t('Navigation.contact')}
+            </h4>
+            <ul className="space-y-3 text-sm leading-9 text-[#334E68] dark:text-slate-300">
+              <li>
+                <a
+                  className="flex items-start gap-3 rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+                  href="tel:0977452762"
+                >
+                  <Phone className="mt-2 h-5 w-5 shrink-0 text-[#4299E1]" />
+                  <span>0977 452 762</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  className="flex items-start gap-3 rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+                  href="mailto:auraeyes4se@gmail.com"
+                >
+                  <Mail className="mt-2 h-5 w-5 shrink-0 text-[#4299E1]" />
+                  <span>auraeyes4se@gmail.com</span>
+                </a>
+              </li>
+              <li>
+                <div className="flex items-start gap-3">
+                  <MapPin className="mt-2 h-5 w-5 shrink-0 text-[#4299E1]" />
+                  <span>FPT University, HCM, VN</span>
+                </div>
+              </li>
+              <li>
+                <div className="flex items-start gap-3">
+                  <Contact className="mt-2 h-5 w-5 shrink-0 text-[#4299E1]" />
+                  <Link
+                    className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+                    to={withLocalePathname(locale, '/contact')}
+                    onClick={scrollToTopSmooth}
+                  >
+                    {t('Navigation.contact')}
+                  </Link>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          {/* Services */}
+          <div>
+            <h4 className="mb-4 text-xl font-semibold leading-tight text-[#1A202C] dark:text-slate-100">
+              {t('GuestFooter.services')}
+            </h4>
+            <ul className="space-y-2 text-sm leading-9 text-[#334E68] dark:text-slate-300">
+              <li>
+                <Link
+                  className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+                  to={withLocalePathname(locale, '/about')}
+                  onClick={scrollToTopSmooth}
+                >
+                  {t('Navigation.about')}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+                  to={withLocalePathname(locale, '/ethics')}
+                  onClick={scrollToTopSmooth}
+                >
+                  {t('Navigation.ethicsPrivacy')}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Platform */}
+          <div>
+            <h4 className="mb-4 text-xl font-semibold leading-tight text-[#1A202C] dark:text-slate-100">
+              {t('GuestFooter.platform')}
+            </h4>
+            <ul className="space-y-2 text-sm leading-9 text-[#334E68] dark:text-slate-300">
+              <li>
+                <Link
+                  className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+                  to={withLocalePathname(locale, '/how-it-works')}
+                  onClick={scrollToTopSmooth}
+                >
+                  {t('Navigation.howItWorks')}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+                  to={withLocalePathname(locale, '/compliance')}
+                  onClick={scrollToTopSmooth}
+                >
+                  {t('Navigation.compliance')}
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="flex flex-col gap-4 border-t border-[#D8E0EA] pt-8 dark:border-slate-700 md:flex-row md:items-center md:justify-between">
+          <p className="text-sm text-[#5E7290] dark:text-slate-400">
+            2026 © AURA Health. {t('GuestFooter.reserved')}
+          </p>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[#5E7290] dark:text-slate-400">
+            <Link
+              className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+              to={withLocalePathname(locale, '/personal-data')}
+              onClick={scrollToTopSmooth}
+            >
+              {t('GuestFooter.personalData')}
+            </Link>
+            <Link
+              className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+              to={withLocalePathname(locale, '/privacy')}
+              onClick={scrollToTopSmooth}
+            >
+              {t('GuestFooter.privacy')}
+            </Link>
+            <Link
+              className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+              to={withLocalePathname(locale, '/security')}
+              onClick={scrollToTopSmooth}
+            >
+              {t('GuestFooter.security')}
+            </Link>
+            <Link
+              className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+              to={withLocalePathname(locale, '/terms')}
+              onClick={scrollToTopSmooth}
+            >
+              {t('GuestFooter.terms')}
+            </Link>
+            <Link
+              className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+              to={withLocalePathname(locale, '/about')}
+              onClick={scrollToTopSmooth}
+            >
+              {t('Navigation.about')}
+            </Link>
+            <a
+              className="inline-flex items-center gap-2 rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+              href="https://status.auraeyes.site"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span className="h-2.5 w-2.5 rounded-full bg-[#12B76A]" />
+              {t('Navigation.status')}
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;

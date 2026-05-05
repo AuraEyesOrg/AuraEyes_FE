@@ -1,0 +1,1537 @@
+import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { aiCoreClient } from '../../../lib/axios';
+import { quotaApi } from '../api/quota.api';
+import { screeningApi } from '../api/screening.api';
+import { agreeScreeningConsent } from '../api/consent.api';
+import { UPLOAD_SCREENING_CONSENT_CONTENT } from '../constants/consent-content';
+import { quotaKeys } from '../hooks/use-quota';
+import { useQuotaBalance } from '../hooks/use-quota';
+import FocusModeLayout from '../components/FocusModeLayout';
+import PatientImageViewer from '../components/ImageViewer';
+import PatientFindings from '../components/AnalysisSidebar';
+import PatientImageStrip from '../components/ReadOnlyImageGallery';
+import { ToggleState, Anomaly, RetinalImage } from '../types/type';
+import {
+  ShieldCheck,
+  AlertTriangle,
+  Sparkles,
+  ArrowRight,
+  RefreshCw,
+  Info,
+} from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
+import { getDiseaseUrgency } from '../mock';
+import i18n from '@/i18n/i18n';
+import {
+  isNormalDisease,
+  toDisplayDiseaseName,
+} from '@/features/patient/lib/disease-translation';
+
+const tRetinal = (key: string, options?: Record<string, unknown>) =>
+  i18n.t(key as never, options as never) as unknown as string;
+
+/** Map urgency level → Anomaly type for visual styling */
+function urgencyToAnomalyType(
+  urgency: 'critical' | 'warning' | 'caution' | 'info' | 'normal'
+): 'warning' | 'priority_high' | 'info' {
+  if (urgency === 'critical' || urgency === 'warning') return 'warning';
+  if (urgency === 'caution') return 'priority_high';
+  return 'info';
+}
+
+/** Map urgency level → Tailwind color class */
+function urgencyToColorClass(
+  urgency: 'critical' | 'warning' | 'caution' | 'info' | 'normal'
+): string {
+  if (urgency === 'critical') return 'bg-red-600';
+  if (urgency === 'warning') return 'bg-orange-500';
+  if (urgency === 'caution') return 'bg-amber-500';
+  if (urgency === 'info') return 'bg-blue-500';
+  return 'bg-emerald-500';
+}
+
+/**
+ * Convert AI pixel-based bbox to percentage-based location relative to original image.
+ * AI Score-CAM returns coords in the original image pixel space.
+ */
+function toPercentLocation(
+  bbox: { x: number; y: number; width: number; height: number },
+  imgWidth: number,
+  imgHeight: number
+) {
+  if (imgWidth === 0 || imgHeight === 0) return undefined;
+  return {
+    x: Math.round((bbox.x / imgWidth) * 1000) / 10,
+    y: Math.round((bbox.y / imgHeight) * 1000) / 10,
+    width: Math.round((bbox.width / imgWidth) * 1000) / 10,
+    height: Math.round((bbox.height / imgHeight) * 1000) / 10,
+  };
+}
+
+function scaleBbox(
+  bbox: { x: number; y: number; width: number; height: number },
+  imgWidth: number,
+  imgHeight: number,
+  scale: number
+) {
+  const cx = bbox.x + bbox.width / 2;
+  const cy = bbox.y + bbox.height / 2;
+  const width = bbox.width * scale;
+  const height = bbox.height * scale;
+
+  const x = Math.max(0, Math.min(cx - width / 2, imgWidth - width));
+  const y = Math.max(0, Math.min(cy - height / 2, imgHeight - height));
+
+  return {
+    x: Math.round(x),
+    y: Math.round(y),
+    width: Math.round(Math.min(width, imgWidth)),
+    height: Math.round(Math.min(height, imgHeight)),
+  };
+}
+
+// --- V2 /diagnosis/v2/analyze response types ---
+interface AICentroid {
+  x: number;
+  y: number;
+}
+interface AIBBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+interface AILesionLocation {
+  centroid: AICentroid;
+  bbox: AIBBox;
+  area: number;
+  confidence: number;
+}
+interface AIV2TopKItem {
+  rank: number;
+  code: string;
+  name_en: string;
+  name_vi: string;
+  confidence: number;
+  class_index: number;
+}
+interface AIV2GroupPrediction {
+  code: string;
+  display: string;
+  description: string;
+  confidence: number;
+}
+interface AIV2ModelNote {
+  status: string;
+  notes: string[];
+  possible_conditions: AIV2TopKItem[];
+  disclaimer: string;
+}
+interface AIV2Response {
+  image_id: string;
+  filename: string;
+  model: {
+    checkpoint: string;
+    epoch: number;
+    val_acc: number;
+  };
+  prediction: {
+    code: string;
+    name_en: string;
+    name_vi: string;
+    confidence: number;
+    class_index: number;
+    top_k: AIV2TopKItem[];
+    group: AIV2GroupPrediction | null;
+  };
+  model_note: AIV2ModelNote;
+  localization: {
+    primary: AICentroid | null;
+    method: string;
+    type: string;
+    threshold: number;
+    num_lesions: number;
+    all_lesions: AILesionLocation[];
+    error: string | null;
+  } | null;
+  heatmap_url: string | null;
+}
+
+function localizeGroupDisplay(display: string, useVietnamese: boolean): string {
+  const trimmed = display?.trim();
+  if (!trimmed) return '';
+  const match = trimmed.match(/^(.+?)\s*\((.+)\)$/);
+  if (!match) return trimmed;
+  const vi = match[1]?.trim() ?? '';
+  const en = match[2]?.trim() ?? '';
+  return useVietnamese ? vi || en : en || vi;
+}
+
+/** Get the natural dimensions of an image from its URL */
+function getImageNaturalSize(url: string): Promise<{ w: number; h: number }> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+    img.onerror = () => resolve({ w: 0, h: 0 });
+    img.src = url;
+  });
+}
+function resolveAiAssetUrl(url?: string): string | undefined {
+  if (!url) return undefined;
+
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('blob:') ||
+    url.startsWith('data:')
+  ) {
+    return url;
+  }
+
+  try {
+    const base =
+      typeof aiCoreClient.defaults.baseURL === 'string' &&
+      aiCoreClient.defaults.baseURL.length > 0
+        ? aiCoreClient.defaults.baseURL
+        : window.location.origin;
+
+    return new URL(url, base).toString();
+  } catch {
+    return url;
+  }
+}
+
+function extractHeatmapUrlFromRaw(rawJsonOutput?: string): string | undefined {
+  if (!rawJsonOutput) return undefined;
+
+  try {
+    const parsed = JSON.parse(rawJsonOutput) as Record<string, unknown>;
+    const url =
+      (parsed.heatmap_url as string | undefined) ??
+      (parsed.heatmap_colormap_url as string | undefined);
+    return resolveAiAssetUrl(url);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Map V2 AI response → Anomaly[] for the frontend.
+ * Uses name_vi for friendly display, disease code for urgency lookup.
+ */
+function mapV2ResponseToAnomalies(
+  data: AIV2Response,
+  imgWidth: number,
+  imgHeight: number
+): Anomaly[] {
+  const anomalies: Anomaly[] = [];
+  const lesions = data.localization?.all_lesions ?? [];
+  const isPrimaryNormal = isNormalDisease(data.prediction.code);
+  const BOX_SCALE = 1.35;
+  const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
+  const useVietnamese = currentLanguage.toLowerCase().startsWith('vi');
+  const groupDisplay = localizeGroupDisplay(
+    data.prediction.group?.display ?? '',
+    useVietnamese
+  );
+
+  for (const pred of data.prediction.top_k) {
+    const isPrimary = pred.rank === 1;
+    let urgency = getDiseaseUrgency(pred.code);
+    // Keep UX consistent: low-confidence primary "status/artifact" findings
+    // should be shown as caution instead of pure info/normal.
+    if (
+      isPrimary &&
+      data.model_note?.status === 'LOW_CONFIDENCE' &&
+      (urgency === 'info' || urgency === 'normal')
+    ) {
+      urgency = 'caution';
+    }
+
+    const lesion = lesions[pred.rank - 1];
+    const location =
+      !isPrimaryNormal && lesion
+        ? toPercentLocation(
+            scaleBbox(lesion.bbox, imgWidth, imgHeight, BOX_SCALE),
+            imgWidth,
+            imgHeight
+          )
+        : undefined;
+
+    anomalies.push({
+      id: String(pred.rank),
+      name: pred.code,
+      code: pred.code,
+      confidence: Math.round(pred.confidence * 100),
+      description: useVietnamese ? pred.name_vi : pred.name_en,
+      color: urgencyToColorClass(urgency),
+      type: urgencyToAnomalyType(urgency),
+      location,
+      friendlyName: toDisplayDiseaseName(
+        useVietnamese ? pred.name_vi : pred.name_en,
+        currentLanguage
+      ),
+      friendlyDescription: toDisplayDiseaseName(
+        useVietnamese ? pred.name_vi : pred.name_en,
+        currentLanguage
+      ),
+      isHighest: isPrimary,
+      groupDisplay: isPrimary ? groupDisplay : undefined,
+    });
+  }
+
+  return anomalies;
+}
+
+// Interface for route state from screening-new
+interface RouteStateImage {
+  id: string;
+  name: string;
+  preview: string;
+  quality?: 'high' | 'medium' | 'low';
+}
+
+interface LocationState {
+  screeningId?: string; // From new screening flow
+  images?: RouteStateImage[];
+  source?: string;
+  consentAccepted?: boolean;
+  rawJsonOutput?: string;
+  resultsPersisted?: boolean;
+}
+
+const LAST_SCREENING_ID_KEY = 'patient:lastScreeningId';
+
+function loadLastScreeningId(): string | null {
+  try {
+    return window.localStorage.getItem(LAST_SCREENING_ID_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveLastScreeningId(id: string) {
+  try {
+    window.localStorage.setItem(LAST_SCREENING_ID_KEY, id);
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
+function clearLastScreeningId() {
+  try {
+    window.localStorage.removeItem(LAST_SCREENING_ID_KEY);
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
+function mapEyeSideLabel(
+  eyeSide?: string
+): 'Left Eye (OS)' | 'Right Eye (OD)' | 'Both Eyes' {
+  if (!eyeSide) return 'Both Eyes';
+  const normalized = eyeSide.toLowerCase();
+  if (normalized === 'left') return 'Left Eye (OS)';
+  if (normalized === 'right') return 'Right Eye (OD)';
+  return 'Both Eyes';
+}
+
+function getFileNameFromUrl(url: string): string {
+  try {
+    const clean = url.split('?')[0];
+    const last = clean.substring(clean.lastIndexOf('/') + 1);
+    return last || `retinal-scan-${Date.now()}.jpg`;
+  } catch {
+    return `retinal-scan-${Date.now()}.jpg`;
+  }
+}
+
+function inferEyeSideFromName(
+  name: string,
+  index: number,
+  total: number
+): 'Left' | 'Right' | 'Both' {
+  const n = name.toLowerCase();
+  if (total === 1) return 'Both';
+  if (n.includes('left') || n.includes('_os') || n.includes('(os)'))
+    return 'Left';
+  if (n.includes('right') || n.includes('_od') || n.includes('(od)'))
+    return 'Right';
+  return index % 2 === 0 ? 'Right' : 'Left';
+}
+
+/**
+ * Restore anomalies from persisted raw JSON.
+ * Handles both V2 format (code/name_vi) and legacy V1 format (class_name).
+ */
+async function mapSavedAnomaliesFromRaw(
+  rawJsonOutput?: string,
+  imageUrl?: string
+): Promise<{ anomalies: Anomaly[]; rawJsonOutput?: string }> {
+  if (!rawJsonOutput) return { anomalies: [] };
+
+  try {
+    const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
+    const parsed = JSON.parse(rawJsonOutput) as unknown;
+    if (!parsed || typeof parsed !== 'object' || !('prediction' in parsed))
+      return { anomalies: [] };
+
+    let w = 0;
+    let h = 0;
+    if (imageUrl) {
+      const size = await getImageNaturalSize(imageUrl);
+      w = size.w;
+      h = size.h;
+    }
+
+    const obj = parsed as Record<string, unknown>;
+    const prediction = obj.prediction as Record<string, unknown> | undefined;
+    const topK = (prediction?.top_k ?? []) as Array<Record<string, unknown>>;
+    if (topK.length === 0) return { anomalies: [] };
+
+    const isV2 = 'code' in topK[0];
+
+    if (isV2) {
+      const v2 = parsed as AIV2Response;
+      const useVietnamese = currentLanguage.toLowerCase().startsWith('vi');
+      if (w > 0 && h > 0 && v2.localization?.all_lesions?.length) {
+        return {
+          anomalies: mapV2ResponseToAnomalies(v2, w, h),
+          rawJsonOutput,
+        };
+      }
+      const groupDisplay = localizeGroupDisplay(
+        v2.prediction.group?.display ?? '',
+        useVietnamese
+      );
+      const mapped = v2.prediction.top_k.map((pred, idx) => {
+        const isPrimary = (pred.rank ?? idx + 1) === 1;
+        let urgency = getDiseaseUrgency(pred.code);
+        if (
+          isPrimary &&
+          v2.model_note?.status === 'LOW_CONFIDENCE' &&
+          (urgency === 'info' || urgency === 'normal')
+        ) {
+          urgency = 'caution';
+        }
+        return {
+          id: String(pred.rank ?? idx + 1),
+          name: pred.code,
+          code: pred.code,
+          confidence: Math.round((pred.confidence ?? 0) * 100),
+          description: useVietnamese ? pred.name_vi : pred.name_en,
+          color: urgencyToColorClass(urgency),
+          type: urgencyToAnomalyType(urgency),
+          friendlyName: toDisplayDiseaseName(
+            useVietnamese ? pred.name_vi : pred.name_en,
+            currentLanguage
+          ),
+          friendlyDescription: toDisplayDiseaseName(
+            useVietnamese ? pred.name_vi : pred.name_en,
+            currentLanguage
+          ),
+          isHighest: isPrimary,
+          groupDisplay: isPrimary ? groupDisplay : undefined,
+        } as Anomaly;
+      });
+      return { anomalies: mapped, rawJsonOutput };
+    }
+
+    // Legacy V1 format fallback
+    const v1TopK = topK as Array<{
+      rank: number;
+      class_name: string;
+      confidence: number;
+      status?: string;
+    }>;
+    const mapped = v1TopK.map((pred, idx) => {
+      const urgency = getDiseaseUrgency(pred.class_name);
+      return {
+        id: String(pred.rank ?? idx + 1),
+        name: pred.class_name,
+        confidence: Math.round((pred.confidence ?? 0) * 100),
+        description: pred.class_name,
+        color: urgencyToColorClass(urgency),
+        type: urgencyToAnomalyType(urgency),
+        friendlyName: toDisplayDiseaseName(pred.class_name, currentLanguage),
+        friendlyDescription: pred.class_name,
+        isHighest: (pred.rank ?? 1) === 1,
+      } as Anomaly;
+    });
+    return { anomalies: mapped, rawJsonOutput };
+  } catch {
+    return { anomalies: [] };
+  }
+}
+
+function mapPersistedFindingsToAnomalies(findings?: string): Anomaly[] {
+  if (!findings) return [];
+  const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
+  const items = findings
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return items.map((item, idx) => {
+    const urgency = getDiseaseUrgency(item);
+    const displayName = toDisplayDiseaseName(item, currentLanguage);
+    return {
+      id: `persisted-${idx + 1}`,
+      name: item,
+      code: undefined,
+      confidence: 0,
+      description: displayName,
+      color: urgencyToColorClass(urgency),
+      type: urgencyToAnomalyType(urgency),
+      friendlyName: displayName,
+      friendlyDescription: displayName,
+      isHighest: idx === 0,
+    } as Anomaly;
+  });
+}
+
+export async function hydrateConsultationPreviewAnomalies(
+  rawJsonOutput: string | undefined,
+  imageUrl: string | undefined
+): Promise<Anomaly[]> {
+  if (!rawJsonOutput || !imageUrl) return [];
+  const { anomalies } = await mapSavedAnomaliesFromRaw(rawJsonOutput, imageUrl);
+  return anomalies;
+}
+
+export interface HydratedScreeningData {
+  anomalies: Anomaly[];
+  heatmapUrl: string | undefined;
+  heatmapData: number[][] | null;
+}
+
+/**
+ * Extract doctor_bbox_overrides from rawJsonOutput.
+ * When a doctor reviews and adjusts bounding boxes, they are persisted
+ * as `doctor_bbox_overrides` inside the JSON — these take priority
+ * over the original AI-generated `localization.all_lesions`.
+ */
+function extractDoctorBboxOverrides(rawJsonOutput: string): Anomaly[] | null {
+  try {
+    const parsed = JSON.parse(rawJsonOutput) as Record<string, unknown>;
+    const saved = parsed.doctor_bbox_overrides as
+      | Array<{
+          id: string;
+          name: string;
+          description?: string;
+          confidence: number;
+          severity?: 'low' | 'moderate' | 'high';
+          location?: { x: number; y: number; width: number; height: number };
+        }>
+      | undefined;
+
+    if (!saved || !Array.isArray(saved) || saved.length === 0) return null;
+
+    return saved.map((s) => ({
+      id: s.id,
+      name: s.name,
+      code: s.name,
+      confidence: s.confidence,
+      description: s.description ?? s.name,
+      friendlyName: toDisplayDiseaseName(
+        s.name,
+        i18n.resolvedLanguage ?? i18n.language ?? 'vi'
+      ),
+      friendlyDescription: toDisplayDiseaseName(
+        s.description ?? s.name,
+        i18n.resolvedLanguage ?? i18n.language ?? 'vi'
+      ),
+      color: '',
+      type:
+        s.severity === 'high'
+          ? 'warning'
+          : s.severity === 'moderate'
+            ? 'priority_high'
+            : 'info',
+      isHighest: false,
+      location: s.location,
+    })) as Anomaly[];
+  } catch {
+    return null;
+  }
+}
+
+function extractHeatmapMatrix(rawJsonOutput: string): number[][] | null {
+  try {
+    const parsed = JSON.parse(rawJsonOutput) as { heatmap_data?: number[][] };
+    const data = parsed.heatmap_data;
+    if (Array.isArray(data) && data.length > 0) return data;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function hydrateFullScreeningData(
+  rawJsonOutput: string | undefined,
+  imageUrl: string | undefined
+): Promise<HydratedScreeningData> {
+  if (!rawJsonOutput || !imageUrl) {
+    return { anomalies: [], heatmapUrl: undefined, heatmapData: null };
+  }
+
+  const doctorBoxes = extractDoctorBboxOverrides(rawJsonOutput);
+  const { anomalies: aiAnomalies } = await mapSavedAnomaliesFromRaw(
+    rawJsonOutput,
+    imageUrl
+  );
+
+  let anomalies: Anomaly[];
+  if (doctorBoxes && doctorBoxes.length > 0) {
+    const aiLookup = new Map(aiAnomalies.map((a) => [a.id, a]));
+    anomalies = doctorBoxes.map((db) => {
+      const aiMatch = aiLookup.get(db.id);
+      if (aiMatch) {
+        return { ...aiMatch, location: db.location };
+      }
+      return db;
+    });
+  } else {
+    anomalies = aiAnomalies;
+  }
+
+  // Append doctor's manually-added findings (ID prefix 'manual-find-')
+  try {
+    const parsed = JSON.parse(rawJsonOutput) as Record<string, unknown>;
+    const manual = parsed.doctor_manual_findings as
+      | Array<{
+          id: string;
+          name: string;
+          description?: string;
+          confidence: number;
+          severity?: 'low' | 'moderate' | 'high';
+          location?: { x: number; y: number; width: number; height: number };
+        }>
+      | undefined;
+
+    if (manual && Array.isArray(manual)) {
+      const existingIds = new Set(anomalies.map((a) => a.id));
+      for (const m of manual) {
+        if (existingIds.has(m.id)) continue;
+        anomalies.push({
+          id: m.id,
+          name: m.name,
+          code: m.name,
+          confidence: m.confidence,
+          description: m.description ?? m.name,
+          friendlyName: toDisplayDiseaseName(
+            m.name,
+            i18n.resolvedLanguage ?? i18n.language ?? 'vi'
+          ),
+          friendlyDescription: toDisplayDiseaseName(
+            m.description ?? m.name,
+            i18n.resolvedLanguage ?? i18n.language ?? 'vi'
+          ),
+          color: '',
+          type:
+            m.severity === 'high'
+              ? 'warning'
+              : m.severity === 'moderate'
+                ? 'priority_high'
+                : 'info',
+          isHighest: false,
+          location: m.location,
+        });
+      }
+    }
+  } catch {
+    // ignore parse errors for manual findings
+  }
+
+  const heatmapData = extractHeatmapMatrix(rawJsonOutput);
+  const heatmapUrl = heatmapData
+    ? undefined
+    : extractHeatmapUrlFromRaw(rawJsonOutput);
+
+  return { anomalies, heatmapUrl, heatmapData };
+}
+
+// --- Helpers: use AI-generated friendly fields, fallback to raw name/description ---
+function friendlyName(anomaly: Anomaly): string {
+  return anomaly.friendlyName || anomaly.name;
+}
+
+function friendlyDescription(anomaly: Anomaly): string {
+  return (
+    anomaly.friendlyDescription ||
+    anomaly.description ||
+    tRetinal('PatientRetinalAnalysis.analysis.helper.detectedByAiTool')
+  );
+}
+
+function toRiskLevelFromUrgency(
+  urgency: 'critical' | 'warning' | 'caution' | 'info' | 'normal',
+  confidence: number
+): 'low' | 'moderate' | 'high' {
+  if (urgency === 'critical') return 'high';
+
+  if (urgency === 'warning') {
+    return confidence >= 70 ? 'high' : 'moderate';
+  }
+
+  if (urgency === 'caution') {
+    return confidence >= 70 ? 'moderate' : 'low';
+  }
+
+  return 'low';
+}
+
+function urgencyRank(
+  urgency: 'critical' | 'warning' | 'caution' | 'info' | 'normal'
+): number {
+  if (urgency === 'critical') return 5;
+  if (urgency === 'warning') return 4;
+  if (urgency === 'caution') return 3;
+  if (urgency === 'info') return 2;
+  return 1;
+}
+
+export default function RetinalAnalysis() {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+  const routeState = location.state as LocationState | null;
+  const { data: quotaBalance } = useQuotaBalance();
+
+  const [toggles, setToggles] = useState<ToggleState>({
+    vesselSegmentation: false,
+    hemorrhages: true,
+    exudates: true,
+    opticDisc: false,
+  });
+
+  const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analyzed, setAnalyzed] = useState(false);
+  const [isFallback, setIsFallback] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showHighlights, setShowHighlights] = useState(false);
+  const [screeningId, setScreeningId] = useState<string | null>(null);
+  const [rawJsonOutput, setRawJsonOutput] = useState<string | undefined>(
+    routeState?.rawJsonOutput
+  );
+  const [resultsPersisted, setResultsPersisted] = useState<boolean>(
+    Boolean(routeState?.resultsPersisted)
+  );
+  const [isEnhancingResults, setIsEnhancingResults] = useState(false);
+  const [isPreparingSession, setIsPreparingSession] = useState(false);
+  const sessionCreationPromiseRef = useRef<Promise<string> | null>(null);
+
+  // Image management
+  const [images, setImages] = useState<RetinalImage[]>([]);
+  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+
+  const ensureScreeningSession = async (): Promise<string> => {
+    if (screeningId) return screeningId;
+    if (sessionCreationPromiseRef.current) {
+      return sessionCreationPromiseRef.current;
+    }
+
+    const createPromise = (async () => {
+      if (images.length === 0) {
+        throw new Error('No images available to create screening session');
+      }
+
+      setIsPreparingSession(true);
+      const files = await Promise.all(
+        images.map(async (img, idx) => {
+          const resp = await fetch(img.url);
+          const imgBlob = await resp.blob();
+          const fileType = imgBlob.type || 'image/jpeg';
+          const fileNameForUpload = img.name || `retinal-scan-${idx + 1}.jpg`;
+          return new File([imgBlob], fileNameForUpload, { type: fileType });
+        })
+      );
+
+      const uploadResp = await screeningApi.uploadRetinalImages(files);
+      const uploadedUrls = uploadResp.data?.uploadedUrls ?? [];
+
+      if (uploadedUrls.length === 0) {
+        throw new Error('Failed to upload retinal images');
+      }
+
+      const retinalImages = uploadedUrls.map((url, idx) => ({
+        imageUrl: url,
+        eyeSide: inferEyeSideFromName(
+          images[idx]?.name || '',
+          idx,
+          uploadedUrls.length
+        ),
+        deviceName: 'Retinal Camera',
+      }));
+
+      const sessionResp = await screeningApi.createSession({
+        modelVersion: '1.0',
+        retinalImages,
+      });
+
+      const createdId = sessionResp.data?.screeningId;
+      if (!createdId) {
+        throw new Error('Missing screening ID from createSession response');
+      }
+
+      setScreeningId(createdId);
+      saveLastScreeningId(createdId);
+      setSearchParams({ screeningId: createdId }, { replace: true });
+      return createdId;
+    })().finally(() => {
+      setIsPreparingSession(false);
+      sessionCreationPromiseRef.current = null;
+    });
+
+    sessionCreationPromiseRef.current = createPromise;
+    return createPromise;
+  };
+
+  useEffect(() => {
+    const queryScreeningId = searchParams.get('screeningId') ?? undefined;
+    const storedScreeningId = loadLastScreeningId() ?? undefined;
+    const hasFreshRouteImages =
+      Boolean(routeState?.images?.length) && !routeState?.screeningId;
+    const incomingScreeningId = hasFreshRouteImages
+      ? undefined
+      : (routeState?.screeningId ?? queryScreeningId ?? storedScreeningId);
+
+    if (hasFreshRouteImages) {
+      setScreeningId(null);
+      clearLastScreeningId();
+      if (queryScreeningId) {
+        setSearchParams({}, { replace: true });
+      }
+    }
+
+    if (
+      routeState?.source === 'new-screening' &&
+      (!incomingScreeningId || !routeState.consentAccepted)
+    ) {
+      navigate('/patient/screening/new', { replace: true });
+      return;
+    }
+
+    if (incomingScreeningId) {
+      setScreeningId(incomingScreeningId);
+      saveLastScreeningId(incomingScreeningId);
+
+      if (queryScreeningId !== incomingScreeningId) {
+        setSearchParams(
+          { screeningId: incomingScreeningId },
+          { replace: true }
+        );
+      }
+    }
+
+    const loadSession = async () => {
+      if (!incomingScreeningId) {
+        const routeImages: RetinalImage[] =
+          routeState?.images?.map((img) => ({
+            id: img.id,
+            url: img.preview,
+            name: img.name,
+            eye:
+              img.name.toLowerCase().includes('right') ||
+              img.name.toLowerCase().includes('(od)')
+                ? 'Right Eye (OD)'
+                : img.name.toLowerCase().includes('left') ||
+                    img.name.toLowerCase().includes('(os)')
+                  ? 'Left Eye (OS)'
+                  : 'Both Eyes',
+            uploadedAt: new Date().toISOString(),
+            analyzed: false,
+            anomalies: [],
+            heatmapUrl: undefined,
+          })) ?? [];
+
+        if (routeImages.length === 0) {
+          navigate('/patient/screening/new', { replace: true });
+          return;
+        }
+
+        setImages(routeImages);
+        setSelectedImageId(routeImages[0].id);
+        setAnalyzed(false);
+        setAnomalies([]);
+        return;
+      }
+
+      try {
+        const response = await screeningApi.getSessionById(incomingScreeningId);
+        const persisted = response.data?.images ?? [];
+        const hasPersistedResult = Boolean(response.data?.latestResult);
+        const persistedFindings = response.data?.latestResult?.findings;
+
+        const mappedPersisted: RetinalImage[] = persisted.map((img) => ({
+          id: img.id,
+          url: img.imageUrl,
+          name: getFileNameFromUrl(img.imageUrl),
+          eye: mapEyeSideLabel(img.eyeSide),
+          uploadedAt: img.capturedAt,
+          analyzed: false,
+          anomalies: [],
+          heatmapUrl: undefined,
+        }));
+
+        const sessionImages = mappedPersisted;
+
+        const mergedRawJson =
+          response.data?.rawJsonOutput ?? routeState?.rawJsonOutput;
+        setRawJsonOutput(mergedRawJson);
+        setResultsPersisted(Boolean(response.data?.latestResult));
+
+        if (sessionImages.length === 0) {
+          setErrorMessage(t('PatientRetinalAnalysis.errors.noImagesInSession'));
+          return;
+        }
+
+        const restoreUrl = sessionImages[0]?.url;
+        const hydrated = await hydrateFullScreeningData(
+          mergedRawJson,
+          restoreUrl
+        );
+        const restoredAnomalies = hydrated.anomalies;
+        const fallbackAnomalies =
+          restoredAnomalies.length > 0
+            ? restoredAnomalies
+            : mapPersistedFindingsToAnomalies(persistedFindings);
+        const hydratedAnomalies = fallbackAnomalies;
+        const isSessionAnalyzed =
+          hasPersistedResult || hydratedAnomalies.length > 0;
+
+        const hydratedImages = sessionImages.map((img, idx) =>
+          idx === 0
+            ? {
+                ...img,
+                analyzed: isSessionAnalyzed,
+                anomalies: hydratedAnomalies,
+                heatmapUrl: hydrated.heatmapUrl,
+                heatmapData: hydrated.heatmapData,
+              }
+            : img
+        );
+
+        setImages(hydratedImages);
+        setSelectedImageId(hydratedImages[0].id);
+        setAnalyzed(isSessionAnalyzed);
+        setAnomalies(hydratedAnomalies);
+        setShowHighlights(false);
+      } catch (error) {
+        console.error('Failed to load screening session:', error);
+        setErrorMessage(t('PatientRetinalAnalysis.errors.loadScreeningFailed'));
+      }
+    };
+
+    loadSession();
+  }, [navigate, routeState, searchParams, setSearchParams]);
+
+  const currentImage =
+    images.find((img) => img.id === selectedImageId) || images[0] || null;
+
+  const handleSelectImage = (imageId: string) => {
+    setSelectedImageId(imageId);
+    const selectedImg = images.find((img) => img.id === imageId);
+    if (selectedImg) {
+      setAnomalies(selectedImg.anomalies);
+      setAnalyzed(selectedImg.analyzed);
+      setIsFallback(false);
+      setErrorMessage(null);
+      setShowHighlights(false);
+
+      if (!selectedImg.heatmapUrl) {
+        setShowHeatmap(false);
+      }
+    }
+  };
+
+  // --- Risk score computation (primary finding + disease urgency) ---
+  const primaryAnomaly =
+    anomalies.find((a) => a.isHighest) ??
+    (anomalies.length > 0
+      ? [...anomalies].sort((a, b) => b.confidence - a.confidence)[0]
+      : null);
+  const primaryConfidence = primaryAnomaly?.confidence ?? 0;
+  const primaryUrgency = getDiseaseUrgency(primaryAnomaly?.name ?? 'Normal');
+  const dominantAnomaly =
+    anomalies.length > 0
+      ? [...anomalies].sort((a, b) => {
+          const urgencyDiff =
+            urgencyRank(getDiseaseUrgency(b.code ?? b.name)) -
+            urgencyRank(getDiseaseUrgency(a.code ?? a.name));
+          if (urgencyDiff !== 0) return urgencyDiff;
+          return (b.confidence ?? 0) - (a.confidence ?? 0);
+        })[0]
+      : null;
+  const dominantUrgency = getDiseaseUrgency(dominantAnomaly?.code ?? 'WNL');
+  const dominantConfidence = dominantAnomaly?.confidence ?? primaryConfidence;
+  const isPrimaryNormal =
+    primaryAnomaly != null
+      ? isNormalDisease(primaryAnomaly.name)
+      : anomalies.length === 0;
+
+  const riskScore = Math.round(primaryConfidence / 10);
+  const riskLevel: 'low' | 'moderate' | 'high' = toRiskLevelFromUrgency(
+    dominantUrgency,
+    dominantConfidence
+  );
+
+  const riskConfig = {
+    low: {
+      label: t('PatientRetinalAnalysis.risk.low.label'),
+      color: 'text-emerald-700',
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-200',
+      icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />,
+      summary: t('PatientRetinalAnalysis.risk.low.summary'),
+    },
+    moderate: {
+      label: t('PatientRetinalAnalysis.risk.moderate.label'),
+      color: 'text-amber-700',
+      bg: 'bg-amber-50',
+      border: 'border-amber-200',
+      icon: <AlertTriangle className="w-5 h-5 text-amber-500" />,
+      summary: t('PatientRetinalAnalysis.risk.moderate.summary'),
+    },
+    high: {
+      label: t('PatientRetinalAnalysis.risk.high.label'),
+      color: 'text-orange-700',
+      bg: 'bg-orange-50',
+      border: 'border-orange-200',
+      icon: <AlertTriangle className="w-5 h-5 text-orange-500" />,
+      summary: t('PatientRetinalAnalysis.risk.high.summary'),
+    },
+  };
+
+  const healthyRisk = {
+    label: t('PatientRetinalAnalysis.risk.healthy.label'),
+    color: 'text-emerald-700',
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200',
+    icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />,
+    summary: t('PatientRetinalAnalysis.risk.healthy.summary'),
+  };
+
+  const risk = isPrimaryNormal ? healthyRisk : riskConfig[riskLevel];
+  const riskTagLabel = isPrimaryNormal
+    ? t('PatientRetinalAnalysis.badge.looksHealthy', {
+        defaultValue: 'Looks Healthy',
+      })
+    : t('PatientRetinalAnalysis.badge.needsAttention', {
+        defaultValue: 'Needs Attention',
+      });
+
+  // --- AI Analysis Handler (AURA AI /analyze endpoint) ---
+  const handleAnalyze = async () => {
+    if (isAnalyzing || (quotaBalance?.remainingQuota ?? 0) <= 0) return;
+    setIsAnalyzing(true);
+    setAnalyzed(false);
+    setAnomalies([]);
+    setIsFallback(false);
+    setErrorMessage(null);
+
+    try {
+      const imageUrl = currentImage?.url;
+      if (!imageUrl) {
+        setErrorMessage(t('PatientRetinalAnalysis.errors.noImageForAnalysis'));
+        setIsAnalyzing(false);
+        return;
+      }
+
+      // Deduct 1 quota credit before running AI analysis
+      try {
+        await quotaApi.deduct();
+        // Invalidate quota cache so QuotaBadge reflects the deduction
+        queryClient.invalidateQueries({ queryKey: quotaKeys.all });
+      } catch (quotaErr) {
+        const err = quotaErr as { response?: { status?: number } };
+        const message =
+          err.response?.status === 402
+            ? t('PatientRetinalAnalysis.errors.quotaExceeded')
+            : t('PatientRetinalAnalysis.errors.quotaDeductFailed');
+        setErrorMessage(message);
+        setIsAnalyzing(false);
+        return;
+      }
+
+      // Get the natural image dimensions for accurate coordinate mapping
+      const { w: imgWidth, h: imgHeight } = await getImageNaturalSize(imageUrl);
+
+      // Convert blob/data URL to File for FormData upload
+      const imgResponse = await fetch(imageUrl);
+      const blob = await imgResponse.blob();
+      const fileName = currentImage?.name || 'retinal-scan.jpg';
+      const file = new File([blob], fileName, {
+        type: blob.type || 'image/jpeg',
+      });
+
+      const fastFormData = new FormData();
+      fastFormData.append('file', file);
+      fastFormData.append('topk', '5');
+
+      // Phase 1: fast classification first for responsive UX.
+      const { data: fastData } = await aiCoreClient.post<AIV2Response>(
+        '/api/v2/diagnosis/v2/analyze/fast',
+        fastFormData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }
+      );
+
+      let mapped = mapV2ResponseToAnomalies(fastData, imgWidth, imgHeight);
+      let rawOutput = JSON.stringify(fastData);
+      setRawJsonOutput(rawOutput);
+      setAnomalies(mapped);
+      setShowHighlights(false);
+      if (currentImage) {
+        setImages((prev) =>
+          prev.map((img) =>
+            img.id === currentImage.id
+              ? {
+                  ...img,
+                  analyzed: true,
+                  anomalies: mapped,
+                  heatmapUrl: undefined,
+                }
+              : img
+          )
+        );
+      }
+      setAnalyzed(true);
+      setIsAnalyzing(false);
+
+      // Phase 2: full analysis to fetch bbox + heatmap.
+      setIsEnhancingResults(true);
+      try {
+        const fullFormData = new FormData();
+        fullFormData.append('file', file);
+        fullFormData.append('threshold', '0.55');
+        fullFormData.append('topk', '5');
+
+        const { data: fullData } = await aiCoreClient.post<AIV2Response>(
+          '/api/v2/diagnosis/v2/analyze',
+          fullFormData,
+          {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          }
+        );
+
+        mapped = mapV2ResponseToAnomalies(fullData, imgWidth, imgHeight);
+        rawOutput = JSON.stringify(fullData);
+        const resolvedHeatmapUrl = resolveAiAssetUrl(
+          fullData.heatmap_url ?? undefined
+        );
+        setRawJsonOutput(rawOutput);
+        setAnomalies(mapped);
+        setShowHighlights(false);
+        if (currentImage) {
+          setImages((prev) =>
+            prev.map((img) =>
+              img.id === currentImage.id
+                ? {
+                    ...img,
+                    analyzed: true,
+                    anomalies: mapped,
+                    heatmapUrl: resolvedHeatmapUrl,
+                  }
+                : img
+            )
+          );
+        }
+      } catch (fullError) {
+        console.warn(
+          'Full analyze (with heatmap) failed, keeping fast result:',
+          fullError
+        );
+      } finally {
+        setIsEnhancingResults(false);
+      }
+
+      let ensuredScreeningId = screeningId;
+
+      if (!screeningId) {
+        const files = await Promise.all(
+          images.map(async (img, idx) => {
+            const resp = await fetch(img.url);
+            const imgBlob = await resp.blob();
+            const fileType = imgBlob.type || 'image/jpeg';
+            const fileNameForUpload = img.name || `retinal-scan-${idx + 1}.jpg`;
+            return new File([imgBlob], fileNameForUpload, { type: fileType });
+          })
+        );
+
+        const uploadResp = await screeningApi.uploadRetinalImages(files);
+        const uploadedUrls = uploadResp.data?.uploadedUrls ?? [];
+
+        if (uploadedUrls.length === 0) {
+          throw new Error('Failed to upload retinal images');
+        }
+
+        const retinalImages = uploadedUrls.map((url, idx) => ({
+          imageUrl: url,
+          eyeSide: inferEyeSideFromName(
+            images[idx]?.name || '',
+            idx,
+            uploadedUrls.length
+          ),
+          deviceName: 'Retinal Camera',
+        }));
+
+        const sessionResp = await screeningApi.createSession({
+          modelVersion: '1.0',
+          retinalImages,
+        });
+
+        if (sessionResp.data?.screeningId) {
+          ensuredScreeningId = sessionResp.data.screeningId;
+          setScreeningId(sessionResp.data.screeningId);
+
+          await agreeScreeningConsent(sessionResp.data.screeningId, {
+            content: UPLOAD_SCREENING_CONSENT_CONTENT,
+          });
+        }
+      }
+
+      if (!ensuredScreeningId) {
+        throw new Error('Screening session not available to save AI results');
+      }
+
+      const primaryMapped =
+        mapped.find((a) => a.isHighest) ??
+        (mapped.length > 0
+          ? [...mapped].sort((a, b) => b.confidence - a.confidence)[0]
+          : null);
+      const persistedConfidence = primaryMapped?.confidence ?? 0;
+      const dominantMapped =
+        mapped.length > 0
+          ? [...mapped].sort((a, b) => {
+              const urgencyDiff =
+                urgencyRank(getDiseaseUrgency(b.code ?? b.name)) -
+                urgencyRank(getDiseaseUrgency(a.code ?? a.name));
+              if (urgencyDiff !== 0) return urgencyDiff;
+              return (b.confidence ?? 0) - (a.confidence ?? 0);
+            })[0]
+          : primaryMapped;
+      const persistedUrgency = getDiseaseUrgency(
+        dominantMapped?.code ?? dominantMapped?.name ?? 'WNL'
+      );
+      const persistedRiskConfidence =
+        dominantMapped?.confidence ?? persistedConfidence;
+      const mappedRiskLevel: 'Low' | 'Moderate' | 'High' =
+        toRiskLevelFromUrgency(persistedUrgency, persistedRiskConfidence) ===
+        'high'
+          ? 'High'
+          : toRiskLevelFromUrgency(
+                persistedUrgency,
+                persistedRiskConfidence
+              ) === 'moderate'
+            ? 'Moderate'
+            : 'Low';
+
+      const significantFindings = mapped
+        .filter((a, idx) => idx === 0 || a.confidence >= 15)
+        .slice(0, 3);
+
+      await screeningApi.saveAiResults(ensuredScreeningId, {
+        rawJsonOutput: rawOutput,
+        riskLevel: mappedRiskLevel,
+        confidenceScore: persistedConfidence,
+        summary:
+          mappedRiskLevel === 'High'
+            ? t('PatientRetinalAnalysis.analysis.persistedSummary.high')
+            : mappedRiskLevel === 'Moderate'
+              ? t('PatientRetinalAnalysis.analysis.persistedSummary.moderate')
+              : persistedUrgency === 'normal'
+                ? t('PatientRetinalAnalysis.analysis.persistedSummary.normal')
+                : t('PatientRetinalAnalysis.analysis.persistedSummary.low'),
+        findings: significantFindings
+          .map((a) => a.friendlyName ?? a.name)
+          .join(', '),
+      });
+
+      setResultsPersisted(true);
+    } catch (error) {
+      console.error('AI Analysis failed:', error);
+
+      const err = error as { response?: { status?: number }; message?: string };
+      const status = err.response?.status;
+
+      if (status === 503) {
+        setErrorMessage(t('PatientRetinalAnalysis.errors.modelLoading'));
+      } else if (status === 400) {
+        setErrorMessage(t('PatientRetinalAnalysis.errors.invalidImage'));
+      } else {
+        setErrorMessage(t('PatientRetinalAnalysis.errors.analysisUnavailable'));
+      }
+      setIsFallback(true);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const heatmapUrl = currentImage?.heatmapUrl;
+  const heatmapDataMatrix = currentImage?.heatmapData ?? null;
+  const hasAnyHeatmap =
+    Boolean(heatmapUrl) ||
+    (heatmapDataMatrix != null && heatmapDataMatrix.length > 0);
+  const hasBoundingBoxes = anomalies.some((a) => Boolean(a.location));
+  const canShowOverlayControls =
+    analyzed && hasBoundingBoxes && hasAnyHeatmap && !isEnhancingResults;
+  useEffect(() => {
+    if (!hasAnyHeatmap) {
+      setShowHeatmap(false);
+      return;
+    }
+  }, [hasAnyHeatmap]);
+  if (images.length === 0) {
+    return null;
+  }
+
+  return (
+    <FocusModeLayout
+      currentStep="analysis"
+      title={t('PatientRetinalAnalysis.page.title')}
+      exitPath="/patient/screening/new"
+      showBreadcrumb={false}
+    >
+      {/* Outer wrapper: fixed height, no overflow bleed */}
+      <div className="flex-1 flex flex-col overflow-hidden bg-[#f0f2f5]">
+        {/* Toggle bar — sticky at top, above the image panel */}
+        {canShowOverlayControls && (
+          <div className="flex-shrink-0 flex justify-center items-center gap-3 px-4 py-2 bg-[#f0f2f5] border-b border-slate-200/60 z-10">
+            {/* Highlights toggle */}
+            <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm border border-slate-200/60">
+              <span className="text-sm font-medium text-slate-600">
+                {t('PatientRetinalAnalysis.toggles.showHighlights')}
+              </span>
+              <button
+                role="switch"
+                aria-checked={showHighlights}
+                onClick={() => {
+                  if (hasBoundingBoxes) setShowHighlights(!showHighlights);
+                }}
+                disabled={!hasBoundingBoxes}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                  !hasBoundingBoxes
+                    ? 'bg-slate-200 cursor-not-allowed'
+                    : showHighlights
+                      ? 'bg-cyan-400'
+                      : 'bg-slate-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${showHighlights ? 'translate-x-6' : 'translate-x-1'}`}
+                />
+              </button>
+            </label>
+
+            {/* Heatmap toggle */}
+            {hasAnyHeatmap && (
+              <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm border border-slate-200/60">
+                <span className="text-sm font-medium text-slate-600">
+                  {t('PatientRetinalAnalysis.toggles.showHeatmap')}
+                </span>
+                <button
+                  role="switch"
+                  aria-checked={showHeatmap}
+                  onClick={() => setShowHeatmap(!showHeatmap)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                    showHeatmap ? 'bg-orange-400' : 'bg-slate-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${showHeatmap ? 'translate-x-6' : 'translate-x-1'}`}
+                  />
+                </button>
+              </label>
+            )}
+          </div>
+        )}
+
+        {/* Main row */}
+        <div className="flex-1 flex overflow-hidden min-h-0">
+          {/* LEFT — Image viewer: fixed max-width, controlled height */}
+          <div className="flex-1 flex flex-col min-w-0 min-h-0 p-3 gap-2">
+            {/*
+            KEY FIX: explicit height with max constraint so image
+            never fills the entire screen. Use `h-[calc(100%-X)]`
+            or a fixed px value depending on strip presence.
+          */}
+            <div
+              className={`relative rounded-2xl overflow-hidden bg-black shadow-lg ${
+                images.length > 1
+                  ? 'flex-1 min-h-0 max-h-[calc(100vh-220px)]'
+                  : 'flex-1 min-h-0 max-h-[calc(100vh-160px)]'
+              }`}
+            >
+              <PatientImageViewer
+                toggles={toggles}
+                zoomLevel={1}
+                anomalies={anomalies}
+                isAnalyzing={isAnalyzing}
+                currentImage={currentImage}
+                showHighlights={showHighlights}
+                showHeatmap={showHeatmap}
+                heatmapUrl={heatmapUrl}
+                heatmapData={heatmapDataMatrix}
+              />
+            </div>
+
+            {/* Image strip */}
+            {images.length > 1 && (
+              <div className="flex-shrink-0">
+                <PatientImageStrip
+                  images={images}
+                  selectedImageId={selectedImageId}
+                  onSelectImage={handleSelectImage}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT — Results panel */}
+          <div className="w-[500px] flex-shrink-0 p-4 pl-2 flex flex-col min-h-0">
+            <div className="flex-1 overflow-y-auto bg-white rounded-2xl border border-slate-200/80 shadow-sm">
+              <div className="px-7 py-7 space-y-7">
+                {/* Header */}
+                <section>
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <h1 className="text-2xl font-bold text-slate-800 tracking-tight leading-tight">
+                      {t('PatientRetinalAnalysis.summary.title')}
+                    </h1>
+                    {analyzed && (
+                      <span
+                        className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold ${risk.color} ${risk.bg} border ${risk.border}`}
+                      >
+                        {risk.icon}
+                        {riskTagLabel}
+                      </span>
+                    )}
+                  </div>
+
+                  {!analyzed && !isAnalyzing ? (
+                    <div className="space-y-4">
+                      <p className="text-[15px] text-slate-500 leading-relaxed">
+                        {t(
+                          'PatientRetinalAnalysis.summary.preAnalyzeDescription'
+                        )}
+                      </p>
+                      <button
+                        onClick={handleAnalyze}
+                        disabled={(quotaBalance?.remainingQuota ?? 0) <= 0}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 disabled:bg-slate-300 disabled:text-slate-600 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-[15px] transition-colors shadow-md shadow-cyan-500/20"
+                      >
+                        <Sparkles className="w-5 h-5" />
+                        {isPreparingSession
+                          ? t('PatientRetinalAnalysis.actions.preparingSession')
+                          : (quotaBalance?.remainingQuota ?? 0) <= 0
+                            ? t('PatientRetinalAnalysis.actions.outOfQuota')
+                            : t(
+                                'PatientRetinalAnalysis.actions.startScreening'
+                              )}
+                      </button>
+                      {(quotaBalance?.remainingQuota ?? 0) <= 0 && (
+                        <p className="text-sm text-amber-600">
+                          {t('PatientRetinalAnalysis.errors.quotaExceeded')}
+                        </p>
+                      )}
+                    </div>
+                  ) : isAnalyzing ? (
+                    <div className="flex items-center gap-4 py-2">
+                      <Spinner size={40} className="flex-shrink-0" />
+                      <p className="text-[15px] text-slate-500">
+                        {t('PatientRetinalAnalysis.summary.analyzing')}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-[15px] text-slate-600 leading-relaxed">
+                        {risk.summary}
+                      </p>
+                      {isEnhancingResults && (
+                        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                          {t('PatientRetinalAnalysis.summary.waitingOverlay', {
+                            defaultValue:
+                              'Primary diagnosis is ready. Detailed overlay is still processing...',
+                          })}
+                        </p>
+                      )}
+                      {isFallback && errorMessage && (
+                        <span className="text-xs text-amber-600 flex items-center gap-1">
+                          <Info className="w-3 h-3" />
+                          {errorMessage}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </section>
+
+                {analyzed && (
+                  <PatientFindings
+                    anomalies={anomalies}
+                    toggles={toggles}
+                    onToggleChange={(key) =>
+                      setToggles((prev) => ({ ...prev, [key]: !prev[key] }))
+                    }
+                    friendlyName={friendlyName}
+                    friendlyDescription={friendlyDescription}
+                  />
+                )}
+
+                {analyzed && (
+                  <section className="space-y-3">
+                    <button
+                      onClick={() =>
+                        navigate('/patient/screening/review', {
+                          state: {
+                            screeningId,
+                            images,
+                            anomalies,
+                            riskLevel,
+                            riskScore,
+                            rawJsonOutput,
+                            resultsPersisted,
+                          },
+                        })
+                      }
+                      className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl text-[15px] transition-colors shadow-md shadow-cyan-500/15"
+                    >
+                      {t('PatientRetinalAnalysis.actions.continueToReview')}
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={handleAnalyze}
+                      className="w-full inline-flex items-center justify-center gap-2 text-sm text-slate-400 hover:text-slate-600 transition-colors py-1"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      {t('PatientRetinalAnalysis.actions.reanalyze')}
+                    </button>
+                  </section>
+                )}
+
+                <section className="pt-4 border-t border-slate-100">
+                  <p className="text-sm text-slate-500 leading-relaxed">
+                    <strong className="text-slate-600">
+                      {t('PatientRetinalAnalysis.disclaimer.importantLabel')}
+                    </strong>{' '}
+                    {t('PatientRetinalAnalysis.disclaimer.message')}
+                  </p>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </FocusModeLayout>
+  );
+}

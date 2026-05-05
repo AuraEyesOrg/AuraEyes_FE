@@ -1,9 +1,59 @@
-export const formatDate = (date: Date | string): string => {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-  });
+interface FormatCurrencyOptions {
+  locale?: string;
+  currency?: string;
+  minimumFractionDigits?: number;
+  maximumFractionDigits?: number;
+  currencyDisplay?: Intl.NumberFormatOptions['currencyDisplay'];
+  absolute?: boolean;
+  useCurrencyStyle?: boolean;
+  suffix?: string;
+}
+
+export const formatCurrency = (
+  value: number,
+  options: FormatCurrencyOptions = {}
+) => {
+  const {
+    locale = 'vi-VN',
+    currency = 'VND',
+    minimumFractionDigits,
+    maximumFractionDigits,
+    currencyDisplay,
+    absolute = false,
+    useCurrencyStyle = true,
+    suffix = '',
+  } = options;
+
+  const amount = absolute ? Math.abs(value) : value;
+  const formatterOptions: Intl.NumberFormatOptions = {
+    ...(useCurrencyStyle ? { style: 'currency', currency } : {}),
+    ...(minimumFractionDigits !== undefined ? { minimumFractionDigits } : {}),
+    ...(maximumFractionDigits !== undefined ? { maximumFractionDigits } : {}),
+    ...(currencyDisplay ? { currencyDisplay } : {}),
+  };
+
+  const formatted = new Intl.NumberFormat(locale, formatterOptions).format(
+    amount
+  );
+
+  return suffix ? `${formatted}${suffix}` : formatted;
+};
+
+export const vndCurrencyOptions: FormatCurrencyOptions = {
+  locale: 'vi-VN',
+  currency: 'VND',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+};
+export const cleanDescription = (
+  description: string | null | undefined
+): string => {
+  if (!description) return '';
+  if (description.startsWith('METADATA:')) {
+    const parts = description.split(' | ');
+    if (parts.length > 1) {
+      return parts.slice(1).join(' | ');
+    }
+  }
+  return description;
 };

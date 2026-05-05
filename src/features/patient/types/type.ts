@@ -17,9 +17,16 @@ export interface Anomaly {
   name: string;
   confidence: number;
   description: string;
-  color: string; // hex or tailwind class prefix
+  color: string;
   type: 'warning' | 'priority_high' | 'info';
   location?: Location;
+  friendlyName?: string;
+  friendlyDescription?: string;
+  isHighest?: boolean;
+  /** V2 disease code (e.g. BRVO, WNL) */
+  code?: string;
+  /** V2 group display name (e.g. "Mạch máu (Vascular)") */
+  groupDisplay?: string;
 }
 
 export interface Patient {
@@ -35,9 +42,11 @@ export interface RetinalImage {
   id: string;
   url: string;
   name: string;
-  eye: 'Left Eye (OS)' | 'Right Eye (OD)';
+  eye: 'Left Eye (OS)' | 'Right Eye (OD)' | 'Both Eyes';
   uploadedAt: string;
   analyzed: boolean;
   anomalies: Anomaly[];
   thumbnail?: string;
+  heatmapUrl?: string;
+  heatmapData?: number[][] | null;
 }

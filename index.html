@@ -1,21 +1,188 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/src/favicon.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AURA | System for Retinal Vascular Health Screening</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="alternate icon" href="/favicon.ico" type="image/png" sizes="16x16">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
-  <link rel="mask-icon" href="/favicon.svg" color="#FFFFFF">
-  <meta name="theme-color" content="#ffffff">
-</head>
+    <!-- ── Primary SEO ─────────────────────────────────────────────── -->
+    <title>AURA — AI Retinal Health Screening</title>
+    <meta
+      name="description"
+      content="Precision AI for retinal vascular health screening. Automated diagnostics with 99.2% clinical accuracy. Connect with verified ophthalmologists and book screenings instantly."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="AURA Team" />
+    <meta
+      name="keywords"
+      content="retinal screening, AI diagnostics, eye health, ophthalmology, fundus imaging, diabetic retinopathy, macular degeneration, AURA"
+    />
 
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.tsx"></script>
-</body>
+    <link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/" />
+    <link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/" />
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href="https://web.auraeyes.site/vi/"
+    />
 
+    <!-- ── Favicon & Icons ─────────────────────────────────────────── -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="alternate icon"
+      href="/favicon.ico"
+      type="image/x-icon"
+      sizes="32x32"
+    />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="mask-icon" href="/favicon.svg" color="#00d1c0" />
+    <meta name="theme-color" content="#1A202C" />
+
+    <!-- ── Preloads ─────────────────────────────────────────────────── -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://challenges.cloudflare.com" />
+    <link rel="dns-prefetch" href="https://lh3.googleusercontent.com" />
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
+
+    <!-- ── Open Graph ──────────────────────────────────────────────── -->
+    <meta property="og:site_name" content="AURA" />
+    <meta property="og:title" content="AURA — AI Retinal Health Screening" />
+    <meta
+      property="og:description"
+      content="Precision AI for retinal vascular health screening. Automated diagnostics with 99.2% clinical accuracy. Connect with verified ophthalmologists and book screenings instantly."
+    />
+    <meta
+      property="og:image"
+      content="https://web.auraeyes.site/icon_512x512.png"
+    />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta
+      property="og:image:alt"
+      content="AURA — AI Retinal Health Screening Platform"
+    />
+    <meta property="og:url" content="https://web.auraeyes.site" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="vi_VN" />
+    <meta property="og:locale:alternate" content="en_US" />
+
+    <!-- ── Twitter Card ────────────────────────────────────────────── -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@AuraEyes" />
+    <meta name="twitter:title" content="AURA — AI Retinal Health Screening" />
+    <meta
+      name="twitter:description"
+      content="Precision AI for retinal vascular health screening. Automated diagnostics with 99.2% clinical accuracy."
+    />
+    <meta
+      name="twitter:image"
+      content="https://web.auraeyes.site/icon_512x512.png"
+    />
+    <meta name="twitter:image:alt" content="AURA Retinal Screening Platform" />
+
+    <!-- ── Google Verification ─────────────────────────────────────── -->
+    <meta
+      name="google-site-verification"
+      content="xTpx1ssi-giVchO9AbcahqgfoS1wj6Rf4FYsTR4fo3w"
+    />
+    <script>
+      (function () {
+        const GA_ID = 'G-59D6MQZ1BJ';
+        const host = window.location.hostname;
+        const localHosts = new Set([
+          'localhost',
+          '127.0.0.1',
+          '0.0.0.0',
+          '::1',
+        ]);
+        const isProductionLikeRuntime =
+          window.location.protocol === 'https:' && !localHosts.has(host);
+
+        if (!isProductionLikeRuntime) {
+          return;
+        }
+
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function gtag() {
+          window.dataLayer.push(arguments);
+        };
+
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+        document.head.appendChild(script);
+
+        window.gtag('js', new Date());
+        window.gtag('config', GA_ID);
+      })();
+    </script>
+    <!-- ── JSON-LD: Organization (baseline — overridden per page) ──── -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "MedicalOrganization",
+        "name": "AURA",
+        "alternateName": "AuraEyes",
+        "url": "https://web.auraeyes.site",
+        "logo": "https://web.auraeyes.site/icon_512x512.png",
+        "description": "AI-powered retinal vascular health screening platform connecting patients with verified ophthalmologists.",
+        "medicalSpecialty": ["Ophthalmology", "Retinal Disease"],
+        "availableService": {
+          "@type": "MedicalProcedure",
+          "name": "AI Retinal Screening",
+          "description": "Automated retinal image analysis using deep learning for early detection of vascular diseases."
+        },
+        "sameAs": ["https://github.com/AuraEyesOrg"]
+      }
+    </script>
+    <script>
+    window.addEventListener('unhandledrejection', function(event) {
+      const msg = event.reason ? event.reason.toString() : '';
+      if (msg.includes('bad-precaching-response') || msg.includes('Failed to fetch dynamically imported module')) {
+        console.warn('Phát hiện lỗi Service Worker cũ, đang tự động dọn dẹp...');
+        
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for (let registration of registrations) {
+              registration.unregister();
+            }
+            window.location.reload();
+          });
+        }
+      }
+    });
+  </script>
+  </head>
+
+  <body>
+    <noscript
+      >You need to enable JavaScript to run the AURA Screening System.</noscript
+    >
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
+    <script>
+      const auraEyes = `      
+       _..._
+     .' .-. '.
+    (  ( o )  )   
+     \`._'-'_.'
+       \`\`\`
+
+  A U R A   E Y E S
+AI Understanding Retinal Analysis
+      `;
+      // Sử dụng %c để style console log khớp với theme-color của bạn (#00d1c0)
+      console.log(
+        '%c' + auraEyes,
+        'color: #00d1c0; font-weight: bold; font-family: monospace; font-size: 14px;'
+      );
+      console.log('"No Code No Bug." – An Phuoc Dao');
+      console.log(
+        '%c Hệ thống đã sẵn sàng. ',
+        'color: #1A202C; background: #00d1c0; padding: 2px 6px; border-radius: 4px; font-weight: bold;'
+      );
+    </script>
+  </body>
 </html>

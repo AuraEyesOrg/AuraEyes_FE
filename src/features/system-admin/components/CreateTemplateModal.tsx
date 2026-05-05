@@ -1,0 +1,244 @@
+import { useState, useEffect } from 'react';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { toast } from 'react-toastify';
+import { X, Clock, Calendar } from 'lucide-react';
+import { extractApiErrorMessage } from '@/lib/api-error';
+import schedulingApi from '../api/scheduling.api';
+import { DAY_OF_WEEK_LABELS, ScheduleTemplateDto } from '@/types/schedule';
+
+interface CreateTemplateModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  editTemplate?: ScheduleTemplateDto | null;
+}
+
+const getDayOfWeekNumber = (dayName: string) => {
+  const index = Object.values(DAY_OF_WEEK_LABELS).indexOf(dayName);
+  return index !== -1 ? parseInt(Object.keys(DAY_OF_WEEK_LABELS)[index]) : 1;
+};
+
+export default function CreateTemplateModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  editTemplate,
+}: CreateTemplateModalProps) {
+  const { t } = useSafeTranslation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [formData, setFormData] = useState({
+    dayOfWeek: 1, // Monday
+    startTime: '08:00',
+    endTime: '17:00',
+    slotDuration: 30,
+    maxCapacity: 1,
+    isActive: true,
+  });
+
+  useEffect(() => {
+    if (editTemplate) {
+      const dayNum =
+        typeof editTemplate.dayOfWeek === 'number'
+          ? editTemplate.dayOfWeek
+          : getDayOfWeekNumber(editTemplate.dayOfWeek);
+
+      setFormData({
+        dayOfWeek: dayNum,
+        startTime: editTemplate.startTime.substring(0, 5),
+        endTime: editTemplate.endTime.substring(0, 5),
+        slotDuration: Number(editTemplate.slotDuration),
+        maxCapacity: Number(editTemplate.maxCapacity),
+        isActive: editTemplate.isActive,
+      });
+    } else {
+      setFormData({
+        dayOfWeek: 1,
+        startTime: '08:00',
+        endTime: '17:00',
+        slotDuration: 30,
+        maxCapacity: 1,
+        isActive: true,
+      });
+    }
+  }, [editTemplate, isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const payload = {
+        ...formData,
+        startTime: `${formData.startTime}:00`,
+        endTime: `${formData.endTime}:00`,
+      };
+
+      if (editTemplate) {
+        await schedulingApi.updateTemplate(editTemplate.id, payload);
+        toast.success(
+          t(
+            'SystemAdmin.scheduling.toasts.updateSuccess',
+            'Schedule template updated successfully.'
+          )
+        );
+      } else {
+        await schedulingApi.createTemplate(payload);
+        toast.success(
+          t(
+            'SystemAdmin.scheduling.toasts.createSuccess',
+            'Schedule template created successfully.'
+          )
+        );
+      }
+
+      onSuccess();
+      onClose();
+    } catch (error) {
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          editTemplate
+            ? t(
+                'SystemAdmin.scheduling.toasts.updateError',
+                'Failed to update template.'
+              )
+            : t(
+                'SystemAdmin.scheduling.toasts.createError',
+                'Failed to create template.'
+              )
+        )
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 dark:border-slate-800">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+            {editTemplate
+              ? t(
+                  'SystemAdmin.scheduling.createModal.editTitle',
+                  'Edit Slot Template'
+                )
+              : t(
+                  'SystemAdmin.scheduling.createModal.title',
+                  'Create Slot Template'
+                )}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-primary-500" />
+              {t('SystemAdmin.scheduling.fields.dayOfWeek', 'Day of Week')}
+            </label>
+            <select
+              value={formData.dayOfWeek}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  dayOfWeek: parseInt(e.target.value),
+                })
+              }
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 transition-all outline-none"
+            >
+              {[1, 2, 3, 4, 5, 6, 0].map((day) => (
+                <option key={day} value={day}>
+                  {DAY_OF_WEEK_LABELS[day]}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary-500" />
+                {t('SystemAdmin.scheduling.fields.startTime', 'Start Time')}
+              </label>
+              <input
+                type="time"
+                value={formData.startTime}
+                onChange={(e) =>
+                  setFormData({ ...formData, startTime: e.target.value })
+                }
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none"
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary-500" />
+                {t('SystemAdmin.scheduling.fields.endTime', 'End Time')}
+              </label>
+              <input
+                type="time"
+                value={formData.endTime}
+                onChange={(e) =>
+                  setFormData({ ...formData, endTime: e.target.value })
+                }
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-primary-500" />
+              {t('SystemAdmin.scheduling.fields.duration', 'Duration (min)')}
+            </label>
+            <input
+              type="number"
+              min="5"
+              step="5"
+              value={formData.slotDuration}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  slotDuration: parseInt(e.target.value),
+                })
+              }
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none"
+              required
+            />
+          </div>
+
+          <div className="pt-4 flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              {t('common.cancel', 'Cancel')}
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-2.5 rounded-xl bg-primary hover:opacity-90 text-slate-900 font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
+            >
+              {isSubmitting
+                ? t('common.saving', 'Saving...')
+                : editTemplate
+                  ? t('common.update', 'Update Template')
+                  : t('common.save', 'Save Template')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

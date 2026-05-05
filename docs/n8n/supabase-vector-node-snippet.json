@@ -1,0 +1,27 @@
+{
+  "note": "This is a portable snippet (not a full workflow). Paste the structure into an n8n workflow as a starting point. You must configure Supabase credentials and table/function names to match your project.",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "matchDocuments",
+        "tableName": "documents",
+        "query": "={{ $node[\"Normalize FE Contract\"].json.message }}",
+        "topK": 6,
+        "filter": {
+          "type": "policy"
+        }
+      },
+      "id": "supabase-vector-search-001",
+      "name": "Supabase Vector Search (Policies)",
+      "type": "n8n-nodes-base.supabaseVectorStore",
+      "typeVersion": 1,
+      "position": [2600, 1040],
+      "credentials": {
+        "supabaseApi": {
+          "id": "<YOUR_SUPABASE_CRED_ID>",
+          "name": "<YOUR_SUPABASE_CRED_NAME>"
+        }
+      }
+    }
+  ]
+}

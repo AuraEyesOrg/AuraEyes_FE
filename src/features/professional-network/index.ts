@@ -1,0 +1,42 @@
+/**
+ * Professional Network Feature Module
+ * Central barrel export for the Professional Network feature
+ *
+ * This module contains all functionality for professional networking
+ * including feed, discover, connections, groups, and saved posts.
+ */
+
+// Pages
+export {
+  FeedPage,
+  DiscoverPage,
+  SavedPage,
+  PostDetailPage,
+  ProfilePage,
+  OrganisationPage,
+} from './pages';
+
+// Components
+export {
+  NetworkLayout,
+  NetworkSidebar,
+  ProfessionalAvatar,
+  ProfessionalCard,
+  ProfessionalCardMini,
+  PostCard,
+  PostComposer,
+  CommentCard,
+  OrganisationCard,
+} from './components';
+
+// API
+export {
+  NETWORK_ENDPOINTS,
+  postsApi,
+  professionalsApi,
+  organisationsApi,
+  savedApi,
+} from './api';
+
+// Types - re-export all types
+export type * from './types';

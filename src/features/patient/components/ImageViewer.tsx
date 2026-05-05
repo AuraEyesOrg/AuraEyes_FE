@@ -1,158 +1,292 @@
-import React from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { ToggleState, Anomaly, RetinalImage } from '../types/type';
-import { AlertTriangle, AlertCircle } from 'lucide-react';
 
 interface ImageViewerProps {
   toggles: ToggleState;
   zoomLevel: number;
   anomalies: Anomaly[];
   isAnalyzing: boolean;
-  currentImage?: RetinalImage | null;
+  currentImage: RetinalImage | null;
+  showHighlights: boolean;
+  showHeatmap?: boolean;
+  heatmapUrl?: string;
+  heatmapData?: number[][] | null;
+  heatmapOpacity?: number;
+  heatmapThreshold?: number;
 }
+
+const HEATMAP_DEFAULT_OPACITY = 0.55;
+const HEATMAP_DEFAULT_THRESHOLD = 0.15;
 
 const ImageViewer: React.FC<ImageViewerProps> = ({
   toggles,
-  zoomLevel,
   anomalies,
   isAnalyzing,
   currentImage,
+  showHighlights = false,
+  showHeatmap = false,
+  heatmapUrl,
+  heatmapData = null,
+  heatmapOpacity = HEATMAP_DEFAULT_OPACITY,
+  heatmapThreshold = HEATMAP_DEFAULT_THRESHOLD,
 }) => {
-  const defaultImageUrl =
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuAnZvlMnDS-CcafTkkjgVLz-0UddpNaBx3OsGxIO9zGXC9fp7Xcw_1SoKlkYiy7zNvYBqtRA86b0wkhPKl9mX-MPsS7JyyMvW5eklHCPWjWy_hdxnGKOfLpWcKa1TvNvRs2wBtJzkygxKDBLqzveve9FQ-CH5A0ZR2TUS5U1KIWHEXQIs-lMeoR4Vx0jsbZlr095MuZggI7VU6BetlAaUJ6cCo_VHXoG5BRAPPmnS-xb7dR8aU3buiURokmF5U3L7W6KKyRilnvR6x4';
-  const imageUrl = currentImage?.url || defaultImageUrl;
-  const imageName = currentImage?.name || 'Fundus photograph';
+  const [imgRect, setImgRect] = useState<{
+    offsetX: number;
+    offsetY: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const heatmapCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  const updateImgRect = useCallback(() => {
+    const img = imgRef.current;
+    const container = containerRef.current;
+    if (!img || !container) return;
+
+    // Must have natural dimensions — guard against 0
+    const nw = img.naturalWidth;
+    const nh = img.naturalHeight;
+    if (!nw || !nh) return;
+
+    const cw = container.clientWidth;
+    const ch = container.clientHeight;
+
+    const scale = Math.min(cw / nw, ch / nh);
+    const rw = nw * scale;
+    const rh = nh * scale;
+
+    setImgRect({
+      offsetX: (cw - rw) / 2,
+      offsetY: (ch - rh) / 2,
+      width: rw,
+      height: rh,
+    });
+  }, []);
+
+  // Re-run on image src change
+  useEffect(() => {
+    setImgRect(null);
+  }, [currentImage?.url]);
+
+  useEffect(() => {
+    window.addEventListener('resize', updateImgRect);
+    return () => window.removeEventListener('resize', updateImgRect);
+  }, [updateImgRect]);
+
+  // Also observe container size changes (e.g. sidebar toggle, panel resize)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => updateImgRect());
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, [updateImgRect]);
+
+  // Render heatmap_data matrix onto canvas using JET colormap (matches ophthalmologist view)
+  useEffect(() => {
+    const canvas = heatmapCanvasRef.current;
+    if (!canvas || !heatmapData || heatmapData.length === 0) return;
+    const rows = heatmapData.length;
+    const cols = heatmapData[0]?.length ?? 0;
+    if (cols === 0) return;
+    canvas.width = cols;
+    canvas.height = rows;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, cols, rows);
+    const imageData = ctx.createImageData(cols, rows);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const v = Math.max(0, Math.min(1, heatmapData[r]?.[c] ?? 0));
+        const idx = (r * cols + c) * 4;
+        if (v <= heatmapThreshold) {
+          imageData.data[idx + 3] = 0;
+        } else {
+          const nv = (v - heatmapThreshold) / (1 - heatmapThreshold);
+          const r4 = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 3)));
+          const g4 = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 2)));
+          const b4 = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 1)));
+          const alpha = Math.min(
+            255,
+            Math.max(0, Math.round((0.3 + 0.7 * nv) * 255))
+          );
+          imageData.data[idx] = Math.round(r4 * 255);
+          imageData.data[idx + 1] = Math.round(g4 * 255);
+          imageData.data[idx + 2] = Math.round(b4 * 255);
+          imageData.data[idx + 3] = alpha;
+        }
+      }
+    }
+    ctx.putImageData(imageData, 0, 0);
+    // showHeatmap in deps ensures the effect re-runs after the canvas mounts
+  }, [heatmapData, heatmapThreshold, showHeatmap]);
+
+  const hasHeatmapMatrix = heatmapData != null && heatmapData.length > 0;
+
+  const getAnnotationStyle = (type: string, isHighest?: boolean) => {
+    if (isHighest)
+      return {
+        border: 'rgba(239, 68, 68, 0.9)',
+        bg: 'rgba(239, 68, 68, 0.12)',
+        glow: true,
+      };
+    if (type === 'warning')
+      return {
+        border: 'rgba(239, 68, 68, 0.65)',
+        bg: 'rgba(239, 68, 68, 0.08)',
+        glow: false,
+      };
+    if (type === 'priority_high')
+      return {
+        border: 'rgba(251, 191, 36, 0.7)',
+        bg: 'rgba(251, 191, 36, 0.08)',
+        glow: false,
+      };
+    return {
+      border: 'rgba(96, 165, 250, 0.6)',
+      bg: 'rgba(96, 165, 250, 0.06)',
+      glow: false,
+    };
+  };
 
   return (
-    <section className="flex-1 relative bg-black flex items-center justify-center overflow-hidden cursor-move select-none">
-      {/* Grid Background Pattern */}
-      <div
-        className="absolute inset-0 opacity-10 pointer-events-none"
-        style={{
-          backgroundImage:
-            'linear-gradient(#283939 1px, transparent 1px), linear-gradient(90deg, #283939 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-      ></div>
+    // KEY FIX: relative + explicit w-full h-full so offsetX/Y math is stable
+    <div
+      ref={containerRef}
+      className="relative w-full h-full overflow-hidden bg-black rounded-2xl"
+    >
+      {/* Base retinal image */}
+      <img
+        ref={imgRef}
+        src={currentImage?.url || ''}
+        alt={currentImage?.name || 'Retinal scan'}
+        className="absolute inset-0 w-full h-full object-contain"
+        draggable={false}
+        // onLoad is the authoritative trigger — naturalWidth is guaranteed here
+        onLoad={updateImgRect}
+      />
 
-      {/* Image Container with Transforms */}
-      <div
-        className="relative max-w-full max-h-full p-10 transition-transform duration-200 ease-out origin-center"
-        style={{ transform: `scale(${zoomLevel})` }}
-      >
-        <div className="relative rounded-full overflow-hidden shadow-2xl border border-[#283939] group">
-          <img
-            src={imageUrl}
-            alt={imageName}
-            className="block max-h-[80vh] w-auto object-contain opacity-90"
-          />
+      {/* Heatmap overlay — canvas (matrix) takes priority over static URL */}
+      {showHeatmap && hasHeatmapMatrix && imgRect && (
+        <canvas
+          ref={heatmapCanvasRef}
+          className="absolute pointer-events-none"
+          style={{
+            left: imgRect.offsetX,
+            top: imgRect.offsetY,
+            width: imgRect.width,
+            height: imgRect.height,
+            opacity: heatmapOpacity,
+            mixBlendMode: 'normal',
+            zIndex: 15,
+          }}
+        />
+      )}
+      {showHeatmap && !hasHeatmapMatrix && heatmapUrl && imgRect && (
+        <img
+          src={heatmapUrl}
+          alt="AI heatmap overlay"
+          className="absolute pointer-events-none"
+          style={{
+            left: imgRect.offsetX,
+            top: imgRect.offsetY,
+            width: imgRect.width,
+            height: imgRect.height,
+            opacity: 0.5,
+            mixBlendMode: 'screen',
+            zIndex: 15,
+          }}
+        />
+      )}
 
-          {/* Real-time Scanning Effect */}
-          {isAnalyzing && (
-            <div className="absolute inset-0 z-30 pointer-events-none">
-              <div className="absolute top-0 left-0 w-full h-1 bg-[#13ecec]/80 shadow-[0_0_15px_rgba(19,236,236,0.8)] animate-[scan_2s_ease-in-out_infinite]"></div>
-              <div className="absolute inset-0 bg-[#13ecec]/5 animate-pulse"></div>
-            </div>
-          )}
+      {/* BBox annotations — positioned in the same imgRect coordinate space */}
+      {showHighlights && imgRect && (
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            left: imgRect.offsetX,
+            top: imgRect.offsetY,
+            width: imgRect.width,
+            height: imgRect.height,
+            zIndex: 20,
+          }}
+        >
+          {anomalies.map((anomaly) => {
+            if (!anomaly.location) return null;
 
-          {/* Dynamic AI Annotation Overlays */}
-          {anomalies.map((anomaly, index) => {
-            // Check if this anomaly type is toggled on
+            // Toggle filtering
+            const name = anomaly.name.toLowerCase();
             const isVisible =
-              (anomaly.name.toLowerCase().includes('hemorrhage') &&
+              ((name.includes('hemorrhage') || name.includes('aneurysm')) &&
                 toggles.hemorrhages) ||
-              (anomaly.name.toLowerCase().includes('aneurysm') &&
-                toggles.hemorrhages) ||
-              (anomaly.name.toLowerCase().includes('exudate') &&
-                toggles.exudates) ||
-              (!anomaly.name.toLowerCase().includes('hemorrhage') &&
-                !anomaly.name.toLowerCase().includes('aneurysm') &&
-                !anomaly.name.toLowerCase().includes('exudate'));
+              (name.includes('exudate') && toggles.exudates) ||
+              (!name.includes('hemorrhage') &&
+                !name.includes('aneurysm') &&
+                !name.includes('exudate'));
 
-            if (!isVisible || !anomaly.location) return null;
+            if (!isVisible) return null;
+
+            const style = getAnnotationStyle(anomaly.type, anomaly.isHighest);
+            const { x, y, width, height } = anomaly.location;
 
             return (
-              <React.Fragment key={anomaly.id}>
+              <div
+                key={anomaly.id}
+                className="absolute"
+                style={{
+                  top: `${y}%`,
+                  left: `${x}%`,
+                  width: `${width}%`,
+                  height: `${height}%`,
+                }}
+              >
                 <div
-                  className={`absolute border-2 rounded-lg pointer-events-none animate-in fade-in zoom-in duration-500`}
+                  className={`absolute inset-0 rounded-md border-2 ${
+                    style.glow
+                      ? 'animate-[glow-pulse_2s_ease-in-out_infinite]'
+                      : ''
+                  }`}
                   style={{
-                    top: `${anomaly.location.y}%`,
-                    left: `${anomaly.location.x}%`,
-                    width: `${anomaly.location.width}%`,
-                    height: `${anomaly.location.height}%`,
-                    borderColor:
-                      anomaly.type === 'warning'
-                        ? '#ef4444'
-                        : anomaly.type === 'priority_high'
-                          ? '#facc15'
-                          : '#3b82f6',
-                    backgroundColor:
-                      anomaly.type === 'warning'
-                        ? 'rgba(239, 68, 68, 0.2)'
-                        : anomaly.type === 'priority_high'
-                          ? 'rgba(250, 204, 21, 0.1)'
-                          : 'rgba(59, 130, 246, 0.1)',
-                    animationDelay: `${index * 200}ms`,
-                    animationFillMode: 'both',
+                    borderColor: style.border,
+                    backgroundColor: style.bg,
+                    ...(style.glow
+                      ? {
+                          boxShadow: `0 0 12px 2px ${style.border}, inset 0 0 8px 1px rgba(239,68,68,0.1)`,
+                          borderWidth: '2.5px',
+                        }
+                      : {}),
                   }}
-                ></div>
-                <div
-                  className="absolute flex items-center gap-1 bg-black/80 backdrop-blur-sm border px-2 py-1 rounded text-xs z-10 whitespace-nowrap shadow-lg transition-opacity duration-300 hover:opacity-100 animate-in fade-in slide-in-from-bottom-2 duration-500"
-                  style={{
-                    top: `${anomaly.location.y - 5}%`,
-                    left: `${anomaly.location.x}%`,
-                    borderColor:
-                      anomaly.type === 'warning'
-                        ? '#ef4444'
-                        : anomaly.type === 'priority_high'
-                          ? '#facc15'
-                          : '#3b82f6',
-                    color:
-                      anomaly.type === 'warning'
-                        ? '#fecaca'
-                        : anomaly.type === 'priority_high'
-                          ? '#fef08a'
-                          : '#bfdbfe',
-                    animationDelay: `${index * 200 + 100}ms`,
-                    animationFillMode: 'both',
-                  }}
-                >
-                  {anomaly.type === 'warning' ? (
-                    <AlertTriangle className="w-3 h-3" />
-                  ) : (
-                    <AlertCircle className="w-3 h-3" />
-                  )}
-                  {anomaly.name} ({anomaly.confidence}%)
-                </div>
-              </React.Fragment>
+                />
+              </div>
             );
           })}
-
-          {/* Static Vessel Segmentation Layer */}
-          {toggles.vesselSegmentation && (
-            <div className="absolute inset-0 bg-[#13ecec]/10 mix-blend-overlay pointer-events-none animate-pulse"></div>
-          )}
         </div>
-      </div>
+      )}
 
-      {/* Floating Scale Bar */}
-      <div className="absolute bottom-6 left-6 bg-black/60 backdrop-blur text-xs text-[#9db9b9] px-3 py-1.5 rounded border border-white/10 flex items-center gap-2 pointer-events-none">
-        <span>Scale: {zoomLevel.toFixed(1)}x</span>
-        <div className="w-20 h-1 bg-white/30 relative">
-          <div className="absolute left-0 top-0 h-full w-px bg-white"></div>
-          <div className="absolute right-0 top-0 h-full w-px bg-white"></div>
+      {/* Scan animation during analysis */}
+      {isAnalyzing && (
+        <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden rounded-2xl">
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-teal-400 to-transparent opacity-80 animate-[scan_2.5s_ease-in-out_infinite]" />
+          <div className="absolute inset-0 bg-teal-400/5 animate-pulse" />
         </div>
-        <span>200µm</span>
-      </div>
+      )}
 
       <style>{`
         @keyframes scan {
-            0% { top: 0%; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
+          0%   { top: 0%;   opacity: 0; }
+          10%  { opacity: 1; }
+          90%  { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+        @keyframes glow-pulse {
+          0%,100% { opacity: 1;    box-shadow: 0 0 12px 2px rgba(239,68,68,0.55), inset 0 0 8px 1px rgba(239,68,68,0.12); }
+          50%      { opacity: 0.8; box-shadow: 0 0 22px 6px rgba(239,68,68,0.4),  inset 0 0 14px 3px rgba(239,68,68,0.08); }
         }
       `}</style>
-    </section>
+    </div>
   );
 };
 

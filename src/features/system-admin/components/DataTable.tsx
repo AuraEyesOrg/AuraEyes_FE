@@ -1,0 +1,118 @@
+/**
+ * Data Table Component
+ * Generic reusable table for displaying paginated data
+ */
+
+import { ReactNode } from 'react';
+import Spinner from '@/components/ui/spinner';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+
+export interface TableColumn<T> {
+  header: string;
+  accessor: keyof T | ((row: T) => ReactNode);
+  width?: string;
+  sortable?: boolean;
+  render?: (value: unknown, row: T) => ReactNode;
+}
+
+interface DataTableProps<T> {
+  columns: TableColumn<T>[];
+  data: T[];
+  keyExtractor: (row: T) => string | number;
+  isLoading?: boolean;
+  isEmpty?: boolean;
+  emptyMessage?: string;
+  onRowClick?: (row: T) => void;
+  className?: string;
+}
+
+export const DataTable = <T,>({
+  columns,
+  data,
+  keyExtractor,
+  isLoading = false,
+  isEmpty = data.length === 0,
+  emptyMessage,
+  onRowClick,
+  className = '',
+}: DataTableProps<T>) => {
+  const { t } = useSafeTranslation();
+  const resolvedEmptyMessage =
+    emptyMessage ??
+    t('SystemAdmin.common.noDataAvailable', 'No data available');
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <Spinner size={32} />
+          <p className="mt-3 text-slate-600 dark:text-slate-400">
+            {t('SystemAdmin.common.loadingData', 'Loading data...')}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isEmpty) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-slate-600 dark:text-slate-400">
+          {resolvedEmptyMessage}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 ${className}`}
+    >
+      <table className="w-full text-sm text-left">
+        <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 font-medium border-b border-slate-200 dark:border-slate-800">
+          <tr>
+            {columns.map((column, idx) => (
+              <th
+                key={idx}
+                className={`px-6 py-4 font-semibold ${column.width || ''}`}
+                style={{ width: column.width }}
+              >
+                {column.header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+          {data.map((row) => (
+            <tr
+              key={keyExtractor(row)}
+              onClick={() => onRowClick?.(row)}
+              className={`hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+            >
+              {columns.map((column, idx) => {
+                const value =
+                  typeof column.accessor === 'function'
+                    ? column.accessor(row)
+                    : row[column.accessor];
+                const rendered = column.render
+                  ? column.render(value, row)
+                  : value;
+
+                return (
+                  <td
+                    key={idx}
+                    className="px-6 py-4 text-slate-700 dark:text-slate-300"
+                  >
+                    {rendered as React.ReactNode}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default DataTable;

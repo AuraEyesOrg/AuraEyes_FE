@@ -1,0 +1,864 @@
+/**
+ * Professional Network Module Styles
+ * Twitter-style CSS for professional network feature
+ * This file is imported in NetworkLayout.tsx to scope styles to network module
+ *
+ * LAYOUT PROPORTIONS (matching Twitter exactly):
+ * ================================================
+ * Breakpoints:
+ *   - xs: 500px
+ *   - sm: 640px
+ *   - md: 768px
+ *   - lg: 1024px
+ *   - xl: 1280px
+ *
+ * Column widths:
+ *   - Left Sidebar:  0 → 68px (xs) → 88px (md) → 275px (xl)
+ *   - Main Content:  w-full, max-w-[600px]
+ *   - Right Panel:   350px (hidden < lg)
+ *   - Gap between columns: 0 → 16px (lg+)
+ *
+ * Total at xl: 275 + 16 + 600 + 16 + 350 = 1257px (centered in viewport)
+ */
+
+/* ============================================
+ * CSS VARIABLES - Twitter-style theme
+ * Synced with Tailwind dark mode (class-based)
+ * ============================================ */
+:root {
+  /* Background colors */
+  --network-bg-main: 255 255 255;
+  --network-bg-search: 239 243 244;
+  --network-bg-sidebar: 247 249 249;
+  --network-accent: 0 229 255;
+
+  /* Brand colors */
+  --network-brand-primary: #00e5ff;
+  --network-brand-dark: #1a202c;
+  --network-brand-soft: #f0fdfa;
+
+  /* Border colors */
+  --network-border-light: #eff3f4;
+  --network-border-dark: #2f3336;
+  --network-line-reply: #cfd9de;
+
+  /* Text colors */
+  --network-text-main: #0f1419;
+  --network-text-muted: #536471;
+  --network-text-light: #a0aec0;
+
+  /* Reaction colors */
+  --network-reaction-insightful: #00e5ff;
+  --network-reaction-agree: #48bb78;
+  --network-reaction-helpful: #f6ad55;
+  --network-reaction-question: #ecc94b;
+  --network-reaction-celebrate: #fc8181;
+}
+
+/* Dark mode variables - Syncs with system-admin theme toggle */
+.dark {
+  /* Background colors - Dark */
+  --network-bg-main: 15 23 42; /* slate-900 */
+  --network-bg-search: 30 41 59; /* slate-800 */
+  --network-bg-sidebar: 15 23 42; /* slate-900 */
+  --network-accent: 0 229 255;
+
+  /* Brand colors - Dark */
+  --network-brand-primary: #00e5ff;
+  --network-brand-dark: #0f172a;
+  --network-brand-soft: #1e293b;
+
+  /* Border colors - Dark */
+  --network-border-light: #334155; /* slate-700 */
+  --network-border-dark: #475569; /* slate-600 */
+  --network-line-reply: #475569;
+
+  /* Text colors - Dark */
+  --network-text-main: #f1f5f9; /* slate-100 */
+  --network-text-muted: #94a3b8; /* slate-400 */
+  --network-text-light: #64748b; /* slate-500 */
+}
+
+/* ============================================
+ * TWITTER-STYLE BUTTONS
+ * ============================================ */
+
+/* Primary Follow Button - Twitter style */
+.network-btn-follow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--network-brand-primary);
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  transition:
+    filter 200ms ease,
+    background-color 200ms ease;
+  white-space: nowrap;
+  min-width: 64px;
+}
+
+.network-btn-follow:hover {
+  filter: brightness(0.9);
+}
+
+.network-btn-follow:active {
+  filter: brightness(0.75);
+}
+
+/* Primary Button Generic */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--network-brand-primary);
+  color: white;
+  font-weight: 700;
+  padding: 8px 20px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  transition: filter 200ms ease;
+}
+
+.btn-primary:hover {
+  filter: brightness(0.9);
+}
+
+.btn-primary:active {
+  filter: brightness(0.75);
+}
+
+/* Secondary Button */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: var(--network-text-main);
+  font-weight: 700;
+  padding: 8px 20px;
+  border-radius: 9999px;
+  border: 1px solid var(--network-border-light);
+  cursor: pointer;
+  transition: background-color 200ms ease;
+}
+
+.btn-secondary:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Ghost Button */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: var(--network-text-muted);
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 200ms ease;
+}
+
+.btn-ghost:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* ============================================
+ * TWITTER-EXACT 3-COLUMN LAYOUT SYSTEM
+ * ============================================ */
+
+/* Main Container - Flexbox, centered horizontally */
+.network-layout-container {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  justify-content: center;
+  gap: 0;
+  background-color: rgb(var(--network-bg-main));
+}
+
+@media (min-width: 1024px) {
+  .network-layout-container {
+    gap: 16px;
+  }
+}
+
+/* ============================================
+ * LEFT SIDEBAR - HEADER ELEMENT
+ * Fixed width, never stretches
+ * ============================================ */
+.network-sidebar-header {
+  display: flex;
+  width: 0;
+  flex-shrink: 0;
+  transition: opacity 200ms ease;
+}
+
+@media (min-width: 500px) {
+  .network-sidebar-header {
+    width: 68px;
+  }
+}
+
+@media (min-width: 768px) {
+  .network-sidebar-header {
+    width: 88px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .network-sidebar-header {
+    width: 275px;
+    justify-content: flex-end;
+  }
+}
+
+/* Inner Fixed Sidebar Container */
+.network-sidebar-inner {
+  position: fixed;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+  border-top: 1px solid var(--network-border-light);
+  background-color: rgb(var(--network-bg-main));
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+@media (min-width: 500px) {
+  .network-sidebar-inner {
+    position: fixed;
+    top: 0;
+    bottom: auto;
+    height: 100%;
+    width: 68px;
+    border-top: 0;
+    background-color: transparent;
+    padding: 12px 8px;
+    padding-top: 8px;
+  }
+}
+
+@media (min-width: 768px) {
+  .network-sidebar-inner {
+    width: 88px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .network-sidebar-inner {
+    width: 260px;
+  }
+}
+
+/* ============================================
+ * MAIN CONTENT - CENTER COLUMN
+ * Fixed max-width, never expands
+ * ============================================ */
+.network-main-content {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 600px;
+  flex-direction: column;
+  border-left: 0;
+  border-right: 0;
+  border-color: var(--network-border-light);
+  padding-bottom: 384px;
+  transition-property: color, background-color, border-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+@media (min-width: 500px) {
+  .network-main-content {
+    border-left-width: 1px;
+    border-right-width: 1px;
+  }
+}
+
+/* ============================================
+ * RIGHT PANEL - ASIDE ELEMENT
+ * Fixed width, hidden on small screens
+ * ============================================ */
+.network-right-panel {
+  display: none;
+  width: 350px;
+  max-width: 350px;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px 16px;
+  padding-top: 4px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .network-right-panel {
+    display: flex;
+  }
+}
+
+/* Right panel section cards - prevent overflow */
+.network-right-panel section {
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Ensure cards inside right panel don't overflow */
+.network-right-panel .hover-card {
+  overflow: hidden;
+}
+
+/* ============================================
+ * SIDEBAR SECTION STYLES
+ * Responsive components inside sidebar
+ * ============================================ */
+.network-sidebar-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  align-items: center;
+}
+
+@media (min-width: 1280px) {
+  .network-sidebar-section {
+    align-items: stretch;
+  }
+}
+
+/* Logo - hidden on mobile */
+.network-sidebar-logo {
+  display: none;
+}
+
+@media (min-width: 500px) {
+  .network-sidebar-logo {
+    display: flex;
+  }
+}
+
+/* Navigation container */
+.network-sidebar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+@media (min-width: 500px) {
+  .network-sidebar-nav {
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 1280px) {
+  .network-sidebar-nav {
+    display: block;
+  }
+}
+
+/* Navigation link */
+.network-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  border-radius: 9999px;
+  color: var(--network-text-main);
+}
+
+.network-nav-link:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+@media (min-width: 1280px) {
+  .network-nav-link {
+    padding-right: 24px;
+  }
+}
+
+/* Navigation label - hidden until xl */
+.network-nav-label {
+  display: none;
+  font-size: 20px;
+}
+
+@media (min-width: 1280px) {
+  .network-nav-label {
+    display: block;
+  }
+}
+
+/* Post button */
+.network-post-button {
+  position: absolute;
+  right: 16px;
+  transform: translateY(-72px);
+  background-color: var(--network-brand-primary);
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  outline: none;
+  transition: filter 200ms ease;
+  padding: 12px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+}
+
+.network-post-button:hover {
+  filter: brightness(0.9);
+}
+
+.network-post-button:active {
+  filter: brightness(0.75);
+}
+
+@media (min-width: 500px) {
+  .network-post-button {
+    position: static;
+    transform: none;
+    margin-top: 16px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .network-post-button {
+    width: 91.666667%;
+  }
+}
+
+/* Post button icon */
+.network-post-icon {
+  display: block;
+  height: 24px;
+  width: 24px;
+  margin: 0 auto;
+}
+
+@media (min-width: 1280px) {
+  .network-post-icon {
+    display: none;
+  }
+}
+
+/* Post button text */
+.network-post-text {
+  display: none;
+  font-size: 17px;
+}
+
+@media (min-width: 1280px) {
+  .network-post-text {
+    display: block;
+  }
+}
+
+/* Profile button at bottom */
+.network-profile-button {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 9999px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.network-profile-button:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+@media (min-width: 500px) {
+  .network-profile-button {
+    display: flex;
+  }
+}
+
+/* Profile info container */
+.network-profile-info {
+  display: none;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+@media (min-width: 1280px) {
+  .network-profile-info {
+    display: block;
+  }
+}
+
+/* Profile more icon */
+.network-profile-more {
+  display: none;
+  width: 20px;
+  height: 20px;
+  color: var(--network-text-main);
+  flex-shrink: 0;
+}
+
+@media (min-width: 1280px) {
+  .network-profile-more {
+    display: block;
+  }
+}
+
+/* ============================================
+ * BACKGROUND UTILITIES
+ * ============================================ */
+.bg-main-background {
+  background-color: rgb(var(--network-bg-main));
+}
+
+.bg-main-search-background {
+  background-color: rgb(var(--network-bg-search));
+}
+
+.bg-main-sidebar-background {
+  background-color: rgb(var(--network-bg-sidebar));
+}
+
+/* ============================================
+ * BORDER UTILITIES
+ * ============================================ */
+.border-light-border {
+  border-color: var(--network-border-light);
+}
+
+.border-dark-border {
+  border-color: var(--network-border-dark);
+}
+
+/* ============================================
+ * TEXT UTILITIES
+ * ============================================ */
+.text-text-main {
+  color: var(--network-text-main);
+}
+
+.text-text-muted {
+  color: var(--network-text-muted);
+}
+
+.text-text-light {
+  color: var(--network-text-light);
+}
+
+/* ============================================
+ * BRAND UTILITIES
+ * ============================================ */
+.bg-brand-primary {
+  background-color: var(--network-brand-primary);
+}
+
+.text-brand-primary {
+  color: var(--network-brand-primary);
+}
+
+.border-brand-primary {
+  border-color: var(--network-brand-primary);
+}
+
+.bg-brand-soft {
+  background-color: var(--network-brand-soft);
+}
+
+.ring-brand-primary {
+  --tw-ring-color: var(--network-brand-primary);
+}
+
+/* Alpha variants */
+.bg-brand-primary\/10 {
+  background-color: rgba(0, 229, 255, 0.1);
+}
+
+.bg-brand-primary\/20 {
+  background-color: rgba(0, 229, 255, 0.2);
+}
+
+.hover\:bg-brand-primary\/10:hover {
+  background-color: rgba(0, 229, 255, 0.1);
+}
+
+.hover\:bg-brand-primary\/90:hover {
+  background-color: rgba(0, 229, 255, 0.9);
+}
+
+.focus-visible\:bg-brand-primary\/10:focus-visible {
+  background-color: rgba(0, 229, 255, 0.1);
+}
+
+.focus-visible\:\!ring-brand-primary\/80:focus-visible {
+  --tw-ring-color: rgba(0, 229, 255, 0.8) !important;
+}
+
+/* ============================================
+ * REACTION UTILITIES
+ * ============================================ */
+.text-reaction-insightful {
+  color: var(--network-reaction-insightful);
+}
+
+.text-reaction-agree {
+  color: var(--network-reaction-agree);
+}
+
+.text-reaction-helpful {
+  color: var(--network-reaction-helpful);
+}
+
+.text-reaction-question {
+  color: var(--network-reaction-question);
+}
+
+.text-reaction-celebrate {
+  color: var(--network-reaction-celebrate);
+}
+
+/* ============================================
+ * TWITTER-STYLE HOVER ANIMATION
+ * ============================================ */
+.hover-animation {
+  transition-property:
+    color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* ============================================
+ * TWITTER-STYLE CUSTOM BUTTON
+ * ============================================ */
+.custom-button {
+  border-radius: 9999px;
+  padding: 0.75rem;
+  transition-property:
+    color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+.custom-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ============================================
+ * TWITTER-STYLE CUSTOM UNDERLINE
+ * ============================================ */
+.custom-underline {
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  outline: none;
+  transition-property:
+    color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+.custom-underline:hover,
+.custom-underline:focus-visible {
+  text-decoration-color: inherit;
+}
+
+/* ============================================
+ * MAIN TAB FOCUS
+ * ============================================ */
+.main-tab {
+  outline: none;
+}
+
+.main-tab:focus-visible {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0
+    var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0
+    calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow), var(--tw-ring-shadow),
+    var(--tw-shadow, 0 0 #0000);
+  --tw-ring-color: rgb(156 163 175);
+  transition-property: box-shadow;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* ============================================
+ * TWITTER-STYLE ACCENT TAB FOCUS
+ * ============================================ */
+.accent-tab {
+  outline: none;
+}
+
+.accent-tab:focus-visible {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0
+    var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0
+    calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow), var(--tw-ring-shadow),
+    var(--tw-shadow, 0 0 #0000);
+  --tw-ring-color: rgba(0, 229, 255, 0.8);
+}
+
+/* ============================================
+ * ACCENT BACKGROUND TAB
+ * ============================================ */
+.accent-bg-tab:focus-visible {
+  background-color: rgba(0, 229, 255, 0.1);
+}
+
+/* ============================================
+ * DARK BACKGROUND TAB
+ * ============================================ */
+.dark-bg-tab:focus-visible {
+  background-color: rgb(243 244 246);
+}
+
+/* ============================================
+ * TWITTER-STYLE HOVER CARD
+ * ============================================ */
+.hover-card:hover,
+.hover-card:focus-visible {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* ============================================
+ * MENU CONTAINER - Twitter style shadow
+ * ============================================ */
+.menu-container {
+  z-index: 10;
+  border-radius: 0.75rem;
+  background-color: white;
+  outline: none;
+  box-shadow:
+    rgba(101, 119, 134, 0.2) 0px 0px 15px,
+    rgba(101, 119, 134, 0.15) 0px 0px 3px 1px;
+}
+
+/* ============================================
+ * TRIM ALT TEXT
+ * ============================================ */
+.trim-alt {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+/* ============================================
+ * NETWORK-SPECIFIC SCROLLBAR
+ * ============================================ */
+.network-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.network-scrollbar::-webkit-scrollbar-track {
+  background: rgb(var(--network-bg-sidebar));
+}
+
+.network-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--network-line-reply);
+  border-radius: 4px;
+}
+
+.network-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--network-text-light);
+}
+
+/* ============================================
+ * XS BREAKPOINT RESPONSIVE (500px)
+ * Twitter uses 500px as first breakpoint
+ * ============================================ */
+@media (min-width: 500px) {
+  .xs\:w-20 {
+    width: 5rem;
+  }
+  .xs\:w-auto {
+    width: auto;
+  }
+  .xs\:flex {
+    display: flex;
+  }
+  .xs\:hidden {
+    display: none;
+  }
+  .xs\:block {
+    display: block;
+  }
+  .xs\:top-0 {
+    top: 0;
+  }
+  .xs\:h-full {
+    height: 100%;
+  }
+  .xs\:border-0 {
+    border-width: 0;
+  }
+  .xs\:border-x {
+    border-left-width: 1px;
+    border-right-width: 1px;
+  }
+  .xs\:bg-transparent {
+    background-color: transparent;
+  }
+  .xs\:px-2 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  .xs\:py-3 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+  .xs\:pt-2 {
+    padding-top: 0.5rem;
+  }
+  .xs\:mt-0 {
+    margin-top: 0;
+  }
+  .xs\:static {
+    position: static;
+  }
+  .xs\:translate-y-0 {
+    transform: translateY(0);
+  }
+  .xs\:flex-col {
+    flex-direction: column;
+  }
+  .xs\:justify-center {
+    justify-content: center;
+  }
+  .xs\:items-center {
+    align-items: center;
+  }
+  .xs\:hover\:bg-brand-primary\/90:hover {
+    background-color: rgba(0, 229, 255, 0.9);
+  }
+  .xs\:active\:bg-brand-primary\/75:active {
+    background-color: rgba(0, 229, 255, 0.75);
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "requestContract": {
+    "version": "1.0",
+    "message": "Tim cho toi lich kham thu 5 luc 16h",
+    "chatInput": "Tim cho toi lich kham thu 5 luc 16h",
+    "text": "Tim cho toi lich kham thu 5 luc 16h",
+    "sessionId": "patient_123",
+    "locale": "vi-VN",
+    "source": "patient-review-page",
+    "timestamp": "2026-03-26T10:00:00.000Z",
+    "metadata": {
+      "userId": "patient_123",
+      "userEmail": "patient@example.com",
+      "token": "jwt_token_here",
+      "screeningId": "screening_456",
+      "riskLevel": "moderate"
+    },
+    "context": {
+      "consultationContext": {
+        "screeningId": "screening_456",
+        "images": [],
+        "anomalies": [],
+        "riskLevel": "moderate",
+        "riskScore": 87,
+        "rawJsonOutput": "{}",
+        "createdAt": "2026-03-26T10:00:00.000Z"
+      }
+    }
+  },
+  "responseContract": {
+    "reply": "Minh tim thay 2 lich phu hop vao thu 5. Ban muon dat voi Bac si Nguyen Van A luc 16:00 khong?",
+    "intent": "BOOK_APPOINTMENT",
+    "requiresConfirmation": true,
+    "suggestedSlots": [
+      {
+        "doctorId": "doc_001",
+        "doctorName": "Nguyen Van A",
+        "startAt": "2026-03-27T16:00:00+07:00",
+        "endAt": "2026-03-27T16:30:00+07:00",
+        "price": 350000,
+        "location": "AURA Eye Center - District 1"
+      },
+      {
+        "doctorId": "doc_002",
+        "doctorName": "Tran Thi B",
+        "startAt": "2026-03-27T16:30:00+07:00",
+        "endAt": "2026-03-27T17:00:00+07:00",
+        "price": 300000,
+        "location": "AURA Eye Center - District 3"
+      }
+    ],
+    "action": {
+      "type": "CONFIRM_BOOKING",
+      "payload": {
+        "doctorId": "doc_001",
+        "startAt": "2026-03-27T16:00:00+07:00"
+      }
+    },
+    "traceId": "trace_abc_123"
+  },
+  "n8nRespondToWebhookBodyTemplate": {
+    "reply": "{{ $json.reply }}",
+    "intent": "{{ $json.intent || 'UNKNOWN' }}",
+    "requiresConfirmation": "{{ $json.requiresConfirmation || false }}",
+    "suggestedSlots": "{{ $json.suggestedSlots || [] }}",
+    "action": "{{ $json.action || {\"type\":\"NONE\"} }}",
+    "traceId": "{{ $json.traceId || $execution.id }}"
+  }
+}
