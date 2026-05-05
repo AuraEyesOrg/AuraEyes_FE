@@ -77,12 +77,16 @@ export default function NotificationsPage() {
       const displayTitle = renderBilingualContent(
         notification.title,
         currentLang,
-        notification.payload
+        notification.payload,
+        notification.type,
+        true
       );
       const displayMessage = renderBilingualContent(
         notification.message,
         currentLang,
-        notification.payload
+        notification.payload,
+        notification.type,
+        false
       );
 
       if (
@@ -380,18 +384,25 @@ function NotificationListItem({
 
   const iconName = getNotificationIcon(notification.type);
   const colorClass = getNotificationColor(notification.type);
-  const typeLabel = getNotificationTypeLabel(notification.type);
+  const typeLabel = getNotificationTypeLabel(
+    notification.type,
+    (key, defaultValue) => i18nT(key as any, defaultValue)
+  );
   const currentLang = i18n.language;
 
   const displayTitle = renderBilingualContent(
     notification.title,
     currentLang,
-    notification.payload
+    notification.payload,
+    notification.type,
+    true
   );
   const displayMessage = renderBilingualContent(
     notification.message,
     currentLang,
-    notification.payload
+    notification.payload,
+    notification.type,
+    false
   );
 
   return (
@@ -424,7 +435,11 @@ function NotificationListItem({
               <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
             )}
             <span className="text-xs text-gray-500 dark:text-gray-300">
-              {formatRelativeTime(notification.createdAt)}
+              {formatRelativeTime(
+                notification.createdAt,
+                false,
+                i18n.language.startsWith('vi') ? 'vi-VN' : 'en-US'
+              )}
             </span>
           </div>
 

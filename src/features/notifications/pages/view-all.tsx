@@ -15,7 +15,7 @@ import {
 } from '@/types/notification';
 import type { Notification } from '@/types/notification';
 import { NotificationIcon } from '@/components/ui/notification';
-import { formatNotificationDateTime } from '@/lib/date-utils';
+import { formatRelativeTime, toIntlLocale } from '@/lib/date-utils';
 import { renderBilingualContent } from '@/lib/notification-utils';
 import PatientLayout from '@/features/patient/components/PatientLayout';
 import {
@@ -110,12 +110,16 @@ export default function ViewAllNotificationsPage() {
       const displayTitle = renderBilingualContent(
         notification.title,
         currentLang,
-        notification.payload
+        notification.payload,
+        notification.type,
+        true
       );
       const displayMessage = renderBilingualContent(
         notification.message,
         currentLang,
-        notification.payload
+        notification.payload,
+        notification.type,
+        false
       );
 
       if (
@@ -442,12 +446,16 @@ function NotificationListItem({
   const displayTitle = renderBilingualContent(
     notification.title,
     currentLang,
-    notification.payload
+    notification.payload,
+    notification.type,
+    true
   );
   const displayMessage = renderBilingualContent(
     notification.message,
     currentLang,
-    notification.payload
+    notification.payload,
+    notification.type,
+    false
   );
 
   return (
@@ -475,7 +483,11 @@ function NotificationListItem({
               <span className="h-2 w-2 rounded-full bg-blue-500" />
             )}
             <span className="text-xs text-gray-500 dark:text-gray-300">
-              {formatNotificationDateTime(notification.createdAt)}
+              {formatRelativeTime(
+                notification.createdAt,
+                false,
+                toIntlLocale(i18n.language)
+              )}
             </span>
           </div>
 
