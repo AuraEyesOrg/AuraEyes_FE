@@ -24,8 +24,10 @@ import {
   Undo2,
   Check,
   Send,
+  Globe,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import { collaborationApi } from '@/features/professional-network/api/collaboration.api';
 import type { AvailableDoctorForConsiliumDto } from '@/features/professional-network/api/collaboration.api';
 import { internalChatApi } from '@/features/professional-network/api/internal-chat.api';
@@ -44,7 +46,9 @@ import Spinner from '@/components/ui/spinner';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import UserAvatar from '@/components/ui/UserAvatar';
-// import { mergeBoxesIntoRawJson } from '@/features/organisation/utils/screening-result.util';
+import { ShareCaseModal } from '../components';
+import { postsApi } from '@/features/professional-network/api/network.api';
+import { useMutation } from '@tanstack/react-query';
 import type { DetectionBox } from '@/features/organisation/types/screening-result.types';
 
 type RiskLevel = 'None' | 'Low' | 'Moderate' | 'High' | 'Critical';
@@ -310,6 +314,9 @@ export default function ScreeningReviewPage() {
   const [isEmergencyConsilium, setIsEmergencyConsilium] = useState(false);
   const [requestingConsilium, setRequestingConsilium] = useState(false);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [activeConsiliumStatus, setActiveConsiliumStatus] = useState<
+    string | null
+  >(null);
 
   // Diagnosis & Finalization states
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
@@ -339,6 +346,10 @@ export default function ScreeningReviewPage() {
     useState<DiagnosisModalTab>('diagnosis');
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [showLockConfirm, setShowLockConfirm] = useState(false);
+
+  // Share Case states
+  const [isShareCaseModalOpen, setIsShareCaseModalOpen] = useState(false);
+  const [shareCaseContent, setShareCaseContent] = useState('');
 
   // ─── Heatmap toolkit draggable state ────────────────────────────────────
   const [toolkitPos, setToolkitPos] = useState({ x: 0, y: 0 });
@@ -685,6 +696,38 @@ export default function ScreeningReviewPage() {
       cancelled = true;
     };
   }, [detail?.rawJsonOutput, selectedImage?.imageUrl]);
+
+  const shareConsultationMutation = useMutation({
+    mutationFn: postsApi.shareConsultationCase,
+    onSuccess: () => {
+      setIsShareCaseModalOpen(false);
+      setShareCaseContent('');
+      ophthalToast.success(
+        t(
+          'Ophthalmologist.consultations.chat.shareCase.success',
+          'Case shared to Aura Network successfully!'
+        )
+      );
+    },
+    onError: (error) => {
+      ophthalToast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'Ophthalmologist.consultations.chat.shareCase.error',
+            'Failed to share case. Please try again.'
+          )
+        )
+      );
+    },
+  });
+
+  const extractApiErrorMessage = (error: unknown, fallback: string) => {
+    if (isAxiosError(error) && error.response?.data?.message) {
+      return error.response.data.message;
+    }
+    return fallback;
+  };
 
   useEffect(() => {
     setBoxOverrides({});
@@ -1133,6 +1176,7 @@ export default function ScreeningReviewPage() {
 
       // Refresh groups status
       setActiveGroupId(groupId);
+      setActiveConsiliumStatus('Requested');
     } catch {
       ophthalToast.error(
         t(
@@ -1157,6 +1201,7 @@ export default function ScreeningReviewPage() {
           );
           if (existing) {
             setActiveGroupId(existing.id);
+            setActiveConsiliumStatus(existing.consiliumStatus ?? null);
           }
         } catch (e) {
           console.error('Error checking existing consilium', e);
@@ -1585,22 +1630,81 @@ export default function ScreeningReviewPage() {
 
                 <div className="flex items-center gap-3">
                   <button
-                    id="btn-request-consilium"
                     type="button"
-                    onClick={() => {
-                      setSelectedDoctors([]);
-                      setConsiliumReason('');
-                      setIsEmergencyConsilium(false);
-                      setShowConsiliumModal(true);
-                    }}
-                    className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-amber-500/30 transition-all hover:-translate-y-0.5 hover:bg-amber-600 active:translate-y-0"
+                    onClick={() => setIsShareCaseModalOpen(true)}
+                    disabled={
+                      !reportableSessionId ||
+                      !detail ||
+                      shareConsultationMutation.isPending
+                    }
+                    className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white shadow-md shadow-indigo-600/30 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 active:translate-y-0 disabled:opacity-50 disabled:translate-y-0"
                   >
-                    <Stethoscope className="h-4 w-4" />
-                    {t(
-                      'Ophthalmologist.screeningReview.consiliumButton',
-                      'Yêu cầu Hội chẩn'
-                    )}
+                    <Globe className="w-3.5 h-3.5" />
+                    {shareConsultationMutation.isPending
+                      ? t(
+                          'Ophthalmologist.consultations.chat.shareCase.sharing',
+                          'Sharing...'
+                        )
+                      : t(
+                          'Ophthalmologist.consultations.chat.shareCase.title',
+                          'Share Case'
+                        )}
                   </button>
+
+                  {!isFinalizedDiagnosis && (
+                    <button
+                      id="btn-consilium-action"
+                      type="button"
+                      onClick={() => {
+                        if (activeGroupId) {
+                          navigate(
+                            resolvePathWithLocale(
+                              `/network/collaboration?groupId=${encodeURIComponent(activeGroupId)}`
+                            )
+                          );
+                          return;
+                        }
+                        setSelectedDoctors([]);
+                        setConsiliumReason('');
+                        setIsEmergencyConsilium(false);
+                        setShowConsiliumModal(true);
+                      }}
+                      className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 ${
+                        !activeGroupId
+                          ? 'bg-amber-500 shadow-amber-500/30 hover:bg-amber-600'
+                          : activeConsiliumStatus === 'Requested'
+                            ? 'bg-sky-500 shadow-sky-500/30 hover:bg-sky-600'
+                            : 'bg-emerald-600 shadow-emerald-600/30 hover:bg-emerald-700'
+                      }`}
+                    >
+                      <Stethoscope className="h-4 w-4" />
+                      {!activeGroupId
+                        ? t(
+                            'Ophthalmologist.screeningReview.consiliumButton',
+                            'Yêu cầu Hội chẩn'
+                          )
+                        : activeConsiliumStatus === 'Requested'
+                          ? t(
+                              'Ophthalmologist.screeningReview.consiliumPendingButton',
+                              'Đang chờ hội chẩn'
+                            )
+                          : t(
+                              'Ophthalmologist.screeningReview.consiliumJoinButton',
+                              'Vào hội chẩn'
+                            )}
+                    </button>
+                  )}
+
+                  {isFinalizedDiagnosis && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-bold border border-emerald-200 dark:border-emerald-800">
+                      <Check className="w-3.5 h-3.5" />
+                      {t(
+                        'Ophthalmologist.screeningReview.status.finalizedLocked',
+                        'Finalized & Locked'
+                      )}
+                    </span>
+                  )}
+
                   <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded-full text-xs font-medium">
                     {t('Ophthalmologist.screeningReview.aiModel', 'AI Model')}:{' '}
                     {detail.modelVersion?.trim()
@@ -2829,7 +2933,7 @@ export default function ScreeningReviewPage() {
                         )}
                       </p>
                     ) : null}
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <div className="flex flex-col gap-2">
                       <button
                         onClick={handleSaveEdits}
                         disabled={savingEdits || isFinalizedDiagnosis}
@@ -2842,23 +2946,24 @@ export default function ScreeningReviewPage() {
                         )}
                         {t(
                           'Ophthalmologist.screeningReview.saveButton',
-                          'Save'
+                          'Lưu chỉnh sửa'
                         )}
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!isFinalizedDiagnosis) navigateToErm();
-                        }}
-                        disabled={isFinalizedDiagnosis}
-                        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 text-sm font-semibold text-white shadow-sm shadow-cyan-600/25 transition-all hover:-translate-y-0.5 hover:bg-cyan-700 hover:shadow-md hover:shadow-cyan-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        <FileText className="w-4 h-4" />
-                        {t(
-                          'Ophthalmologist.screeningReview.openErmDiagnosis',
-                          'Chẩn đoán, đơn thuốc & khóa hồ sơ (ERM)'
-                        )}
-                      </button>
+                      {!isFinalizedDiagnosis && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!isFinalizedDiagnosis) navigateToErm();
+                          }}
+                          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 text-sm font-semibold text-white shadow-sm shadow-cyan-600/25 transition-all hover:-translate-y-0.5 hover:bg-cyan-700 hover:shadow-md hover:shadow-cyan-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <FileText className="w-4 h-4" />
+                          {t(
+                            'Ophthalmologist.screeningReview.openErmDiagnosis',
+                            'Chẩn đoán, thuốc & Khóa hồ sơ'
+                          )}
+                        </button>
+                      )}
                     </div>
                     {!isFinalizedDiagnosis ? (
                       <p className="mt-2 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
@@ -3131,6 +3236,35 @@ export default function ScreeningReviewPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {detail && (
+        <ShareCaseModal
+          t={t}
+          isOpen={isShareCaseModalOpen}
+          isSubmitting={shareConsultationMutation.isPending}
+          patientName={detail.patientFullName}
+          content={shareCaseContent}
+          onChangeContent={setShareCaseContent}
+          onClose={() => setIsShareCaseModalOpen(false)}
+          onSubmit={() => {
+            if (!reportableSessionId) return;
+            shareConsultationMutation.mutate({
+              consultationSessionId: reportableSessionId,
+              aiSummary: detail.latestResult?.summary ?? '',
+              finalDiagnosis:
+                clinicalFindings || (detail.latestResult?.findings ?? ''),
+              doctorNote: shareCaseContent.trim(),
+            });
+          }}
+          caseSnapshot={{
+            summary: detail.latestResult?.summary ?? '',
+            findings: clinicalFindings || (detail.latestResult?.findings ?? ''),
+            riskLevel: detail.latestResult?.riskLevel ?? 'None',
+            confidenceScore: detail.latestResult?.confidenceScore ?? 0,
+            originalImageUrls: detail.images.map((img) => img.imageUrl),
+          }}
+        />
       )}
     </div>
   );

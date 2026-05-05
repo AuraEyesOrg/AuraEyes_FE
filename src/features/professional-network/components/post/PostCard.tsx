@@ -15,7 +15,6 @@ import {
   Heart,
   PartyPopper,
   FileText,
-  FlaskConical,
   HelpingHand,
   Newspaper,
   Copy,
@@ -51,12 +50,6 @@ interface Props {
 }
 
 const postTypeConfig = {
-  CasePresentation: {
-    icon: FlaskConical,
-    labelKey: 'ProfessionalNetwork.postTypes.casePresentation',
-    labelFallback: 'Case Presentation',
-    color: 'text-purple-500 bg-purple-50',
-  },
   PeerDiscussion: {
     icon: HelpingHand,
     labelKey: 'ProfessionalNetwork.postTypes.peerDiscussion',
@@ -116,24 +109,6 @@ const reactionConfig: Record<
     labelFallback: 'Celebrate',
     color: 'text-reaction-celebrate',
   },
-};
-
-const parseInternalCaseSections = (content: string) => {
-  const resultMatch = content.match(
-    /\[CASE_RESULT\]([\s\S]*?)\[\/CASE_RESULT\]/
-  );
-  const doctorMatch = content.match(
-    /\[DOCTOR_NOTE\]([\s\S]*?)\[\/DOCTOR_NOTE\]/
-  );
-
-  if (!resultMatch && !doctorMatch) {
-    return null;
-  }
-
-  return {
-    caseResult: resultMatch?.[1]?.trim() ?? '',
-    doctorNote: doctorMatch?.[1]?.trim() ?? '',
-  };
 };
 
 export function PostCard({
@@ -218,9 +193,6 @@ export function PostCard({
 
   const isOwnPost = !!currentUserId && post.author.id === currentUserId;
   const canReportPost = !canModerate && !isOwnPost && !post.isHidden;
-  const parsedInternalCase = post.isInternalCase
-    ? parseInternalCaseSections(post.content)
-    : null;
 
   const handleSave = () => {
     if (isOwnPost) return;
@@ -504,65 +476,25 @@ export function PostCard({
                   to={toLocalizedPath(`/network/post/${post.id}`)}
                   className="block mt-2"
                 >
-                  {post.isInternalCase && parsedInternalCase ? (
-                    <div className="space-y-3">
-                      <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-800 dark:bg-cyan-900/20">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-700 dark:text-cyan-200">
-                          {t(
-                            'ProfessionalNetwork.postCard.internalCase.caseResultAndDiagnosis',
-                            'Case Result and Diagnosis'
-                          )}
-                        </p>
-                        <p className="mt-2 text-[14px] leading-relaxed whitespace-pre-wrap text-slate-800 dark:text-slate-100">
-                          {parsedInternalCase.caseResult ||
-                            t(
-                              'ProfessionalNetwork.postCard.internalCase.noAiSummary',
-                              'No AI summary or diagnosis provided.'
-                            )}
-                        </p>
-                      </div>
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/60">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300">
-                          {t(
-                            'ProfessionalNetwork.postCard.internalCase.doctorNote',
-                            'Doctor Note'
-                          )}
-                        </p>
-                        <p className="mt-2 text-[14px] leading-relaxed whitespace-pre-wrap text-slate-800 dark:text-slate-100">
-                          {parsedInternalCase.doctorNote ||
-                            t(
-                              'ProfessionalNetwork.postCard.internalCase.noDoctorNote',
-                              '{{name}}: "No note provided."',
-                              { name: post.author.fullName }
-                            )}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-[15px] text-(--text-primary) whitespace-pre-wrap leading-normal">
-                      {post.content.split('\n').map((line, i) => {
-                        const boldRegex = /\*\*(.*?)\*\*/g;
-                        const parts = line.split(boldRegex);
+                  <div className="text-[15px] text-(--text-primary) whitespace-pre-wrap leading-normal">
+                    {post.content.split('\n').map((line, i) => {
+                      const boldRegex = /\*\*(.*?)\*\*/g;
+                      const parts = line.split(boldRegex);
 
-                        return (
-                          <p
-                            key={i}
-                            className={
-                              line.startsWith('#') ? 'text-brand-primary' : ''
-                            }
-                          >
-                            {parts.map((part, j) =>
-                              j % 2 === 1 ? (
-                                <strong key={j}>{part}</strong>
-                              ) : (
-                                part
-                              )
-                            )}
-                          </p>
-                        );
-                      })}
-                    </div>
-                  )}
+                      return (
+                        <p
+                          key={i}
+                          className={
+                            line.startsWith('#') ? 'text-brand-primary' : ''
+                          }
+                        >
+                          {parts.map((part, j) =>
+                            j % 2 === 1 ? <strong key={j}>{part}</strong> : part
+                          )}
+                        </p>
+                      );
+                    })}
+                  </div>
                 </Link>
 
                 {/* Media - images from attachments */}

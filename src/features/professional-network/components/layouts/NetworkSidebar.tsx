@@ -15,15 +15,19 @@ import {
   ArrowLeft,
   Sun,
   Moon,
+  Globe,
   Users,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/contexts/ThemeContext';
 import useAuthStore from '@/store/auth-store';
 import {
   DEFAULT_LOCALE,
   getLocaleFromPathname,
   withLocalePathname,
+  type AppLocale,
 } from '@/i18n/locales';
+import { persistLocale } from '@/i18n/middleware';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { AuraLogo } from '@/components/ui/aura-logo';
@@ -57,6 +61,7 @@ export function NetworkSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
+  const { i18n } = useTranslation();
   const { t } = useSafeTranslation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedPath = (pathname: string) =>
@@ -141,11 +146,28 @@ export function NetworkSidebar() {
       isActive: () =>
         location.pathname === toLocalizedPath('/network/collaboration'),
     },
-  ];
+  ].filter((item) => {
+    // Hide Profile tab for Clinic Staff
+    if (
+      item.label === t('ProfessionalNetwork.navigation.profile', 'Profile') &&
+      user?.roles?.includes('ClinicStaff')
+    ) {
+      return false;
+    }
+    return true;
+  });
 
   const handleLogout = () => {
     logout();
     navigate(toLocalizedPath('/login'));
+  };
+
+  const handleToggleLanguage = () => {
+    const newLocale: AppLocale = locale === 'en' ? 'vi' : 'en';
+    persistLocale(newLocale);
+    i18n.changeLanguage(newLocale);
+    const newPath = withLocalePathname(newLocale, location.pathname);
+    navigate(newPath);
   };
 
   return (
@@ -215,16 +237,19 @@ export function NetworkSidebar() {
 
         {/* User Profile Footer - pinned to bottom */}
         <div className="mt-auto pt-6 border-t border-gray-700">
-          <div className="flex items-center gap-3 px-2">
-            <div className="flex items-center gap-3 flex-1">
-              <UserAvatar
-                fullName={user?.fullName}
-                avatarUrl={user?.avatarUrl}
-                fallbackName={t('ProfessionalNetwork.common.user', 'User')}
-                size="md"
-                className="shrink-0 border-2 border-brand/30 shadow-sm"
-                fallbackClassName="bg-brand/20 text-brand"
-              />
+          <div className="flex items-center gap-2 px-1">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="relative shrink-0">
+                <UserAvatar
+                  fullName={user?.fullName}
+                  avatarUrl={user?.avatarUrl}
+                  fallbackName={t('ProfessionalNetwork.common.user', 'User')}
+                  size="md"
+                  className="border-2 border-brand/30 shadow-sm"
+                  fallbackClassName="bg-brand/20 text-brand"
+                />
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-(--bg-secondary)" />
+              </div>
               <div className="flex flex-col overflow-hidden">
                 <p className="text-sm font-bold text-(--text-primary) truncate">
                   {user?.fullName ||
@@ -235,6 +260,13 @@ export function NetworkSidebar() {
                 </p>
               </div>
             </div>
+            <button
+              onClick={handleToggleLanguage}
+              className="text-gray-500 hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-cyan-500/10"
+              title={t('Common.language', 'Language')}
+            >
+              <Globe className="w-5 h-5" />
+            </button>
             <button
               onClick={handleLogout}
               className="text-gray-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"

@@ -12,7 +12,6 @@ import {
   Activity,
   Share2,
   Mail,
-  Network,
   Plus,
   Zap,
   Coins,
@@ -38,8 +37,6 @@ import { resolvePathWithLocale } from '@/i18n/middleware';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { getDiseaseUrgency } from '@/features/patient/mock/disease-mapping';
 import i18n from '@/i18n/i18n';
-import { postsApi } from '@/features/professional-network/api/network.api';
-import { resolveAuthorType } from '@/features/professional-network/utils/authorType';
 import useAuthStore from '@/store/auth-store';
 import { BoxLabelSelector } from '../components/BoxLabelSelector';
 import type {
@@ -73,7 +70,7 @@ import {
 } from '@/features/organisation/utils/screening-result.util';
 
 // ─── Share modal tab type ────────────────────────────────────────────────────
-type ShareTab = 'email' | 'network';
+type ShareTab = 'email';
 
 type TranslationParams = Record<
   string,
@@ -246,7 +243,6 @@ export default function OrganisationScreeningResultPage() {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareTab, setShareTab] = useState<ShareTab>('email');
   const [sharingEmail, setSharingEmail] = useState(false); // loading riêng
-  const [sharingNetwork, setSharingNetwork] = useState(false); // loading riêng
   const [shareEmail, setShareEmail] = useState('');
   const [shareIncludePdf, setShareIncludePdf] = useState(true);
   const [shareIncludeRetinalImages, setShareIncludeRetinalImages] =
@@ -1087,126 +1083,6 @@ export default function OrganisationScreeningResultPage() {
     shareIncludeRetinalImages,
     shareEmail,
     isWalkInPatient,
-    t,
-  ]);
-
-  // ─── Share to Professional Network ───────────────────────────────────────
-  const buildNetworkShareContent = useCallback(() => {
-    if (!sessionData || !draft) return '';
-    const topFindings = aiFindings.slice(0, 3);
-    const findingText =
-      topFindings.length > 0
-        ? topFindings.map((f) => `- ${f.localizedName}`).join('\n')
-        : `- ${t(
-            'Organisation.screeningResult.network.noAbnormalFindings',
-            'No clear abnormal findings'
-          )}`;
-
-    return [
-      t(
-        'Organisation.screeningResult.network.title',
-        'AI screening case shared by organisation'
-      ),
-      t('Organisation.screeningResult.network.session', 'Session: {{id}}...', {
-        id: sessionData.screeningId.slice(0, 8),
-      }),
-      t(
-        'Organisation.screeningResult.network.riskLevel',
-        'Risk level: {{risk}}',
-        {
-          risk: draft.riskLevel,
-        }
-      ),
-      '',
-      t('Organisation.screeningResult.network.summary', 'Summary:'),
-      draft.summary,
-      '',
-      t('Organisation.screeningResult.network.topFindings', 'Top findings:'),
-      findingText,
-      '',
-      t(
-        'Organisation.screeningResult.network.consultationNote',
-        'Consultation note: {{note}}',
-        {
-          note:
-            consultationNote.trim() ||
-            t(
-              'Organisation.screeningResult.network.notProvidedYet',
-              'Not provided yet'
-            ),
-        }
-      ),
-    ].join('\n');
-  }, [aiFindings, consultationNote, draft, sessionData, t]);
-
-  const handleShareToNetwork = useCallback(async () => {
-    if (!sessionData || !draft || sharingNetwork) return;
-
-    setSharingNetwork(true);
-    try {
-      const formData = new FormData();
-      formData.append(
-        'authorType',
-        resolveAuthorType(user?.roles, 'Organisation')
-      );
-      formData.append('category', 'CasePresentation');
-      formData.append('allowComments', 'true');
-      formData.append('isInternalCase', 'false');
-      formData.append('isAnonymizationConfirmed', 'true');
-      formData.append('aiScreeningId', sessionData.screeningId);
-      formData.append('content', buildNetworkShareContent());
-
-      const targetImage =
-        sessionData.images[selectedImageIndex] ?? sessionData.images[0];
-      if (targetImage?.imageUrl) {
-        try {
-          const imageResponse = await fetch(targetImage.imageUrl);
-          if (imageResponse.ok) {
-            const imageBlob = await imageResponse.blob();
-            const extension =
-              imageBlob.type.split('/')[1]?.replace(/[^a-z0-9]/gi, '') || 'jpg';
-            const fileName = `org-screening-${sessionData.screeningId.slice(0, 8)}.${extension}`;
-            formData.append(
-              'attachments',
-              new File([imageBlob], fileName, {
-                type: imageBlob.type || 'image/jpeg',
-              })
-            );
-          }
-        } catch (imageError) {
-          console.warn('Unable to attach selected retinal image:', imageError);
-        }
-      }
-
-      await postsApi.createPost(formData);
-      toast.success(
-        t(
-          'Organisation.screeningResult.toast.shareNetworkSuccess',
-          'Case shared to Professional Network successfully.'
-        )
-      );
-      setShareModalOpen(false);
-    } catch (error) {
-      console.error('Failed to share organisation screening case:', error);
-      toast.error(
-        getErrorMessage(
-          error,
-          t(
-            'Organisation.screeningResult.toast.shareNetworkFailed',
-            'Unable to post to Professional Network. Please try again.'
-          )
-        )
-      );
-    } finally {
-      setSharingNetwork(false);
-    }
-  }, [
-    buildNetworkShareContent,
-    draft,
-    selectedImageIndex,
-    sessionData,
-    sharingNetwork,
-    user?.roles,
     t,
   ]);
 
@@ -2137,38 +2013,6 @@ export default function OrganisationScreeningResultPage() {
                 )}
               </h3>
 
-              {/* Tab switcher */}
-              <div className="mt-3 flex gap-1 rounded-xl bg-(--bg-primary) p-1">
-                <button
-                  onClick={() => setShareTab('email')}
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                    shareTab === 'email'
-                      ? 'bg-(--bg-secondary) text-(--text-primary) shadow-sm'
-                      : 'text-(--text-secondary) hover:text-(--text-primary)'
-                  }`}
-                >
-                  <Mail className="w-4 h-4" />
-                  {t(
-                    'Organisation.screeningResult.shareModal.tabs.email',
-                    'Send email to patient'
-                  )}
-                </button>
-                <button
-                  onClick={() => setShareTab('network')}
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                    shareTab === 'network'
-                      ? 'bg-(--bg-secondary) text-(--text-primary) shadow-sm'
-                      : 'text-(--text-secondary) hover:text-(--text-primary)'
-                  }`}
-                >
-                  <Network className="w-4 h-4" />
-                  {t(
-                    'Organisation.screeningResult.shareModal.tabs.network',
-                    'Post to Network'
-                  )}
-                </button>
-              </div>
-
               {/* Tab: email */}
               {shareTab === 'email' && (
                 <div className="mt-4 space-y-4">
@@ -2255,73 +2099,6 @@ export default function OrganisationScreeningResultPage() {
                       {t(
                         'Organisation.screeningResult.shareModal.email.send',
                         'Send share'
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Tab: network */}
-              {shareTab === 'network' && (
-                <div className="mt-4 space-y-4">
-                  <p className="text-sm text-(--text-secondary)">
-                    {t(
-                      'Organisation.screeningResult.shareModal.network.intro',
-                      'Post this screening case to Professional Network as a case presentation. The selected retinal image will be attached.'
-                    )}
-                  </p>
-                  {draft ? (
-                    <div className="rounded-xl border border-(--border-primary) bg-(--bg-primary) p-3 space-y-1 text-xs text-(--text-secondary)">
-                      <p>
-                        <span className="font-semibold text-(--text-primary)">
-                          {t(
-                            'Organisation.screeningResult.shareModal.network.riskLabel',
-                            'Risk level:'
-                          )}
-                        </span>{' '}
-                        {draft.riskLevel}
-                      </p>
-                      <p className="line-clamp-2">
-                        <span className="font-semibold text-(--text-primary)">
-                          {t(
-                            'Organisation.screeningResult.shareModal.network.summaryLabel',
-                            'Summary:'
-                          )}
-                        </span>{' '}
-                        {draft.summary}
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-amber-600 dark:text-amber-400">
-                      {t(
-                        'Organisation.screeningResult.shareModal.network.noDraft',
-                        'No AI result yet. Please run analysis first.'
-                      )}
-                    </p>
-                  )}
-                  <div className="flex justify-end gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!sharingNetwork) setShareModalOpen(false);
-                      }}
-                      disabled={sharingNetwork}
-                      className="rounded-xl border border-(--border-primary) bg-(--bg-primary) px-4 py-2 text-sm font-medium text-(--text-secondary)"
-                    >
-                      {t('Organisation.common.cancel', 'Cancel')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleShareToNetwork}
-                      disabled={sharingNetwork || !draft}
-                      className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                    >
-                      {sharingNetwork && (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      )}
-                      {t(
-                        'Organisation.screeningResult.shareModal.network.post',
-                        'Post to Network'
                       )}
                     </button>
                   </div>

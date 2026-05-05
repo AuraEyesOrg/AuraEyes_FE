@@ -51,7 +51,7 @@ import {
   useUploadChatImages,
   consultationKeys,
 } from '@/features/consultation/hooks';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth-store';
 import {
   ChatStatus,
@@ -85,8 +85,6 @@ import { extractApiErrorMessage } from '@/lib/api-error';
 import { resolveAvatarUrl } from '@/lib/user-avatar';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
-import { postsApi } from '@/features/professional-network/api/network.api';
-import { resolveAuthorType } from '@/features/professional-network/utils/authorType';
 
 type ConsultationPhase = 'PRE_VISIT' | 'IN_PROGRESS' | 'COMPLETED';
 
@@ -526,162 +524,6 @@ interface ConsultationsChatViewProps {
   sessionsLoading: boolean;
 }
 
-interface ShareCaseModalProps {
-  isOpen: boolean;
-  isSubmitting: boolean;
-  patientName: string;
-  content: string;
-  onChangeContent: (value: string) => void;
-  onClose: () => void;
-  onSubmit: () => void;
-  caseSnapshot: {
-    summary: string | null;
-    findings: string | null;
-    riskLevel: string | null;
-    confidenceScore: number | null;
-    originalImageUrls: string[];
-  };
-  t: TranslateFn;
-}
-
-function ShareCaseModal({
-  isOpen,
-  isSubmitting,
-  patientName,
-  content,
-  onChangeContent,
-  onClose,
-  onSubmit,
-  caseSnapshot,
-  t,
-}: ShareCaseModalProps) {
-  if (!isOpen) return null;
-
-  const livePreview = [
-    t(
-      'Ophthalmologist.consultations.chat.shareCase.previewTitle',
-      'Anonymized clinical case post'
-    ),
-    `${t('Ophthalmologist.consultations.chat.shareCase.patient', 'Patient')}: ${patientName}`,
-    `${t('Ophthalmologist.consultations.chat.shareCase.riskLevel', 'Risk level')}: ${caseSnapshot.riskLevel ?? 'N/A'}`,
-    `${t('Ophthalmologist.consultations.chat.shareCase.aiConfidence', 'AI confidence')}: ${caseSnapshot.confidenceScore ?? '--'}%`,
-    '',
-    `${t('Ophthalmologist.consultations.chat.shareCase.summary', 'Summary')}: ${caseSnapshot.summary ?? 'N/A'}`,
-    `${t('Ophthalmologist.consultations.chat.shareCase.finalDiagnosis', 'Final diagnosis')}: ${caseSnapshot.findings ?? 'N/A'}`,
-    '',
-    `${t('Ophthalmologist.consultations.chat.shareCase.doctorSays', 'Doctor says')}: ${content.trim() || '...'}`,
-  ].join('\n');
-
-  return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-      <div
-        className="fixed inset-0 bg-black/55 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      <div className="relative z-10 w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-[#1e3a5f] dark:bg-[#0a1f44]">
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-[#1e3a5f]">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-            {t(
-              'Ophthalmologist.consultations.chat.shareCase.title',
-              'Share Case To Network'
-            )}
-          </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-[#0a1929]"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="grid gap-0 md:grid-cols-2">
-          <div className="border-b border-slate-200 p-5 dark:border-[#1e3a5f] md:border-b-0 md:border-r">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">
-              {t(
-                'Ophthalmologist.consultations.chat.shareCase.doctorContent',
-                'Doctor Content'
-              )}
-            </p>
-            <textarea
-              value={content}
-              onChange={(event) => onChangeContent(event.target.value)}
-              placeholder={t(
-                'Ophthalmologist.consultations.chat.shareCase.contentPlaceholder',
-                'Enter clinical notes to share with the doctor network...'
-              )}
-              rows={7}
-              className="mt-3 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 dark:text-slate-100"
-            />
-
-            <div className="mt-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">
-                {t(
-                  'Ophthalmologist.consultations.chat.shareCase.retinalImages',
-                  'Retinal Images'
-                )}{' '}
-                ({caseSnapshot.originalImageUrls.length})
-              </p>
-              <div className="mt-2 grid grid-cols-3 gap-2">
-                {caseSnapshot.originalImageUrls
-                  .slice(0, 6)
-                  .map((url, index) => (
-                    <img
-                      key={`${url}-${index}`}
-                      src={url}
-                      alt={`retinal-${index + 1}`}
-                      className="h-20 w-full rounded-xl border border-slate-200 object-cover dark:border-[#1e3a5f]"
-                    />
-                  ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">
-              {t(
-                'Ophthalmologist.consultations.chat.shareCase.preview',
-                'Post Preview'
-              )}
-            </p>
-            <div className="mt-3 h-[260px] overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-700 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 dark:text-slate-200">
-              <pre className="whitespace-pre-wrap font-sans">{livePreview}</pre>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4 dark:border-[#1e3a5f]">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-[#1e3a5f] dark:text-slate-200 dark:hover:bg-[#0a1929]"
-          >
-            {t('Ophthalmologist.common.cancel', 'Cancel')}
-          </button>
-          <button
-            type="button"
-            onClick={onSubmit}
-            disabled={isSubmitting || !content.trim()}
-            className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <Send className="h-4 w-4" />
-            {isSubmitting
-              ? t(
-                  'Ophthalmologist.consultations.chat.shareCase.sharing',
-                  'Sharing case...'
-                )
-              : t(
-                  'Ophthalmologist.consultations.chat.shareCase.title',
-                  'Share Case To Network'
-                )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function ConsultationsChatView({
   sessions,
   sessionsLoading,
@@ -711,8 +553,7 @@ export default function ConsultationsChatView({
   >({});
   const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
   const [isPeerTyping, setIsPeerTyping] = useState(false);
-  const [isShareCaseModalOpen, setIsShareCaseModalOpen] = useState(false);
-  const [shareCaseContent, setShareCaseContent] = useState('');
+
   const [sessionActionTarget, setSessionActionTarget] = useState<{
     type: 'cancel' | 'complete';
     sessionId: string;
@@ -758,76 +599,6 @@ export default function ConsultationsChatView({
   const uploadChatImagesMutation = useUploadChatImages();
   const cancelSessionMutation = useCancelSession();
   const endSessionMutation = useEndSession();
-
-  const buildInternalCasePostContent = (
-    aiSummary: string,
-    finalDiagnosis: string,
-    doctorNote: string
-  ) => {
-    return [
-      '[CASE_RESULT]',
-      `${t('Ophthalmologist.consultations.chat.saveResult.aiSummary', 'Tóm tắt AI')}: ${aiSummary || t('Ophthalmologist.consultations.chat.na', 'N/A')}`,
-      `${t('Ophthalmologist.consultations.chat.saveResult.finalDiagnosis', 'Chẩn đoán cuối')}: ${finalDiagnosis || t('Ophthalmologist.consultations.chat.na', 'N/A')}`,
-      '[/CASE_RESULT]',
-      '',
-      '[DOCTOR_NOTE]',
-      `${t('Ophthalmologist.consultations.chat.saveResult.doctorSays', 'Bác sĩ nói rằng')}: ${doctorNote}`,
-      '[/DOCTOR_NOTE]',
-    ].join('\n');
-  };
-
-  const shareConsultationMutation = useMutation({
-    mutationFn: async ({
-      consultationSessionId,
-      aiSummary,
-      finalDiagnosis,
-      doctorNote,
-    }: {
-      consultationSessionId: string;
-      aiSummary: string;
-      finalDiagnosis: string;
-      doctorNote: string;
-    }) => {
-      const formData = new FormData();
-      formData.append(
-        'authorType',
-        resolveAuthorType(user?.roles, 'Ophthalmologist')
-      );
-      formData.append('category', 'CasePresentation');
-      formData.append('visibility', 'Public');
-      formData.append('allowComments', 'true');
-      formData.append('isInternalCase', 'true');
-      formData.append('consultationSessionId', consultationSessionId);
-      formData.append('isAnonymizationConfirmed', 'true');
-      formData.append(
-        'content',
-        buildInternalCasePostContent(aiSummary, finalDiagnosis, doctorNote)
-      );
-      return postsApi.createPost(formData);
-    },
-    onSuccess: () => {
-      ophthalToast.success(
-        t(
-          'Ophthalmologist.consultations.chat.shareCase.success',
-          'Đã chia sẻ ca lên mạng lưới chuyên môn.'
-        )
-      );
-      queryClient.invalidateQueries({ queryKey: ['network'] });
-      setShareCaseContent('');
-      setIsShareCaseModalOpen(false);
-    },
-    onError: (error) => {
-      ophthalToast.error(
-        extractApiErrorMessage(
-          error,
-          t(
-            'Ophthalmologist.consultations.chat.shareCase.error',
-            'Failed to share consultation case'
-          )
-        )
-      );
-    },
-  });
 
   const phase = currentSession ? getPhase(currentSession) : 'PRE_VISIT';
   const phaseUIConfig = getPhaseUIConfig(t);
@@ -2476,41 +2247,6 @@ export default function ConsultationsChatView({
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">
-                  {t(
-                    'Ophthalmologist.consultations.chat.shareCase.title',
-                    'Share Case To Network'
-                  )}
-                </p>
-                <p className="mt-2 text-xs text-slate-500 dark:text-gray-400">
-                  {t(
-                    'Ophthalmologist.consultations.chat.shareCase.description',
-                    'Share anonymized cases to Aura Network with a clinical post layout.'
-                  )}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setIsShareCaseModalOpen(true)}
-                  disabled={
-                    !currentSession?.id ||
-                    !selectedSession?.caseSnapshot ||
-                    shareConsultationMutation.isPending
-                  }
-                  className="mt-3 inline-flex items-center justify-center rounded-xl bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {shareConsultationMutation.isPending
-                    ? t(
-                        'Ophthalmologist.consultations.chat.shareCase.sharing',
-                        'Sharing case...'
-                      )
-                    : t(
-                        'Ophthalmologist.consultations.chat.shareCase.title',
-                        'Share Case To Network'
-                      )}
-                </button>
-              </div>
-
               <div className="rounded-2xl bg-slate-900 p-4 text-white dark:bg-[#030712]">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-cyan-300">
                   <Stethoscope className="h-4 w-4" />
@@ -2620,49 +2356,6 @@ export default function ConsultationsChatView({
                       </p>
                     </div>
                   </div>
-                </div>
-
-                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
-                    {t(
-                      'Ophthalmologist.consultations.chat.shareCase.title',
-                      'Share Case To Network'
-                    )}
-                  </p>
-                  <p className="mt-2 text-xs text-slate-500 dark:text-gray-400">
-                    {t(
-                      'Ophthalmologist.consultations.chat.shareCase.description',
-                      'Share anonymized cases to Aura Network with a clinical post layout.'
-                    )}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setIsShareCaseModalOpen(true)}
-                    disabled={
-                      !currentSession?.id ||
-                      !selectedSession?.caseSnapshot ||
-                      shareConsultationMutation.isPending
-                    }
-                    className="mt-3 inline-flex items-center justify-center rounded-xl bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {shareConsultationMutation.isPending
-                      ? t(
-                          'Ophthalmologist.consultations.chat.shareCase.sharing',
-                          'Sharing case...'
-                        )
-                      : t(
-                          'Ophthalmologist.consultations.chat.shareCase.title',
-                          'Share Case To Network'
-                        )}
-                  </button>
-                  {!selectedSession?.caseSnapshot && (
-                    <p className="mt-2 text-[11px] text-amber-600 dark:text-amber-300">
-                      {t(
-                        'Ophthalmologist.consultations.chat.shareCase.notEligible',
-                        'This consultation has no retinal snapshot or final diagnosis yet, so it cannot be shared.'
-                      )}
-                    </p>
-                  )}
                 </div>
               </div>
 
@@ -2786,36 +2479,6 @@ export default function ConsultationsChatView({
             </div>
           </aside>
         </>
-      )}
-
-      {currentSession && selectedSession?.caseSnapshot && (
-        <ShareCaseModal
-          t={t}
-          isOpen={isShareCaseModalOpen}
-          isSubmitting={shareConsultationMutation.isPending}
-          patientName={patientName}
-          content={shareCaseContent}
-          onChangeContent={setShareCaseContent}
-          onClose={() => setIsShareCaseModalOpen(false)}
-          onSubmit={() =>
-            shareConsultationMutation.mutate({
-              consultationSessionId: currentSession.id,
-              aiSummary: selectedSession.caseSnapshot?.summary ?? '',
-              finalDiagnosis:
-                selectedSession.caseSnapshot?.findings ??
-                selectedSession.caseSnapshot?.summary ??
-                '',
-              doctorNote: shareCaseContent.trim(),
-            })
-          }
-          caseSnapshot={{
-            summary: selectedSession.caseSnapshot.summary,
-            findings: selectedSession.caseSnapshot.findings,
-            riskLevel: selectedSession.caseSnapshot.riskLevel,
-            confidenceScore: selectedSession.caseSnapshot.confidenceScore,
-            originalImageUrls: selectedSession.caseSnapshot.originalImageUrls,
-          }}
-        />
       )}
 
       <ConfirmModal

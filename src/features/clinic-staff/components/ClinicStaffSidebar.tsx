@@ -99,6 +99,11 @@ export default function ClinicStaffSidebar() {
       requiredAnySubRole: ['Receptionist', 'Cashier'],
     },
     {
+      icon: Globe,
+      label: t('ClinicStaffSidebar.nav.network', 'Aura Network'),
+      path: '/network/feed',
+    },
+    {
       icon: Settings,
       label: t('ClinicStaffSidebar.nav.settings', 'Settings'),
       path: '/clinic-staff/settings',

@@ -1296,13 +1296,17 @@
       }
     },
     "screeningReview": {
+      "status": {
+        "finalizedLocked": "This case is finalized. Editing is locked."
+      },
+      "subtitle": "Case details and AI findings",
       "diagnosis": {
-        "H35.3": "H35.3 - Thoái hóa hoàng điểm",
-        "H35.0": "H35.0 - Bệnh võng mạc nền",
-        "H35.9": "H35.9 - Bệnh võng mạc, không xác định",
-        "H36.0": "H36.0 - Bệnh võng mạc đái tháo đường",
-        "H40.9": "H40.9 - Glôcôm, không xác định",
-        "custom": "Mã ICD-10 khác..."
+        "H35.3": "H35.3 - Macular Degeneration",
+        "H35.0": "H35.0 - Background Retinopathy",
+        "H35.9": "H35.9 - Retinopathy, unspecified",
+        "H36.0": "H36.0 - Diabetic Retinopathy",
+        "H40.9": "H40.9 - Glaucoma, unspecified",
+        "custom": "Other ICD-10 code..."
       },
       "toolbox": {
         "size": "Size",
@@ -6425,512 +6429,6 @@
       }
     }
   },
-  "ProfessionalNetwork": {
-    "common": {
-      "user": "User",
-      "member": "Member",
-      "unknownAuthor": "Unknown",
-      "showMore": "Show more",
-      "tryAgain": "Try again",
-      "actions": {
-        "cancel": "Cancel",
-        "follow": "Follow"
-      },
-      "roles": {
-        "ophthalmologist": "Ophthalmologist",
-        "orgAdmin": "Organisation Admin",
-        "systemAdmin": "System Admin",
-        "patient": "Patient"
-      },
-      "gender": {
-        "male": "Male",
-        "female": "Female",
-        "other": "Other"
-      },
-      "pagination": {
-        "previous": "Previous",
-        "next": "Next",
-        "pageOf": "Page {{page}} of {{total}}"
-      }
-    },
-    "navigation": {
-      "feed": "Feed",
-      "discover": "Discover",
-      "saved": "Saved",
-      "managePosts": "Manage Posts",
-      "profile": "Profile"
-    },
-    "sidebar": {
-      "backToOrganisationDashboard": "Back to Organisation Dashboard",
-      "backToDashboard": "Back to Dashboard",
-      "logout": "Logout",
-      "theme": {
-        "lightMode": "Light Mode",
-        "darkMode": "Dark Mode"
-      }
-    },
-    "rightPanel": {
-      "searchPlaceholder": "Search professionals, posts...",
-      "sections": {
-        "trendingTopics": "Trending Topics",
-        "whoToFollow": "Who to follow",
-        "yourGroups": "Your Groups"
-      },
-      "trending": {
-        "rankLabel": "#{{rank}} - Trending",
-        "postsCount": "{{count}} posts",
-        "tags": {
-          "aiScreening": "AI Screening",
-          "diabeticRetinopathy": "Diabetic Retinopathy",
-          "glaucomaGuidelines2026": "Glaucoma Guidelines 2026",
-          "smileSurgery": "SMILE Surgery",
-          "pediatricVision": "Pediatric Vision"
-        }
-      },
-      "groups": {
-        "membersCount": "{{count}} members"
-      }
-    },
-    "footer": {
-      "terms": "Terms",
-      "privacy": "Privacy",
-      "help": "Help",
-      "copyright": "© {{year}} Aura"
-    },
-    "postTypes": {
-      "casePresentation": "Case Presentation",
-      "peerDiscussion": "Peer Discussion",
-      "knowledgeShare": "Knowledge Share",
-      "announcement": "Announcement"
-    },
-    "specialties": {
-      "aiScreening": "AI Screening",
-      "communityOphthalmology": "Community Ophthalmology",
-      "deepLearning": "Deep Learning",
-      "diabeticRetinopathy": "Diabetic Retinopathy",
-      "drScreening": "DR Screening",
-      "retinalDiseases": "Retinal Diseases",
-      "glaucoma": "Glaucoma",
-      "retinopathyOfPrematurity": "Retinopathy of Prematurity",
-      "aiMedicalImaging": "AI Medical Imaging",
-      "primaryEyeCare": "Primary Eye Care",
-      "octAnalysis": "OCT Analysis",
-      "opticNerveImaging": "Optic Nerve Imaging",
-      "pediatricRetina": "Pediatric Retina",
-      "retinalAnalysis": "Retinal Analysis",
-      "telemedicine": "Telemedicine"
-    },
-    "reactions": {
-      "insightful": "Insightful",
-      "agree": "Agree",
-      "helpful": "Helpful",
-      "question": "Question",
-      "celebrate": "Celebrate"
-    },
-    "discover": {
-      "title": "Discover",
-      "description": "Explore posts from professionals and organisations",
-      "searchPlaceholder": "Search posts...",
-      "tabs": {
-        "professionals": "Professionals",
-        "organisations": "Organisations"
-      },
-      "categories": {
-        "all": "All"
-      },
-      "results": {
-        "oneFound": "1 post found",
-        "manyFound": "{{count}} posts found"
-      },
-      "empty": {
-        "title": "No posts found",
-        "description": "Try a different category or search term"
-      }
-    },
-    "feed": {
-      "title": "Feed",
-      "description": {
-        "manageMode": "Moderation view for hidden and flagged content",
-        "default": "Latest posts from your professional network"
-      },
-      "tabs": {
-        "feed": "Feed",
-        "managePosts": "Manage Posts"
-      },
-      "states": {
-        "loadError": "Failed to load posts",
-        "empty": "No posts yet. Be the first to share!"
-      },
-      "manage": {
-        "reportedPostsHeading": "Reported Posts ({{count}})",
-        "hiddenPostsHeading": "Hidden Posts ({{count}})",
-        "noReportedPosts": "No reported posts at this time.",
-        "noHiddenPosts": "No hidden posts yet."
-      },
-      "trending": {
-        "title": "Trending Topics",
-        "rankLabel": "#{{rank}} - Trending",
-        "postsCount": "{{count}} posts",
-        "empty": "No trending topics yet"
-      }
-    },
-    "postDetail": {
-      "title": "Post",
-      "inputs": {
-        "addCommentPlaceholder": "Add a comment...",
-        "replyTo": "Reply to {{name}}..."
-      },
-      "comments": {
-        "title": "Comments ({{count}})"
-      },
-      "actions": {
-        "reply": "Reply",
-        "hide": "Hide",
-        "view": "View"
-      },
-      "replies": {
-        "one": "1 reply",
-        "many": "{{count}} replies"
-      },
-      "states": {
-        "loadingReplies": "Loading replies...",
-        "notFound": "Post not found",
-        "noComments": "No comments yet. Be the first to comment!"
-      }
-    },
-    "postComposer": {
-      "placeholder": "Share insights with your network...",
-      "typeLabel": "Type:",
-      "doctorNotesHeading": "Doctor Notes",
-      "caseSource": {
-        "title": "Case source",
-        "externalCase": "External Case",
-        "internalCase": "Internal Case"
-      },
-      "internal": {
-        "selectConsultationCase": "Select consultation case",
-        "loadingInternalCases": "Loading internal cases...",
-        "chooseInternalCase": "Choose an internal case",
-        "caseOptionLabel": "{{patient}} - {{type}} - {{status}} - #{{id}}",
-        "anonymousPatient": "Anonymous patient",
-        "previewTitle": "Internal case preview (anonymized)",
-        "retinalCasePreviewAlt": "Retinal case preview",
-        "noImagePreview": "No image preview",
-        "medicalDiagnosis": "Medical diagnosis",
-        "noFinalDiagnosis": "No final doctor diagnosis available for this case.",
-        "patientIdentityHidden": "Patient identity is hidden. Only medical snapshot is shared.",
-        "addDoctorNotes": "Add doctor notes"
-      },
-      "external": {
-        "allowedInfoOptional": "Allowed anonymized patient info (optional)",
-        "patientAge": "Patient age",
-        "patientGender": "Patient gender",
-        "allowedDataHint": "Allowed only: age, gender, and medical images. Do not include name, address, or phone number."
-      },
-      "caseDisclosureConsent": "I confirm this case is anonymized and shared for professional educational discussion only.",
-      "fileAnonymizationConsent": "I confirm attached files do not contain patient-identifying information.",
-      "actions": {
-        "addImage": "Add Image",
-        "attachDocument": "Attach Document",
-        "addLink": "Add Link",
-        "shareInternalCase": "Share Internal Case",
-        "post": "Post"
-      }
-    },
-    "postCard": {
-      "states": {
-        "hiddenByModeration": "Hidden by moderation",
-        "originalPostHidden": "Original post hidden"
-      },
-      "repost": {
-        "shared": "shared"
-      },
-      "menu": {
-        "copyLink": "Copy link",
-        "saved": "Saved",
-        "savePost": "Save post",
-        "hidePost": "Hide post",
-        "reportPost": "Report post"
-      },
-      "actions": {
-        "sharePost": "Share post"
-      },
-      "internalCase": {
-        "caseResultAndDiagnosis": "Case Result and Diagnosis",
-        "noAiSummary": "No AI summary or diagnosis provided.",
-        "doctorNote": "Doctor Note",
-        "noDoctorNote": "{{name}}: \"No note provided.\""
-      },
-      "hideDialog": {
-        "title": "Hide this post",
-        "description": "Hidden posts are visible only to their author and System Admin.",
-        "reasonPlaceholder": "Reason for hiding (optional)"
-      },
-      "shareDialog": {
-        "title": "Share this post",
-        "commentPlaceholder": "Add your comment... (optional)",
-        "previewAlt": "preview",
-        "share": "Share"
-      }
-    },
-    "shareClinicCaseModal": {
-      "title": "Share Clinic Case",
-      "caseInformation": {
-        "title": "Case Information"
-      },
-      "fields": {
-        "patient": "Patient",
-        "riskLevel": "Risk Level",
-        "confidence": "Confidence"
-      },
-      "retinalImages": {
-        "title": "Retinal Images ({{count}})",
-        "alt": "Retinal image {{index}}"
-      },
-      "findings": {
-        "label": "Findings"
-      },
-      "symptoms": {
-        "label": "Symptoms"
-      },
-      "summary": {
-        "label": "Summary"
-      },
-      "doctorNotes": {
-        "label": "Add Doctor Notes",
-        "placeholder": "Type your observations, recommendations, or additional notes..."
-      },
-      "preview": {
-        "title": "Post Preview",
-        "empty": "Type notes to see preview"
-      },
-      "actions": {
-        "posting": "Posting...",
-        "postCase": "Post Case"
-      }
-    },
-    "commentCard": {
-      "actions": {
-        "reacted": "Reacted",
-        "react": "React",
-        "reply": "Reply",
-        "hide": "Hide",
-        "view": "View"
-      },
-      "time": {
-        "recentFallback": "2h"
-      },
-      "replies": {
-        "one": "1 reply",
-        "many": "{{count}} replies"
-      }
-    },
-    "saved": {
-      "title": "Bookmarks",
-      "sections": {
-        "allSaved": "All Saved",
-        "allSavedPosts": "All Saved Posts"
-      },
-      "count": {
-        "posts": "{{count}} posts"
-      },
-      "states": {
-        "loadError": "Failed to load saved posts",
-        "empty": "No saved posts yet"
-      }
-    },
-    "organisation": {
-      "title": "Organisation",
-      "common": {
-        "gender": {
-          "male": "Male",
-          "female": "Female"
-        },
-        "yearsAbbr": "yrs",
-        "idLabel": "ID",
-        "notAvailable": "N/A"
-      },
-      "screening": {
-        "title": "Retinal Screening",
-        "navigation": {
-          "cancelAndReturn": "Cancel & Return",
-          "proceedToReview": "Proceed to Review",
-          "transferringFiles": "Transferring Files...",
-          "executingAiModel": "Executing AI Model...",
-          "startAiAnalysis": "Start AI Analysis"
-        },
-        "upload": {
-          "title": "Image Acquisition",
-          "subtitle": "Select or drag retinal scan files for processing.",
-          "dropzone": {}
-        },
-        "findings": {
-          "namePlaceholder": "Enter name...",
-          "descriptionLabel": "Detailed description",
-          "descriptionPlaceholder": "Enter description...",
-          "detectedFindings": "Detected Findings",
-          "finding": "Finding",
-          "nameLabel": "Disease Name / Sign",
-          "riskLabel": "Risk:",
-          "severityLow": "Low (Yellow)",
-          "severityModerate": "Moderate (Orange)",
-          "severityHigh": "High (Red)"
-        },
-        "consiliumButton": "Request Consilium",
-        "consiliumModal": {
-          "subtitle": "Invite colleagues to support urgent case diagnosis",
-          "noDoctorsAvailable": "No doctors currently available.",
-          "maxDoctorsToast": "Maximum 3 doctors can be invited for consilium.",
-          "availableStatus": "Available",
-          "emergencyDescription": "High priority notification will be sent to invited doctors",
-          "sendEmergencyRequest": "Send Emergency Request",
-          "readyDescription": "System is ready to process {{count}} scan(s). This will consume 1 AI screening credit.",
-          "clinicalAdvisory": {
-            "title": "Clinical Advisory",
-            "description": "Aura AI triage results provide preliminary probabilities. They are not intended to replace formal diagnosis by an ophthalmologist or clinical specialist."
-          },
-          "includedScans": "Included Scans"
-        },
-        "quotaBanner": {
-          "title": "Quota exhausted",
-          "description": "Buy more quota from wallet. If your balance is insufficient, top up your wallet first."
-        },
-        "quotaModal": {
-          "title": "Buy more AI quota",
-          "quantityLabel": "Number of credits to purchase",
-          "unitPriceLabel": "Unit price/credit",
-          "totalPaymentLabel": "Total payment",
-          "walletBalanceLabel": "Wallet balance",
-          "walletSufficient": "Your wallet has sufficient balance to buy quota.",
-          "walletInsufficient": "Insufficient wallet balance. Need {{amount}} VND more.",
-          "suggestedTopUp": "Suggested top-up: {{amount}} VND"
-        },
-        "actions": {
-          "buyMoreQuota": "Buy more",
-          "buyQuota": "Buy quota",
-          "topUpWallet": "Top up wallet"
-        },
-        "toast": {
-          "buyQuotaSuccess": "Purchased {{count}} AI quota credits successfully.",
-          "walletInsufficient": "Insufficient wallet balance. Please top up your wallet.",
-          "buyQuotaFailed": "Unable to buy quota. Please try again.",
-          "paymentLinkUnavailable": "Unable to get payment link. Please try again.",
-          "createTopUpFailed": "Unable to create top-up request. Please try again.",
-          "noPatientSelected": "No patient selected",
-          "quotaExhausted": "Quota exhausted. Please buy more quota from wallet or top up your balance.",
-          "quotaUnitPriceUnavailable": "Quota unit price is unavailable. Please try again later.",
-          "invalidTopUpAmount": "Invalid top-up amount."
-        },
-        "wallet": {
-          "topUpDescription": "Top up for organisation quota purchase ({{amount}} VND)"
-        }
-      },
-      "types": {
-        "hospital": "Hospital",
-        "clinic": "Clinic",
-        "researchCenter": "Research Center"
-      },
-      "actions": {
-        "follow": "Follow",
-        "following": "Following"
-      },
-      "stats": {
-        "followers": "Followers",
-        "members": "{{count}} members",
-        "membersLabel": "Members",
-        "postsLabel": "Posts"
-      },
-      "tabs": {
-        "posts": "Posts",
-        "members": "Members",
-        "about": "About"
-      },
-      "states": {
-        "notFound": "Organisation not found",
-        "noPosts": "No posts yet",
-        "noPublicMembers": "No public members"
-      },
-      "accreditations": {
-        "jciAccredited": "JCI Accredited",
-        "iso9001": "ISO 9001:2015",
-        "nationalRetinalScreeningCenter": "National Retinal Screening Center",
-        "auraAiCertifiedPartner": "Aura AI Certified Partner",
-        "fda510kCleared": "FDA 510(k) Cleared",
-        "ceMarkClassIIa": "CE Mark Class IIa",
-        "mohVnApproved": "Ministry of Health of Vietnam Approved",
-        "auraAiScreeningSite": "Aura AI Screening Site"
-      },
-      "about": {
-        "title": "About",
-        "location": "Location",
-        "accreditations": "Accreditations"
-      }
-    },
-    "profile": {
-      "title": "Profile",
-      "verified": "Verified",
-      "preview": {
-        "banner": "You're viewing your profile as others see it",
-        "exit": "Exit Preview",
-        "label": "Preview"
-      },
-      "stats": {
-        "postsCount": "{{count}} posts",
-        "yearsExperience": "{{years}} years experience"
-      },
-      "states": {
-        "notFound": "Profile not found",
-        "noPosts": "No posts yet"
-      },
-      "actions": {
-        "shareProfile": "Share profile",
-        "report": "Report"
-      },
-      "systemAdmin": {
-        "title": "System Administration Profile",
-        "description": "System Admin account focuses on AURA platform governance, network moderation, and system operations coordination.",
-        "items": {
-          "moderatePosts": "Moderate and hide violating posts",
-          "reviewReports": "Review reported content and escalation cases",
-          "maintainStandards": "Maintain policy and safety standards across network"
-        }
-      },
-      "organisation": {
-        "introductionTitle": "Clinic introduction",
-        "defaultBio": "The clinic partners with AURA to deploy AI retinal screening, combining specialist expertise and clinical decision support diagnostics.",
-        "featuredServicesTitle": "Featured services",
-        "featuredServices": {
-          "items": {
-            "aiScreening": "AI retinal screening at facility level",
-            "consultationAndReferral": "Result consultation and appropriate referral",
-            "recordsAndFollowUp": "Medical record management and periodic follow-up"
-          }
-        },
-        "qualityCommitmentTitle": "Quality commitments",
-        "qualityCommitment": {
-          "items": {
-            "dataPrivacy": "Comply with patient data privacy procedures",
-            "aiAndClinical": "Combine AI assessment with clinical expertise",
-            "fastAccurateCare": "Optimize fast and accurate care experience"
-          }
-        }
-      },
-      "about": {
-        "bioTitle": "Bio",
-        "noBio": "No bio added yet.",
-        "experienceTitle": "Experience",
-        "experienceValue": "{{years}} years of experience",
-        "degreesTitle": "Degrees",
-        "noDegreeRecords": "No degree records.",
-        "licensesTitle": "Licenses and Certifications",
-        "noLicenseRecords": "No license records.",
-        "unknownAuthority": "Unknown authority",
-        "issued": "Issued",
-        "expires": "Expires",
-        "viewFile": "View file"
-      }
-    }
-  },
   "ClinicStaffQueue": {
     "page": {
       "title": "Queue Management",
@@ -6961,6 +6459,7 @@
       "transactions": "Transaction History",
       "wallet": "Digital Wallet",
       "settings": "Settings",
+      "network": "Aura Network",
       "profile": "My Profile"
     },
     "actions": {
@@ -8021,6 +7520,430 @@
       "completed": "Completed",
       "processing": "In Progress",
       "viewDetails": "View Details"
+    }
+  },
+  "ProfessionalNetwork": {
+    "common": {
+      "network": "Network",
+      "user": "User",
+      "member": "Member",
+      "unknownAuthor": "Unknown",
+      "showMore": "Show more",
+      "tryAgain": "Try again",
+      "actions": {
+        "cancel": "Cancel",
+        "follow": "Follow"
+      },
+      "roles": {
+        "ophthalmologist": "Ophthalmologist",
+        "orgAdmin": "Organisation Admin",
+        "systemAdmin": "System Admin",
+        "patient": "Patient"
+      },
+      "gender": {
+        "male": "Male",
+        "female": "Female",
+        "other": "Other"
+      },
+      "pagination": {
+        "previous": "Previous",
+        "next": "Next",
+        "pageOf": "Page {{page}} / {{total}}"
+      }
+    },
+    "navigation": {
+      "feed": "Feed",
+      "discover": "Discover",
+      "saved": "Saved",
+      "managePosts": "Manage Posts",
+      "profile": "Profile",
+      "collaboration": "Collaboration"
+    },
+    "sidebar": {
+      "backToOrganisationDashboard": "Back to Organisation Dashboard",
+      "backToDashboard": "Back to Dashboard",
+      "logout": "Logout",
+      "theme": {
+        "lightMode": "Light Mode",
+        "darkMode": "Dark Mode"
+      }
+    },
+    "rightPanel": {
+      "searchPlaceholder": "Search professionals, posts...",
+      "sections": {
+        "trendingTopics": "Trending Topics",
+        "whoToFollow": "Who to Follow",
+        "yourGroups": "Your Groups"
+      },
+      "trending": {
+        "rankLabel": "#{{rank}} - Trending",
+        "postsCount": "{{count}} posts",
+        "tags": {
+          "aiScreening": "AI Screening",
+          "diabeticRetinopathy": "Diabetic Retinopathy",
+          "glaucomaGuidelines2026": "Glaucoma Guidelines 2026",
+          "smileSurgery": "SMILE Surgery",
+          "pediatricVision": "Pediatric Vision"
+        }
+      },
+      "groups": {
+        "membersCount": "{{count}} members"
+      }
+    },
+    "footer": {
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "help": "Help",
+      "copyright": "© {{year}} Aura"
+    },
+    "postTypes": {
+      "casePresentation": "Case Presentation",
+      "peerDiscussion": "Peer Discussion",
+      "knowledgeShare": "Knowledge Share",
+      "announcement": "Announcement"
+    },
+    "specialties": {
+      "aiScreening": "AI Screening",
+      "communityOphthalmology": "Community Ophthalmology",
+      "deepLearning": "Deep Learning",
+      "diabeticRetinopathy": "Diabetic Retinopathy",
+      "drScreening": "DR Screening",
+      "retinalDiseases": "Retinal Diseases",
+      "glaucoma": "Glaucoma",
+      "retinopathyOfPrematurity": "Retinopathy of Prematurity",
+      "aiMedicalImaging": "AI Medical Imaging",
+      "primaryEyeCare": "Primary Eye Care",
+      "octAnalysis": "OCT Analysis",
+      "opticNerveImaging": "Optic Nerve Imaging",
+      "pediatricRetina": "Pediatric Retina",
+      "retinalAnalysis": "Retinal Analysis",
+      "telemedicine": "Telemedicine"
+    },
+    "reactions": {
+      "insightful": "Insightful",
+      "agree": "Agree",
+      "helpful": "Helpful",
+      "question": "Question",
+      "celebrate": "Celebrate"
+    },
+    "discover": {
+      "title": "Discover",
+      "description": "Explore posts from professionals and organisations",
+      "searchPlaceholder": "Search posts...",
+      "tabs": {
+        "professionals": "Professionals",
+        "organisations": "Organisations"
+      },
+      "categories": {
+        "all": "All"
+      },
+      "results": {
+        "oneFound": "1 post found",
+        "manyFound": "{{count}} posts found"
+      },
+      "empty": {
+        "title": "No posts found",
+        "description": "Try a different category or keyword"
+      }
+    },
+    "feed": {
+      "title": "Feed",
+      "description": {
+        "manageMode": "Moderation mode for hidden or flagged content",
+        "default": "Latest posts from your professional network"
+      },
+      "tabs": {
+        "feed": "Feed",
+        "managePosts": "Manage Posts"
+      },
+      "states": {
+        "loadError": "Failed to load posts",
+        "empty": "No posts yet. Be the first to share!"
+      },
+      "manage": {
+        "reportedPostsHeading": "Reported Posts ({{count}})",
+        "hiddenPostsHeading": "Hidden Posts ({{count}})",
+        "noReportedPosts": "No reported posts at the moment.",
+        "noHiddenPosts": "No posts have been hidden."
+      },
+      "trending": {
+        "title": "Trending Topics",
+        "rankLabel": "#{{rank}} - Trending",
+        "postsCount": "{{count}} posts",
+        "empty": "No trending topics yet"
+      }
+    },
+    "postDetail": {
+      "title": "Post",
+      "inputs": {
+        "addCommentPlaceholder": "Add a comment...",
+        "replyTo": "Reply to {{name}}..."
+      },
+      "comments": {
+        "title": "Comments ({{count}})"
+      },
+      "actions": {
+        "reply": "Reply",
+        "hide": "Hide",
+        "view": "View"
+      },
+      "replies": {
+        "one": "1 reply",
+        "many": "{{count}} replies"
+      },
+      "states": {
+        "loadingReplies": "Loading replies...",
+        "notFound": "Post not found",
+        "noComments": "No comments yet. Be the first to comment!"
+      }
+    },
+    "postComposer": {
+      "placeholder": "Share your professional insights...",
+      "typeLabel": "Type:",
+      "doctorNotesHeading": "Doctor Notes",
+      "caseSource": {
+        "title": "Case source",
+        "externalCase": "External Case",
+        "internalCase": "Internal Case"
+      },
+      "internal": {
+        "selectConsultationCase": "Select consultation case",
+        "loadingInternalCases": "Loading internal cases...",
+        "chooseInternalCase": "Choose an internal case",
+        "caseOptionLabel": "{{patient}} - {{type}} - {{status}} - #{{id}}",
+        "anonymousPatient": "Anonymous patient",
+        "previewTitle": "Internal case preview (anonymized)",
+        "retinalCasePreviewAlt": "Retinal case preview",
+        "noImagePreview": "No image preview",
+        "medicalDiagnosis": "Medical diagnosis",
+        "noFinalDiagnosis": "No final doctor diagnosis available for this case.",
+        "patientIdentityHidden": "Patient identity is hidden. Only medical snapshot is shared.",
+        "addDoctorNotes": "Add doctor notes"
+      },
+      "external": {
+        "allowedInfoOptional": "Allowed anonymized patient info (optional)",
+        "patientAge": "Patient age",
+        "patientGender": "Patient gender",
+        "allowedDataHint": "Allowed only: age, gender, and medical images. Do not include name, address, or phone number."
+      },
+      "caseDisclosureConsent": "I confirm this case is anonymized and shared for professional educational discussion only.",
+      "fileAnonymizationConsent": "I confirm attached files do not contain patient-identifying information.",
+      "actions": {
+        "addImage": "Add Image",
+        "attachDocument": "Attach Document",
+        "addLink": "Add Link",
+        "shareInternalCase": "Share Internal Case",
+        "post": "Post"
+      }
+    },
+    "postCard": {
+      "states": {
+        "hiddenByModeration": "Hidden by moderation",
+        "originalPostHidden": "Original post hidden"
+      },
+      "repost": {
+        "shared": "shared"
+      },
+      "menu": {
+        "copyLink": "Copy link",
+        "saved": "Saved",
+        "savePost": "Save post",
+        "hidePost": "Hide post",
+        "reportPost": "Report post"
+      },
+      "actions": {
+        "sharePost": "Share post"
+      },
+      "internalCase": {
+        "caseResultAndDiagnosis": "Case Result and Diagnosis",
+        "noAiSummary": "No AI summary or diagnosis provided.",
+        "doctorNote": "Doctor Note",
+        "noDoctorNote": "{{name}}: \"No note provided.\""
+      },
+      "hideDialog": {
+        "title": "Hide this post",
+        "description": "Hidden posts are visible only to their author and System Admin.",
+        "reasonPlaceholder": "Reason for hiding (optional)"
+      },
+      "shareDialog": {
+        "title": "Share this post",
+        "commentPlaceholder": "Add your comment... (optional)",
+        "previewAlt": "preview",
+        "share": "Share"
+      }
+    },
+    "shareClinicCaseModal": {
+      "title": "Share Clinic Case",
+      "caseInformation": {
+        "title": "Case Information"
+      },
+      "fields": {
+        "patient": "Patient",
+        "riskLevel": "Risk Level",
+        "confidence": "Confidence"
+      },
+      "retinalImages": {
+        "title": "Retinal Images ({{count}})",
+        "alt": "Retinal image {{index}}"
+      },
+      "findings": {
+        "label": "Findings"
+      },
+      "symptoms": {
+        "label": "Symptoms"
+      },
+      "summary": {
+        "label": "Summary"
+      },
+      "doctorNotes": {
+        "label": "Add Doctor Notes",
+        "placeholder": "Type your observations, recommendations, or additional notes..."
+      },
+      "preview": {
+        "title": "Post Preview",
+        "empty": "Type notes to see preview"
+      },
+      "actions": {
+        "posting": "Posting...",
+        "postCase": "Post Case"
+      }
+    },
+    "commentCard": {
+      "actions": {
+        "reacted": "Reacted",
+        "react": "React",
+        "reply": "Reply",
+        "hide": "Hide",
+        "view": "View"
+      },
+      "time": {
+        "recentFallback": "2h"
+      },
+      "replies": {
+        "one": "1 reply",
+        "many": "{{count}} replies"
+      }
+    },
+    "saved": {
+      "title": "Bookmarks",
+      "sections": {
+        "allSaved": "All Saved",
+        "allSavedPosts": "All Saved Posts"
+      },
+      "count": {
+        "posts": "{{count}} posts"
+      },
+      "states": {
+        "loadError": "Failed to load saved posts",
+        "empty": "No saved posts yet"
+      }
+    },
+    "profile": {
+      "title": "Profile",
+      "verified": "Verified",
+      "preview": {
+        "banner": "You're viewing your profile as others see it",
+        "exit": "Exit Preview",
+        "label": "Preview"
+      },
+      "stats": {
+        "postsCount": "{{count}} posts",
+        "yearsExperience": "{{years}} years experience"
+      },
+      "states": {
+        "notFound": "Profile not found",
+        "noPosts": "No posts yet"
+      },
+      "actions": {
+        "shareProfile": "Share profile",
+        "report": "Report"
+      },
+      "systemAdmin": {
+        "title": "System Administration Profile",
+        "description": "System Admin account focuses on AURA platform governance, network moderation, and system operations coordination.",
+        "items": {
+          "moderatePosts": "Moderate and hide violating posts",
+          "reviewReports": "Review reported content and escalation cases",
+          "maintainStandards": "Maintain policy and safety standards across network"
+        }
+      },
+      "organisation": {
+        "introductionTitle": "Clinic introduction",
+        "defaultBio": "The clinic partners with AURA to deploy AI retinal screening, combining specialist expertise and clinical decision support diagnostics.",
+        "featuredServicesTitle": "Featured services",
+        "featuredServices": {
+          "items": {
+            "aiScreening": "AI retinal screening at facility level",
+            "consultationAndReferral": "Result consultation and appropriate referral",
+            "recordsAndFollowUp": "Medical record management and periodic follow-up"
+          }
+        },
+        "qualityCommitmentTitle": "Quality commitments",
+        "qualityCommitment": {
+          "items": {
+            "dataPrivacy": "Comply with patient data privacy procedures",
+            "aiAndClinical": "Combine AI assessment with clinical expertise",
+            "fastAccurateCare": "Optimize fast and accurate care experience"
+          }
+        }
+      },
+      "about": {
+        "bioTitle": "Bio",
+        "noBio": "No bio added yet.",
+        "experienceTitle": "Experience",
+        "experienceValue": "{{years}} years of experience",
+        "degreesTitle": "Degrees",
+        "noDegreeRecords": "No degree records.",
+        "licensesTitle": "Licenses and Certifications",
+        "noLicenseRecords": "No license records.",
+        "unknownAuthority": "Unknown authority",
+        "issued": "Issued",
+        "expires": "Expires",
+        "viewFile": "View file"
+      }
+    },
+    "organisation": {
+      "title": "Organisation",
+      "types": {
+        "hospital": "Hospital",
+        "clinic": "Clinic",
+        "researchCenter": "Research Center"
+      },
+      "actions": {
+        "follow": "Follow",
+        "following": "Following"
+      },
+      "stats": {
+        "followers": "Followers",
+        "members": "{{count}} members",
+        "membersLabel": "Members",
+        "postsLabel": "Posts"
+      },
+      "tabs": {
+        "posts": "Posts",
+        "members": "Members",
+        "about": "About"
+      },
+      "states": {
+        "notFound": "Organisation not found",
+        "noPosts": "No posts yet",
+        "noPublicMembers": "No public members"
+      },
+      "accreditations": {
+        "jciAccredited": "JCI Accredited",
+        "iso9001": "ISO 9001:2015",
+        "nationalRetinalScreeningCenter": "National Retinal Screening Center",
+        "auraAiCertifiedPartner": "Aura AI Certified Partner",
+        "fda510kCleared": "FDA 510(k) Cleared",
+        "ceMarkClassIIa": "CE Mark Class IIa",
+        "mohVnApproved": "Ministry of Health of Vietnam Approved",
+        "auraAiScreeningSite": "Aura AI Screening Site"
+      },
+      "about": {
+        "title": "About",
+        "location": "Location",
+        "accreditations": "Accreditations"
+      }
     }
   }
 }
