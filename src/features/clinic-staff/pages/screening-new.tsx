@@ -291,17 +291,14 @@ export default function ClinicStaffScreeningNewPage() {
                   {selectedPatient.name}
                 </p>
                 <p className="text-xs text-(--text-secondary) mt-0.5">
-                  {t(
-                    'ClinicStaff.screeningNew.patientInfo.gender',
-                    '{{gender}} · {{age}} yrs',
-                    {
-                      gender:
-                        selectedPatient.gender === 'M'
-                          ? t('ClinicStaff.common.gender.male', 'Male')
-                          : t('ClinicStaff.common.gender.female', 'Female'),
-                      age: selectedPatient.age,
-                    }
-                  )}
+                  {i18nT('ClinicStaff.screeningNew.patientInfo.gender', {
+                    defaultValue: '{{gender}} · {{age}} yrs',
+                    gender:
+                      selectedPatient.gender === 'M'
+                        ? t('ClinicStaff.common.gender.male', 'Male')
+                        : t('ClinicStaff.common.gender.female', 'Female'),
+                    age: selectedPatient.age,
+                  })}
                 </p>
               </div>
             </div>
