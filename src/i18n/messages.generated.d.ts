@@ -10107,6 +10107,7 @@ declare module 'i18next' {
               pending: string;
             };
             states: {
+              ermPending: string;
               checkedIn: string;
               screeningPending: string;
               aiCompleted: string;

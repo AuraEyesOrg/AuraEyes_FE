@@ -10,7 +10,6 @@ import {
   type N8nChatResponseAction,
   normalizeN8nChatResponse,
 } from '../types/n8n-chat.contract';
-import { useSystemSettings } from '@/features/system-admin/api/system-settings.api';
 
 export const openN8nChat = () => {
   window.dispatchEvent(new CustomEvent('aura-ai-chat:open'));
@@ -52,7 +51,6 @@ export default function N8nChatWidget({
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const token = getItem<string>('token') ?? undefined;
-  const { data: systemSettings } = useSystemSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [input, setInput] = useState('');
@@ -84,10 +82,7 @@ export default function N8nChatWidget({
   ];
 
   const patientMeta = useMemo(() => {
-    const advanceBookingSetting = systemSettings?.['MIN_ADVANCE_BOOKING_HOURS'];
-    let advanceBookingHours = advanceBookingSetting
-      ? parseFloat(advanceBookingSetting)
-      : 0.5;
+    let advanceBookingHours = 0.5;
     if (isNaN(advanceBookingHours) || advanceBookingHours < 0.5)
       advanceBookingHours = 0.5;
     const minAdvanceBookingMs = advanceBookingHours * 60 * 60 * 1000;
@@ -109,7 +104,6 @@ export default function N8nChatWidget({
     token,
     user?.email,
     user?.id,
-    systemSettings,
   ]);
 
   useEffect(() => {

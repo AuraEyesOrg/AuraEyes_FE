@@ -3,23 +3,25 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import FocusModeLayout from '../components/FocusModeLayout';
 import { Anomaly, RetinalImage } from '../types/type';
-import N8nChatWidget, { openN8nChat } from '../components/N8nChatWidget';
+import N8nChatWidget from '../components/N8nChatWidget';
 import {
   ShieldCheck,
   AlertTriangle,
-  CalendarCheck,
   FileDown,
-  ImagePlus,
-  ExternalLink,
-  Sparkles,
-  ArrowLeft,
-  ZoomIn,
   ChevronRight,
-  Stethoscope,
-  Bot,
-  CheckCircle2,
+  FileText,
+  Star,
+  ClipboardList,
+  Sparkles,
+  ZoomIn,
+  ArrowLeft,
+  ExternalLink,
+  CalendarCheck,
 } from 'lucide-react';
-import { SecondaryActionCard } from '../components';
+import { SecondaryActionCard, FeedbackModal } from '../components';
+import { useCreateClinicFeedback } from '@/features/patient/hooks/use-feedback';
+import { toast } from 'react-toastify';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import {
   loadScreeningConsultationContext,
   saveScreeningConsultationContext,
@@ -238,6 +240,8 @@ export default function ReviewPage() {
     Record<string, boolean>
   >({});
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const createClinicFeedbackMutation = useCreateClinicFeedback();
   const riskLevel =
     activeState?.riskLevel ??
     relevantStoredContext?.riskLevel ??
@@ -283,11 +287,7 @@ export default function ReviewPage() {
     relevantStoredContext?.screeningId ??
     hydratedSession?.screeningId;
 
-  const {
-    data: linkedConsultationSessions,
-    isLoading: isLinkedConsultationLoading,
-    isFetching: isLinkedConsultationFetching,
-  } = useConsultationSessions(
+  const { data: linkedConsultationSessions } = useConsultationSessions(
     {
       patientId,
       aiScreeningId: screeningId,
@@ -301,14 +301,6 @@ export default function ReviewPage() {
 
   const latestLinkedConsultation =
     linkedConsultationSessions?.items?.[0] ?? null;
-  const hasBookedOrConsultedThisCase =
-    (linkedConsultationSessions?.totalCount ?? 0) > 0;
-  const consultationProgressLabel = latestLinkedConsultation
-    ? latestLinkedConsultation.statusName
-    : null;
-  const consultationBookedAtLabel = latestLinkedConsultation?.createdAt
-    ? new Date(latestLinkedConsultation.createdAt).toLocaleString()
-    : null;
   const rawJsonForAnalysis =
     activeState?.rawJsonOutput ??
     relevantStoredContext?.rawJsonOutput ??
@@ -325,15 +317,18 @@ export default function ReviewPage() {
       .map((a) => {
         if (isVietnamese) {
           const friendlyVi = a.friendlyName?.trim();
-          if (friendlyVi) return friendlyVi;
-          return toDisplayDiseaseName(a.name, currentLanguage).trim();
+          if (friendlyVi) {
+            return toDisplayDiseaseName(friendlyVi, currentLanguage).trim();
+          }
+          return toDisplayDiseaseName(a.name ?? '', currentLanguage).trim();
         }
 
         const friendlyEn = a.friendlyDescription?.trim();
-        if (friendlyEn) return friendlyEn;
+        if (friendlyEn) {
+          return toDisplayDiseaseName(friendlyEn, currentLanguage).trim();
+        }
 
-        const fallback = a.name?.trim();
-        return fallback ?? '';
+        return toDisplayDiseaseName(a.name ?? '', currentLanguage).trim();
       })
       .filter(Boolean);
 
@@ -440,7 +435,9 @@ export default function ReviewPage() {
         currentStep="review"
         title={t('PatientReview.page.title', 'Review & Next Steps')}
         exitPath="/patient/screening"
+        showQuotaBadge={false}
         showBreadcrumb={false}
+        showStepper={false}
       >
         <div className="flex-1 flex items-center justify-center bg-[var(--bg-primary)]">
           <div className="text-center space-y-4 max-w-sm">
@@ -465,7 +462,9 @@ export default function ReviewPage() {
       currentStep="review"
       title={t('PatientReview.page.title', 'Review & Next Steps')}
       exitPath="/patient/screening"
+      showQuotaBadge={false}
       showBreadcrumb={false}
+      showStepper={false}
     >
       <div className="flex-1 overflow-y-auto bg-[var(--bg-primary)]">
         <div className="w-full max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -477,19 +476,6 @@ export default function ReviewPage() {
               <p className="text-(--text-secondary) font-medium text-lg">
                 {t('PatientReview.page.subtitle')}
               </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate('/patient/doctors')}
-                className="inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-3 font-bold text-white shadow-sm transition-all hover:bg-brand/90 hover:shadow-md active:scale-95"
-              >
-                <CalendarCheck className="w-5 h-5" />
-                {t(
-                  'PatientDashboard.actions.bookNewAppointment',
-                  'Book Appointment'
-                )}
-              </button>
             </div>
           </div>
 
@@ -551,10 +537,7 @@ export default function ReviewPage() {
                 <div>
                   <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                     <div>
-                      <p className="text-sm text-(--text-secondary) font-medium mb-0.5">
-                        {t('PatientReview.labels.scanId', { id: scanId })}
-                      </p>
-                      <p className="text-xs text-(--text-muted)">
+                      <p className="text-xs text-(--text-muted) font-medium">
                         {t('PatientReview.labels.capturedAt')}{' '}
                         {new Date().toLocaleDateString('en-US', {
                           month: 'short',
@@ -674,122 +657,118 @@ export default function ReviewPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
-                {/* PRIMARY — Book Consultation */}
-                <div className="col-span-1 md:col-span-3 lg:col-span-2 bg-gradient-to-br from-primary/10 to-transparent dark:from-primary/20 dark:to-[#1e3a5f] rounded-2xl p-6 md:p-8 shadow-sm border border-primary/20 dark:border-primary/30 relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-6 opacity-[0.2] pointer-events-none">
-                    <Stethoscope className="w-44 h-44 text-primary" />
+                {/* PRIMARY — Consultation Results */}
+                <div className="col-span-1 md:col-span-3 lg:col-span-2 bg-gradient-to-br from-emerald-500/10 to-transparent dark:from-emerald-500/20 dark:to-[#1a2e25] rounded-2xl p-6 md:p-8 shadow-sm border border-emerald-500/20 dark:border-emerald-500/30 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-6 opacity-[0.2] pointer-events-none transition-transform group-hover:scale-110 duration-700">
+                    <ClipboardList className="w-44 h-44 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <div className="relative z-10 flex flex-col h-full justify-between gap-6">
-                    <div className="max-w-md">
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 dark:bg-primary/20 text-primary text-[11px] font-bold uppercase tracking-wider mb-4">
-                        {t('PatientReview.labels.primaryRecommendation')}
+                  <div className="relative z-10 flex flex-col h-full justify-between gap-8">
+                    <div className="max-w-xl">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold uppercase tracking-wider mb-4 border border-emerald-500/10">
+                        {t(
+                          'PatientReview.labels.consultationComplete',
+                          'Examination Complete'
+                        )}
                       </div>
-                      <h3 className="text-2xl font-bold text-(--text-primary) mb-2">
-                        {t('PatientReview.actions.bookConsultation')}
+                      <h3 className="text-2xl md:text-3xl font-black text-(--text-primary) mb-3 tracking-tight">
+                        {t(
+                          'PatientReview.actions.viewResults',
+                          'Review Consultation Results'
+                        )}
                       </h3>
-                      <p className="text-(--text-secondary) leading-relaxed">
-                        {t('PatientReview.descriptions.bookConsultation')}
+                      <p className="text-(--text-secondary) leading-relaxed text-[15px]">
+                        {t(
+                          'PatientReview.descriptions.consultationComplete',
+                          'Your eye examination is finished. You can now access your official medical record, diagnosis, and personalized care plan from our specialist.'
+                        )}
                       </p>
                     </div>
-                    <div className="flex flex-wrap gap-3">
-                      {hasBookedOrConsultedThisCase ? (
-                        <div className="w-full rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-4 dark:border-emerald-800/40 dark:bg-emerald-900/20">
-                          <div className="flex items-start gap-3">
-                            <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-800/40 dark:text-emerald-300">
-                              <CheckCircle2 className="w-4 h-4" />
-                            </span>
-                            <div className="min-w-0 space-y-1">
-                              <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">
-                                {t(
-                                  'PatientReview.consultation.alreadyBookedTitle',
-                                  'You already submitted this case for consultation'
-                                )}
-                              </p>
-                              <p className="text-sm text-emerald-700 dark:text-emerald-300">
-                                {t(
-                                  'PatientReview.consultation.alreadyBookedDescription',
-                                  'To avoid duplicate bookings, specialist booking and AI chat are locked for this case.'
-                                )}
-                              </p>
-                              {(consultationProgressLabel ||
-                                consultationBookedAtLabel) && (
-                                <p className="pt-1 text-xs font-medium text-emerald-700/90 dark:text-emerald-200/90">
-                                  {consultationProgressLabel
-                                    ? `${t('PatientReview.consultation.statusLabel', 'Status')}: ${consultationProgressLabel}`
-                                    : ''}
-                                  {consultationProgressLabel &&
-                                  consultationBookedAtLabel
-                                    ? ' • '
-                                    : ''}
-                                  {consultationBookedAtLabel
-                                    ? `${t('PatientReview.consultation.createdAtLabel', 'Booked at')}: ${consultationBookedAtLabel}`
-                                    : ''}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() =>
-                              navigate('/patient/doctors', {
-                                state: {
-                                  consultationContext,
-                                },
-                              })
-                            }
-                            disabled={
-                              isLinkedConsultationLoading ||
-                              isLinkedConsultationFetching
-                            }
-                            className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/30 transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none"
-                          >
-                            <CalendarCheck className="w-5 h-5" />
-                            {t('PatientReview.actions.findSpecialist')}
-                          </button>
-                          <button
-                            onClick={openN8nChat}
-                            disabled={
-                              isLinkedConsultationLoading ||
-                              isLinkedConsultationFetching
-                            }
-                            className="flex items-center justify-center gap-2 surface-primary hover:bg-gray-50 dark:hover:bg-[#2d4a6f] text-(--text-primary) font-semibold py-3 px-6 rounded-xl surface-border transition-colors disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            <Bot className="w-5 h-5" />
-                            {t('PatientReview.actions.askAuraAssistant')}
-                          </button>
-                        </>
-                      )}
+
+                    <div className="flex flex-wrap gap-4">
+                      <button
+                        onClick={() =>
+                          navigate(
+                            resolvePathWithLocale('/patient/medical-history')
+                          )
+                        }
+                        className="flex items-center justify-center gap-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-8 rounded-2xl transition-all shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/30 active:scale-95 group/btn"
+                      >
+                        <FileText className="w-5 h-5 transition-transform group-hover/btn:rotate-6" />
+                        {t(
+                          'PatientReview.actions.viewMedicalRecord',
+                          'View Medical Record'
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => setIsFeedbackModalOpen(true)}
+                        className="flex items-center justify-center gap-2.5 surface-primary hover:bg-gray-50 dark:hover:bg-[#2d4a6f] text-(--text-primary) font-bold py-3.5 px-8 rounded-2xl surface-border transition-all shadow-sm hover:shadow-md active:scale-95 group/btn"
+                      >
+                        <Star className="w-5 h-5 text-amber-400 transition-transform group-hover/btn:scale-110" />
+                        {t(
+                          'PatientReview.actions.rateExperience',
+                          'Rate Experience'
+                        )}
+                      </button>
                     </div>
                   </div>
                 </div>
 
                 {/* SECONDARY actions column */}
-                <div className="col-span-1 md:col-span-3 lg:col-span-1 flex flex-col gap-4">
-                  <SecondaryActionCard
-                    icon={<FileDown className="w-5 h-5" />}
-                    iconBg="bg-blue-50 text-blue-600"
-                    title={
-                      isDownloadingPdf
-                        ? t(
-                            'PatientReview.actions.downloadingReport',
-                            'Downloading report...'
-                          )
-                        : t('PatientReview.actions.downloadReport')
-                    }
-                    subtitle={t('PatientReview.labels.pdfFormat')}
-                    actionIcon={<FileDown className="w-4 h-4" />}
+                <div className="col-span-1 md:col-span-3 lg:col-span-1 flex flex-col gap-5">
+                  {/* Download PDF Card — PREMIUM Version */}
+                  <div
                     onClick={downloadPatientReportPdf}
-                  />
+                    className="relative surface-primary rounded-2xl p-5 border border-blue-500/20 dark:border-blue-500/30 overflow-hidden cursor-pointer group/pdf transition-all hover:shadow-xl hover:shadow-blue-500/5 active:scale-98"
+                  >
+                    <div className="absolute top-0 right-0 p-4 opacity-[0.05] group-hover/pdf:scale-110 transition-transform duration-500">
+                      <FileText className="w-24 h-24 text-blue-600" />
+                    </div>
+                    <div className="flex items-center gap-4 relative z-10">
+                      <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover/pdf:bg-blue-500 group-hover/pdf:text-white transition-all duration-300">
+                        {isDownloadingPdf ? (
+                          <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <FileDown className="w-6 h-6" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-(--text-primary) text-[15px] mb-0.5 group-hover/pdf:text-blue-600 transition-colors">
+                          {isDownloadingPdf
+                            ? t(
+                                'PatientReview.actions.downloadingReport',
+                                'Downloading...'
+                              )
+                            : t('PatientReview.actions.downloadReport')}
+                        </h4>
+                        <p className="text-xs text-(--text-muted) font-medium">
+                          {t(
+                            'PatientReview.labels.pdfFormat',
+                            'Portable Document Format (.pdf)'
+                          )}
+                        </p>
+                      </div>
+                      <div className="w-8 h-8 rounded-lg surface-secondary flex items-center justify-center text-(--text-muted) group-hover/pdf:translate-x-1 transition-transform">
+                        <ChevronRight className="w-4 h-4" />
+                      </div>
+                    </div>
+                  </div>
 
                   <SecondaryActionCard
-                    icon={<ImagePlus className="w-5 h-5" />}
-                    iconBg="bg-emerald-50 text-emerald-600"
-                    title={t('PatientReview.actions.newScan')}
-                    subtitle={t('PatientReview.descriptions.startNewAnalysis')}
+                    icon={<CalendarCheck className="w-5 h-5" />}
+                    iconBg="bg-cyan-50 text-cyan-600"
+                    title={t(
+                      'PatientReview.actions.bookConsultation',
+                      'Đặt lịch tư vấn'
+                    )}
+                    subtitle={t(
+                      'PatientReview.descriptions.bookConsultation',
+                      'Trao đổi kết quả này với bác sĩ chuyên khoa.'
+                    )}
                     actionIcon={<ChevronRight className="w-4 h-4" />}
-                    onClick={() => navigate('/patient/screening/new')}
+                    onClick={() =>
+                      navigate(resolvePathWithLocale('/patient/schedule'))
+                    }
                   />
                 </div>
               </div>
@@ -867,25 +846,113 @@ export default function ReviewPage() {
                   })}
             </div>
           </section>
-
-          <footer className="pb-6 pt-4 border-t border-(--border-color)">
-            <div className="text-center text-sm text-(--text-muted) space-y-1">
-              <p>
-                <strong className="text-(--text-secondary)">Important:</strong>{' '}
-                {t('PatientReview.footer.importantDisclaimer')}
-              </p>
-              <p>
-                {t('PatientReview.footer.copyright', {
-                  year: new Date().getFullYear(),
-                })}
-              </p>
-            </div>
-          </footer>
         </div>
       </div>
-      {!hasBookedOrConsultedThisCase ? (
-        <N8nChatWidget consultationContext={consultationContext} />
-      ) : null}
+
+      <FeedbackModal
+        open={isFeedbackModalOpen}
+        title={t(
+          'PatientAppointments.feedback.modalTitle',
+          'Đánh giá trải nghiệm'
+        )}
+        subtitle={t(
+          'PatientAppointments.feedback.modalSubtitle',
+          'Ý kiến của bạn giúp chúng tôi cải thiện chất lượng dịch vụ.'
+        )}
+        contextLabel={
+          latestLinkedConsultation
+            ? `${t('PatientReview.labels.consultation', 'Lượt khám')} - ${new Date(latestLinkedConsultation.createdAt).toLocaleDateString()}`
+            : undefined
+        }
+        alreadySubmittedTargets={
+          (latestLinkedConsultation as any)?.submittedFeedbackTargets ?? []
+        }
+        targets={
+          latestLinkedConsultation
+            ? {
+                clinicId: '00000000-0000-0000-0000-000000000000',
+                clinicName: t('PatientReview.labels.clinicVisit', 'Phòng khám'),
+                doctorId:
+                  latestLinkedConsultation.ophthalmologistId ?? undefined,
+                doctorName:
+                  latestLinkedConsultation.ophthalmologistName ?? undefined,
+                staffId: (latestLinkedConsultation as any).staffId ?? undefined,
+                staffName:
+                  (latestLinkedConsultation as any).staffName ?? undefined,
+              }
+            : undefined
+        }
+        isSubmitting={createClinicFeedbackMutation.isPending}
+        submitLabel={t(
+          'PatientAppointments.feedback.submitLabel',
+          'Gửi đánh giá'
+        )}
+        labels={{
+          targetTitle: t(
+            'PatientAppointments.feedback.targetTitle',
+            'Bạn muốn đánh giá đối tượng nào?'
+          ),
+          targetClinic: t(
+            'PatientAppointments.feedback.targetClinic',
+            'Phòng khám'
+          ),
+          targetDoctor: t(
+            'PatientAppointments.feedback.targetDoctor',
+            'Bác sĩ'
+          ),
+          targetStaff: t(
+            'PatientAppointments.feedback.targetStaff',
+            'Nhân viên'
+          ),
+          rating: t('PatientAppointments.feedback.ratingLabel', 'Đánh giá'),
+          commentPlaceholder: t(
+            'PatientAppointments.feedback.commentPlaceholder',
+            'Chia sẻ thêm về trải nghiệm của bạn...'
+          ),
+        }}
+        onClose={() => setIsFeedbackModalOpen(false)}
+        onSubmit={async (values) => {
+          if (!latestLinkedConsultation) return;
+          try {
+            await createClinicFeedbackMutation.mutateAsync({
+              appointmentId: latestLinkedConsultation.id,
+              rating: values.rating,
+              comment: values.comment,
+              doctorId:
+                values.targetType === 'DOCTOR' ? values.targetId : undefined,
+              staffId:
+                values.targetType === 'STAFF' ? values.targetId : undefined,
+            });
+            toast.success(
+              t(
+                'PatientAppointments.toast.feedbackSubmitted',
+                'Cảm ơn bạn đã gửi đánh giá!'
+              )
+            );
+          } catch (error) {
+            const status = (error as { response?: { status?: number } })
+              .response?.status;
+            if (status === 409) {
+              toast.info(
+                t(
+                  'PatientAppointments.toast.feedbackAlreadyExists',
+                  'Bạn đã gửi đánh giá này rồi.'
+                )
+              );
+              return;
+            }
+            toast.error(
+              t(
+                'PatientAppointments.toast.feedbackSubmitFailed',
+                'Không thể gửi đánh giá. Vui lòng thử lại sau.'
+              )
+            );
+            throw error;
+          }
+        }}
+      />
+
+      <N8nChatWidget consultationContext={consultationContext} />
     </FocusModeLayout>
   );
 }

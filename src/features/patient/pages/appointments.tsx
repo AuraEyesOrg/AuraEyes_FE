@@ -19,6 +19,7 @@ import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import { Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
+import ConfirmModal from '@/components/ui/confirm-modal';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import {
   usePatientClinicAppointments,
@@ -92,6 +93,8 @@ const AppointmentsPage = () => {
   const [qrTarget, setQrTarget] = useState<ClinicAppointmentDto | null>(null);
   const [cancellationTarget, setCancellationTarget] =
     useState<ClinicAppointmentDto | null>(null);
+  const [directCancelTarget, setDirectCancelTarget] =
+    useState<ClinicAppointmentDto | null>(null);
 
   const { user } = useAuthStore();
   const patientId = user?.roleId;
@@ -138,20 +141,26 @@ const AppointmentsPage = () => {
   const handleCancelClick = (appointment: ClinicAppointmentDto) => {
     // If not paid and pending, cancel directly (no refund needed)
     if (appointment.status === 'Pending' && !appointment.isPaidDeposit) {
-      if (window.confirm(t('PatientAppointments.cancellation.confirmDirect'))) {
-        cancelAppointmentMutation.mutate(appointment.id, {
-          onSuccess: () => {
-            toast.success(t('PatientAppointments.cancellation.successToast'));
-          },
-          onError: (error: any) => {
-            toast.error(mapClinicPatientErrorMessage(error));
-          },
-        });
-      }
+      setDirectCancelTarget(appointment);
     } else {
       // Refund request needed
       setCancellationTarget(appointment);
     }
+  };
+
+  const handleDirectCancel = () => {
+    if (!directCancelTarget) return;
+
+    cancelAppointmentMutation.mutate(directCancelTarget.id, {
+      onSuccess: () => {
+        toast.success(t('PatientAppointments.cancellation.successToast'));
+        setDirectCancelTarget(null);
+      },
+      onError: (error: any) => {
+        toast.error(mapClinicPatientErrorMessage(error));
+        setDirectCancelTarget(null);
+      },
+    });
   };
 
   const stats = useMemo(
@@ -208,27 +217,8 @@ const AppointmentsPage = () => {
     });
   };
 
-  const submitClinicFeedback = async (rating: number, comment?: string) => {
-    if (!clinicFeedbackTarget) return;
-    try {
-      await createClinicFeedbackMutation.mutateAsync({
-        appointmentId: clinicFeedbackTarget.id,
-        rating,
-        comment,
-      });
-      setClinicFeedbackTarget(null);
-      toast.success(t('PatientAppointments.toast.feedbackSubmitted'));
-    } catch (error) {
-      const status = (error as { response?: { status?: number } }).response
-        ?.status;
-      if (status === 409) {
-        setClinicFeedbackTarget(null);
-        toast.info(t('PatientAppointments.toast.feedbackAlreadyExists'));
-        return;
-      }
-      toast.error(t('PatientAppointments.toast.feedbackSubmitFailed'));
-    }
-  };
+  // submitClinicFeedback is handled directly via the FeedbackModal's onSubmit below
+  // which posts one target at a time and lets the modal manage its own open state.
 
   const handleRequestCancellation = async (values: any) => {
     if (!cancellationTarget || !patientId) return;
@@ -406,6 +396,20 @@ const AppointmentsPage = () => {
                     'PatientAppointments.labels.organisationAppointment'
                   )}
                   clinicLabel={t('PatientAppointments.labels.clinicVisit')}
+                  allTargetsSubmitted={
+                    // Determine available targets for this appointment
+                    (() => {
+                      const submitted = new Set(
+                        (appointment.submittedFeedbackTargets ?? []).map((s) =>
+                          s.toUpperCase()
+                        )
+                      );
+                      const available = ['CLINIC'];
+                      if (appointment.ophthalId) available.push('DOCTOR');
+                      if (appointment.staffId) available.push('STAFF');
+                      return available.every((t) => submitted.has(t));
+                    })()
+                  }
                   onRate={() => setClinicFeedbackTarget(appointment)}
                   onViewQR={() => setQrTarget(appointment)}
                   onSync={handleSync}
@@ -448,6 +452,9 @@ const AppointmentsPage = () => {
             ? `${t('PatientAppointments.labels.clinicVisit')} - ${clinicFeedbackTarget.date}`
             : undefined
         }
+        alreadySubmittedTargets={
+          clinicFeedbackTarget?.submittedFeedbackTargets ?? []
+        }
         targets={
           clinicFeedbackTarget
             ? {
@@ -455,8 +462,8 @@ const AppointmentsPage = () => {
                 clinicName: t('PatientAppointments.labels.clinicVisit'),
                 doctorId: clinicFeedbackTarget.ophthalId ?? undefined,
                 doctorName: clinicFeedbackTarget.ophthalFullName ?? undefined,
-                staffId: (clinicFeedbackTarget as any).staffId ?? undefined,
-                staffName: (clinicFeedbackTarget as any).staffName ?? undefined,
+                staffId: clinicFeedbackTarget.staffId ?? undefined,
+                staffName: clinicFeedbackTarget.staffName ?? undefined,
               }
             : undefined
         }
@@ -485,9 +492,17 @@ const AppointmentsPage = () => {
               staffId:
                 values.targetType === 'STAFF' ? values.targetId : undefined,
             });
-            setClinicFeedbackTarget(null);
+            toast.success(t('PatientAppointments.toast.feedbackSubmitted'));
+            // Modal stays open — FeedbackModal manages switching to next target
           } catch (error) {
-            console.error('Failed to submit clinic feedback:', error);
+            const status = (error as { response?: { status?: number } })
+              .response?.status;
+            if (status === 409) {
+              toast.info(t('PatientAppointments.toast.feedbackAlreadyExists'));
+              return;
+            }
+            toast.error(t('PatientAppointments.toast.feedbackSubmitFailed'));
+            throw error; // Re-throw so FeedbackModal doesn't mark target as submitted
           }
         }}
       />
@@ -513,6 +528,17 @@ const AppointmentsPage = () => {
         }}
         onClose={() => setCancellationTarget(null)}
         onSubmit={handleRequestCancellation}
+      />
+
+      <ConfirmModal
+        open={!!directCancelTarget}
+        title={t('PatientAppointments.cancellation.modalTitle')}
+        message={t('PatientAppointments.cancellation.confirmDirect')}
+        confirmLabel={t('PatientAppointments.cancellation.confirmLabel')}
+        cancelLabel={t('common.actions.cancel', { defaultValue: 'Hủy bỏ' })}
+        isLoading={cancelAppointmentMutation.isPending}
+        onConfirm={handleDirectCancel}
+        onCancel={() => setDirectCancelTarget(null)}
       />
     </PatientLayout>
   );
@@ -586,6 +612,7 @@ interface ClinicAppointmentCardProps {
   reasonLabel: string;
   organisationLabel: string;
   clinicLabel: string;
+  allTargetsSubmitted: boolean;
   onRate: () => void;
   onViewQR: () => void;
   onSync: (orderId: string) => void;
@@ -601,6 +628,7 @@ const ClinicAppointmentCard = ({
   reasonLabel,
   organisationLabel,
   clinicLabel,
+  allTargetsSubmitted,
   onRate,
   onViewQR,
   onSync,
@@ -782,7 +810,7 @@ const ClinicAppointmentCard = ({
             <div className="flex justify-end pt-4 lg:pt-0">
               {appointment.status === 'Completed' && (
                 <div className="w-full sm:w-auto">
-                  {appointment.hasFeedback ? (
+                  {allTargetsSubmitted ? (
                     <FeedbackSubmittedBadge label={submittedLabel} />
                   ) : (
                     <button

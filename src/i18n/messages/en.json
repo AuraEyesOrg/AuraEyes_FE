@@ -408,7 +408,7 @@
       "leftPanel": {
         "titleLine": "AI-Powered",
         "titleHighlight": "Eye Care Platform.",
-        "description": "Secure access for patients, ophthalmologists, and organizations to next-generation retinal screening tools with 99.2% clinical accuracy.",
+        "description": "Secure access for patients, ophthalmologists, and organizations to next-generation retinal screening tools with clinical accuracy.",
         "hipaa": "HIPAA Compliant",
         "encryption": "End-to-End Encryption",
         "systemStatus": "System Status:",
@@ -429,7 +429,8 @@
         "registrationError": "An error occurred during registration",
         "googleError": "An error occurred during Google login",
         "captchaRequired": "Please complete the CAPTCHA verification.",
-        "turnstileRequired": "Please complete the Turnstile verification."
+        "turnstileRequired": "Please complete the Turnstile verification.",
+        "invalidCredentials": "Invalid email or password."
       },
       "loginForm": {
         "heading": "Welcome Back",
@@ -1978,7 +1979,7 @@
         },
         "validation": {
           "title": "Clinical Validation",
-          "description": "Verified 99.2% sensitivity in multi-center clinical trials. Peer-reviewed results published in top-tier medical journals.",
+          "description": "Verified sensitivity in multi-center clinical trials. Peer-reviewed results published in top-tier medical journals.",
           "cta": "Download Whitepaper"
         }
       }
@@ -2263,7 +2264,7 @@
       "learnMore": "Learn More"
     },
     "descriptions": {
-      "bookConsultation": "Discuss these results with a specialist to get a professional assessment and a personalized care plan.",
+      "bookConsultation": "Discuss these results with a specialist.",
       "startNewAnalysis": "Start a new analysis for another eye or re-check."
     },
     "consultation": {
@@ -2938,7 +2939,9 @@
       "phoneNumber": "Phone Number",
       "dateOfBirth": "Date of Birth",
       "gender": "Gender",
-      "address": "Address"
+      "address": "Address",
+      "citizenId": "Citizen ID (CCCD)",
+      "citizenIdPlaceholder": "Enter CCCD number"
     },
     "gender": {
       "preferNotToSay": "Prefer not to say",
