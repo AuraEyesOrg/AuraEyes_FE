@@ -45,7 +45,7 @@ const resolveLocaleCandidates = (): Array<'vi' | 'en'> => {
 };
 
 export const useSafeTranslation = () => {
-  const { t: baseT } = useTranslation();
+  const { t: baseT, i18n } = useTranslation();
 
   const t = useCallback(
     (
@@ -85,5 +85,5 @@ export const useSafeTranslation = () => {
     [baseT]
   );
 
-  return { t };
+  return { t, i18n };
 };

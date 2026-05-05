@@ -1204,6 +1204,180 @@ declare module 'i18next' {
         carePlan: string;
         latestVisit: string;
       };
+      PatientSidebar: {
+        nav: {
+          dashboard: string;
+          myScans: string;
+          medicalHistory: string;
+          appointments: string;
+          clinicSchedule: string;
+          carePlan: string;
+          chat: string;
+          wallet: string;
+          helpFeedback: string;
+          settings: string;
+        };
+      };
+      PatientHeader: {
+        pages: {
+          dashboard: string;
+          screening: string;
+          appointments: string;
+          doctors: string;
+          clinics: string;
+          chat: string;
+          wallet: string;
+          profile: string;
+          settings: string;
+          security: string;
+          notifications: string;
+          carePlan: string;
+          schedule: string;
+          medicalHistory: string;
+        };
+        breadcrumb: {
+          home: string;
+        };
+        search: {
+          placeholder: string;
+        };
+        actions: {
+          toggleTheme: string;
+        };
+      };
+      PatientAppointments: {
+        clinicBooking: {
+          page: {
+            title: string;
+            organisationLabel: string;
+          };
+          visitDate: string;
+          visitReason: string;
+          visitReasonPlaceholder: string;
+          selectDoctorFirst: string;
+          slotUnavailable: string;
+          bookingSuccess: string;
+          timeFrames: string;
+          searchingSlots: string;
+          morning: string;
+          afternoon: string;
+          selectOphthalmologist: string;
+          forSlot: string;
+          anyDoctor: string;
+          anyDoctorDesc: string;
+          randomDoctorAssigned: string;
+          noSlots: string;
+          noSlotsDesc: string;
+          infoText: string;
+          confirmBooking: string;
+          viewDetails: string;
+          specialist: string;
+          bio: string;
+          credentials: string;
+          consultationFee: string;
+          consultation: string;
+          patients: string;
+          rating: string;
+          reasons: {
+            routine: string;
+            blurred: string;
+            pressure: string;
+            pain: string;
+            first: string;
+          };
+          slotStatus: {
+            full: string;
+            booked: string;
+            doctors: string;
+          };
+        };
+        stats: {
+          upcoming: string;
+          awaitingPayment: string;
+          completed: string;
+          cancelled: string;
+          total: string;
+          slots: string;
+        };
+        filters: {
+          all: string;
+          upcoming: string;
+          completed: string;
+          cancelled: string;
+        };
+        clinicStatus: {
+          depositPaid: string;
+          pending: string;
+          confirmed: string;
+          checkedIn: string;
+          inProgress: string;
+          completed: string;
+          cancelled: string;
+          noShow: string;
+          cancellationRequested: string;
+        };
+        page: {
+          title: string;
+          subtitle: string;
+        };
+        actions: {
+          bookNew: string;
+          bookMoreSlot: string;
+          rateClinic: string;
+          payNow: string;
+          showCheckInQr: string;
+        };
+        empty: {
+          clinicAll: string;
+          clinicByFilter: string;
+        };
+        sections: {
+          organisationSlots: string;
+        };
+        feedback: {
+          submittedBadge: string;
+          modalTitle: string;
+          modalSubtitle: string;
+          submitLabel: string;
+          targetTitle: string;
+          targetClinic: string;
+          targetDoctor: string;
+          targetStaff: string;
+          ratingLabel: string;
+          commentPlaceholder: string;
+        };
+        labels: {
+          reason: string;
+          organisationAppointment: string;
+          clinicVisit: string;
+          consultingDoctor: string;
+          clinicDoctor: string;
+        };
+        pagination: {
+          prev: string;
+          next: string;
+          pageOf: string;
+        };
+        cancellation: {
+          modalTitle: string;
+          modalSubtitle: string;
+          bankName: string;
+          accountName: string;
+          bankNumber: string;
+          reason: string;
+          confirmLabel: string;
+          confirmDirect: string;
+          cancelling: string;
+          ruleNotice: string;
+          successToast: string;
+        };
+        toast: {
+          feedbackSubmitted: string;
+          feedbackAlreadyExists: string;
+          feedbackSubmitFailed: string;
+          statusUpdated: string;
+        };
+      };
       schedules: {
         title: string;
         subtitle: string;
@@ -2516,6 +2690,7 @@ declare module 'i18next' {
         aiAssessment: string;
         primaryRecommendation: string;
         pdfFormat: string;
+        consultationComplete: string;
       };
       status: {
         healthy: string;
@@ -2540,6 +2715,9 @@ declare module 'i18next' {
         newScan: string;
         viewAllResources: string;
         startNewScreening: string;
+        viewResults: string;
+        viewMedicalRecord: string;
+        rateExperience: string;
       };
       sections: {
         recommendedActions: string;
@@ -2548,6 +2726,7 @@ declare module 'i18next' {
       descriptions: {
         bookConsultation: string;
         startNewAnalysis: string;
+        consultationComplete: string;
       };
       consultation: {
         alreadyBookedTitle: string;
@@ -10010,64 +10189,6 @@ declare module 'i18next' {
             needsAttention: string;
           };
         };
-        PatientReview: {
-          page: {
-            title: string;
-            subtitle: string;
-          };
-          sessionLabel: string;
-          labels: {
-            retinalImage: string;
-            retinalScanAlt: string;
-            noImage: string;
-            scanId: string;
-            capturedAt: string;
-            aiAssessment: string;
-            primaryRecommendation: string;
-            pdfFormat: string;
-          };
-          status: {
-            healthy: string;
-            high: string;
-          };
-          summary: {
-            healthy: string;
-            high: string;
-            moderate: string;
-            low: string;
-          };
-          findingsDetected: string;
-          findingsMore: string;
-          actions: {
-            zoomImage: string;
-            viewFullAnalysisDetails: string;
-            bookConsultation: string;
-            findSpecialist: string;
-            askAuraAssistant: string;
-            downloadingReport: string;
-            downloadReport: string;
-            newScan: string;
-            viewAllResources: string;
-            startNewScreening: string;
-          };
-          sections: {
-            recommendedActions: string;
-            learnMore: string;
-          };
-          descriptions: {
-            bookConsultation: string;
-            startNewAnalysis: string;
-          };
-          consultation: {
-            alreadyBookedTitle: string;
-            alreadyBookedDescription: string;
-            statusLabel: string;
-            createdAtLabel: string;
-          };
-          empty: {
-            description: string;
-          };
-        };
         toast: {
           noPatient: string;
           missingVisit: string;
@@ -10864,6 +10985,23 @@ declare module 'i18next' {
         processing: string;
         viewDetails: string;
       };
+    };
+    NotificationDropdown: {
+      aria: {
+        label: string;
+      };
+      status: {
+        online: string;
+      };
+      actions: {
+        markAllAsRead: string;
+      };
+      loading: string;
+      empty: {
+        title: string;
+        description: string;
+      };
+      viewAll: string;
     };
   }
 

@@ -1,4 +1,170 @@
 {
+  "PatientAppointments": {
+    "page": {
+      "eyebrow": "Your schedule",
+      "title": "Appointments",
+      "subtitle": "Manage your doctor and organisation appointments"
+    },
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {{page}} of {{total}}"
+    },
+    "loading": {
+      "appointments": "Loading appointments...",
+      "clinicAppointments": "Loading clinic appointments..."
+    },
+    "stats": {
+      "upcoming": "Upcoming",
+      "completed": "Completed",
+      "total": "Total",
+      "cancelled": "Cancelled",
+      "slots": "Slots",
+      "awaitingPayment": "Awaiting payment"
+    },
+    "filters": {
+      "label": "Filter",
+      "all": "All",
+      "upcoming": "Upcoming",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "sections": {
+      "organisationSlots": "Organisation Slots",
+      "doctorSlots": "Doctor Slots"
+    },
+    "actions": {
+      "bookNew": "Book new",
+      "bookMoreSlot": "Book More Slot",
+      "rateClinic": "Rate Clinic",
+      "viewChat": "View Chat",
+      "joinCall": "Join Call",
+      "cancel": "Cancel",
+      "viewDetails": "View Details",
+      "bookFirstAppointment": "Book Your First Appointment",
+      "showCheckInQr": "Show Check-in QR",
+      "payNow": "Pay Now"
+    },
+    "labels": {
+      "clinicVisit": "Clinic Visit",
+      "organisationAppointment": "Organisation appointment",
+      "reason": "Reason: {{reason}}",
+      "notScheduledYet": "Not scheduled yet",
+      "doctorName": "Doctor: {{name}}",
+      "videoConsultation": "Video consultation",
+      "videoConsultationReady": "Video consultation (link ready)",
+      "consultingDoctor": "Consulting Doctor"
+    },
+    "sessionType": {
+      "verification": "Verification",
+      "videoCall": "Video Call",
+      "clinicBooking": "Clinic Booking"
+    },
+    "sessionStatus": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "clinicStatus": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "depositPaid": "Deposit Paid",
+      "checkedIn": "Checked In",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "noShow": "No Show",
+      "cancellationRequested": "Refund Pending"
+    },
+    "empty": {
+      "clinicAll": "No clinic appointments yet.",
+      "clinicByFilter": "No {{filter}} clinic appointments.",
+      "doctorAll": "No doctor appointments yet.",
+      "doctorByFilter": "No {{filter}} doctor appointments.",
+      "noAppointmentsTitle": "No Appointments Found",
+      "noAppointmentsAll": "You haven't created any appointments yet.",
+      "noAppointmentsByFilter": "No {{filter}} appointments."
+    },
+    "toast": {
+      "cancelSigninRequired": "Unable to cancel appointment. Please sign in again.",
+      "feedbackSubmitted": "Feedback submitted",
+      "feedbackAlreadyExists": "Feedback already exists for this appointment.",
+      "feedbackSubmitFailed": "Unable to submit feedback right now. Please try again."
+    },
+    "cancelModal": {
+      "title": "Cancel appointment?",
+      "message": "Are you sure you want to cancel this appointment? The consultation fee will be refunded to your wallet.",
+      "confirmLabel": "Yes, cancel appointment",
+      "cancelLabel": "Keep appointment"
+    },
+    "feedback": {
+      "submittedBadge": "Feedback submitted",
+      "modalTitle": "Clinic feedback",
+      "modalSubtitle": "Share your clinic visit experience.",
+      "submitLabel": "Submit clinic feedback"
+    },
+    "clinicBooking": {
+      "page": {
+        "title": "Organisation Schedule",
+        "organisationLabel": "Organisation"
+      },
+      "visitDate": "Visit Date",
+      "visitReason": "Visit Reason",
+      "visitReasonPlaceholder": "Blurred vision, routine follow-up...",
+      "selectDoctorFirst": "Please select a doctor to continue.",
+      "slotUnavailable": "This slot is too close to the start time. Please select another slot at least 30 minutes in advance.",
+      "bookingSuccess": "Booking successful! Redirecting to payment...",
+      "timeFrames": "time frame(s)",
+      "searchingSlots": "Searching for available slots...",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "selectOphthalmologist": "Select Ophthalmologist",
+      "forSlot": "For {{start}} - {{end}}",
+      "anyDoctor": "Any available doctor",
+      "anyDoctorDesc": "System will randomly select an available doctor for you",
+      "randomDoctorAssigned": "Random doctor assigned",
+      "noSlots": "No Slots Available",
+      "noSlotsDesc": "There are no available slots for this date. Please select another day from the calendar.",
+      "infoText": "Appointment is subject to confirmation. Please arrive 15 minutes before your time slot.",
+      "confirmBooking": "Confirm Booking",
+      "viewDetails": "View Details",
+      "specialist": "Ophthalmologist Specialist",
+      "bio": "Bio & Experience",
+      "credentials": "Degrees & Certificates",
+      "consultationFee": "Consultation Fee",
+      "consultation": "Consultation",
+      "patients": "Patients",
+      "rating": "Rating",
+      "reasons": {
+        "routine": "Routine follow-up",
+        "blurred": "Blurred vision",
+        "pressure": "Eye pressure check",
+        "pain": "Eye pain or discomfort",
+        "first": "First-time visit"
+      },
+      "slotStatus": {
+        "full": "Full",
+        "booked": "Booked",
+        "doctors": "Dr"
+      }
+    },
+    "cancellation": {
+      "modalTitle": "Request Appointment Cancellation",
+      "modalSubtitle": "Please provide your banking information so we can refund your deposit (30% of slot price).",
+      "bankName": "Bank Name",
+      "accountName": "Account Name",
+      "bankNumber": "Bank Account Number",
+      "reason": "Cancellation Reason (optional)",
+      "successToast": "Cancellation request submitted. An administrator will review and process your refund.",
+      "errorToast": "Failed to submit cancellation request. Please try again later.",
+      "ruleNotice": "Note: You can only cancel an appointment at least 6 hours before the start time.",
+      "ruleViolated": "Cannot cancel appointment as it is less than 6 hours before the start time.",
+      "confirmLabel": "Submit Request",
+      "cancelling": "Submitting...",
+      "confirmDirect": "Are you sure you want to cancel this appointment? Since payment has not been completed, it will be cancelled immediately and the slot will be released for others."
+    }
+  },
   "Validation": {
     "Required": "This field is required",
     "MaxLength": {
@@ -2232,7 +2398,8 @@
       "capturedAt": "Captured at",
       "aiAssessment": "AI Assessment",
       "primaryRecommendation": "Primary Recommendation",
-      "pdfFormat": "PDF Format"
+      "pdfFormat": "PDF Format",
+      "consultationComplete": "Examination Complete"
     },
     "status": {
       "healthy": "Looks Healthy",
@@ -2254,9 +2421,10 @@
       "askAuraAssistant": "Ask Aura Assistant",
       "downloadingReport": "Downloading report...",
       "downloadReport": "Download Report",
-      "newScan": "New Scan",
-      "viewAllResources": "View all resources",
-      "startNewScreening": "Start new screening"
+      "startNewScreening": "Start new screening",
+      "viewResults": "Review Consultation Results",
+      "viewMedicalRecord": "View Medical Record",
+      "rateExperience": "Rate Experience"
     },
     "sections": {
       "recommendedActions": "Recommended Actions",
@@ -2264,7 +2432,8 @@
     },
     "descriptions": {
       "bookConsultation": "Discuss these results with a specialist.",
-      "startNewAnalysis": "Start a new analysis for another eye or re-check."
+      "startNewAnalysis": "Start a new analysis for another eye or re-check.",
+      "consultationComplete": "Your eye examination is finished. You can now access your official medical record, diagnosis, and personalized care plan from our specialist."
     },
     "consultation": {
       "alreadyBookedTitle": "You already submitted this case for consultation",
@@ -2278,151 +2447,6 @@
     "footer": {
       "importantDisclaimer": "Important: This analysis is AI-assisted and does not replace a professional medical examination.",
       "copyright": "© {{year}} AuraEyes. All rights reserved."
-    }
-  },
-  "PatientAppointments": {
-    "page": {
-      "eyebrow": "Your schedule",
-      "title": "Appointments",
-      "subtitle": "Manage your doctor and organisation appointments"
-    },
-    "pagination": {
-      "prev": "Previous",
-      "next": "Next",
-      "pageOf": "Page {{page}} of {{total}}"
-    },
-    "loading": {
-      "appointments": "Loading appointments...",
-      "clinicAppointments": "Loading clinic appointments..."
-    },
-    "stats": {
-      "upcoming": "Upcoming",
-      "completed": "Completed",
-      "total": "Total",
-      "cancelled": "Cancelled",
-      "slots": "Slots",
-      "awaitingPayment": "Awaiting payment"
-    },
-    "filters": {
-      "label": "Filter",
-      "all": "All",
-      "upcoming": "Upcoming",
-      "completed": "Completed",
-      "cancelled": "Cancelled"
-    },
-    "sections": {
-      "organisationSlots": "Organisation Slots",
-      "doctorSlots": "Doctor Slots"
-    },
-    "actions": {
-      "bookNew": "Book new",
-      "bookMoreSlot": "Book More Slot",
-      "rateClinic": "Rate Clinic",
-      "viewChat": "View Chat",
-      "joinCall": "Join Call",
-      "cancel": "Cancel",
-      "viewDetails": "View Details",
-      "bookFirstAppointment": "Book Your First Appointment",
-      "showCheckInQr": "Show Check-in QR",
-      "payNow": "Pay Now"
-    },
-    "labels": {
-      "clinicVisit": "Clinic Visit",
-      "organisationAppointment": "Organisation appointment",
-      "reason": "Reason: {{reason}}",
-      "notScheduledYet": "Not scheduled yet",
-      "doctorName": "Doctor: {{name}}",
-      "videoConsultation": "Video consultation",
-      "videoConsultationReady": "Video consultation (link ready)",
-      "consultingDoctor": "Consulting Doctor"
-    },
-    "sessionType": {
-      "verification": "Verification",
-      "videoCall": "Video Call",
-      "clinicBooking": "Clinic Booking"
-    },
-    "sessionStatus": {
-      "pending": "Pending",
-      "confirmed": "Confirmed",
-      "completed": "Completed",
-      "cancelled": "Cancelled"
-    },
-    "clinicStatus": {
-      "pending": "Pending",
-      "confirmed": "Confirmed",
-      "depositPaid": "Deposit Paid",
-      "checkedIn": "Checked In",
-      "inProgress": "In Progress",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "noShow": "No Show",
-      "cancellationRequested": "Refund Pending"
-    },
-    "empty": {
-      "clinicAll": "No clinic appointments yet.",
-      "clinicByFilter": "No {{filter}} clinic appointments.",
-      "doctorAll": "No doctor appointments yet.",
-      "doctorByFilter": "No {{filter}} doctor appointments.",
-      "noAppointmentsTitle": "No Appointments Found",
-      "noAppointmentsAll": "You haven't created any appointments yet.",
-      "noAppointmentsByFilter": "No {{filter}} appointments."
-    },
-    "toast": {
-      "cancelSigninRequired": "Unable to cancel appointment. Please sign in again.",
-      "feedbackSubmitted": "Feedback submitted",
-      "feedbackAlreadyExists": "Feedback already exists for this appointment.",
-      "feedbackSubmitFailed": "Unable to submit feedback right now. Please try again."
-    },
-    "cancelModal": {
-      "title": "Cancel appointment?",
-      "message": "Are you sure you want to cancel this appointment? The consultation fee will be refunded to your wallet.",
-      "confirmLabel": "Yes, cancel appointment",
-      "cancelLabel": "Keep appointment"
-    },
-    "feedback": {
-      "submittedBadge": "Feedback submitted",
-      "modalTitle": "Clinic feedback",
-      "modalSubtitle": "Share your clinic visit experience.",
-      "submitLabel": "Submit clinic feedback"
-    },
-    "cancellation": {
-      "modalTitle": "Request Appointment Cancellation",
-      "modalSubtitle": "Please provide your banking information so we can refund your deposit (30% of slot price).",
-      "bankName": "Bank Name",
-      "accountName": "Account Name",
-      "bankNumber": "Bank Account Number",
-      "reason": "Cancellation Reason (optional)",
-      "successToast": "Cancellation request submitted. An administrator will review and process your refund.",
-      "errorToast": "Failed to submit cancellation request. Please try again later.",
-      "ruleNotice": "Note: You can only cancel an appointment at least 6 hours before the start time.",
-      "ruleViolated": "Cannot cancel appointment as it is less than 6 hours before the start time.",
-      "confirmLabel": "Submit Request",
-      "cancelling": "Submitting...",
-      "confirmDirect": "Are you sure you want to cancel this appointment? Since payment has not been completed, it will be cancelled immediately and the slot will be released for others."
-    },
-    "clinicBooking": {
-      "page": {
-        "title": "Organisation Schedule"
-      },
-      "visitDate": "Visit Date",
-      "visitReason": "Visit Reason",
-      "searchingSlots": "Searching for slots...",
-      "selectOphthalmologist": "Select Ophthalmologist",
-      "anyDoctor": "Any available doctor",
-      "anyDoctorDesc": "System will randomly select an available doctor for you",
-      "noSlots": "No Slots Available",
-      "noSlotsDesc": "There are no available slots for this date. Please select another day from the calendar.",
-      "timeFrames": "time frame(s)",
-      "morning": "Morning",
-      "afternoon": "Afternoon",
-      "infoText": "Appointment is subject to confirmation. Please arrive 15 minutes before your time slot.",
-      "slotUnavailable": "This slot is too close to start time. Please choose another slot at least 30 minutes ahead.",
-      "selectDoctorFirst": "Please select a doctor to continue.",
-      "bookingSuccess": "Booking successful! Redirecting to payment...",
-      "randomDoctorAssigned": "Randomly assigned doctor",
-      "doctorExperience": "{{years}} years exp",
-      "forSlot": "For {{start}} - {{end}}",
-      "bookButton": "Book Appointment"
     }
   },
   "PatientDashboard_Legacy": {
@@ -2730,7 +2754,7 @@
       "emptyByFilterTitle": "No results for this filter",
       "emptyByFilterDescription": "Try adjusting your filter or check back later",
       "medicalAppt": "Medical Appointment",
-      "ref": "Ref: {{id}}",
+      "ref": "Ref",
       "payNow": "Pay Now",
       "emptyPaymentOrdersDescription": "When you book an appointment, transactions will appear here."
     },
@@ -3285,7 +3309,11 @@
       "profile": "My Profile",
       "settings": "Settings",
       "security": "Security",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "carePlan": "Care Plan",
+      "schedule": "Clinic Schedule",
+      "medicalHistory": "Digital Medical Records",
+      "helpFeedback": "Help & Feedback"
     }
   },
   "PatientN8nChat": {
@@ -8021,6 +8049,65 @@
       "completed": "Completed",
       "processing": "In Progress",
       "viewDetails": "View Details"
+    }
+  },
+  "Notifications": {
+    "AiScreeningCompleted": {
+      "title": "AI Screening Ready",
+      "message": "Your AI retinal screening results are ready. Please view details in the app."
+    },
+    "NewAppointmentBooked": {
+      "title": "Appointment Booked",
+      "message": "You have successfully booked an appointment at {{appointmentTime}}. Please complete the deposit payment."
+    },
+    "ScheduleChanged": {
+      "RefundRejected": {
+        "title": "Refund Request Rejected",
+        "message": "The refund request for your appointment has been rejected. Reason: {{reason}}."
+      },
+      "RefundApproved": {
+        "title": "Refund Request Approved",
+        "message": "The refund request for your appointment has been approved."
+      },
+      "default": {
+        "title": "Schedule Changed",
+        "message": "Your appointment schedule has been updated."
+      }
+    },
+    "WalletDepositSuccess": {
+      "title": "Deposit Successful",
+      "message": "Successfully deposited {{amount}} VND into your wallet."
+    },
+    "RefundProcessed": {
+      "title": "Refund Successful",
+      "message": "The refund for your appointment has been processed successfully."
+    }
+  },
+  "NotificationDropdown": {
+    "aria": {
+      "label": "Notifications"
+    },
+    "status": {
+      "online": "Online"
+    },
+    "actions": {
+      "markAllAsRead": "Mark all as read"
+    },
+    "loading": "Loading notifications...",
+    "empty": {
+      "title": "No notifications yet",
+      "description": "We'll notify you when something happens"
+    },
+    "viewAll": "View all notifications"
+  },
+  "notification": {
+    "types": {
+      "screening": "Screening",
+      "consultation": "Consultation",
+      "message": "Message",
+      "appointment": "Appointment",
+      "wallet": "Wallet",
+      "notification": "Notification"
     }
   }
 }

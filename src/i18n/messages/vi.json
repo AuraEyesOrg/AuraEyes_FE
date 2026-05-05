@@ -1,4 +1,178 @@
 {
+  "PatientAppointments": {
+    "page": {
+      "eyebrow": "Lịch của bạn",
+      "title": "Lịch hẹn",
+      "subtitle": "Quản lý lịch hẹn với bác sĩ và cơ sở y tế"
+    },
+    "pagination": {
+      "prev": "Trước",
+      "next": "Sau",
+      "pageOf": "Trang {{page}} / {{total}}"
+    },
+    "loading": {
+      "appointments": "Đang tải lịch hẹn...",
+      "clinicAppointments": "Đang tải lịch hẹn cơ sở y tế..."
+    },
+    "stats": {
+      "upcoming": "Sắp tới",
+      "completed": "Hoàn thành",
+      "total": "Tổng",
+      "cancelled": "Đã hủy",
+      "slots": "Lượt",
+      "awaitingPayment": "Chờ thanh toán"
+    },
+    "filters": {
+      "label": "Bộ lọc",
+      "all": "Tất cả",
+      "upcoming": "Sắp tới",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã hủy"
+    },
+    "sections": {
+      "organisationSlots": "Lịch cơ sở y tế",
+      "doctorSlots": "Lịch bác sĩ"
+    },
+    "actions": {
+      "bookNew": "Đặt lịch mới",
+      "bookMoreSlot": "Đặt thêm lịch",
+      "rateClinic": "Đánh giá cơ sở",
+      "viewChat": "Xem chat",
+      "joinCall": "Tham gia gọi",
+      "cancel": "Hủy",
+      "viewDetails": "Xem chi tiết",
+      "bookFirstAppointment": "Đặt lịch hẹn đầu tiên",
+      "showCheckInQr": "Hiện mã Check-in",
+      "payNow": "Thanh toán ngay"
+    },
+    "labels": {
+      "clinicVisit": "Lịch khám cơ sở",
+      "organisationAppointment": "Lịch hẹn tại cơ sở y tế",
+      "reason": "Lý do: {{reason}}",
+      "notScheduledYet": "Chưa lên lịch",
+      "doctorName": "Bác sĩ: {{name}}",
+      "videoConsultation": "Tư vấn video",
+      "videoConsultationReady": "Tư vấn video (đã có link)",
+      "consultingDoctor": "Bác sĩ phụ trách"
+    },
+    "sessionType": {
+      "verification": "Xác minh",
+      "videoCall": "Gọi video",
+      "clinicBooking": "Đặt lịch cơ sở"
+    },
+    "sessionStatus": {
+      "pending": "Chờ xác nhận",
+      "confirmed": "Đã xác nhận",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã hủy"
+    },
+    "clinicStatus": {
+      "pending": "Chờ xác nhận",
+      "confirmed": "Đã xác nhận",
+      "depositPaid": "Đã đặt cọc",
+      "checkedIn": "Đã check-in",
+      "inProgress": "Đang khám",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã hủy",
+      "noShow": "Vắng mặt",
+      "cancellationRequested": "Chờ hoàn tiền",
+      "fullyPaid": "Đã tất toán",
+      "awaitingPayment": "Chờ thanh toán"
+    },
+    "empty": {
+      "clinicAll": "Chưa có lịch hẹn cơ sở y tế.",
+      "clinicByFilter": "Không có lịch hẹn cơ sở y tế {{filter}}.",
+      "doctorAll": "Chưa có lịch hẹn bác sĩ.",
+      "doctorByFilter": "Không có lịch hẹn bác sĩ {{filter}}.",
+      "noAppointmentsTitle": "Không tìm thấy lịch hẹn",
+      "noAppointmentsAll": "Bạn chưa tạo lịch hẹn nào.",
+      "noAppointmentsByFilter": "Không có lịch hẹn {{filter}}."
+    },
+    "toast": {
+      "cancelSigninRequired": "Không thể hủy lịch hẹn. Vui lòng đăng nhập lại.",
+      "feedbackSubmitted": "Gửi đánh giá thành công",
+      "feedbackAlreadyExists": "Bạn đã gửi đánh giá cho lịch hẹn này.",
+      "feedbackSubmitFailed": "Không thể gửi đánh giá lúc này. Vui lòng thử lại."
+    },
+    "cancelModal": {
+      "title": "Hủy lịch hẹn?",
+      "message": "Bạn có chắc muốn hủy lịch hẹn này không? Phí tư vấn sẽ được hoàn về ví của bạn.",
+      "confirmLabel": "Có, hủy lịch hẹn",
+      "cancelLabel": "Giữ lịch hẹn"
+    },
+    "feedback": {
+      "submittedBadge": "Đã gửi đánh giá",
+      "modalTitle": "Đánh giá dịch vụ",
+      "modalSubtitle": "Chia sẻ trải nghiệm của bạn về buổi thăm khám.",
+      "submitLabel": "Gửi đánh giá",
+      "targetTitle": "Bạn muốn đánh giá đối tượng nào?",
+      "targetClinic": "Phòng khám",
+      "targetDoctor": "Bác sĩ",
+      "targetStaff": "Nhân viên",
+      "ratingLabel": "Mức độ hài lòng",
+      "commentPlaceholder": "Hãy chia sẻ thêm về trải nghiệm của bạn..."
+    },
+    "cancellation": {
+      "modalTitle": "Yêu cầu hủy lịch hẹn",
+      "modalSubtitle": "Vui lòng cung cấp thông tin ngân hàng để chúng tôi hoàn tiền đặt cọc (30% giá trị slot).",
+      "bankName": "Tên ngân hàng",
+      "accountName": "Tên chủ tài khoản",
+      "bankNumber": "Số tài khoản",
+      "reason": "Lý do hủy (tùy chọn)",
+      "successToast": "Yêu cầu hủy đã được gửi. Quản trị viên sẽ kiểm tra và hoàn tiền cho bạn.",
+      "errorToast": "Không thể gửi yêu cầu hủy. Vui lòng thử lại sau.",
+      "ruleNotice": "Lưu ý: Bạn chỉ có thể hủy lịch hẹn trước giờ bắt đầu ít nhất 6 tiếng.",
+      "ruleViolated": "Không thể hủy lịch hẹn vì đã quá hạn (ít hơn 6 tiếng trước giờ khám).",
+      "confirmLabel": "Gửi yêu cầu hủy",
+      "cancelling": "Đang gửi yêu cầu...",
+      "confirmDirect": "Bạn có chắc chắn muốn hủy lịch hẹn này không? Vì bạn chưa thanh toán nên lịch hẹn sẽ bị hủy ngay lập tức và giải phóng chỗ cho người khác."
+    },
+    "clinicBooking": {
+      "page": {
+        "title": "Lịch khám tổ chức",
+        "organisationLabel": "Tổ chức"
+      },
+      "visitDate": "Ngày khám",
+      "visitReason": "Lý do khám",
+      "visitReasonPlaceholder": "Mờ mắt, kiểm tra định kỳ...",
+      "selectDoctorFirst": "Vui lòng chọn bác sĩ để tiếp tục.",
+      "slotUnavailable": "Slot này đã quá gần giờ bắt đầu. Vui lòng chọn slot khác cách ít nhất 30 phút.",
+      "bookingSuccess": "Đặt lịch thành công! Đang chuyển đến trang thanh toán...",
+      "timeFrames": "khung giờ",
+      "searchingSlots": "Đang tìm kiếm khung giờ trống...",
+      "morning": "Buổi sáng",
+      "afternoon": "Buổi chiều",
+      "selectOphthalmologist": "Chọn bác sĩ nhãn khoa",
+      "forSlot": "Cho khung {{start}} - {{end}}",
+      "anyDoctor": "Bất kỳ bác sĩ nào",
+      "anyDoctorDesc": "Hệ thống sẽ chọn ngẫu nhiên 1 bác sĩ còn rảnh cho bạn",
+      "randomDoctorAssigned": "Đã chọn ngẫu nhiên bác sĩ",
+      "noSlots": "Không có khung giờ nào",
+      "noSlotsDesc": "Không có khung giờ trống nào cho ngày này. Vui lòng chọn ngày khác trên lịch.",
+      "infoText": "Lịch khám cần được xác nhận. Vui lòng đến trước 15 phút so với giờ hẹn.",
+      "confirmBooking": "Xác nhận đặt lịch",
+      "viewDetails": "Xem chi tiết",
+      "specialist": "Chuyên gia nhãn khoa",
+      "bio": "Giới thiệu & Kinh nghiệm",
+      "credentials": "Bằng cấp & Chứng chỉ",
+      "consultationFee": "Phí khám",
+      "consultation": "Khám bệnh",
+      "patients": "Bệnh nhân",
+      "rating": "Đánh giá",
+      "reasons": {
+        "routine": "Kiểm tra định kỳ",
+        "blurred": "Mắt mờ",
+        "pressure": "Kiểm tra nhãn áp",
+        "pain": "Đau hoặc khó chịu ở mắt",
+        "first": "Lần đầu thăm khám"
+      },
+      "slotStatus": {
+        "full": "Hết chỗ",
+        "booked": "Đã đặt",
+        "doctors": "BS"
+      }
+    }
+  },
   "Validation": {
     "Required": "Trường này là bắt buộc",
     "MaxLength": {
@@ -1034,6 +1208,53 @@
         "daysShort": "n"
       },
       "emptyTitle": "Không tìm thấy lịch hẹn",
+      "PatientSidebar": {
+        "nav": {
+          "dashboard": "Tổng quan",
+          "myScans": "Lượt quét của tôi",
+          "medicalHistory": "Bệnh án điện tử",
+          "appointments": "Lịch hẹn",
+          "clinicSchedule": "Lịch khám",
+          "carePlan": "Kế hoạch chăm sóc",
+          "chat": "Trò chuyện",
+          "wallet": "Lịch sử giao dịch",
+          "helpFeedback": "Hỗ trợ & Phản hồi",
+          "settings": "Cài đặt"
+        },
+        "actions": {
+          "logout": "Đăng xuất"
+        }
+      },
+      "PatientHeader": {
+        "pages": {
+          "dashboard": "Tổng quan",
+          "screening": "Lượt quét của tôi",
+          "appointments": "Lịch hẹn",
+          "doctors": "Tìm bác sĩ",
+          "clinics": "Tìm phòng khám",
+          "chat": "Trò chuyện",
+          "wallet": "Lịch sử giao dịch",
+          "profile": "Hồ sơ của tôi",
+          "settings": "Cài đặt",
+          "security": "Bảo mật",
+          "notifications": "Thông báo",
+          "carePlan": "Kế hoạch chăm sóc",
+          "schedule": "Lịch khám",
+          "medicalHistory": "Bệnh án điện tử",
+          "helpFeedback": "Hỗ trợ & Phản hồi",
+          "roadmap": "Lộ trình sức khỏe"
+        },
+        "breadcrumb": {
+          "home": "Trang chủ"
+        },
+        "search": {
+          "placeholder": "Tìm báo cáo, lịch hẹn..."
+        },
+        "actions": {
+          "toggleTheme": "Chuyển chế độ sáng/tối",
+          "logout": "Đăng xuất"
+        }
+      },
       "emptySearch": "Không có lịch hẹn nào khớp với tìm kiếm của bạn.",
       "emptyTab": "Không có lịch hẹn trong tab này.",
       "toast": {
@@ -1200,6 +1421,48 @@
       "noSearchResults": "Không tìm thấy kết quả cho \"{{query}}\"",
       "carePlan": "Kế hoạch chăm sóc",
       "latestVisit": "Lần khám gần nhất"
+    },
+    "PatientSidebar": {
+      "nav": {
+        "dashboard": "Tổng quan",
+        "myScans": "Lượt quét của tôi",
+        "medicalHistory": "Bệnh án điện tử",
+        "appointments": "Lịch hẹn",
+        "clinicSchedule": "Lịch khám",
+        "carePlan": "Kế hoạch chăm sóc",
+        "chat": "Trò chuyện",
+        "wallet": "Lịch sử giao dịch",
+        "helpFeedback": "Hỗ trợ & Phản hồi",
+        "settings": "Cài đặt"
+      }
+    },
+    "PatientHeader": {
+      "pages": {
+        "dashboard": "Tổng quan",
+        "screening": "Lượt quét của tôi",
+        "appointments": "Lịch hẹn",
+        "doctors": "Tìm bác sĩ",
+        "clinics": "Tìm phòng khám",
+        "chat": "Trò chuyện",
+        "wallet": "Lịch sử giao dịch",
+        "profile": "Hồ sơ của tôi",
+        "settings": "Cài đặt",
+        "security": "Bảo mật",
+        "notifications": "Thông báo",
+        "carePlan": "Kế hoạch chăm sóc",
+        "schedule": "Lịch khám",
+        "medicalHistory": "Bệnh án điện tử",
+        "helpFeedback": "Hỗ trợ & Phản hồi"
+      },
+      "breadcrumb": {
+        "home": "Trang chủ"
+      },
+      "search": {
+        "placeholder": "Tìm kiếm kết quả, lịch hẹn..."
+      },
+      "actions": {
+        "toggleTheme": "Chuyển chế độ sáng/tối"
+      }
     },
     "schedules": {
       "title": "Quản lý lịch",
@@ -2487,233 +2750,19 @@
       "secondary": "Xem chính sách quyền riêng tư"
     }
   },
-  "PatientAnalysisDetail": {
-    "page": {
-      "title": "Chi tiết phân tích"
-    },
-    "summary": {
-      "title": "Phát hiện AI chi tiết"
-    },
-    "actions": {
-      "backToReview": "Quay lại đánh giá"
-    }
-  },
-  "PatientReview": {
-    "page": {
-      "title": "Đánh giá & Bước tiếp theo",
-      "subtitle": "Kết quả phân tích từ hệ thống AI AuraEyes"
-    },
-    "sessionLabel": "Phiên sàng lọc",
-    "labels": {
-      "retinalImage": "Ảnh võng mạc",
-      "retinalScanAlt": "Ảnh chụp võng mạc",
-      "noImage": "Không có ảnh",
-      "scanId": "Mã ca: {{id}}",
-      "capturedAt": "Chụp lúc",
-      "aiAssessment": "Đánh giá của AI",
-      "primaryRecommendation": "Khuyến nghị ưu tiên",
-      "pdfFormat": "Định dạng PDF"
-    },
-    "status": {
-      "healthy": "Mắt khỏe mạnh",
-      "high": "Cần lưu ý"
-    },
-    "summary": {
-      "healthy": "Ảnh chụp võng mạc của bạn trông khỏe mạnh. Không tìm thấy mối lo ngại đáng kể nào - hãy tiếp tục duy trì việc kiểm tra định kỳ.",
-      "high": "Chúng tôi tìm thấy các khu vực cần trao đổi với chuyên gia mắt. Sự lưu ý sớm là cách tốt nhất để bảo vệ thị lực của bạn.",
-      "moderate": "Đã phát hiện các dấu hiệu bất thường và nên được bác sĩ chuyên khoa xem xét để xác nhận và thực hiện các bước tiếp theo.",
-      "low": "Đã phát hiện các dấu hiệu rủi ro thấp. Hãy duy trì việc theo dõi định kỳ với bác sĩ chuyên khoa mắt."
-    },
-    "findingsDetected": "Các dấu hiệu phát hiện bao gồm:",
-    "findingsMore": " và {{count}} dấu hiệu khác",
-    "actions": {
-      "zoomImage": "Phóng to ảnh",
-      "viewFullAnalysisDetails": "Xem chi tiết phân tích đầy đủ",
-      "bookConsultation": "Đặt lịch tư vấn",
-      "findSpecialist": "Tìm bác sĩ chuyên khoa",
-      "askAuraAssistant": "Hỏi trợ lý Aura",
-      "downloadingReport": "Đang tải báo cáo...",
-      "downloadReport": "Tải báo cáo",
-      "newScan": "Sàng lọc mới",
-      "viewAllResources": "Xem tất cả tài liệu",
-      "startNewScreening": "Bắt đầu sàng lọc mới"
-    },
-    "sections": {
-      "recommendedActions": "Hành động khuyên dùng",
-      "learnMore": "Tìm hiểu thêm"
-    },
-    "descriptions": {
-      "bookConsultation": "Trao đổi kết quả này với bác sĩ chuyên khoa để nhận được đánh giá chuyên môn và kế hoạch chăm sóc cá nhân hóa.",
-      "startNewAnalysis": "Bắt đầu một phân tích mới cho mắt khác hoặc kiểm tra lại."
-    },
-    "consultation": {
-      "alreadyBookedTitle": "Bạn đã gửi ca này để tư vấn",
-      "alreadyBookedDescription": "Để tránh đặt lịch trùng lặp, tính năng đặt bác sĩ và chat AI đã được khóa cho ca này.",
-      "statusLabel": "Trạng thái",
-      "createdAtLabel": "Đã đặt lúc"
-    },
-    "empty": {
-      "description": "Vui lòng thực hiện một ca sàng lọc để xem kết quả."
-    },
-    "footer": {
-      "importantDisclaimer": "Quan trọng: Phân tích này được hỗ trợ bởi AI và không thay thế cho việc khám chữa bệnh chuyên nghiệp.",
-      "copyright": "© {{year}} AuraEyes. Đã đăng ký bản quyền."
-    }
-  },
-  "PatientAppointments": {
-    "page": {
-      "eyebrow": "Lịch của bạn",
-      "title": "Lịch hẹn",
-      "subtitle": "Quản lý lịch hẹn với bác sĩ và cơ sở y tế"
-    },
-    "pagination": {
-      "prev": "Trước",
-      "next": "Sau",
-      "pageOf": "Trang {{page}} / {{total}}"
-    },
-    "loading": {
-      "appointments": "Đang tải lịch hẹn...",
-      "clinicAppointments": "Đang tải lịch hẹn cơ sở y tế..."
-    },
-    "stats": {
-      "upcoming": "Sắp tới",
-      "completed": "Hoàn thành",
-      "total": "Tổng",
-      "cancelled": "Đã hủy",
-      "slots": "Lượt",
-      "awaitingPayment": "Chờ thanh toán"
-    },
-    "filters": {
-      "label": "Bộ lọc",
-      "all": "Tất cả",
-      "upcoming": "Sắp tới",
-      "completed": "Hoàn thành",
-      "cancelled": "Đã hủy"
-    },
-    "sections": {
-      "organisationSlots": "Lịch cơ sở y tế",
-      "doctorSlots": "Lịch bác sĩ"
-    },
-    "actions": {
-      "bookNew": "Đặt lịch mới",
-      "bookMoreSlot": "Đặt thêm lịch",
-      "rateClinic": "Đánh giá cơ sở",
-      "viewChat": "Xem chat",
-      "joinCall": "Tham gia gọi",
-      "cancel": "Hủy",
-      "viewDetails": "Xem chi tiết",
-      "bookFirstAppointment": "Đặt lịch hẹn đầu tiên",
-      "showCheckInQr": "Hiện mã Check-in",
-      "payNow": "Thanh toán ngay"
-    },
-    "labels": {
-      "clinicVisit": "Lịch khám cơ sở",
-      "organisationAppointment": "Lịch hẹn tại cơ sở y tế",
-      "reason": "Lý do: {{reason}}",
-      "notScheduledYet": "Chưa lên lịch",
-      "doctorName": "Bác sĩ: {{name}}",
-      "videoConsultation": "Tư vấn video",
-      "videoConsultationReady": "Tư vấn video (đã có link)",
-      "consultingDoctor": "Bác sĩ phụ trách"
-    },
-    "sessionType": {
-      "verification": "Xác minh",
-      "videoCall": "Gọi video",
-      "clinicBooking": "Đặt lịch cơ sở"
-    },
-    "sessionStatus": {
-      "pending": "Chờ xác nhận",
-      "confirmed": "Đã xác nhận",
-      "completed": "Hoàn thành",
-      "cancelled": "Đã hủy"
-    },
-    "clinicStatus": {
-      "pending": "Chờ xác nhận",
-      "confirmed": "Đã xác nhận",
-      "depositPaid": "Đã đặt cọc",
-      "checkedIn": "Đã check-in",
-      "inProgress": "Đang khám",
-      "completed": "Hoàn thành",
-      "cancelled": "Đã hủy",
-      "noShow": "Vắng mặt",
-      "cancellationRequested": "Chờ hoàn tiền",
-      "fullyPaid": "Đã tất toán",
-      "awaitingPayment": "Chờ thanh toán"
-    },
-    "empty": {
-      "clinicAll": "Chưa có lịch hẹn cơ sở y tế.",
-      "clinicByFilter": "Không có lịch hẹn cơ sở y tế {{filter}}.",
-      "doctorAll": "Chưa có lịch hẹn bác sĩ.",
-      "doctorByFilter": "Không có lịch hẹn bác sĩ {{filter}}.",
-      "noAppointmentsTitle": "Không tìm thấy lịch hẹn",
-      "noAppointmentsAll": "Bạn chưa tạo lịch hẹn nào.",
-      "noAppointmentsByFilter": "Không có lịch hẹn {{filter}}."
-    },
-    "toast": {
-      "cancelSigninRequired": "Không thể hủy lịch hẹn. Vui lòng đăng nhập lại.",
-      "feedbackSubmitted": "Gửi đánh giá thành công",
-      "feedbackAlreadyExists": "Bạn đã gửi đánh giá cho lịch hẹn này.",
-      "feedbackSubmitFailed": "Không thể gửi đánh giá lúc này. Vui lòng thử lại."
-    },
-    "cancelModal": {
-      "title": "Hủy lịch hẹn?",
-      "message": "Bạn có chắc muốn hủy lịch hẹn này không? Phí tư vấn sẽ được hoàn về ví của bạn.",
-      "confirmLabel": "Có, hủy lịch hẹn",
-      "cancelLabel": "Giữ lịch hẹn"
-    },
-    "feedback": {
-      "submittedBadge": "Đã gửi đánh giá",
-      "modalTitle": "Đánh giá dịch vụ",
-      "modalSubtitle": "Chia sẻ trải nghiệm của bạn về buổi thăm khám.",
-      "submitLabel": "Gửi đánh giá",
-      "targetTitle": "Bạn muốn đánh giá đối tượng nào?",
-      "targetClinic": "Phòng khám",
-      "targetDoctor": "Bác sĩ",
-      "targetStaff": "Nhân viên",
-      "ratingLabel": "Mức độ hài lòng",
-      "commentPlaceholder": "Hãy chia sẻ thêm về trải nghiệm của bạn..."
-    },
-    "cancellation": {
-      "modalTitle": "Yêu cầu hủy lịch hẹn",
-      "modalSubtitle": "Vui lòng cung cấp thông tin ngân hàng để chúng tôi hoàn tiền đặt cọc (30% giá trị slot).",
-      "bankName": "Tên ngân hàng",
-      "accountName": "Tên chủ tài khoản",
-      "bankNumber": "Số tài khoản",
-      "reason": "Lý do hủy (tùy chọn)",
-      "successToast": "Yêu cầu hủy đã được gửi. Quản trị viên sẽ kiểm tra và hoàn tiền cho bạn.",
-      "errorToast": "Không thể gửi yêu cầu hủy. Vui lòng thử lại sau.",
-      "ruleNotice": "Lưu ý: Bạn chỉ có thể hủy lịch hẹn trước giờ bắt đầu ít nhất 6 tiếng.",
-      "ruleViolated": "Không thể hủy lịch hẹn vì đã quá hạn (ít hơn 6 tiếng trước giờ khám).",
-      "confirmLabel": "Gửi yêu cầu hủy",
-      "cancelling": "Đang gửi yêu cầu...",
-      "confirmDirect": "Bạn có chắc chắn muốn hủy lịch hẹn này không? Vì bạn chưa thanh toán nên lịch hẹn sẽ bị hủy ngay lập tức và giải phóng chỗ cho người khác."
-    },
-    "clinicBooking": {
-      "page": {
-        "title": "Lịch khám tổ chức"
-      },
-      "visitDate": "Ngày khám",
-      "visitReason": "Lý do khám",
-      "searchingSlots": "Đang tìm kiếm khung giờ...",
-      "selectOphthalmologist": "Chọn bác sĩ nhãn khoa",
-      "anyDoctor": "Bất kỳ bác sĩ nào",
-      "anyDoctorDesc": "Hệ thống sẽ chọn ngẫu nhiên 1 bác sĩ còn rảnh cho bạn",
-      "noSlots": "Không có khung giờ trống",
-      "noSlotsDesc": "Không có khung giờ khả dụng cho ngày này. Vui lòng chọn ngày khác.",
-      "timeFrames": "khung giờ",
-      "morning": "Buổi sáng",
-      "afternoon": "Buổi chiều",
-      "infoText": "Lịch khám cần được xác nhận. Vui lòng đến trước 15 phút so với giờ hẹn.",
-      "slotUnavailable": "Slot này đã quá gần giờ bắt đầu. Vui lòng chọn slot khác cách ít nhất 30 phút.",
-      "selectDoctorFirst": "Vui lòng chọn bác sĩ để tiếp tục.",
-      "bookingSuccess": "Đặt lịch thành công! Đang chuyển đến trang thanh toán...",
-      "randomDoctorAssigned": "Đã chọn ngẫu nhiên bác sĩ",
-      "doctorExperience": "{{years}} năm kinh nghiệm",
-      "forSlot": "Cho khung {{start}} - {{end}}",
-      "bookButton": "Đặt lịch khám"
-    }
-  },
   "PatientDashboard": {
+    "nav": {
+      "dashboard": "Tổng quan",
+      "myScans": "Lượt quét của tôi",
+      "medicalHistory": "Bệnh án điện tử",
+      "appointments": "Lịch hẹn",
+      "clinicSchedule": "Lịch khám",
+      "carePlan": "Kế hoạch chăm sóc",
+      "chat": "Trò chuyện",
+      "wallet": "Lịch sử giao dịch",
+      "helpFeedback": "Hỗ trợ & Phản hồi",
+      "settings": "Cài đặt"
+    },
     "greeting": {
       "morning": "Chào buổi sáng",
       "afternoon": "Chào buổi chiều",
@@ -2768,7 +2817,8 @@
     },
     "actions": {
       "viewFullReport": "Xem báo cáo đầy đủ",
-      "openLatestSession": "Mở phiên gần nhất"
+      "openLatestSession": "Mở phiên gần nhất",
+      "logout": "Đăng xuất"
     },
     "history": {
       "title": "Lịch sử sàng lọc",
@@ -2796,6 +2846,73 @@
     "empty": {
       "title": "Chưa có lộ trình chăm sóc.",
       "message": "Bác sĩ sẽ thêm các bước chăm sóc tại đây sau lượt khám tiếp theo của bạn."
+    }
+  },
+  "PatientReview": {
+    "page": {
+      "title": "Đánh giá & Bước tiếp theo",
+      "subtitle": "Kết quả phân tích từ hệ thống AI AuraEyes"
+    },
+    "sessionLabel": "Phiên sàng lọc",
+    "labels": {
+      "retinalImage": "Ảnh võng mạc",
+      "retinalScanAlt": "Ảnh chụp võng mạc",
+      "noImage": "Không có ảnh",
+      "scanId": "Mã ca: {{id}}",
+      "capturedAt": "Chụp lúc",
+      "aiAssessment": "Đánh giá của AI",
+      "primaryRecommendation": "Khuyến nghị ưu tiên",
+      "pdfFormat": "Định dạng PDF",
+      "consultationComplete": "Khám bệnh hoàn tất"
+    },
+    "status": {
+      "healthy": "Mắt khỏe mạnh",
+      "high": "Cần lưu ý"
+    },
+    "summary": {
+      "healthy": "Ảnh chụp võng mạc của bạn trông khỏe mạnh. Không tìm thấy mối lo ngại đáng kể nào - hãy tiếp tục duy trì việc kiểm tra định kỳ.",
+      "high": "Chúng tôi tìm thấy các khu vực cần trao đổi với chuyên gia mắt. Sự lưu ý sớm là cách tốt nhất để bảo vệ thị lực của bạn.",
+      "moderate": "Đã phát hiện các dấu hiệu bất thường và nên được bác sĩ chuyên khoa xem xét để xác nhận và thực hiện các bước tiếp theo.",
+      "low": "Đã phát hiện các dấu hiệu rủi ro thấp. Hãy duy trì việc theo dõi định kỳ với bác sĩ chuyên khoa mắt."
+    },
+    "findingsDetected": "Các dấu hiệu phát hiện bao gồm:",
+    "findingsMore": " và {{count}} dấu hiệu khác",
+    "actions": {
+      "zoomImage": "Phóng to ảnh",
+      "viewFullAnalysisDetails": "Xem chi tiết phân tích đầy đủ",
+      "bookConsultation": "Đặt lịch tư vấn",
+      "findSpecialist": "Tìm bác sĩ chuyên khoa",
+      "askAuraAssistant": "Hỏi trợ lý Aura",
+      "downloadingReport": "Đang tải báo cáo...",
+      "downloadReport": "Tải báo cáo",
+      "newScan": "Sàng lọc mới",
+      "viewAllResources": "Xem tất cả tài liệu",
+      "startNewScreening": "Bắt đầu sàng lọc mới",
+      "viewResults": "Xem kết quả tư vấn",
+      "viewMedicalRecord": "Xem hồ sơ bệnh án",
+      "rateExperience": "Đánh giá trải nghiệm"
+    },
+    "sections": {
+      "recommendedActions": "Hành động khuyên dùng",
+      "learnMore": "Tìm hiểu thêm"
+    },
+    "descriptions": {
+      "bookConsultation": "Trao đổi kết quả này với bác sĩ chuyên khoa để nhận được đánh giá chuyên môn và kế hoạch chăm sóc cá nhân hóa.",
+      "startNewAnalysis": "Bắt đầu một phân tích mới cho mắt khác hoặc kiểm tra lại.",
+      "consultationComplete": "Quá trình khám mắt của bạn đã hoàn tất. Bây giờ bạn có thể truy cập hồ sơ bệnh án chính thức, chẩn đoán và kế hoạch chăm sóc cá nhân hóa từ chuyên gia của chúng tôi."
+    },
+    "consultation": {
+      "alreadyBookedTitle": "Bạn đã gửi ca này để tư vấn",
+      "alreadyBookedDescription": "Để tránh đặt lịch trùng lặp, tính năng đặt bác sĩ và chat AI đã được khóa cho ca này.",
+      "statusLabel": "Trạng thái",
+      "createdAtLabel": "Đã đặt lúc"
+    },
+    "empty": {
+      "description": "Vui lòng thực hiện một ca sàng lọc để xem kết quả."
+    },
+    "footer": {
+      "importantDisclaimer": "Quan trọng: Phân tích này được hỗ trợ bởi AI và không thay thế cho việc khám chữa bệnh chuyên nghiệp.",
+      "copyright": "© {{year}} AuraEyes. Đã đăng ký bản quyền."
     }
   },
   "PatientHelpFeedback": {
@@ -3160,7 +3277,7 @@
       "emptyByFilterTitle": "Không có kết quả cho bộ lọc này",
       "emptyByFilterDescription": "Hãy điều chỉnh bộ lọc hoặc kiểm tra lại sau",
       "medicalAppt": "Khám chữa bệnh",
-      "ref": "Mã: {{id}}",
+      "ref": "Mã",
       "payNow": "Thanh toán ngay",
       "emptyPaymentOrdersDescription": "Khi bạn đặt lịch, giao dịch sẽ hiển thị ở đây."
     },
@@ -3709,13 +3826,17 @@
       "appointments": "Lịch hẹn",
       "doctors": "Tìm bác sĩ",
       "clinics": "Tìm phòng khám",
-      "roadmap": "Lộ trình sức khỏe",
       "chat": "Trò chuyện",
-      "wallet": "Lịch sử giao dịch",
+      "wallet": "Ví",
       "profile": "Hồ sơ của tôi",
       "settings": "Cài đặt",
       "security": "Bảo mật",
-      "notifications": "Thông báo"
+      "notifications": "Thông báo",
+      "carePlan": "Kế hoạch chăm sóc",
+      "schedule": "Lịch khám",
+      "medicalHistory": "Bệnh án điện tử",
+      "helpFeedback": "Hỗ trợ & Phản hồi",
+      "roadmap": "Lộ trình sức khỏe"
     }
   },
   "PatientN8nChat": {
@@ -10007,64 +10128,6 @@
           "needsAttention": "Cần lưu ý"
         }
       },
-      "PatientReview": {
-        "page": {
-          "title": "Đánh giá & Bước tiếp theo",
-          "subtitle": "Kết quả phân tích từ hệ thống AI AuraEyes"
-        },
-        "sessionLabel": "Phiên sàng lọc",
-        "labels": {
-          "retinalImage": "Ảnh võng mạc",
-          "retinalScanAlt": "Ảnh chụp võng mạc",
-          "noImage": "Không có ảnh",
-          "scanId": "Mã ca: {{id}}",
-          "capturedAt": "Chụp lúc",
-          "aiAssessment": "Đánh giá của AI",
-          "primaryRecommendation": "Khuyến nghị ưu tiên",
-          "pdfFormat": "Định dạng PDF"
-        },
-        "status": {
-          "healthy": "Mắt khỏe mạnh",
-          "high": "Cần lưu ý"
-        },
-        "summary": {
-          "healthy": "Ảnh chụp võng mạc của bạn trông khỏe mạnh. Không tìm thấy mối lo ngại đáng kể nào - hãy tiếp tục duy trì việc kiểm tra định kỳ.",
-          "high": "Chúng tôi tìm thấy các khu vực cần trao đổi với chuyên gia mắt. Sự lưu ý sớm là cách tốt nhất để bảo vệ thị lực của bạn.",
-          "moderate": "Đã phát hiện các dấu hiệu bất thường và nên được bác sĩ chuyên khoa xem xét để xác nhận và thực hiện các bước tiếp theo.",
-          "low": "Đã phát hiện các dấu hiệu rủi ro thấp. Hãy duy trì việc theo dõi định kỳ với bác sĩ chuyên khoa mắt."
-        },
-        "findingsDetected": "Các dấu hiệu phát hiện bao gồm:",
-        "findingsMore": " và {{count}} dấu hiệu khác",
-        "actions": {
-          "zoomImage": "Phóng to ảnh",
-          "viewFullAnalysisDetails": "Xem chi tiết phân tích đầy đủ",
-          "bookConsultation": "Đặt lịch tư vấn",
-          "findSpecialist": "Tìm bác sĩ chuyên khoa",
-          "askAuraAssistant": "Hỏi trợ lý Aura",
-          "downloadingReport": "Đang tải báo cáo...",
-          "downloadReport": "Tải báo cáo",
-          "newScan": "Sàng lọc mới",
-          "viewAllResources": "Xem tất cả tài liệu",
-          "startNewScreening": "Bắt đầu sàng lọc mới"
-        },
-        "sections": {
-          "recommendedActions": "Hành động khuyên dùng",
-          "learnMore": "Tìm hiểu thêm"
-        },
-        "descriptions": {
-          "bookConsultation": "Trao đổi kết quả này với bác sĩ chuyên khoa.",
-          "startNewAnalysis": "Bắt đầu một phân tích mới cho mắt khác hoặc kiểm tra lại."
-        },
-        "consultation": {
-          "alreadyBookedTitle": "Bạn đã gửi ca này để tư vấn",
-          "alreadyBookedDescription": "Để tránh đặt lịch trùng lặp, tính năng đặt bác sĩ và chat AI đã được khóa cho ca này.",
-          "statusLabel": "Trạng thái",
-          "createdAtLabel": "Đã đặt lúc"
-        },
-        "empty": {
-          "description": "Vui lòng thực hiện một ca sàng lọc để xem kết quả."
-        }
-      },
       "toast": {
         "noPatient": "Chưa chọn bệnh nhân",
         "missingVisit": "Cần có một ca khám (check-in) để bắt đầu sàng lọc."
@@ -10678,38 +10741,37 @@
             "invalidQr": "Mã QR không hợp lệ hoặc không đúng định dạng CCCD/VNeID.",
             "qrExtractSuccess": "Trích xuất hồ sơ công dân thành công!"
           }
-
         },
         "email": {
-          "walkInHint": "B?nh nhân vãng lai: nh?p email ngu?i nh?n d? g?i k?t qu?.",
-          "defaultHint": "Có th? ch?nh s?a email tru?c khi g?i.",
-          "recipient": "Email ngu?i nh?n",
+          "walkInHint": "Bệnh nhân vãng lai: nhập email người nhận để gửi kết quả.",
+          "defaultHint": "Có thể chỉnh sửa email trước khi gửi.",
+          "recipient": "Email người nhận",
           "placeholder": "benhnhan@example.com",
           "attachPdf": "Đính kèm báo cáo PDF",
-          "attachImages": "Chia s? liên k?t ?nh võng m?c",
-          "send": "G?i chia s?"
+          "attachImages": "Chia sẻ liên kết ảnh võng mạc",
+          "send": "Gửi chia sẻ"
         },
         "network": {
-          "hint": "Đăng ca sàng l?c này lên M?ng lu?i Chuyên môn.",
-          "riskLabel": "M?c d? r?i ro:",
-          "summaryLabel": "Tóm t?t:",
-          "noDraft": "Chua có k?t qu? AI. Vui lòng ch?y phân tích tru?c.",
+          "hint": "Đăng ca sàng lọc này lên Mạng lưới Chuyên môn.",
+          "riskLabel": "Mức độ rủi ro:",
+          "summaryLabel": "Tóm tắt:",
+          "noDraft": "Chưa có kết quả AI. Vui lòng chạy phân tích trước.",
           "notePlaceholder": "Thêm ghi chú cho ca này...",
-          "post": "Đăng lên M?ng"
+          "post": "Đăng lên Mạng"
         }
       },
       "network": {
-        "title": "Ca sàng l?c AI du?c chia s? b?i đi?u ph?i viên",
+        "title": "Ca sàng lọc AI được chia sẻ bởi điều phối viên",
         "session": "Phiên: {{id}}...",
-        "risk": "M?c r?i ro: {{risk}}",
-        "summaryLabel": "Tóm t?t:",
-        "findingsLabel": "Phát hi?n chính:",
-        "noteLabel": "Ghi chú đi?u ph?i: {{note}}",
+        "risk": "Mức rủi ro: {{risk}}",
+        "summaryLabel": "Tóm tắt:",
+        "findingsLabel": "Phát hiện chính:",
+        "noteLabel": "Ghi chú điều phối: {{note}}",
         "noteEmpty": "Không có",
-        "noFindings": "Không có phát hi?n b?t thu?ng rõ ràng"
+        "noFindings": "Không có phát hiện bất thường rõ ràng"
       },
       "findings": {
-        "emptyFallback": "Không có phát hi?n AI đáng k? nào du?c xác đ?nh."
+        "emptyFallback": "Không có phát hiện AI đáng kể nào được xác định."
       }
     }
   },
@@ -10861,6 +10923,65 @@
       "completed": "Đã hoàn tất",
       "processing": "Đang xử lý",
       "viewDetails": "Xem chi tiết"
+    }
+  },
+  "Notifications": {
+    "AiScreeningCompleted": {
+      "title": "Kết quả sàng lọc AI đã sẵn sàng",
+      "message": "Kết quả sàng lọc đáy mắt AI của bạn đã có. Vui lòng xem chi tiết trong ứng dụng."
+    },
+    "NewAppointmentBooked": {
+      "title": "Đặt lịch khám thành công",
+      "message": "Bạn đã đặt lịch thành công vào lúc {{appointmentTime}}. Vui lòng hoàn tất thanh toán đặt cọc."
+    },
+    "ScheduleChanged": {
+      "RefundRejected": {
+        "title": "Yêu cầu hoàn tiền bị từ chối",
+        "message": "Yêu cầu hoàn tiền cho lịch khám của bạn đã bị từ chối. Lý do: {{reason}}."
+      },
+      "RefundApproved": {
+        "title": "Yêu cầu hoàn tiền đã chấp nhận",
+        "message": "Yêu cầu hoàn tiền cho lịch khám của bạn đã được chấp nhận."
+      },
+      "default": {
+        "title": "Lịch hẹn thay đổi",
+        "message": "Lịch khám của bạn đã có sự thay đổi."
+      }
+    },
+    "WalletDepositSuccess": {
+      "title": "Nạp tiền thành công",
+      "message": "Đã nạp thành công {{amount}} VND vào ví của bạn."
+    },
+    "RefundProcessed": {
+      "title": "Hoàn tiền thành công",
+      "message": "Yêu cầu hoàn tiền đã được xử lý thành công."
+    }
+  },
+  "NotificationDropdown": {
+    "aria": {
+      "label": "Thông báo"
+    },
+    "status": {
+      "online": "Trực tuyến"
+    },
+    "actions": {
+      "markAllAsRead": "Đánh dấu tất cả là đã đọc"
+    },
+    "loading": "Đang tải thông báo...",
+    "empty": {
+      "title": "Chưa có thông báo nào",
+      "description": "Chúng tôi sẽ thông báo cho bạn khi có cập nhật mới"
+    },
+    "viewAll": "Xem tất cả thông báo"
+  },
+  "notification": {
+    "types": {
+      "screening": "Sàng lọc",
+      "consultation": "Tư vấn",
+      "message": "Tin nhắn",
+      "appointment": "Lịch hẹn",
+      "wallet": "Ví",
+      "notification": "Thông báo"
     }
   }
 }
