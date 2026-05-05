@@ -4833,6 +4833,63 @@ declare module 'i18next' {
           addWalkInDesc: string;
         };
       };
+      sidebar: {
+        items: {
+          dashboard: string;
+          'staff-management': string;
+          'leave-requests': string;
+          patients: string;
+          'transaction-ledger': string;
+          'refund-requests': string;
+          scheduling: string;
+          permissions: string;
+          'audit-logs': string;
+          settings: string;
+          'aura-network': string;
+        };
+      };
+      cashflow: {
+        title: string;
+        description: string;
+        stats: {
+          totalVolume: string;
+          pendingAmount: string;
+          completedOrders: string;
+        };
+        filterOptions: {
+          all: string;
+          completed: string;
+          pending: string;
+          cancelled: string;
+        };
+        status: {
+          pending: string;
+          confirmed: string;
+          processing: string;
+          completed: string;
+          cancelled: string;
+          refunded: string;
+          partiallyPaid: string;
+          fullyPaid: string;
+          cancellationRequested: string;
+        };
+        table: {
+          list: string;
+          patientFallback: string;
+          defaultDescription: string;
+          onlineDeposit: string;
+          fullPayment: string;
+          refundedDeposit: string;
+          paidLabel: string;
+          deposited: string;
+          remaining: string;
+        };
+        pagination: {
+          previous: string;
+          next: string;
+          page: string;
+        };
+      };
     };
     ProfessionalNetwork: {
       common: {
@@ -5705,6 +5762,7 @@ declare module 'i18next' {
           calendar: {
             actions: {
               collectCashDeposit: string;
+              collectCashPayment: string;
               completeVisit: string;
               newWalkIn: string;
               noShow: string;
@@ -5757,6 +5815,7 @@ declare module 'i18next' {
             };
             toast: {
               depositRequiredBeforeCheckIn: string;
+              paymentRequiredBeforeCheckIn: string;
               consultationStarted: string;
               invalidQr: string;
               markedNoShow: string;
@@ -5791,6 +5850,10 @@ declare module 'i18next' {
               date: {
                 label: string;
               };
+              morning: string;
+              afternoon: string;
+              selectDoctor: string;
+              consultation: string;
               slot: {
                 title: string;
                 loading: string;
@@ -8238,6 +8301,12 @@ declare module 'i18next' {
         medicationAndService: string;
         deposit: string;
         finalPayment: string;
+        refund: string;
+        methods: {
+          Cash: string;
+          PayOS: string;
+          BankTransfer: string;
+        };
       };
       orderDetails: {
         patientLabel: string;
