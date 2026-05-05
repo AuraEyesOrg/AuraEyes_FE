@@ -55,6 +55,23 @@ const DISEASE_NAME_VI: Record<string, string> = {
   'Anterior Ischemic Optic Neuropathy':
     'Bệnh lý thần kinh thị do thiếu máu trước',
   'Idiopathic Intracranial Hypertension': 'Tăng áp lực nội sọ vô căn',
+  'Cystoid Macular Edema': 'Phù hoàng điểm dạng nang',
+  'Retinal Hemorrhage': 'Xuất huyết võng mạc',
+  'Optic Disc Cupping': 'Lõm đĩa thị',
+  Drusen: 'Lắng đọng Drusen',
+  'Vogt-Koyanagi-Harada Disease': 'Bệnh Vogt-Koyanagi-Harada',
+  'Retinal Detachment': 'Bong võng mạc',
+  'Posterior Vitreous Detachment': 'Bong dịch kính sau',
+  'White Matter Lesion': 'Tổn thương đốm trắng',
+  'Hard Exudates': 'Xuất tiết cứng',
+  'Soft Exudates': 'Xuất tiết mềm',
+  'Intraretinal Microvascular Abnormality': 'Bất thường vi mạch trong võng mạc',
+  'Neovascularization of the Disc': 'Tân mạch đĩa thị',
+  'Neovascularization Elsewhere': 'Tân mạch vị trí khác',
+  'Polypoidal Choroidal Vasculopathy': 'Bệnh mạch máu hắc mạc dạng polyp',
+  'Choroidal Neovascularization': 'Tân mạch hắc mạc',
+  'Age-related Macular Degeneration': 'Thoái hóa hoàng điểm tuổi già',
+  'Cytomegalovirus Retinitis': 'Viêm võng mạc do CMV',
 };
 
 const DISEASE_NAME_VI_BY_LOWER = Object.fromEntries(
@@ -115,6 +132,7 @@ const ABBREVIATION_MAP: Record<string, string> = {
 };
 
 function expandAbbreviations(name: string): string {
+  if (!name) return '';
   const trimmed = name.trim();
   const upper = trimmed.toUpperCase();
   return ABBREVIATION_MAP[upper] ?? ABBREVIATION_MAP[trimmed] ?? name;
@@ -134,7 +152,7 @@ export function toDisplayDiseaseName(
   language: string
 ): string {
   const expanded = expandAbbreviations(diseaseName);
-  const isVietnamese = language.toLowerCase().startsWith('vi');
+  const isVietnamese = (language || 'vi').toLowerCase().startsWith('vi');
   if (!isVietnamese) return expanded;
 
   return (
@@ -148,7 +166,7 @@ export function localizeFindingsText(
   findings: string,
   language: string
 ): string {
-  const isVietnamese = language.toLowerCase().startsWith('vi');
+  const isVietnamese = (language || 'vi').toLowerCase().startsWith('vi');
   if (!isVietnamese) return findings;
 
   return findings
