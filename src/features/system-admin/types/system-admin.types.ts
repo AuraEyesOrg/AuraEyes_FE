@@ -329,6 +329,8 @@ export interface User {
   lastLoginAt?: string; // Raw field from BE
   createdAt: string;
   emailVerified: boolean;
+  avatarUrl?: string | null;
+  providerAvatarUrl?: string | null;
 }
 
 export interface UserStats {
