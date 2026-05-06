@@ -48,6 +48,7 @@ import Spinner from '@/components/ui/spinner';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/confirm-modal';
 import ConsiliumTimer from '../components/ConsiliumTimer';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 type GroupUiSettings = {
   displayName?: string;
@@ -322,7 +323,12 @@ export default function CollaborationPage() {
       setCandidateUsers(data);
     } catch (error) {
       console.error('Failed to load candidate users', error);
-      toast.error('Failed to load users for group member selection.');
+      toast.error(
+        t(
+          'ProfessionalNetwork.collaboration.errors.loadCandidates',
+          'Failed to load candidate users.'
+        )
+      );
     } finally {
       setCandidateLoading(false);
     }
@@ -537,7 +543,14 @@ export default function CollaborationPage() {
           );
         } catch (error) {
           console.error('Failed to upload images', error);
-          toast.error('Failed to upload image.');
+          const message = extractApiErrorMessage(
+            error,
+            t(
+              'ProfessionalNetwork.collaboration.toasts.uploadError',
+              'Image upload failed.'
+            )
+          );
+          toast.error(message);
           throw error;
         } finally {
           setIsUploadingImages(false);
@@ -567,10 +580,18 @@ export default function CollaborationPage() {
   const requestSelectAllByRoleForCreate = (
     role: 'Ophthalmologist' | 'ClinicStaff'
   ) => {
+    const roleLabel = t(`ProfessionalNetwork.roles.${role}`, role);
     openConfirm({
-      title: 'Confirm role selection',
-      message: `Select all users with role ${role} for this new group?`,
-      confirmLabel: 'Confirm',
+      title: t(
+        'ProfessionalNetwork.collaboration.confirm.roleSelectionTitle',
+        'Confirm role selection'
+      ),
+      message: t(
+        'ProfessionalNetwork.collaboration.confirm.roleSelectionMessage',
+        'Select all users with role {{role}} for this new group?',
+        { role: roleLabel }
+      ),
+      confirmLabel: t('ProfessionalNetwork.common.confirm', 'Confirm'),
       tone: 'default',
       onConfirm: () => {
         const matchedIds = candidateUsers
@@ -584,7 +605,13 @@ export default function CollaborationPage() {
         setSelectedMemberIdsForCreate((prev) =>
           Array.from(new Set([...prev, ...matchedIds]))
         );
-        toast.success(`Selected ${matchedIds.length} ${role} user(s).`);
+        toast.success(
+          t('ProfessionalNetwork.collaboration.toasts.roleSelected', {
+            count: matchedIds.length,
+            role: roleLabel,
+            defaultValue: `Selected ${matchedIds.length} ${role} user(s).`,
+          })
+        );
       },
     });
   };
@@ -594,10 +621,18 @@ export default function CollaborationPage() {
   ) => {
     if (!selectedGroupId) return;
 
+    const roleLabel = t(`ProfessionalNetwork.roles.${role}`, role);
     openConfirm({
-      title: 'Confirm member update',
-      message: `Select all ${role} accounts into this group?`,
-      confirmLabel: 'Confirm',
+      title: t(
+        'ProfessionalNetwork.collaboration.confirm.memberUpdateTitle',
+        'Confirm member update'
+      ),
+      message: t(
+        'ProfessionalNetwork.collaboration.confirm.memberUpdateMessage',
+        'Select all {{role}} accounts into this group?',
+        { role: roleLabel }
+      ),
+      confirmLabel: t('ProfessionalNetwork.common.confirm', 'Confirm'),
       tone: 'default',
       onConfirm: async () => {
         try {
@@ -615,11 +650,23 @@ export default function CollaborationPage() {
 
           await internalChatApi.updateMembers(selectedGroupId, newMemberIds);
 
-          toast.success(`Member list updated by role ${role}.`);
+          toast.success(
+            t('ProfessionalNetwork.collaboration.toasts.memberUpdateSuccess', {
+              role: roleLabel,
+              defaultValue: `Member list updated by role ${role}.`,
+            })
+          );
           void loadGroups();
         } catch (error) {
           console.error('Failed to update members', error);
-          toast.error('Failed to update members.');
+          const message = extractApiErrorMessage(
+            error,
+            t(
+              'ProfessionalNetwork.collaboration.errors.updateMembers',
+              'Failed to update members.'
+            )
+          );
+          toast.error(message);
         }
       },
     });
@@ -633,11 +680,27 @@ export default function CollaborationPage() {
 
     const inGroup = selectedGroupMembers.includes(memberId);
     openConfirm({
-      title: inGroup ? 'Confirm member removal' : 'Confirm member selection',
+      title: inGroup
+        ? t(
+            'ProfessionalNetwork.collaboration.confirm.memberRemoveTitle',
+            'Confirm member removal'
+          )
+        : t(
+            'ProfessionalNetwork.collaboration.confirm.memberSelectTitle',
+            'Confirm member selection'
+          ),
       message: inGroup
-        ? `Unselect ${memberName} from this group?`
-        : `Select ${memberName} for this group?`,
-      confirmLabel: 'Confirm',
+        ? t(
+            'ProfessionalNetwork.collaboration.confirm.memberRemoveMessage',
+            'Unselect {{name}} from this group?',
+            { name: memberName }
+          )
+        : t(
+            'ProfessionalNetwork.collaboration.confirm.memberSelectMessage',
+            'Select {{name}} for this group?',
+            { name: memberName }
+          ),
+      confirmLabel: t('ProfessionalNetwork.common.confirm', 'Confirm'),
       tone: inGroup ? 'danger' : 'default',
       onConfirm: async () => {
         try {
@@ -658,11 +721,23 @@ export default function CollaborationPage() {
                 : g
             )
           );
-          toast.success('Member selection updated successfully.');
+          toast.success(
+            t(
+              'ProfessionalNetwork.collaboration.toasts.memberSelectionSuccess',
+              'Member selection updated successfully.'
+            )
+          );
           void loadGroups(); // reload to get updated member list if needed
         } catch (error) {
           console.error('Failed to update members', error);
-          toast.error('Failed to update members.');
+          const message = extractApiErrorMessage(
+            error,
+            t(
+              'ProfessionalNetwork.collaboration.errors.updateMembers',
+              'Failed to update members.'
+            )
+          );
+          toast.error(message);
         }
       },
     });
@@ -681,7 +756,12 @@ export default function CollaborationPage() {
 
     const trimmedName = newGroupName.trim();
     if (!trimmedName) {
-      toast.error('Group name is required.');
+      toast.error(
+        t(
+          'ProfessionalNetwork.collaboration.toasts.groupNameRequired',
+          'Group name is required.'
+        )
+      );
       return;
     }
 
@@ -820,7 +900,12 @@ export default function CollaborationPage() {
     if (!selectedGroupId || !selectedGroup) return;
     const trimmedName = renameGroupName.trim();
     if (!trimmedName) {
-      toast.error('Group name is required.');
+      toast.error(
+        t(
+          'ProfessionalNetwork.collaboration.toasts.groupNameRequired',
+          'Group name is required.'
+        )
+      );
       return;
     }
 
@@ -871,10 +956,18 @@ export default function CollaborationPage() {
     if (!selectedGroupId) return;
 
     openConfirm({
-      title: 'Confirm group deletion',
-      message:
-        'Are you sure you want to delete this group? This action cannot be undone.',
-      confirmLabel: 'Delete Group',
+      title: t(
+        'ProfessionalNetwork.collaboration.confirm.deleteTitle',
+        'Confirm group deletion'
+      ),
+      message: t(
+        'ProfessionalNetwork.collaboration.confirm.deleteMessage',
+        'Are you sure you want to delete this group? This action cannot be undone.'
+      ),
+      confirmLabel: t(
+        'ProfessionalNetwork.collaboration.actions.deleteGroup',
+        'Delete Group'
+      ),
       tone: 'danger',
       onConfirm: async () => {
         try {
@@ -891,10 +984,22 @@ export default function CollaborationPage() {
             return remaining[0]?.id ?? null;
           });
           setIsGroupMenuOpen(false);
-          toast.success('Group deleted successfully.');
+          toast.success(
+            t(
+              'ProfessionalNetwork.collaboration.toasts.deleteSuccess',
+              'Group deleted successfully.'
+            )
+          );
         } catch (error) {
           console.error('Failed to delete group', error);
-          toast.error('Failed to delete group.');
+          const message = extractApiErrorMessage(
+            error,
+            t(
+              'ProfessionalNetwork.collaboration.toasts.deleteError',
+              'Failed to delete group.'
+            )
+          );
+          toast.error(message);
         }
       },
     });
