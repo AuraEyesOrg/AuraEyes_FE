@@ -280,3 +280,28 @@ export function localizeDiseaseMentions(
 
   return localized;
 }
+
+export function localizeClinicalNarrativeText(
+  text: string,
+  language: string
+): string {
+  const isVietnamese = (language || 'vi').toLowerCase().startsWith('vi');
+  if (!isVietnamese || !text?.trim()) return text;
+
+  let localized = localizeDiseaseMentions(text, language);
+  localized = localized
+    .replace(
+      /some findings may need specialist review\.?/gi,
+      'Một số phát hiện có thể cần bác sĩ chuyên khoa đánh giá.'
+    )
+    .replace(
+      /internal clinical case shared from consultation\.?/gi,
+      'Ca lâm sàng nội bộ được chia sẻ từ buổi tư vấn.'
+    )
+    .replace(
+      /patient identity has been masked for professional discussion\.?/gi,
+      'Thông tin nhận diện bệnh nhân đã được ẩn để phục vụ thảo luận chuyên môn.'
+    );
+
+  return localized;
+}

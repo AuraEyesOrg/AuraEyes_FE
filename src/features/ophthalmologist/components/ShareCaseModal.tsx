@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, AlertCircle, Stethoscope } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import {
-  localizeDiseaseMentions,
+  localizeClinicalNarrativeText,
   localizeFindingsText,
 } from '@/features/patient/lib/disease-translation';
 
@@ -43,9 +43,19 @@ export function ShareCaseModal({
     [caseSnapshot.findings, language]
   );
   const localizedSummary = useMemo(
-    () => localizeDiseaseMentions(caseSnapshot.summary ?? '', language),
+    () => localizeClinicalNarrativeText(caseSnapshot.summary ?? '', language),
     [caseSnapshot.summary, language]
   );
+  const localizedRiskLevel = useMemo(() => {
+    const raw = (caseSnapshot.riskLevel ?? '').trim().toLowerCase();
+    if (!raw) return caseSnapshot.riskLevel;
+    if (raw === 'low') return 'Thấp';
+    if (raw === 'moderate' || raw === 'medium') return 'Trung bình';
+    if (raw === 'high') return 'Cao';
+    if (raw === 'critical') return 'Nguy kịch';
+    if (raw === 'none') return 'Không';
+    return caseSnapshot.riskLevel;
+  }, [caseSnapshot.riskLevel]);
 
   const previewContent = useMemo(() => {
     const parts: string[] = [];
@@ -58,7 +68,7 @@ export function ShareCaseModal({
 
     if (caseSnapshot.riskLevel) {
       parts.push(
-        `⚠️ **${t('ProfessionalNetwork.shareClinicCaseModal.fields.riskLevel', 'Risk Level')}**: ${caseSnapshot.riskLevel}`
+        `⚠️ **${t('ProfessionalNetwork.shareClinicCaseModal.fields.riskLevel', 'Risk Level')}**: ${localizedRiskLevel}`
       );
     }
 
@@ -81,7 +91,14 @@ export function ShareCaseModal({
     }
 
     return parts.join('\n\n');
-  }, [caseSnapshot, content, localizedFindings, localizedSummary, t]);
+  }, [
+    caseSnapshot,
+    content,
+    localizedFindings,
+    localizedRiskLevel,
+    localizedSummary,
+    t,
+  ]);
 
   return (
     <AnimatePresence>
@@ -166,7 +183,7 @@ export function ShareCaseModal({
                   <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 dark:bg-[#0a1929]/50 dark:ring-[#1e3a5f]">
                     <h4 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                       {t(
-                        'Ophthalmologist.consultations.chat.shareCase.clinicalData',
+                        'ProfessionalNetwork.shareClinicCaseModal.caseInformation.title',
                         'Clinical Snapshot'
                       )}
                     </h4>
@@ -174,7 +191,7 @@ export function ShareCaseModal({
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-slate-500">
                           {t(
-                            'Ophthalmologist.consultations.chat.shareCase.patientName',
+                            'ProfessionalNetwork.shareClinicCaseModal.fields.patient',
                             'Patient'
                           )}
                         </span>
@@ -185,12 +202,12 @@ export function ShareCaseModal({
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-slate-500">
                           {t(
-                            'Ophthalmologist.consultations.chat.shareCase.riskLevel',
+                            'ProfessionalNetwork.shareClinicCaseModal.fields.riskLevel',
                             'Risk Level'
                           )}
                         </span>
                         <span className="rounded-full bg-rose-50 px-2 py-0.5 text-xs font-bold text-rose-600 dark:bg-rose-900/30">
-                          {caseSnapshot.riskLevel}
+                          {localizedRiskLevel}
                         </span>
                       </div>
                     </div>
@@ -200,8 +217,8 @@ export function ShareCaseModal({
                     <div>
                       <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
                         {t(
-                          'Ophthalmologist.consultations.chat.shareCase.aiSummary',
-                          'AI Summary'
+                          'ProfessionalNetwork.shareClinicCaseModal.summary.label',
+                          'Summary'
                         )}
                       </h4>
                       <p className="text-sm leading-relaxed text-slate-600 dark:text-gray-300 italic">
@@ -232,7 +249,7 @@ export function ShareCaseModal({
                   <div className="flex flex-col gap-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
                       {t(
-                        'Ophthalmologist.consultations.chat.shareCase.doctorNotes',
+                        'ProfessionalNetwork.shareClinicCaseModal.doctorNotes.label',
                         'Professional Notes'
                       )}
                     </label>
@@ -240,7 +257,7 @@ export function ShareCaseModal({
                       value={content}
                       onChange={(e) => onChangeContent(e.target.value)}
                       placeholder={t(
-                        'Ophthalmologist.consultations.chat.shareCase.placeholder',
+                        'ProfessionalNetwork.shareClinicCaseModal.doctorNotes.placeholder',
                         'Add your clinical observations, questions for colleagues, or case context...'
                       )}
                       className="min-h-[140px] w-full resize-none rounded-2xl border border-slate-200 bg-white p-4 text-sm outline-none ring-primary/20 transition-all focus:border-primary focus:ring-4 dark:border-[#1e3a5f] dark:bg-[#0a1f44] dark:text-white"
@@ -251,7 +268,7 @@ export function ShareCaseModal({
                   <div className="flex flex-col gap-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
                       {t(
-                        'Ophthalmologist.consultations.chat.shareCase.postPreview',
+                        'ProfessionalNetwork.shareClinicCaseModal.preview.title',
                         'Post Preview'
                       )}
                     </label>
