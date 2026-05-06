@@ -2015,6 +2015,16 @@ export default function ClinicStaffAppointmentsPage() {
             cancelUrl: `${window.location.origin}${localePrefix}/payment/cancel`,
           });
 
+          await Promise.all([
+            queryClient.invalidateQueries({
+              queryKey: organisationClinicBookingKeys.all,
+            }),
+            queryClient.invalidateQueries({
+              queryKey: ['clinic-staff', 'queue'],
+            }),
+            queryClient.invalidateQueries({ queryKey: ['clinic-queue'] }),
+          ]);
+
           // For walk-ins with cash payment, the backend now handles auto-check-in
           // in ClinicVisitService.ProcessPaymentCompletionAsync.
           if (method === 'Cash' && appointmentToPay.isWalkIn) {
