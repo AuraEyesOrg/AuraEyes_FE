@@ -26,6 +26,7 @@ import useAuthStore from '@/store/auth-store';
 import { mapOnlineConsultationErrorMessage } from '@/lib/api-error';
 import { formatSlotTime, formatDate } from '@/lib/date-utils';
 import { toast } from 'react-toastify';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
   loadScreeningConsultationContext,
   saveScreeningConsultationContext,
@@ -73,6 +74,7 @@ const PREVIEW_TOGGLES: ToggleState = {
 export default function BookingConfirmationPage(
   props: BookingConfirmationProps
 ) {
+  const { t } = useSafeTranslation();
   const { embeddedSlotId, embeddedConsultationContext, onClose, onSuccess } =
     props;
 
@@ -256,7 +258,12 @@ export default function BookingConfirmationPage(
         },
       });
 
-      toast.success('Bạn đã đặt lịch thành công!');
+      toast.success(
+        t(
+          'PatientAppointments.bookingConfirmation.toastSuccess',
+          'You have booked your appointment successfully!'
+        )
+      );
       sessionStorage.removeItem('patient-booking-confirm-context');
       setIsSuccess(true);
       setSessionId(result.consultationSessionId);
@@ -306,7 +313,10 @@ export default function BookingConfirmationPage(
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 flex items-center justify-center">
             <Spinner />
             <span className="ml-3 text-gray-600 dark:text-gray-400">
-              Loading booking details...
+              {t(
+                'PatientAppointments.bookingConfirmation.loading',
+                'Loading booking details...'
+              )}
             </span>
           </div>
         </div>
@@ -329,17 +339,25 @@ export default function BookingConfirmationPage(
             )}
             <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Reservation Not Found
+              {t(
+                'PatientAppointments.bookingConfirmation.notFoundTitle',
+                'Reservation Not Found'
+              )}
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              The reservation may have expired or been cancelled. Please try
-              booking again.
+              {t(
+                'PatientAppointments.bookingConfirmation.notFoundDesc',
+                'The reservation may have expired or been cancelled. Please try booking again.'
+              )}
             </p>
             <button
               onClick={exitFlow}
               className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-medium transition"
             >
-              Book an Appointment
+              {t(
+                'PatientAppointments.bookingConfirmation.bookNew',
+                'Book an Appointment'
+              )}
             </button>
           </div>
         </div>
@@ -364,18 +382,23 @@ export default function BookingConfirmationPage(
               <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Booking Confirmed!
+              {t(
+                'PatientAppointments.bookingConfirmation.successTitle',
+                'Booking Confirmed!'
+              )}
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Your appointment has been successfully booked. You will receive a
-              confirmation email with the meeting details.
+              {t(
+                'PatientAppointments.bookingConfirmation.successMessage',
+                'Your appointment has been successfully booked. You will receive a confirmation email with the meeting details.'
+              )}
             </p>
 
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-6 text-left">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Date
+                    {t('PatientAppointments.bookingConfirmation.date', 'Date')}
                   </p>
                   <p className="font-medium text-gray-900 dark:text-white">
                     {formatDate(slot.date)}
@@ -383,7 +406,7 @@ export default function BookingConfirmationPage(
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Time
+                    {t('PatientAppointments.bookingConfirmation.time', 'Time')}
                   </p>
                   <p className="font-medium text-gray-900 dark:text-white">
                     {formatSlotTime(slot.startTime)} –{' '}
@@ -392,7 +415,10 @@ export default function BookingConfirmationPage(
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Session ID
+                    {t(
+                      'PatientAppointments.bookingConfirmation.sessionId',
+                      'Session ID'
+                    )}
                   </p>
                   <p className="font-medium text-gray-900 dark:text-white text-sm">
                     {sessionId.slice(0, 8)}
@@ -400,10 +426,14 @@ export default function BookingConfirmationPage(
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Consultation Fee
+                    {t(
+                      'PatientAppointments.bookingConfirmation.fee',
+                      'Consultation Fee'
+                    )}
                   </p>
                   <p className="font-medium text-emerald-600 dark:text-emerald-400">
-                    {slot.cost?.toLocaleString('vi-VN')} VND
+                    {slot.cost?.toLocaleString('vi-VN')}{' '}
+                    {t('Common.currency.vnd', 'VND')}
                   </p>
                 </div>
               </div>
@@ -413,7 +443,10 @@ export default function BookingConfirmationPage(
               onClick={exitFlowOnSuccess}
               className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-medium transition"
             >
-              View My Appointments
+              {t(
+                'PatientAppointments.bookingConfirmation.viewAppointments',
+                'View My Appointments'
+              )}
             </button>
           </div>
         </div>
@@ -433,20 +466,29 @@ export default function BookingConfirmationPage(
             <ArrowLeft className="w-5 h-5" />
           </div>
           <span className="text-sm font-bold uppercase tracking-tight">
-            Cancel and go back
+            {t(
+              'PatientAppointments.bookingConfirmation.back',
+              'Cancel and go back'
+            )}
           </span>
         </button>
 
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Confirm Your Booking
+            {t(
+              'PatientAppointments.bookingConfirmation.title',
+              'Confirm Your Booking'
+            )}
           </h1>
         </div>
 
         {/* Appointment Details */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Appointment Details
+            {t(
+              'PatientAppointments.bookingConfirmation.detailsTitle',
+              'Appointment Details'
+            )}
           </h2>
           <div className="space-y-4">
             <div className="flex items-start gap-4">
@@ -454,7 +496,9 @@ export default function BookingConfirmationPage(
                 <Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-500 dark:text-gray-400">Date</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {t('PatientAppointments.bookingConfirmation.date', 'Date')}
+                </p>
                 <p className="font-medium text-gray-900 dark:text-white">
                   {formatDate(slot.date)}
                 </p>
@@ -465,13 +509,20 @@ export default function BookingConfirmationPage(
                 <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-500 dark:text-gray-400">Time</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {t('PatientAppointments.bookingConfirmation.time', 'Time')}
+                </p>
                 <p className="font-medium text-gray-900 dark:text-white">
                   {formatSlotTime(slot.startTime)} –{' '}
                   {formatSlotTime(slot.endTime)}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Online Consultation
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {t(
+                      'PatientAppointments.labels.videoConsultation',
+                      'Online Consultation'
+                    )}
+                  </p>
                 </p>
               </div>
             </div>
@@ -479,7 +530,10 @@ export default function BookingConfirmationPage(
           <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <span className="text-gray-600 dark:text-gray-400">
-                Consultation Fee
+                {t(
+                  'PatientAppointments.bookingConfirmation.fee',
+                  'Consultation Fee'
+                )}
               </span>
               <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                 {slot.cost?.toLocaleString('vi-VN')} VND
@@ -491,11 +545,16 @@ export default function BookingConfirmationPage(
         {/* Data Sharing Options */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Share Your Medical Data
+            {t(
+              'PatientAppointments.bookingConfirmation.shareTitle',
+              'Share Your Medical Data'
+            )}
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Allow the doctor to access your previous screenings and AI analysis
-            results for a more personalized consultation.
+            {t(
+              'PatientAppointments.bookingConfirmation.shareDesc',
+              'Allow the doctor to access your previous screenings and AI analysis results for a more personalized consultation.'
+            )}
           </p>
           <div className="space-y-3">
             <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-cyan-500 cursor-pointer">
@@ -508,10 +567,16 @@ export default function BookingConfirmationPage(
               <Eye className="w-5 h-5 text-gray-400" />
               <div className="flex-1">
                 <p className="font-medium text-gray-900 dark:text-white">
-                  Retinal Images
+                  {t(
+                    'PatientAppointments.bookingConfirmation.retinalImages',
+                    'Retinal Images'
+                  )}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Share your uploaded retinal images
+                  {t(
+                    'PatientAppointments.bookingConfirmation.retinalImagesDesc',
+                    'Share your uploaded retinal images'
+                  )}
                 </p>
               </div>
             </label>
@@ -525,10 +590,16 @@ export default function BookingConfirmationPage(
               <Brain className="w-5 h-5 text-gray-400" />
               <div className="flex-1">
                 <p className="font-medium text-gray-900 dark:text-white">
-                  AI Analysis Results
+                  {t(
+                    'PatientAppointments.bookingConfirmation.aiResults',
+                    'AI Analysis Results'
+                  )}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Share AI screening results and risk assessments
+                  {t(
+                    'PatientAppointments.bookingConfirmation.aiResultsDesc',
+                    'Share AI screening results and risk assessments'
+                  )}
                 </p>
               </div>
             </label>
@@ -539,10 +610,13 @@ export default function BookingConfirmationPage(
         {consultationContext?.screeningId && (
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              AI Case Attached
+              {t(
+                'PatientAppointments.bookingConfirmation.aiCaseTitle',
+                'AI Case Attached'
+              )}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-              Case ID:{' '}
+              {t('PatientAppointments.bookingConfirmation.caseId', 'Case ID')}:{' '}
               <span className="font-semibold">
                 {consultationContext.screeningId}
               </span>
@@ -557,22 +631,33 @@ export default function BookingConfirmationPage(
                   />
                 ) : (
                   <div className="h-40 w-full flex items-center justify-center text-sm text-gray-500">
-                    No original image
+                    {t(
+                      'PatientAppointments.bookingConfirmation.noOriginalImage',
+                      'No original image'
+                    )}
                   </div>
                 )}
                 <p className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
-                  Original retinal image
+                  {t(
+                    'PatientAppointments.bookingConfirmation.originalImage',
+                    'Original retinal image'
+                  )}
                 </p>
               </div>
               <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-900/40">
                 {!shareAiResults ? (
                   <div className="h-40 w-full flex items-center justify-center text-sm text-gray-500 px-3 text-center">
-                    Turn on &quot;AI Analysis Results&quot; to preview how the
-                    doctor will see AI highlights.
+                    {t(
+                      'PatientAppointments.bookingConfirmation.turnOnAiToPreview',
+                      'Turn on "AI Analysis Results" to preview how the doctor will see AI highlights.'
+                    )}
                   </div>
                 ) : !previewRetinalImage ? (
-                  <div className="h-40 w-full flex items-center justify-center text-sm text-gray-500">
-                    Add a retinal image in screening to preview AI overlays.
+                  <div className="h-40 w-full flex items-center justify-center text-sm text-gray-500 px-4 text-center">
+                    {t(
+                      'PatientAppointments.bookingConfirmation.addRetinalToPreview',
+                      'Add a retinal image in screening to preview AI overlays.'
+                    )}
                   </div>
                 ) : (
                   <div className="h-40 w-full relative overflow-hidden">
@@ -587,12 +672,19 @@ export default function BookingConfirmationPage(
                   </div>
                 )}
                 <p className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
-                  AI annotated preview
+                  {t(
+                    'PatientAppointments.bookingConfirmation.aiAnnotated',
+                    'AI annotated preview'
+                  )}
                 </p>
               </div>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-              Symptoms/findings ({symptomNames.length}):
+              {t('PatientAppointments.bookingConfirmation.symptoms', {
+                count: symptomNames.length,
+                defaultValue: `Symptoms/findings (${symptomNames.length})`,
+              })}
+              :
             </p>
             {symptomNames.length > 0 ? (
               <div className="flex flex-wrap gap-2">
@@ -607,7 +699,10 @@ export default function BookingConfirmationPage(
               </div>
             ) : (
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                No symptom tags extracted from AI result.
+                {t(
+                  'PatientAppointments.bookingConfirmation.noSymptoms',
+                  'No symptom tags extracted from AI result.'
+                )}
               </p>
             )}
           </div>
@@ -620,7 +715,10 @@ export default function BookingConfirmationPage(
             disabled={releaseMutation.isPending || confirmMutation.isPending}
             className="flex-1 px-6 py-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
           >
-            Cancel Reservation
+            {t(
+              'PatientAppointments.bookingConfirmation.cancelReservation',
+              'Cancel Reservation'
+            )}
           </button>
           <button
             onClick={handleConfirm}
@@ -629,19 +727,29 @@ export default function BookingConfirmationPage(
           >
             {confirmMutation.isPending ? (
               <>
-                <Spinner /> Processing...
+                <Spinner />{' '}
+                {t(
+                  'PatientAppointments.bookingConfirmation.processing',
+                  'Processing...'
+                )}
               </>
             ) : (
               <>
-                <CheckCircle className="w-5 h-5" /> Confirm &amp; Pay
+                <CheckCircle className="w-5 h-5" />{' '}
+                {t(
+                  'PatientAppointments.bookingConfirmation.confirmAndPay',
+                  'Confirm & Pay'
+                )}
               </>
             )}
           </button>
         </div>
 
         <p className="mt-4 text-sm text-center text-gray-500 dark:text-gray-400">
-          By confirming, you agree to the consultation terms and the fee will be
-          deducted from your wallet.
+          {t(
+            'PatientAppointments.bookingConfirmation.agreement',
+            'By confirming, you agree to the consultation terms and the fee will be deducted from your wallet.'
+          )}
         </p>
       </div>
     </Wrapper>
