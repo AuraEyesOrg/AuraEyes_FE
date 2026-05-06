@@ -86,6 +86,7 @@ import { extractApiErrorMessage } from '@/lib/api-error';
 import { resolveAvatarUrl } from '@/lib/user-avatar';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
+import { localizeFindingsText } from '@/features/patient/lib/disease-translation';
 
 type ConsultationPhase = 'PRE_VISIT' | 'IN_PROGRESS' | 'COMPLETED';
 
@@ -269,7 +270,8 @@ const getSessionPreviewFromPayload = (session: SessionOptionalMetadata) => {
 
 const getSessionPreviewText = (
   session: SessionOptionalMetadata,
-  t: (key: string, fallback: string) => string
+  t: (key: string, fallback: string) => string,
+  language: string
 ) => {
   const payloadPreview = getSessionPreviewFromPayload(session);
   if (payloadPreview) {
@@ -283,7 +285,7 @@ const getSessionPreviewText = (
 
   const findings = session.caseSnapshot?.findings?.trim();
   if (findings) {
-    return findings;
+    return localizeFindingsText(findings, language);
   }
 
   if (session.chatStatus === ChatStatus.MemoOnly) {
@@ -1354,7 +1356,7 @@ export default function ConsultationsChatView({
               );
               const previewText =
                 sessionPreviewMap[session.id] ??
-                getSessionPreviewText(session, t);
+                getSessionPreviewText(session, t, i18n.language);
               const isUnread =
                 (sessionUnreadMap[session.id] ?? false) ||
                 getSessionUnreadCount(session) > 0;

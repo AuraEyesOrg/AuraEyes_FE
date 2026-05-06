@@ -46,32 +46,71 @@ const DISEASE_NAME_VI: Record<string, string> = {
   'Proliferative Diabetic Retinopathy':
     'Bệnh võng mạc đái tháo đường tăng sinh',
   'Diabetic Retinopathy': 'Bệnh võng mạc đái tháo đường',
+  'Within Normal Limits': 'Bình thường',
   'Central Serous Retinopathy': 'Bong thanh dịch hắc võng mạc trung tâm',
+  'Central Serous Chorioretinopathy': 'Hắc võng mạc trung tâm thanh dịch',
   'Macular Edema': 'Phù hoàng điểm',
+  'Macular Degeneration': 'Thoái hóa hoàng điểm',
+  'Macular Hole': 'Lỗ hoàng điểm',
+  'Macular Star': 'Hình sao hoàng điểm',
+  'Hemorrhagic PED': 'Bong biểu mô sắc tố xuất huyết',
   'Central Retinal Artery Occlusion': 'Tắc động mạch võng mạc trung tâm',
   'Branch Retinal Artery Occlusion': 'Tắc động mạch võng mạc nhánh',
+  'Branch Retinal Vein Occlusion': 'Tắc nhánh tĩnh mạch võng mạc',
+  'Central Retinal Vein Occlusion': 'Tắc tĩnh mạch trung tâm võng mạc',
   'Giant Retinal Tear': 'Vết rách võng mạc lớn',
   'Vitreous Hemorrhage': 'Xuất huyết dịch kính',
+  'Tortuous Vessels': 'Mạch máu ngoằn ngoèo',
+  Microaneurysm: 'Vi phình mạch',
+  Plaque: 'Mảng xơ vữa',
+  'Arcuate Hemorrhage': 'Xuất huyết hình cung',
   'Anterior Ischemic Optic Neuropathy':
     'Bệnh lý thần kinh thị do thiếu máu trước',
+  'Ischemic Optic Neuropathy': 'Bệnh thần kinh thị giác thiếu máu',
   'Idiopathic Intracranial Hypertension': 'Tăng áp lực nội sọ vô căn',
+  'Optic Neuritis': 'Viêm dây thần kinh thị giác',
   'Cystoid Macular Edema': 'Phù hoàng điểm dạng nang',
   'Retinal Hemorrhage': 'Xuất huyết võng mạc',
+  'Hypertensive Retinopathy': 'Bệnh võng mạc cao huyết áp',
   'Optic Disc Cupping': 'Lõm đĩa thị',
+  'Optic Disc Edema': 'Phù đĩa thị (Gai thị)',
+  'Optic Disc Pallor / Atrophy': 'Bạc màu / Teo đĩa thị',
   Drusen: 'Lắng đọng Drusen',
+  'Drusen / Yellow Spots': 'Drusen / Đốm trắng vàng',
   'Vogt-Koyanagi-Harada Disease': 'Bệnh Vogt-Koyanagi-Harada',
   'Retinal Detachment': 'Bong võng mạc',
+  'Retinal Tear': 'Vết rách võng mạc',
   'Posterior Vitreous Detachment': 'Bong dịch kính sau',
+  'Vitreous Syneresis': 'Hóa lỏng dịch kính',
   'White Matter Lesion': 'Tổn thương đốm trắng',
   'Hard Exudates': 'Xuất tiết cứng',
+  Exudates: 'Xuất tiết',
+  Photocoagulation: 'Quang đông',
   'Soft Exudates': 'Xuất tiết mềm',
+  'Cotton Wool Spots': 'Đốm xuất tiết bông',
   'Intraretinal Microvascular Abnormality': 'Bất thường vi mạch trong võng mạc',
   'Neovascularization of the Disc': 'Tân mạch đĩa thị',
   'Neovascularization Elsewhere': 'Tân mạch vị trí khác',
   'Polypoidal Choroidal Vasculopathy': 'Bệnh mạch máu hắc mạc dạng polyp',
   'Choroidal Neovascularization': 'Tân mạch hắc mạc',
+  'Choroidal Fold': 'Nếp gấp hắc mạc',
+  'Cilioretinal Artery': 'Động mạch mi võng mạc',
+  'RPE Changes': 'Thay đổi biểu mô sắc tố',
   'Age-related Macular Degeneration': 'Thoái hóa hoàng điểm tuổi già',
   'Cytomegalovirus Retinitis': 'Viêm võng mạc do CMV',
+  Retinoschisis: 'Tách lớp võng mạc',
+  Myopia: 'Cận thị bệnh lý',
+  'Peripheral Retinal Degen.': 'Thoái hóa võng mạc chu biên',
+  'Other Disc Modification': 'Bất thường khác quanh đĩa thị',
+  'Tilted Disc': 'Đĩa thị nghiêng',
+  'Peripapillary Atrophy': 'Thoái hóa quanh gai thị',
+  'Laser Scars / Spots': 'Sẹo Laser',
+  'Chorioretinal Scar': 'Sẹo hắc võng mạc',
+  Staphyloma: 'Giãn lồi củng mạc',
+  Coloboma: 'Khuyết mô mắt',
+  'Epiretinal Membrane': 'Màng trước võng mạc',
+  'Silicon Oil': 'Dầu Silicon trong mắt',
+  'Blur Fundus': 'Đáy mắt mờ',
 };
 
 const DISEASE_NAME_VI_BY_LOWER = Object.fromEntries(
@@ -169,18 +208,52 @@ export function localizeFindingsText(
   const isVietnamese = (language || 'vi').toLowerCase().startsWith('vi');
   if (!isVietnamese) return findings;
 
-  return findings
-    .split(',')
-    .map((segment) => {
-      const trimmed = segment.trim();
-      if (!trimmed) return trimmed;
+  const normalizedFindings = findings
+    .replace(/\bRelated Findings\s*:/gi, ', Related Findings: ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
-      const confidenceMatch = trimmed.match(/\([^)]*\)\s*$/);
-      const confidenceSuffix = confidenceMatch?.[0] ?? '';
-      const diseasePart = normalizeDiseaseName(trimmed);
-      const translated = toDisplayDiseaseName(diseasePart, language);
+  const localizeLabel = (label: string): string => {
+    return label
+      .replace(/primary finding/gi, 'Phát hiện chính')
+      .replace(/related findings?/gi, 'Phát hiện liên quan')
+      .replace(/^findings?$/gi, 'Phát hiện');
+  };
+
+  const localizeSegment = (segment: string): string => {
+    const trimmed = segment.trim();
+    if (!trimmed) return '';
+
+    const confidenceMatch = trimmed.match(/\([^)]*\)\s*$/);
+    const confidenceSuffix = confidenceMatch?.[0] ?? '';
+    const withoutConfidence = trimmed
+      .slice(0, trimmed.length - confidenceSuffix.length)
+      .trim();
+
+    const colonIndex = withoutConfidence.indexOf(':');
+    if (colonIndex === -1) {
+      const translated = toDisplayDiseaseName(
+        normalizeDiseaseName(withoutConfidence),
+        language
+      );
       return `${translated}${confidenceSuffix}`.trim();
-    })
+    }
+
+    const rawLabel = withoutConfidence.slice(0, colonIndex).trim();
+    const rawValue = withoutConfidence.slice(colonIndex + 1).trim();
+    const translatedLabel = localizeLabel(rawLabel);
+    const translatedValue = rawValue
+      .split('/')
+      .map((item) => toDisplayDiseaseName(normalizeDiseaseName(item), language))
+      .filter(Boolean)
+      .join(' / ');
+
+    return `${translatedLabel}: ${translatedValue}${confidenceSuffix}`.trim();
+  };
+
+  return normalizedFindings
+    .split(',')
+    .map(localizeSegment)
     .filter(Boolean)
     .join(', ');
 }
