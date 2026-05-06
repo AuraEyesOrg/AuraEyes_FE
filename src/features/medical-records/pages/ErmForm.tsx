@@ -79,7 +79,10 @@ import useAuthStore from '@/store/auth-store';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { resolvePathWithLocale } from '@/i18n/middleware';
-import { MedicalRecordStatus } from '../api/medical-record.api';
+import {
+  medicalRecordApi,
+  MedicalRecordStatus,
+} from '../api/medical-record.api';
 import {
   useMedicalRecord,
   useUpdateDiagnosis,
@@ -1025,12 +1028,50 @@ export default function ErmForm() {
       return;
     }
 
-    if (!id) {
-      toast.warning('Vui lòng tạo hồ sơ từ luồng tiếp nhận');
-      return;
-    }
-
     try {
+      let targetRecordId = id;
+      const incomingFormData = location.state?.formData as
+        | Record<string, string>
+        | undefined;
+      const incomingPatientId =
+        incomingFormData?.patientId || record?.patientId;
+      const incomingVisitId = incomingFormData?.visitId;
+      const incomingAppointmentId = incomingFormData?.appointmentId;
+
+      if (!isOphthalmologist && (!targetRecordId || targetRecordId === 'new')) {
+        if (!incomingPatientId) {
+          toast.warning('Vui lòng tạo hồ sơ từ luồng tiếp nhận');
+          return;
+        }
+
+        const fallbackRecordNumber = (
+          data.maYT?.trim() ||
+          incomingFormData?.maYT ||
+          incomingVisitId?.slice(0, 8) ||
+          incomingPatientId.slice(0, 8)
+        ).toUpperCase();
+
+        const createResponse = await medicalRecordApi.create({
+          patientId: incomingPatientId,
+          medicalRecordNumber: fallbackRecordNumber,
+          administrativeDataJson: JSON.stringify({
+            patientId: incomingPatientId,
+            visitId: incomingVisitId,
+            appointmentId: incomingAppointmentId,
+          }),
+        });
+
+        targetRecordId = createResponse.data?.data;
+        if (!targetRecordId) {
+          throw new Error('Failed to create medical record');
+        }
+      }
+
+      if (!targetRecordId || targetRecordId === 'new') {
+        toast.warning('Vui lòng tạo hồ sơ từ luồng tiếp nhận');
+        return;
+      }
+
       if (isStaff && !isOphthalmologist) {
         const adminFields = [
           'khoa',
@@ -1087,7 +1128,7 @@ export default function ErmForm() {
         }, {} as any);
 
         await updateAdministrativeMutation.mutateAsync({
-          id,
+          id: targetRecordId,
           data: { administrativeDataJson: JSON.stringify(adminData) },
         });
 
@@ -1148,7 +1189,7 @@ export default function ErmForm() {
         clinicalData.noMedicationPrescribed = noMedicationPrescribed;
 
         await updateDiagnosisMutation.mutateAsync({
-          id,
+          id: targetRecordId,
           data: {
             clinicalDataJson: JSON.stringify(clinicalData),
             finalDiagnosis: data.finalDiagnosisMain,

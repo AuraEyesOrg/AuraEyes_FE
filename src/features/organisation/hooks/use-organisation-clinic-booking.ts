@@ -72,6 +72,7 @@ export const useCreateClinicStaffAppointment = () => {
       queryClient.invalidateQueries({
         queryKey: organisationClinicBookingKeys.all,
       });
+      queryClient.invalidateQueries({ queryKey: ['clinic-staff', 'queue'] });
       queryClient.invalidateQueries({ queryKey: ['clinic-queue'] });
     },
   });
@@ -86,6 +87,8 @@ export const useCheckInClinicAppointment = () => {
       queryClient.invalidateQueries({
         queryKey: organisationClinicBookingKeys.all,
       });
+      queryClient.invalidateQueries({ queryKey: ['clinic-staff', 'queue'] });
+      queryClient.invalidateQueries({ queryKey: ['clinic-queue'] });
     },
   });
 };
@@ -99,6 +102,8 @@ export const useStartClinicAppointment = () => {
       queryClient.invalidateQueries({
         queryKey: organisationClinicBookingKeys.all,
       });
+      queryClient.invalidateQueries({ queryKey: ['clinic-staff', 'queue'] });
+      queryClient.invalidateQueries({ queryKey: ['clinic-queue'] });
     },
   });
 };
@@ -117,6 +122,8 @@ export const useCompleteClinicAppointment = () => {
       queryClient.invalidateQueries({
         queryKey: organisationClinicBookingKeys.all,
       });
+      queryClient.invalidateQueries({ queryKey: ['clinic-staff', 'queue'] });
+      queryClient.invalidateQueries({ queryKey: ['clinic-queue'] });
     },
   });
 };
@@ -130,6 +137,8 @@ export const useMarkNoShowClinicAppointment = () => {
       queryClient.invalidateQueries({
         queryKey: organisationClinicBookingKeys.all,
       });
+      queryClient.invalidateQueries({ queryKey: ['clinic-staff', 'queue'] });
+      queryClient.invalidateQueries({ queryKey: ['clinic-queue'] });
     },
   });
 };
@@ -155,6 +164,8 @@ export const useCompleteOrderPayment = () => {
       queryClient.invalidateQueries({
         queryKey: organisationClinicBookingKeys.all,
       });
+      queryClient.invalidateQueries({ queryKey: ['clinic-staff', 'queue'] });
+      queryClient.invalidateQueries({ queryKey: ['clinic-queue'] });
       // Also invalidate billing/financial queries if they exist
       queryClient.invalidateQueries({ queryKey: ['financial'] });
       queryClient.invalidateQueries({ queryKey: ['system-admin', 'orders'] });
