@@ -3,7 +3,7 @@
  * Main card for displaying professional network posts (including reposts/quote posts)
  */
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -38,6 +38,7 @@ import {
   withLocalePathname,
 } from '@/i18n/locales';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { localizeCasePostContent } from '../../utils/postContentLocalization';
 
 interface Props {
   post: ProfessionalPost;
@@ -121,7 +122,7 @@ export function PostCard({
   isHidingPost = false,
 }: Props) {
   const { user } = useAuthStore();
-  const { t } = useSafeTranslation();
+  const { t, i18n } = useSafeTranslation();
   const location = useLocation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedPath = (pathname: string) =>
@@ -139,6 +140,19 @@ export function PostCard({
   const moreMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const repostMutation = useRepostMutation();
+  const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
+  const localizedPostContent = useMemo(
+    () => localizeCasePostContent(post.content, currentLanguage),
+    [post.content, currentLanguage]
+  );
+  const localizedOriginalPostContent = useMemo(
+    () =>
+      localizeCasePostContent(
+        post.originalPost?.content ?? '',
+        currentLanguage
+      ),
+    [post.originalPost?.content, currentLanguage]
+  );
 
   // Read directly from post prop (optimistic updates modify query cache)
   const userReaction = post.currentUserReaction;
@@ -438,7 +452,7 @@ export function PostCard({
                       )}
                     >
                       <p className="text-[14px] text-(--text-primary) leading-snug line-clamp-3">
-                        {post.originalPost.content}
+                        {localizedOriginalPostContent}
                       </p>
                     </Link>
                   )}
@@ -477,7 +491,7 @@ export function PostCard({
                   className="block mt-2"
                 >
                   <div className="text-[15px] text-(--text-primary) whitespace-pre-wrap leading-normal">
-                    {post.content.split('\n').map((line, i) => {
+                    {localizedPostContent.split('\n').map((line, i) => {
                       const boldRegex = /\*\*(.*?)\*\*/g;
                       const parts = line.split(boldRegex);
 
@@ -865,7 +879,7 @@ export function PostCard({
                         </div>
                       </div>
                       <p className="text-[14px] text-(--text-primary) line-clamp-3 leading-snug">
-                        {post.content}
+                        {localizedPostContent}
                       </p>
                     </div>
 

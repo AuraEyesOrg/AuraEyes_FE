@@ -9,6 +9,42 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, AlertCircle } from 'lucide-react';
 import type { ConsultationSessionDto } from '@/types/consultation';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { localizeFindingsText } from '@/features/patient/lib/disease-translation';
+
+function normalizeRawValueToText(value: unknown): string {
+  if (typeof value === 'string') return value.trim();
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter(Boolean)
+      .join(', ');
+  }
+  return '';
+}
+
+function extractFindingsFromRawJson(rawJsonOutput: string | null): string {
+  if (!rawJsonOutput) return '';
+  try {
+    const parsed = JSON.parse(rawJsonOutput) as Record<string, unknown>;
+    const primary =
+      normalizeRawValueToText(parsed.primary_finding) ||
+      normalizeRawValueToText(parsed.primaryFinding) ||
+      normalizeRawValueToText(parsed.final_diagnosis) ||
+      normalizeRawValueToText(parsed.finalDiagnosis);
+
+    const related =
+      normalizeRawValueToText(parsed.related_findings) ||
+      normalizeRawValueToText(parsed.relatedFindings);
+
+    const findings =
+      normalizeRawValueToText(parsed.findings) ||
+      [primary, related].filter(Boolean).join(', ');
+
+    return findings.trim();
+  } catch {
+    return '';
+  }
+}
 
 interface ShareClinicCaseModalProps {
   session: ConsultationSessionDto | null;
@@ -25,7 +61,7 @@ export function ShareClinicCaseModal({
   onShare,
   isLoading = false,
 }: ShareClinicCaseModalProps) {
-  const { t } = useSafeTranslation();
+  const { t, i18n } = useSafeTranslation();
   const [doctorNotes, setDoctorNotes] = useState('');
 
   const handleShare = useCallback(() => {
@@ -36,6 +72,20 @@ export function ShareClinicCaseModal({
   }, [doctorNotes, onShare, onClose]);
 
   const caseSnapshot = useMemo(() => session?.caseSnapshot, [session]);
+  const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
+  const localizedFindings = useMemo(() => {
+    if (!caseSnapshot) return '';
+    const findingsSource =
+      caseSnapshot.findings?.trim() ||
+      extractFindingsFromRawJson(caseSnapshot.rawJsonOutput);
+    if (!findingsSource) return '';
+    return localizeFindingsText(findingsSource, currentLanguage);
+  }, [
+    caseSnapshot,
+    caseSnapshot?.findings,
+    caseSnapshot?.rawJsonOutput,
+    currentLanguage,
+  ]);
 
   const previewContent = useMemo(() => {
     if (!caseSnapshot) return '';
@@ -65,9 +115,9 @@ export function ShareClinicCaseModal({
     }
 
     // Findings
-    if (caseSnapshot.findings) {
+    if (localizedFindings) {
       parts.push(
-        `🔍 **${t('ProfessionalNetwork.shareClinicCaseModal.findings.label', 'Findings')}**: ${caseSnapshot.findings}`
+        `🔍 **${t('ProfessionalNetwork.shareClinicCaseModal.findings.label', 'Findings')}**: ${localizedFindings}`
       );
     }
 
@@ -86,7 +136,7 @@ export function ShareClinicCaseModal({
     }
 
     return parts.join('\n\n');
-  }, [caseSnapshot, doctorNotes, t]);
+  }, [caseSnapshot, doctorNotes, localizedFindings, t]);
 
   if (!session || !caseSnapshot) return null;
 
@@ -234,7 +284,7 @@ export function ShareClinicCaseModal({
                   )}
 
                 {/* Case Findings */}
-                {caseSnapshot.findings && (
+                {localizedFindings && (
                   <div>
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
                       {t(
@@ -243,7 +293,7 @@ export function ShareClinicCaseModal({
                       )}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400 bg-slate-50 dark:bg-slate-800/50 rounded p-3">
-                      {caseSnapshot.findings}
+                      {localizedFindings}
                     </p>
                   </div>
                 )}

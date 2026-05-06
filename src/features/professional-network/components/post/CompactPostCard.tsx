@@ -6,6 +6,7 @@
  */
 
 import { Link, useLocation } from 'react-router-dom';
+import { useMemo } from 'react';
 import { FileText, HelpingHand, Newspaper } from 'lucide-react';
 import type { ProfessionalPost } from '../../types';
 import { InitialsAvatar } from '../professional/InitialsAvatar';
@@ -15,6 +16,7 @@ import {
   withLocalePathname,
 } from '@/i18n/locales';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { localizeCasePostContent } from '../../utils/postContentLocalization';
 
 const postTypeConfig = {
   PeerDiscussion: {
@@ -42,11 +44,16 @@ interface Props {
 }
 
 export function CompactPostCard({ post }: Props) {
-  const { t } = useSafeTranslation();
+  const { t, i18n } = useSafeTranslation();
   const location = useLocation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
+  const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
+  const localizedPostContent = useMemo(
+    () => localizeCasePostContent(post.content, currentLanguage),
+    [post.content, currentLanguage]
+  );
 
   const typeConfig =
     postTypeConfig[post.category as keyof typeof postTypeConfig] ??
@@ -93,7 +100,7 @@ export function CompactPostCard({ post }: Props) {
 
         {/* Content — max 2 lines */}
         <p className="text-[13px] text-text-secondary leading-snug line-clamp-2">
-          {post.content}
+          {localizedPostContent}
         </p>
       </div>
     </Link>
