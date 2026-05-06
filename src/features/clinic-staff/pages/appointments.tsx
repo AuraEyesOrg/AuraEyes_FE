@@ -2023,7 +2023,7 @@ export default function ClinicStaffAppointmentsPage() {
           if (!appointmentToPay?.orderId) return;
           const localePrefix = i18nObj.language === 'en' ? '/en' : '/vi';
 
-          await payRemainingMutation.mutateAsync({
+          const result = await payRemainingMutation.mutateAsync({
             orderId: appointmentToPay.orderId,
             method,
             returnUrl: `${window.location.origin}${localePrefix}/payment/success`,
@@ -2050,6 +2050,8 @@ export default function ClinicStaffAppointmentsPage() {
               )
             );
           }
+
+          return result;
         }}
       />
     </ClinicStaffLayout>
