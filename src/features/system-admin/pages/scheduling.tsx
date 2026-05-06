@@ -900,8 +900,7 @@ export default function SystemAdminScheduling() {
                   </h4>
                   <p className="text-primary-700 dark:text-primary-300 mt-1">
                     {t(
-                      'SystemAdmin.scheduling.info.description',
-                      'The system automatically generates slots every night based on these templates. Use "Trigger Generation" to manually fill missing slots for the next 14 days.'
+                      'The system automatically generates slots every night based on these templates. Use "Trigger Generation" to manually fill missing slots for the next 7 days.'
                     )}
                   </p>
                 </div>
