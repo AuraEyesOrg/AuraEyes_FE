@@ -386,14 +386,26 @@ export default function SettingsPage() {
                         {
                           code: 'vi' as AppLocale,
                           flag: '🇻🇳',
-                          nativeLabel: 'Tiếng Việt',
-                          label: 'Vietnamese',
+                          nativeLabel: t(
+                            'Ophthalmologist.settings.language.options.viNative',
+                            'Tiếng Việt'
+                          ),
+                          label: t(
+                            'Ophthalmologist.settings.language.options.viLabel',
+                            'Vietnamese'
+                          ),
                         },
                         {
                           code: 'en' as AppLocale,
                           flag: '🇺🇸',
-                          nativeLabel: 'English',
-                          label: 'English (US)',
+                          nativeLabel: t(
+                            'Ophthalmologist.settings.language.options.enNative',
+                            'English'
+                          ),
+                          label: t(
+                            'Ophthalmologist.settings.language.options.enLabel',
+                            'English (US)'
+                          ),
                         },
                       ] as const
                     ).map((opt) => {
