@@ -603,7 +603,6 @@ export default function ClinicStaffQueuePage() {
                             )}
                           </span>
                         </td>
-                        inli{' '}
                         <td className="px-6 py-4">
                           {item.screeningId ? (
                             <div>

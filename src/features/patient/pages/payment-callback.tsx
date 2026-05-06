@@ -15,7 +15,7 @@ import PatientLayout from '../components/PatientLayout';
 import { toast } from 'react-toastify';
 import { getOrderById, syncOrder } from '../api/financial.api';
 import { formatCurrency } from '@/lib/helper';
-import { useTranslation } from 'react-i18next';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import useAuthStore from '@/store/auth-store';
 import type { OrderDto } from '../types/financial.types';
 
@@ -42,9 +42,7 @@ const POLL_INTERVAL_MS = 2000;
  *  4. Show success / failed / cancelled UI
  */
 export default function PaymentCallbackPage() {
-  const { t: i18nT } = useTranslation();
-  const t = (key: string, options?: Record<string, unknown>) =>
-    i18nT(key as never, options as never) as unknown as string;
+  const { t } = useSafeTranslation();
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -136,9 +134,15 @@ export default function PaymentCallbackPage() {
             order.status === 'Completed' || order.status === 'FullyPaid';
           toast.success(
             isFullyPaid
-              ? 'Thanh toán hoàn tất thành công!'
+              ? t(
+                  'PatientPaymentCallback.toast.fullyPaid',
+                  'Thanh toán hoàn tất thành công!'
+                )
               : callbackType === 'clinic-booking'
-                ? 'Thanh toán đặt cọc thành công! Lịch khám đã được xác nhận.'
+                ? t(
+                    'PatientPaymentCallback.toast.bookingConfirmed',
+                    'Thanh toán đặt cọc thành công! Lịch khám đã được xác nhận.'
+                  )
                 : t('PatientPaymentCallback.toast.depositSuccess')
           );
           return;
@@ -196,11 +200,17 @@ export default function PaymentCallbackPage() {
               </h1>
               <p className="text-(--text-secondary) text-sm">
                 {isClinicBooking
-                  ? 'Đang xác nhận thanh toán đặt cọc...'
+                  ? t(
+                      'PatientPaymentCallback.loading.clinicBooking',
+                      'Đang xác nhận thanh toán đặt cọc...'
+                    )
                   : t('PatientPaymentCallback.loading.description')}
               </p>
               <p className="text-xs text-(--text-muted) mt-2 flex items-center justify-center gap-1">
-                Vui lòng không đóng trang này
+                {t(
+                  'PatientPaymentCallback.loading.noClose',
+                  'Vui lòng không đóng trang này'
+                )}
               </p>
             </>
           )}
@@ -213,14 +223,23 @@ export default function PaymentCallbackPage() {
               </div>
               <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
                 {orderData?.status === 'Completed'
-                  ? 'Thanh toán hoàn tất!'
+                  ? t(
+                      'PatientPaymentCallback.success.fullyPaid',
+                      'Thanh toán hoàn tất!'
+                    )
                   : isClinicBooking
-                    ? 'Thanh toán đặt cọc thành công!'
+                    ? t(
+                        'PatientPaymentCallback.success.bookingConfirmed',
+                        'Thanh toán đặt cọc thành công!'
+                      )
                     : t('PatientPaymentCallback.success.title')}
               </h1>
               <p className="text-(--text-secondary) mb-6 text-sm">
                 {isClinicBooking
-                  ? 'Lịch khám của bạn đã được xác nhận. Vui lòng đến đúng giờ hẹn.'
+                  ? t(
+                      'PatientPaymentCallback.success.bookingConfirmedDescription',
+                      'Lịch khám của bạn đã được xác nhận. Vui lòng đến đúng giờ hẹn.'
+                    )
                   : t('PatientPaymentCallback.success.description')}
               </p>
 
@@ -231,10 +250,19 @@ export default function PaymentCallbackPage() {
                     <span className="text-sm text-(--text-secondary) flex items-center gap-1.5">
                       <CreditCard className="w-4 h-4" />
                       {orderData.status === 'Completed'
-                        ? 'Số tiền thanh toán nốt'
+                        ? t(
+                            'PatientPaymentCallback.success.amountRemaining',
+                            'Số tiền thanh toán nốt'
+                          )
                         : isClinicBooking
-                          ? 'Số tiền đặt cọc (30%)'
-                          : 'Số tiền'}
+                          ? t(
+                              'PatientPaymentCallback.success.amountDeposit',
+                              'Số tiền đặt cọc (30%)'
+                            )
+                          : t(
+                              'PatientPaymentCallback.success.amount',
+                              'Số tiền'
+                            )}
                     </span>
                     <span className="font-bold text-green-600 dark:text-green-400">
                       {formatCurrency(
@@ -254,7 +282,10 @@ export default function PaymentCallbackPage() {
                   {orderData.description && (
                     <div className="flex items-start justify-between gap-4">
                       <span className="text-sm text-(--text-secondary) shrink-0">
-                        Mô tả
+                        {t(
+                          'PatientPaymentCallback.success.descriptionLabel',
+                          'Mô tả'
+                        )}
                       </span>
                       <span className="text-sm font-medium text-(--text-primary) text-right">
                         {orderData.description}
@@ -265,7 +296,10 @@ export default function PaymentCallbackPage() {
                   {orderData.payments?.[0]?.paidAt && (
                     <div className="flex items-center justify-between pt-2 border-t border-(--border-color)">
                       <span className="text-sm text-(--text-secondary)">
-                        Thời gian thanh toán
+                        {t(
+                          'PatientPaymentCallback.success.paidAt',
+                          'Thời gian thanh toán'
+                        )}
                       </span>
                       <span className="text-sm font-medium text-(--text-primary)">
                         {new Date(orderData.payments[0].paidAt!).toLocaleString(
@@ -286,8 +320,14 @@ export default function PaymentCallbackPage() {
                   >
                     <ArrowLeft className="w-4 h-4" />
                     {useAuthStore.getState().user?.roles.includes('ClinicStaff')
-                      ? 'Về Dashboard'
-                      : 'Lịch sử thanh toán'}
+                      ? t(
+                          'PatientPaymentCallback.success.backToDashboard',
+                          'Về Dashboard'
+                        )
+                      : t(
+                          'PatientPaymentCallback.success.paymentHistory',
+                          'Lịch sử thanh toán'
+                        )}
                   </button>
                 )}
                 <button
@@ -296,8 +336,14 @@ export default function PaymentCallbackPage() {
                 >
                   <Calendar className="w-4 h-4" />
                   {useAuthStore.getState().user?.roles.includes('ClinicStaff')
-                    ? 'Quay lại Lịch hẹn'
-                    : 'Xem lịch hẹn'}
+                    ? t(
+                        'PatientPaymentCallback.success.backToAppointments',
+                        'Quay lại Lịch hẹn'
+                      )
+                    : t(
+                        'PatientPaymentCallback.success.viewAppointments',
+                        'Xem lịch hẹn'
+                      )}
                 </button>
               </div>
             </>
@@ -314,7 +360,10 @@ export default function PaymentCallbackPage() {
               </h1>
               <p className="text-(--text-secondary) mb-6 text-sm">
                 {isClinicBooking
-                  ? 'Thanh toán chưa được xác nhận. Lịch khám vẫn được giữ — bạn có thể thử thanh toán lại trong trang lịch sử.'
+                  ? t(
+                      'PatientPaymentCallback.failed.clinicBooking',
+                      'Thanh toán chưa được xác nhận. Lịch khám vẫn được giữ — bạn có thể thử thanh toán lại trong trang lịch sử.'
+                    )
                   : t('PatientPaymentCallback.failed.fallbackDescription')}
               </p>
 
@@ -326,7 +375,7 @@ export default function PaymentCallbackPage() {
                     className="flex-1 py-3 bg-brand hover:brightness-110 text-white rounded-xl font-semibold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
                   >
                     <RotateCw className="w-4 h-4" />
-                    Thanh toán lại
+                    {t('PatientPaymentCallback.failed.retry', 'Thanh toán lại')}
                   </a>
                 )}
                 <button
@@ -334,7 +383,10 @@ export default function PaymentCallbackPage() {
                   className="flex-1 py-3 bg-(--bg-secondary) hover:bg-(--bg-tertiary) text-(--text-primary) border border-(--border-color) rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Lịch sử thanh toán
+                  {t(
+                    'PatientPaymentCallback.failed.history',
+                    'Lịch sử thanh toán'
+                  )}
                 </button>
               </div>
             </>
@@ -351,7 +403,10 @@ export default function PaymentCallbackPage() {
               </h1>
               <p className="text-(--text-secondary) mb-6 text-sm">
                 {isClinicBooking
-                  ? 'Bạn đã hủy thanh toán. Lịch khám này đã được giải phóng để người khác có thể đặt. Vui lòng đặt lại nếu bạn vẫn muốn khám.'
+                  ? t(
+                      'PatientPaymentCallback.cancelled.clinicBooking',
+                      'Bạn đã hủy thanh toán. Lịch khám này đã được giải phóng để người khác có thể đặt. Vui lòng đặt lại nếu bạn vẫn muốn khám.'
+                    )
                   : t('PatientPaymentCallback.cancelled.description')}
               </p>
 
@@ -362,7 +417,10 @@ export default function PaymentCallbackPage() {
                     className="flex-1 py-3 bg-brand hover:brightness-110 text-white rounded-xl font-semibold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
                   >
                     <Calendar className="w-4 h-4" />
-                    Xem lịch hẹn
+                    {t(
+                      'PatientPaymentCallback.cancelled.viewAppointments',
+                      'Xem lịch hẹn'
+                    )}
                   </button>
                 )}
                 <button
@@ -370,7 +428,10 @@ export default function PaymentCallbackPage() {
                   className="flex-1 py-3 bg-(--bg-secondary) hover:bg-(--bg-tertiary) text-(--text-primary) border border-(--border-color) rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Lịch sử thanh toán
+                  {t(
+                    'PatientPaymentCallback.cancelled.history',
+                    'Lịch sử thanh toán'
+                  )}
                 </button>
               </div>
             </>
