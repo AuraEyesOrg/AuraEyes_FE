@@ -1579,6 +1579,7 @@
       }
     },
     "consultations": {
+      "title": "Tư vấn sau khám",
       "chat": {
         "phase": {
           "preVisit": "Trước khám",
@@ -2196,7 +2197,7 @@
       "liveQueue": "Hàng đợi trực tiếp",
       "autoSync": "Tự động đồng bộ"
     },
-    "consultations": {
+    "consultationsLegacy": {
       "title": "Tư vấn sau khám"
     },
     "wallet": {

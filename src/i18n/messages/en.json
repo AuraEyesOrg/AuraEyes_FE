@@ -1541,6 +1541,7 @@
       }
     },
     "consultations": {
+      "title": "Post-consultations",
       "chat": {
         "phase": {
           "preVisit": "Pre-visit",
@@ -1880,7 +1881,7 @@
         "filtered": "No screenings match your current filter. Try adjusting your search or status filter."
       }
     },
-    "consultations": {
+    "consultationsLegacy": {
       "title": "Post-consultations"
     },
     "wallet": {
