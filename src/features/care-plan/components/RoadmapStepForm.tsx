@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { X, Sparkles } from 'lucide-react';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import type {
   CreateRoadmapStepRequest,
   HealthRoadmapStepDto,
@@ -14,41 +15,43 @@ const STEP_TYPES: RoadmapStepType[] = [
   'Custom',
 ];
 
-const TYPE_LABEL: Record<RoadmapStepType, string> = {
-  FollowUp: 'Follow-up visit',
-  Test: 'Eye / diagnostic test',
-  Medication: 'Medication review',
-  Custom: 'Custom instruction',
-};
-
 interface PresetSpec {
   key: string;
-  label: string;
-  title: string;
+  labelKey: string;
+  labelDefault: string;
+  titleKey: string;
+  titleDefault: string;
   stepType: RoadmapStepType;
   daysFromToday: number;
-  description?: string;
+  descriptionKey?: string;
+  descriptionDefault?: string;
 }
 
 const PRESETS: PresetSpec[] = [
   {
     key: 'follow-up-1m',
-    label: 'Follow-up in 1 month',
-    title: 'Follow-up visit',
+    labelKey: 'CarePlan.form.presets.followUp1m',
+    labelDefault: 'Follow-up in 1 month',
+    titleKey: 'CarePlan.form.stepTypeLabel.followUp',
+    titleDefault: 'Follow-up visit',
     stepType: 'FollowUp',
     daysFromToday: 30,
   },
   {
     key: 'recheck-vision',
-    label: 'Re-check vision',
-    title: 'Re-check vision',
+    labelKey: 'CarePlan.form.presets.recheckVision',
+    labelDefault: 'Re-check vision',
+    titleKey: 'CarePlan.form.presets.recheckVision',
+    titleDefault: 'Re-check vision',
     stepType: 'Test',
     daysFromToday: 14,
   },
   {
     key: 'med-review',
-    label: 'Medication review',
-    title: 'Medication review',
+    labelKey: 'CarePlan.form.stepTypeLabel.medication',
+    labelDefault: 'Medication review',
+    titleKey: 'CarePlan.form.stepTypeLabel.medication',
+    titleDefault: 'Medication review',
     stepType: 'Medication',
     daysFromToday: 7,
   },
@@ -95,6 +98,7 @@ export default function RoadmapStepForm({
   onCreate,
   onUpdate,
 }: RoadmapStepFormProps) {
+  const { t } = useSafeTranslation();
   const isEdit = mode.kind === 'edit';
 
   const initial = useMemo(() => {
@@ -132,10 +136,14 @@ export default function RoadmapStepForm({
   if (!open) return null;
 
   const applyPreset = (preset: PresetSpec) => {
-    setTitle(preset.title);
+    setTitle(t(preset.titleKey, preset.titleDefault));
     setStepType(preset.stepType);
     setPlannedDate(isoFromTodayPlus(preset.daysFromToday));
-    if (preset.description !== undefined) setDescription(preset.description);
+    if (preset.descriptionKey || preset.descriptionDefault) {
+      setDescription(
+        t(preset.descriptionKey ?? '', preset.descriptionDefault ?? '')
+      );
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -143,11 +151,18 @@ export default function RoadmapStepForm({
     setError(null);
 
     if (!title.trim()) {
-      setError('Title is required.');
+      setError(
+        t('CarePlan.form.validation.titleRequired', 'Title is required.')
+      );
       return;
     }
     if (!plannedDate) {
-      setError('Planned date is required.');
+      setError(
+        t(
+          'CarePlan.form.validation.plannedDateRequired',
+          'Planned date is required.'
+        )
+      );
       return;
     }
 
@@ -173,7 +188,12 @@ export default function RoadmapStepForm({
       }
     } catch (err) {
       const msg =
-        err instanceof Error ? err.message : 'Failed to save roadmap step.';
+        err instanceof Error
+          ? err.message
+          : t(
+              'CarePlan.form.validation.saveFailed',
+              'Failed to save roadmap step.'
+            );
       setError(msg);
     }
   };
@@ -183,13 +203,15 @@ export default function RoadmapStepForm({
       <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 shadow-xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-(--border-color)">
           <h2 className="text-lg font-bold text-(--text-primary)">
-            {isEdit ? 'Edit roadmap step' : 'Add roadmap step'}
+            {isEdit
+              ? t('CarePlan.form.title.edit', 'Edit roadmap step')
+              : t('CarePlan.form.title.add', 'Add roadmap step')}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
-            aria-label="Close"
+            aria-label={t('CarePlan.form.actions.close', 'Close')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -199,7 +221,8 @@ export default function RoadmapStepForm({
           {!isEdit && (
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-(--text-secondary)">
-                <Sparkles className="w-3.5 h-3.5" /> Quick-add presets
+                <Sparkles className="w-3.5 h-3.5" />{' '}
+                {t('CarePlan.form.quickPresets', 'Quick-add presets')}
               </p>
               <div className="flex flex-wrap gap-2">
                 {PRESETS.map((preset) => (
@@ -209,7 +232,7 @@ export default function RoadmapStepForm({
                     onClick={() => applyPreset(preset)}
                     className="px-3 py-1.5 rounded-lg border border-(--border-color) bg-(--bg-secondary) hover:bg-brand/10 hover:border-brand/40 text-(--text-primary) text-xs font-semibold transition-colors"
                   >
-                    {preset.label}
+                    {t(preset.labelKey, preset.labelDefault)}
                   </button>
                 ))}
               </div>
@@ -218,7 +241,7 @@ export default function RoadmapStepForm({
 
           <div>
             <label className="block text-sm font-semibold text-(--text-primary) mb-1.5">
-              Title
+              {t('CarePlan.form.labels.title', 'Title')}
             </label>
             <input
               type="text"
@@ -226,7 +249,10 @@ export default function RoadmapStepForm({
               onChange={(e) => setTitle(e.target.value)}
               maxLength={200}
               required
-              placeholder="e.g. Follow-up visit"
+              placeholder={t(
+                'CarePlan.form.placeholders.title',
+                'e.g. Follow-up visit'
+              )}
               className="w-full px-3 py-2 rounded-lg border border-(--border-color) bg-(--bg-primary) text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:ring-2 focus:ring-brand/40"
             />
           </div>
@@ -234,16 +260,19 @@ export default function RoadmapStepForm({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-(--text-primary) mb-1.5">
-                Type
+                {t('CarePlan.form.labels.type', 'Type')}
               </label>
               <select
                 value={stepType}
                 onChange={(e) => setStepType(e.target.value as RoadmapStepType)}
                 className="w-full px-3 py-2 rounded-lg border border-(--border-color) bg-(--bg-primary) text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-brand/40"
               >
-                {STEP_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {TYPE_LABEL[t]}
+                {STEP_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {t(
+                      `CarePlan.form.stepTypeLabel.${type === 'FollowUp' ? 'followUp' : type === 'Test' ? 'test' : type === 'Medication' ? 'medication' : 'custom'}`,
+                      type
+                    )}
                   </option>
                 ))}
               </select>
@@ -251,7 +280,7 @@ export default function RoadmapStepForm({
 
             <div>
               <label className="block text-sm font-semibold text-(--text-primary) mb-1.5">
-                Planned date
+                {t('CarePlan.form.labels.plannedDate', 'Planned date')}
               </label>
               <input
                 type="date"
@@ -266,9 +295,9 @@ export default function RoadmapStepForm({
 
           <div>
             <label className="block text-sm font-semibold text-(--text-primary) mb-1.5">
-              Description{' '}
+              {t('CarePlan.form.labels.description', 'Description')}{' '}
               <span className="text-xs font-normal text-(--text-muted)">
-                (optional)
+                ({t('CarePlan.form.labels.optional', 'optional')})
               </span>
             </label>
             <textarea
@@ -276,7 +305,10 @@ export default function RoadmapStepForm({
               onChange={(e) => setDescription(e.target.value)}
               maxLength={2000}
               rows={3}
-              placeholder="Doctor instruction or context for the patient"
+              placeholder={t(
+                'CarePlan.form.placeholders.description',
+                'Doctor instruction or context for the patient'
+              )}
               className="w-full px-3 py-2 rounded-lg border border-(--border-color) bg-(--bg-primary) text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:ring-2 focus:ring-brand/40 resize-none"
             />
           </div>
@@ -292,7 +324,7 @@ export default function RoadmapStepForm({
               disabled={isSubmitting}
               className="px-4 py-2 rounded-lg border border-(--border-color) bg-(--bg-secondary) text-(--text-primary) text-sm font-semibold hover:bg-(--bg-primary) transition-colors disabled:opacity-60"
             >
-              Cancel
+              {t('CarePlan.form.actions.cancel', 'Cancel')}
             </button>
             <button
               type="submit"
@@ -300,10 +332,10 @@ export default function RoadmapStepForm({
               className="px-5 py-2 rounded-lg bg-brand hover:bg-brand/90 text-white text-sm font-bold transition-colors disabled:opacity-60"
             >
               {isSubmitting
-                ? 'Saving...'
+                ? t('CarePlan.form.actions.saving', 'Saving...')
                 : isEdit
-                  ? 'Save changes'
-                  : 'Add step'}
+                  ? t('CarePlan.form.actions.saveChanges', 'Save changes')
+                  : t('CarePlan.form.actions.addStep', 'Add step')}
             </button>
           </div>
         </form>

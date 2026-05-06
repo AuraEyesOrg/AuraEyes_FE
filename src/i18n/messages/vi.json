@@ -412,7 +412,7 @@
       "intro": {
         "complianceLabel": "Tiêu chuẩn tuân thủ:",
         "complianceDescription": "Áp dụng các nguyên tắc bảo vệ dữ liệu theo tiêu chuẩn Y tế số và quy định pháp luật sở tại (bao gồm yêu cầu bảo vệ Dữ liệu cá nhân nhạy cảm).",
-        "commitment": "Aura Digital Hospital nhận thức rõ tầm quan trọng và tính nhạy cảm của Dữ liệu Y tế (Protected Health Information - PHI). Chúng tôi cam kết thiết lập các lớp bảo mật cấp độ doanh nghiệp (Enterprise-grade Security) để bảo vệ quyền riêng tư của bạn trọn vẹn."
+        "commitment": "Aura Eyes nhận thức rõ tầm quan trọng và tính nhạy cảm của Dữ liệu Y tế (Protected Health Information - PHI). Chúng tôi cam kết thiết lập các lớp bảo mật cấp độ doanh nghiệp (Enterprise-grade Security) để bảo vệ quyền riêng tư của bạn trọn vẹn."
       },
       "sections": {
         "classification": {
@@ -622,13 +622,13 @@
         "version": "Phiên bản: 1.0"
       },
       "intro": {
-        "welcome": "Chào mừng bạn đến với Bệnh viện Kỹ thuật số Aura (\"Bệnh viện\", \"Chúng tôi\", hoặc \"Aura Digital Hospital\").",
+        "welcome": "Chào mừng bạn đến với Phòng khám Kỹ thuật số Aura (\"Phòng khám\", \"Chúng tôi\", hoặc \"Aura Eyes\").",
         "description": "Bằng việc tạo tài khoản, truy cập và sử dụng nền tảng của chúng tôi, Người dùng (bao gồm Bệnh nhân, Bác sĩ và Nhân viên y tế) đồng ý tuân thủ toàn bộ các điều khoản được quy định dưới đây."
       },
       "sections": {
         "serviceNature": {
           "title": "Bản chất dịch vụ và Miễn trừ trách nhiệm y tế",
-          "description": "Aura Digital Hospital là nền tảng bệnh viện thông minh cung cấp các công cụ Hỗ trợ Quyết định Lâm sàng (CDS). Trí tuệ nhân tạo (AI) của Aura hoạt động như một hệ thống hỗ trợ chẩn đoán chuyên sâu, giúp bác sĩ đưa ra phác đồ điều trị chính xác nhất.",
+          "description": "Aura Eyes là nền tảng phòng khám thông minh cung cấp các công cụ Hỗ trợ Quyết định Lâm sàng (CDS). Trí tuệ nhân tạo (AI) của Aura hoạt động như một hệ thống hỗ trợ chẩn đoán chuyên sâu, giúp bác sĩ đưa ra phác đồ điều trị chính xác nhất.",
           "disclaimer": {
             "title": "Khuyến cáo quan trọng",
             "descriptionPrefix": "Mọi báo cáo, bản đồ nhiệt, lộ trình rủi ro hoặc điểm số được tạo ra bởi AI của AURA Eyes",
@@ -684,16 +684,76 @@
     },
     "steps": {
       "logo": "Nhấn vào logo để quay về Trang chủ bất cứ lúc nào.",
-      "navAbout": "Mục Về chúng tôi giới thiệu tầm nhìn Aura và các giá trị cốt lõi của Bệnh viện số.",
+      "navAbout": "Mục Về chúng tôi giới thiệu tầm nhìn Aura và các giá trị cốt lõi của Phòng khám số.",
       "navHowItWorks": "Mục Cách hoạt động mô tả quy trình hiện đại từ khi đặt lịch đến lúc nhận tư vấn chuyên môn.",
       "navEthics": "Xem lại cam kết của chúng tôi về quyền riêng tư, AI đạo đức và minh bạch trong y tế.",
       "navContact": "Liên hệ với nhóm đối tác của chúng tôi để hợp tác chiến lược hoặc gia nhập mạng lưới bác sĩ.",
       "aboutMission": "Khu vực này tóm tắt sứ mệnh của Aura: Mang công nghệ y tế tiên tiến nhất đến gần hơn với bệnh nhân.",
       "contactOrganisation": "Mục Liên hệ dành cho các đối tác chiến lược hoặc bác sĩ muốn gia nhập mạng lưới.",
       "getStartedPatient": "Nút Bắt đầu dẫn tới cổng bệnh nhân, nơi bạn có thể quản lý hồ sơ sức khỏe và đặt lịch khám.",
-      "getStartedDoctor": "Từ nút Bắt đầu, bác sĩ có thể đăng ký gia nhập đội ngũ chuyên gia của Bệnh viện Aura.",
+      "getStartedDoctor": "Từ nút Bắt đầu, bác sĩ có thể đăng ký gia nhập đội ngũ chuyên gia của Phòng khám Aura.",
       "bookAppointment": "Trải nghiệm đặt lịch trực tuyến. Bạn có thể chọn chuyên gia, khung giờ và thanh toán đặt cọc ngay tại đây.",
       "patientPortalLogin": "Đăng nhập Cổng bệnh nhân để tra cứu hồ sơ y tế, theo dõi phác đồ điều trị và tải EMR (PDF)."
+    }
+  },
+  "CarePlan": {
+    "status": {
+      "upcoming": "Sắp tới",
+      "completed": "Hoàn thành",
+      "overdue": "Quá hạn",
+      "cancelled": "Đã hủy"
+    },
+    "stepType": {
+      "followUp": "Tái khám",
+      "test": "Xét nghiệm",
+      "medication": "Dùng thuốc",
+      "custom": "Tùy chỉnh"
+    },
+    "actions": {
+      "nextUp": "Sắp tới",
+      "markComplete": "Đánh dấu hoàn tất",
+      "edit": "Sửa",
+      "delete": "Xóa"
+    },
+    "form": {
+      "title": {
+        "edit": "Chỉnh sửa bước lộ trình",
+        "add": "Thêm bước lộ trình"
+      },
+      "quickPresets": "Mẫu nhanh",
+      "presets": {
+        "followUp1m": "Tái khám sau 1 tháng",
+        "recheckVision": "Kiểm tra lại thị lực"
+      },
+      "labels": {
+        "title": "Tiêu đề",
+        "type": "Loại",
+        "plannedDate": "Ngày dự kiến",
+        "description": "Mô tả",
+        "optional": "tùy chọn"
+      },
+      "stepTypeLabel": {
+        "followUp": "Lịch tái khám",
+        "test": "Xét nghiệm / chẩn đoán",
+        "medication": "Đánh giá dùng thuốc",
+        "custom": "Chỉ định tùy chỉnh"
+      },
+      "placeholders": {
+        "title": "vd. Lịch tái khám",
+        "description": "Chỉ định của bác sĩ hoặc ngữ cảnh cho bệnh nhân"
+      },
+      "actions": {
+        "close": "Đóng",
+        "cancel": "Hủy",
+        "saving": "Đang lưu...",
+        "saveChanges": "Lưu thay đổi",
+        "addStep": "Thêm bước"
+      },
+      "validation": {
+        "titleRequired": "Vui lòng nhập tiêu đề.",
+        "plannedDateRequired": "Vui lòng chọn ngày dự kiến.",
+        "saveFailed": "Không thể lưu bước lộ trình."
+      }
     }
   },
   "Auth": {
@@ -741,7 +801,7 @@
     },
     "login": {
       "leftPanel": {
-        "titleLine": "Bệnh viện Kỹ thuật số",
+        "titleLine": "Phòng khám Kỹ thuật số",
         "titleHighlight": "ứng dụng AI.",
         "description": "Trải nghiệm y tế số hiện đại cho bệnh nhân và bác sĩ với công nghệ chẩn đoán AI tiên tiến, độ chính xác lâm sàng.",
         "hipaa": "Tiêu chuẩn Y tế số",
@@ -782,7 +842,7 @@
       },
       "registerForm": {
         "heading": "Tạo tài khoản",
-        "description": "Đăng ký tài khoản bệnh nhân để trải nghiệm dịch vụ y tế số tại Aura Digital Hospital.",
+        "description": "Đăng ký tài khoản bệnh nhân để trải nghiệm dịch vụ y tế số tại Aura Eyes.",
         "fullNameLabel": "Họ và tên",
         "fullNamePlaceholder": "Nguyen Van A",
         "emailLabel": "Địa chỉ email",
@@ -979,8 +1039,8 @@
       }
     },
     "pendingApproval": {
-      "brandSubtitle": "Bệnh viện Kỹ thuật số",
-      "brandDescription": "Nền tảng quản lý bệnh viện thông minh",
+      "brandSubtitle": "Phòng khám Kỹ thuật số",
+      "brandDescription": "Nền tảng quản lý phòng khám thông minh",
       "statusBadge": "Đang xác minh",
       "title": "Chào mừng bạn đến với AURA!",
       "primaryMessage": "Vui lòng đợi admin xác minh thông tin bạn cung cấp.",
@@ -991,6 +1051,102 @@
       "goHome": "Quay về trang chủ giới thiệu",
       "logout": "Đăng xuất",
       "footer": "© 2026 AURA. All rights reserved."
+    },
+    "twoFactorVerify": {
+      "title": "Xác thực bảo mật",
+      "subtitle": "Xác thực hai yếu tố thêm một lớp bảo mật để bảo vệ dữ liệu y tế và thông tin bệnh nhân của bạn.",
+      "backToLogin": "Quay lại đăng nhập",
+      "sessionExpired": "Phiên làm việc hết hạn",
+      "sessionExpiredDesc": "Phiên đăng nhập của bạn đã hết hạn. Vui lòng thử đăng nhập lại.",
+      "successfulTitle": "Xác thực thành công",
+      "successfulDesc": "Danh tính của bạn đã được xác minh. Chúng tôi đang chuẩn bị không gian làm việc cho bạn.",
+      "redirecting": "Đang chuyển hướng sau {{seconds}}s...",
+      "continueNow": "Tiếp tục ngay",
+      "enterCode": "Xác thực hai yếu tố",
+      "enterRecovery": "Nhập mã khôi phục",
+      "codeDesc": "Nhập mã 6 chữ số từ ứng dụng xác thực của bạn.",
+      "recoveryDesc": "Nhập một trong các mã khôi phục của bạn để xác minh danh tính.",
+      "loggingInAs": "Đang đăng nhập với tư cách: <0>{{email}}</0>",
+      "codeLabel": "Mã xác thực",
+      "recoveryLabel": "Mã khôi phục",
+      "placeholder": "000000",
+      "recoveryPlaceholder": "XXXX-XXXX-XXXX",
+      "verifyButton": "Xác thực & Đăng nhập",
+      "verifying": "Đang xác thực...",
+      "useRecovery": "Không thể truy cập ứng dụng xác thực? Sử dụng mã khôi phục",
+      "useAuthenticator": "Sử dụng ứng dụng xác thực thay thế",
+      "securityNotice": {
+        "recovery": "Mỗi mã khôi phục chỉ có thể sử dụng một lần. Sau khi sử dụng, chúng tôi khuyên bạn nên tạo mã mới từ cài đặt bảo mật.",
+        "lost": "Nếu bạn mất quyền truy cập vào cả ứng dụng xác thực và mã khôi phục, vui lòng liên hệ với quản trị viên hệ thống để khôi phục tài khoản."
+      }
+    },
+    "twoFactorSettings": {
+      "title": "Cài đặt bảo mật",
+      "sections": {
+        "password": {
+          "title": "Mật khẩu",
+          "desc": "Cập nhật mật khẩu tài khoản của bạn thường xuyên.",
+          "action": "Thay đổi"
+        },
+        "notifications": {
+          "title": "Thông báo",
+          "desc": "Quản lý tùy chọn thông báo và nhắc nhở.",
+          "action": "Cấu hình"
+        }
+      },
+      "status": {
+        "enabled": "Xác thực hai yếu tố đang Bật",
+        "disabled": "Xác thực hai yếu tố đang Tắt",
+        "enabledDesc": "Tài khoản của bạn đang được bảo vệ bằng lớp bảo mật bổ sung.",
+        "disabledDesc": "Bật 2FA để tăng cường bảo mật cho tài khoản của bạn.",
+        "recoveryRemaining": "Mã khôi phục còn lại",
+        "enableButton": "Bật xác thực hai yếu tố",
+        "disableButton": "Tắt xác thực hai yếu tố",
+        "generateNewCodes": "Tạo mã khôi phục mới"
+      },
+      "setup": {
+        "title": "Thiết lập ứng dụng xác thực",
+        "desc": "Quét mã QR bên dưới bằng ứng dụng xác thực của bạn (Google Authenticator, Authy, v.v.)",
+        "manualKey": "Hoặc nhập mã này thủ công:",
+        "copied": "Đã sao chép!",
+        "enterCode": "Nhập mã 6 chữ số từ ứng dụng",
+        "verifyAndEnable": "Xác minh và Bật"
+      },
+      "recoveryCodes": {
+        "title": "Lưu mã khôi phục của bạn",
+        "desc": "Lưu các mã này ở nơi an toàn. Bạn có thể sử dụng chúng để truy cập tài khoản nếu mất thiết bị xác thực.",
+        "warning": "Mỗi mã chỉ có thể sử dụng một lần. Sau khi sử dụng, mã đó sẽ bị hủy.",
+        "copyCodes": "Sao chép mã",
+        "download": "Tải xuống",
+        "done": "Hoàn tất"
+      },
+      "disable": {
+        "title": "Tắt xác thực hai yếu tố?",
+        "desc": "Hành động này sẽ làm tài khoản của bạn kém bảo mật hơn. Bạn cần nhập mật khẩu để xác nhận.",
+        "confirmPassword": "Xác nhận mật khẩu",
+        "passwordPlaceholder": "Nhập mật khẩu của bạn",
+        "submit": "Tắt 2FA"
+      },
+      "modals": {
+        "generateCodes": {
+          "title": "Tạo mã khôi phục mới",
+          "desc": "Nhập mật khẩu của bạn để tiếp tục",
+          "submit": "Tạo mới"
+        },
+        "changePassword": {
+          "title": "Thay đổi mật khẩu"
+        }
+      },
+      "securityNotice": "Xác thực hai yếu tố thêm một lớp bảo mật cho tài khoản của bạn bằng cách yêu cầu mã xác minh ngoài mật khẩu. Chúng tôi khuyên bạn nên sử dụng ứng dụng xác thực như Google Authenticator hoặc Authy.",
+      "toasts": {
+        "passwordChanged": "Đã thay đổi mật khẩu thành công",
+        "passwordChangeFailed": "Thay đổi mật khẩu thất bại",
+        "fetchStatusError": "Không thể tải trạng thái 2FA. Vui lòng thử lại.",
+        "setupError": "Thiết lập 2FA thất bại. Vui lòng thử lại.",
+        "invalidCode": "Mã xác thực không hợp lệ. Vui lòng thử lại.",
+        "invalidPassword": "Mật khẩu không đúng. Vui lòng thử lại.",
+        "generateCodesError": "Không thể tạo mã khôi phục. Vui lòng thử lại."
+      }
     }
   },
   "Ophthalmologist": {
@@ -2196,9 +2352,9 @@
     "ophthalmology": "Nhãn khoa"
   },
   "GuestHome": {
-    "badge": "Hệ thống Bệnh viện Kỹ thuật số Aura",
+    "badge": "Hệ thống Phòng khám Kỹ thuật số Aura",
     "title": "Chăm sóc sức khỏe thông minh với độ chính xác lâm sàng",
-    "description": "Aura Digital Hospital cung cấp giải pháp y tế số toàn diện, kết hợp sức mạnh của AI và đội ngũ chuyên gia hàng đầu để bảo vệ sức khỏe của bạn.",
+    "description": "Aura Eyes cung cấp giải pháp y tế số toàn diện, kết hợp sức mạnh của AI và đội ngũ chuyên gia hàng đầu để bảo vệ sức khỏe của bạn.",
     "primaryCta": "Đặt lịch ngay",
     "secondaryCta": "Tìm bác sĩ",
     "recruitmentPopup": {
@@ -2248,7 +2404,7 @@
       "advanced": "Chuyên sâu"
     },
     "source": {
-      "auraGovernance": "Nguồn: Aura Eyes  Clinical Governance v2026.1"
+      "auraGovernance": "Nguồn: Aura Eyes - Quản trị lâm sàng v2026.1"
     },
     "terms": {
       "fundus": "Đáy mắt (Fundus)",
@@ -2368,7 +2524,7 @@
       "degreeMissing": "Chưa cập nhật bằng cấp",
       "certificateLabel": "Chứng chỉ",
       "certificateMissing": "Chưa cập nhật chứng chỉ",
-      "experience": "Bệnh viện Aura, {{years}} năm kinh nghiệm",
+      "experience": "Phòng khám Aura, {{years}} năm kinh nghiệm",
       "expertiseLabel": "Chuyên môn",
       "aboutLabel": "Giới thiệu",
       "bioMissing": "Chưa cập nhật phần giới thiệu",
@@ -2415,7 +2571,7 @@
     }
   },
   "About": {
-    "heroTitle": "Bệnh viện Kỹ thuật số Aura",
+    "heroTitle": "Phòng khám Kỹ thuật số Aura",
     "heroDescription": "Aura Eyes kết hợp chuyên môn lâm sàng và AI y tế tiên tiến để mang đến trải nghiệm chăm sóc sức khỏe toàn diện, chính xác và dễ tiếp cận.",
     "values": {
       "badge": "Giá trị cốt lõi",
@@ -2564,7 +2720,7 @@
       "organizationName": "Tên tổ chức",
       "organizationType": "Loại hình tổ chức",
       "organizationTypeClinic": "Phòng khám",
-      "organizationTypeHospital": "Bệnh viện",
+      "organizationTypeHospital": "Phòng khám",
       "cityLocation": "Thành phố / Khu vực",
       "businessCode": "Mã số doanh nghiệp",
       "businessCodePlaceholder": "0312345678",
@@ -2693,7 +2849,7 @@
   },
   "Home": {
     "hero": {
-      "badge": "Hệ thống Bệnh viện Kỹ thuật số",
+      "badge": "Hệ thống Phòng khám Kỹ thuật số",
       "titlePrefix": "Nâng tầm chăm sóc sức khỏe bằng",
       "titleHighlight": "Y tế số thông minh",
       "description": "Aura mang đến giải pháp khám bệnh và tư vấn từ xa hiện đại, tích hợp AI chẩn đoán sớm các bất thường sức khỏe. Chuyên nghiệp, bảo mật và tận tâm.",
@@ -2746,7 +2902,7 @@
       "primaryCta": "Tìm hiểu sứ mệnh",
       "secondaryCta": "Hợp tác cùng chúng tôi",
       "info": {
-        "nonProfitTitle": "Bệnh viện Kỹ thuật số",
+        "nonProfitTitle": "Phòng khám Kỹ thuật số",
         "nonProfitDescription": "Hiện đại hóa quy trình chăm sóc",
         "openSourceTitle": "Công nghệ AI",
         "openSourceDescription": "Chẩn đoán chính xác, hỗ trợ tận tâm"
@@ -2965,7 +3121,7 @@
       "noResultsDescription": "Bạn chưa thực hiện bất kỳ ca sàng lọc nào. Hãy đặt lịch hẹn để kiểm tra sức khỏe mắt ngay hôm nay."
     },
     "stats": {
-      "latestAiRiskStatus": "Tình trạng mắt (AI)",
+      "latestAiRiskStatus": "Tình trạng mắt",
       "noScans": "Chưa có dữ liệu",
       "nextAppointment": "Lịch khám tiếp theo",
       "noneScheduled": "Chưa có lịch hẹn"
@@ -6527,7 +6683,7 @@
       },
       "orgType": {
         "clinic": "Phòng khám",
-        "hospital": "Bệnh viện",
+        "hospital": "Phòng khám",
         "optometry": "Đo thị lực",
         "research": "Nghiên cứu"
       },
@@ -9891,7 +10047,7 @@
             }
           },
           "types": {
-            "hospital": "Bệnh viện",
+            "hospital": "Phòng khám",
             "clinic": "Phòng khám",
             "researchCenter": "Trung tâm nghiên cứu"
           },
@@ -10225,7 +10381,7 @@
           "noResultsDescription": "Bạn chưa thực hiện bất kỳ ca sàng lọc nào. Hãy đặt lịch hẹn để kiểm tra sức khỏe mắt ngay hôm nay."
         },
         "stats": {
-          "latestAiRiskStatus": "Tình trạng mắt (AI)",
+          "latestAiRiskStatus": "Tình trạng mắt",
           "noScans": "Chưa có dữ liệu",
           "nextAppointment": "Lịch khám tiếp theo",
           "noneScheduled": "Chưa có lịch hẹn"
@@ -11170,6 +11326,10 @@
         "pageOf": "Trang {{page}} / {{total}}"
       }
     },
+    "roles": {
+      "Ophthalmologist": "Bác sĩ Nhãn khoa",
+      "ClinicStaff": "Nhân viên Phòng khám"
+    },
     "feed": {
       "title": "Mạng lưới Chuyên môn",
       "description": {
@@ -11228,7 +11388,10 @@
         "uploadSuccess": "Đã gửi ảnh thành công.",
         "uploadError": "Tải ảnh lên thất bại.",
         "meetingSuccess": "Đã tạo cuộc họp thành công!",
-        "meetingError": "Tạo cuộc họp thất bại."
+        "meetingError": "Tạo cuộc họp thất bại.",
+        "roleSelected": "Đã chọn {{count}} người dùng vai trò {{role}}.",
+        "memberUpdateSuccess": "Danh sách thành viên đã được cập nhật theo vai trò {{role}}.",
+        "memberSelectionSuccess": "Cập nhật lựa chọn thành viên thành công."
       },
       "confirm": {
         "createTitle": "Xác nhận tạo nhóm",
@@ -11240,7 +11403,15 @@
         "uploadTitle": "Xác nhận gửi ảnh",
         "uploadMessage": "Tải {{count}} ảnh lên nhóm chat này?",
         "meetingTitle": "Xác nhận tạo cuộc họp",
-        "meetingMessage": "Tạo một phiên Google Meet mới cho nhóm này?"
+        "meetingMessage": "Tạo một phiên Google Meet mới cho nhóm này?",
+        "roleSelectionTitle": "Xác nhận chọn theo vai trò",
+        "roleSelectionMessage": "Chọn tất cả người dùng có vai trò {{role}} cho nhóm mới này?",
+        "memberUpdateTitle": "Xác nhận cập nhật thành viên",
+        "memberUpdateMessage": "Chọn tất cả tài khoản {{role}} vào nhóm này?",
+        "memberRemoveTitle": "Xác nhận xóa thành viên",
+        "memberRemoveMessage": "Bỏ chọn {{name}} khỏi nhóm này?",
+        "memberSelectTitle": "Xác nhận chọn thành viên",
+        "memberSelectMessage": "Chọn {{name}} vào nhóm này?"
       },
       "actions": {
         "createGroup": "Tạo nhóm mới",
@@ -11265,6 +11436,8 @@
       },
       "errors": {
         "loadGroups": "Không thể tải danh sách nhóm",
+        "loadCandidates": "Không thể tải danh sách thành viên.",
+        "updateMembers": "Cập nhật thành viên thất bại.",
         "sendMessage": "Gửi tin nhắn thất bại"
       },
       "consilium": {
@@ -11368,7 +11541,7 @@
     "organisation": {
       "title": "Tổ chức",
       "types": {
-        "hospital": "Bệnh viện",
+        "hospital": "Phòng khám",
         "clinic": "Phòng khám",
         "researchCenter": "Trung tâm Nghiên cứu"
       },
@@ -11426,5 +11599,128 @@
       "knowledgeShare": "Chia sẻ Kiến thức",
       "announcement": "Thông báo"
     }
+  },
+  "DoctorCarePlan": {
+    "title": "Lộ trình chăm sóc",
+    "subtitle": "Các bước chăm sóc tiếp theo do bác sĩ chỉ định cho bệnh nhân này.",
+    "manageAll": "Quản lý tất cả",
+    "addStep": "Thêm bước",
+    "loading": "Đang tải...",
+    "noUpcoming": "Không có bước nào sắp tới. Nhấn <0>Thêm bước</0> để bắt đầu lộ trình chăm sóc.",
+    "toasts": {
+      "completeSuccess": "Đã đánh dấu hoàn thành.",
+      "completeError": "Không thể hoàn thành bước này.",
+      "deleteConfirm": "Xóa bước \"{{title}}\"?",
+      "deleteSuccess": "Đã xóa bước.",
+      "deleteError": "Không thể xóa bước này.",
+      "addSuccess": "Đã thêm bước vào lộ trình.",
+      "addError": "Không thể thêm bước.",
+      "updateSuccess": "Đã cập nhật bước.",
+      "updateError": "Không thể cập nhật bước."
+    }
+  },
+  "twoFactorVerify": {
+    "title": "Xác thực hai yếu tố",
+    "codeDesc": "Nhập mã 6 chữ số từ ứng dụng xác thực của bạn.",
+    "recoveryDesc": "Nhập một trong các mã khôi phục để xác minh danh tính.",
+    "loggingInAs": "Đăng nhập với: <0>{{email}}</0>",
+    "inputs": {
+      "codePlaceholder": "000000"
+    },
+    "actions": {
+      "verify": "Xác minh",
+      "verifying": "Đang xác minh...",
+      "useRecovery": "Sử dụng mã khôi phục",
+      "useApp": "Sử dụng ứng dụng xác thực",
+      "backToLogin": "Quay lại đăng nhập"
+    },
+    "toasts": {
+      "verifySuccess": "Xác minh thành công!",
+      "verifyError": "Xác minh thất bại. Vui lòng thử lại."
+    }
+  },
+  "twoFactorSettings": {
+    "title": "Xác thực hai lớp (2FA)",
+    "status": {
+      "enabled": "2FA hiện đang được bật",
+      "disabled": "2FA hiện đang bị tắt"
+    },
+    "actions": {
+      "enable": "Bật 2FA",
+      "disable": "Tắt 2FA",
+      "viewRecovery": "Xem mã khôi phục"
+    },
+    "setup": {
+      "title": "Thiết lập xác thực hai lớp",
+      "step1": "1. Quét mã QR này bằng ứng dụng xác thực (như Google Authenticator hoặc Authy).",
+      "step2": "2. Nhập mã 6 chữ số từ ứng dụng để xác minh.",
+      "manualLabel": "Không thể quét mã QR? Sử dụng mã bí mật này:",
+      "placeholder": "Nhập mã 6 chữ số",
+      "verify": "Xác minh & Bật"
+    },
+    "recovery": {
+      "title": "Mã khôi phục của bạn",
+      "desc": "Lưu trữ các mã này ở nơi an toàn. Bạn có thể sử dụng chúng để truy cập tài khoản nếu mất điện thoại.",
+      "done": "Tôi đã lưu các mã này"
+    },
+    "toasts": {
+      "enableSuccess": "Đã bật 2FA thành công!",
+      "disableSuccess": "Đã tắt 2FA thành công!",
+      "copySuccess": "Đã sao chép mã khôi phục vào bộ nhớ tạm!"
+    }
+  },
+  "MedicalRecords": {
+    "page": {
+      "title": "BỆNH ÁN MẮT",
+      "subtitle": "(Dùng cho điều trị ngoại trú)",
+      "storageNumber": "Số lưu trữ",
+      "medicalRecordNumber": "Mã YT",
+      "department": "Khoa",
+      "bed": "Giường"
+    },
+    "sections": {
+      "administrative": {
+        "title": "I. HÀNH CHÍNH",
+        "age": "Tuổi",
+        "fullName": "Họ và tên",
+        "birthDate": "Ngày sinh",
+        "gender": "Giới tính",
+        "job": "Nghề nghiệp",
+        "ethnicity": "Dân tộc",
+        "nationality": "Ngoại kiều",
+        "address": "Địa chỉ",
+        "ward": "Xã, phường",
+        "district": "Huyện (Quận, thị xã)",
+        "province": "Tỉnh (thành phố)",
+        "workplace": "Nơi làm việc",
+        "objectType": "Đối tượng",
+        "bhytExpiry": "BHYT giá trị đến ngày"
+      },
+      "clinical": {
+        "title": "III. LÂM SÀNG",
+        "eyeExams": "Khám mắt",
+        "rightEye": "Mắt phải",
+        "leftEye": "Mắt trái"
+      }
+    },
+    "toasts": {
+      "loadError": "Không thể tải hồ sơ bệnh án",
+      "saveSuccess": "Thông tin hành chính đã được lưu!",
+      "saveError": "Lỗi khi lưu thông tin",
+      "createFromQueueWarning": "Vui lòng tạo hồ sơ từ luồng tiếp nhận/check-in",
+      "pdfNoIdError": "Hồ sơ chưa được tạo. Không thể tải PDF.",
+      "pdfDownloadSuccess": "Đã tải EMR PDF thành công.",
+      "pdfDownloadError": "Không thể tải EMR PDF. Vui lòng thử lại.",
+      "doctorCreateUnauthorized": "Bác sĩ không có quyền tạo hồ sơ mới. Hồ sơ phải được tạo bởi nhân viên phòng khám.",
+      "ermSaveRequiredBeforeScreening": "Vui lòng lưu xong phần hành chính ERM (bấm Lưu) trước khi tạo sàng lọc."
+    },
+    "actions": {
+      "back": "QUAY LẠI",
+      "save": "LƯU THÔNG TIN",
+      "print": "IN BỆNH ÁN",
+      "downloadPdf": "TẢI PDF",
+      "downloadingPdf": "ĐANG TẢI PDF..."
+    },
+    "loading": "ĐANG TẢI THÔNG TIN BỆNH ÁN..."
   }
 }

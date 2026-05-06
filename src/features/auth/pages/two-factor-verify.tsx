@@ -16,6 +16,8 @@ import { verifyTwoFactorLogin } from '../api/auth.api';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import '@/styles/auth-animations.css';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { Trans } from 'react-i18next';
 
 interface TwoFactorVerifyForm {
   code: string;
@@ -31,6 +33,7 @@ const TwoFactorVerifyPage = () => {
   const location = useLocation();
   const state = location.state as LocationState | null;
   const { login: authLogin, setIsAuthenticated } = useAuthStore();
+  const { t } = useSafeTranslation();
 
   const [isLoading, setIsLoading] = useState(false);
   const [useRecoveryCode, setUseRecoveryCode] = useState(false);
@@ -72,17 +75,20 @@ const TwoFactorVerifyPage = () => {
         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Session Expired
+            {t('twoFactorVerify.sessionExpired', 'Session Expired')}
           </h2>
           <p className="text-gray-600 mb-6">
-            Your login session has expired. Please try logging in again.
+            {t(
+              'twoFactorVerify.sessionExpiredDesc',
+              'Your login session has expired. Please try logging in again.'
+            )}
           </p>
           <Link
             to="/login"
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#00d1c0] text-white font-semibold rounded-lg hover:bg-[#00b8a9] transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Login
+            {t('twoFactorVerify.backToLogin', 'Back to Login')}
           </Link>
         </div>
       </div>
@@ -122,11 +128,19 @@ const TwoFactorVerifyPage = () => {
           nextPath = '/clinic-staff/dashboard';
         }
 
-        toast.success('Xác thực thành công. Đang chuyển trang...');
+        toast.success(
+          t(
+            'twoFactorVerify.successfulTitle',
+            'Verification successful. Redirecting...'
+          )
+        );
         setRedirectTarget(nextPath);
         setRedirectCountdown(5);
       } else {
-        toast.error(response.errors?.join(', ') || 'Verification failed');
+        toast.error(
+          response.errors?.join(', ') ||
+            t('twoFactorVerify.errors.failed', 'Verification failed')
+        );
       }
     } catch (err: unknown) {
       console.error('2FA verification error:', err);
@@ -137,10 +151,15 @@ const TwoFactorVerifyPage = () => {
         toast.error(
           axiosError.response?.data?.message ||
             axiosError.response?.data?.errors?.join(', ') ||
-            'Invalid verification code'
+            t('twoFactorVerify.errors.invalidCode', 'Invalid verification code')
         );
       } else {
-        toast.error('An error occurred during verification');
+        toast.error(
+          t(
+            'twoFactorVerify.errors.errorOccurred',
+            'An error occurred during verification'
+          )
+        );
       }
     } finally {
       setIsLoading(false);
@@ -172,12 +191,14 @@ const TwoFactorVerifyPage = () => {
         <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
           <div className="w-16 h-1 bg-[#00d1c0] mb-2 rounded-full"></div>
           <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight">
-            Secure <br />
-            <span className="text-[#00d1c0]">Verification.</span>
+            {t('twoFactorVerify.title', 'Secure Verification')}{' '}
+            <span className="text-[#00d1c0]">.</span>
           </h1>
           <p className="text-gray-300 text-lg lg:text-xl font-light leading-relaxed max-w-md">
-            Two-factor authentication adds an extra layer of security to protect
-            your medical data and patient information.
+            {t(
+              'twoFactorVerify.subtitle',
+              'Two-factor authentication adds an extra layer of security to protect your medical data and patient information.'
+            )}
           </p>
         </div>
 
@@ -201,7 +222,7 @@ const TwoFactorVerifyPage = () => {
             className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Login
+            {t('twoFactorVerify.backToLogin', 'Back to Login')}
           </Link>
 
           {/* Header */}
@@ -212,15 +233,23 @@ const TwoFactorVerifyPage = () => {
                   <CheckCircle className="h-8 w-8" />
                 </div>
                 <h2 className="text-3xl font-bold text-[#1A202C] tracking-tight">
-                  Verification Successful
+                  {t(
+                    'twoFactorVerify.successfulTitle',
+                    'Verification Successful'
+                  )}
                 </h2>
                 <p className="text-gray-500">
-                  Your identity has been verified. We are preparing your
-                  workspace.
+                  {t(
+                    'twoFactorVerify.successfulDesc',
+                    'Your identity has been verified. We are preparing your workspace.'
+                  )}
                 </p>
                 <div className="inline-flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Redirecting in {redirectCountdown}s...
+                  {t('twoFactorVerify.redirecting', {
+                    seconds: redirectCountdown,
+                    defaultValue: `Redirecting in ${redirectCountdown}s...`,
+                  })}
                 </div>
                 <button
                   type="button"
@@ -231,7 +260,7 @@ const TwoFactorVerifyPage = () => {
                   }}
                   className="text-sm font-semibold text-[#1F85F5] hover:text-[#00d1c0]"
                 >
-                  Continue now
+                  {t('twoFactorVerify.continueNow', 'Continue now')}
                 </button>
               </div>
             ) : (
@@ -247,17 +276,31 @@ const TwoFactorVerifyPage = () => {
                 </div>
                 <h2 className="text-3xl font-bold text-[#1A202C] tracking-tight mb-2">
                   {useRecoveryCode
-                    ? 'Enter Recovery Code'
-                    : 'Two-Factor Authentication'}
+                    ? t('twoFactorVerify.enterRecovery', 'Enter Recovery Code')
+                    : t(
+                        'twoFactorVerify.enterCode',
+                        'Two-Factor Authentication'
+                      )}
                 </h2>
                 <p className="text-gray-500">
                   {useRecoveryCode
-                    ? 'Enter one of your recovery codes to verify your identity.'
-                    : 'Enter the 6-digit code from your authenticator app.'}
+                    ? t(
+                        'twoFactorVerify.recoveryDesc',
+                        'Enter one of your recovery codes to verify your identity.'
+                      )
+                    : t(
+                        'twoFactorVerify.codeDesc',
+                        'Enter the 6-digit code from your authenticator app.'
+                      )}
                 </p>
                 {state.email && (
                   <p className="text-sm text-gray-400 mt-2">
-                    Logging in as: <strong>{state.email}</strong>
+                    <Trans
+                      i18nKey="twoFactorVerify.loggingInAs"
+                      values={{ email: state.email }}
+                    >
+                      Logging in as: <strong>{state.email}</strong>
+                    </Trans>
                   </p>
                 )}
               </>
@@ -272,19 +315,30 @@ const TwoFactorVerifyPage = () => {
                   htmlFor="code"
                   className="block text-sm font-semibold text-gray-700"
                 >
-                  {useRecoveryCode ? 'Recovery Code' : 'Verification Code'}
+                  {useRecoveryCode
+                    ? t('twoFactorVerify.recoveryLabel', 'Recovery Code')
+                    : t('twoFactorVerify.codeLabel', 'Verification Code')}
                 </label>
                 <input
                   {...register('code', {
-                    required: 'Code is required',
+                    required: t(
+                      'twoFactorVerify.validation.codeRequired',
+                      'Code is required'
+                    ),
                     pattern: useRecoveryCode
                       ? {
                           value: /^[a-zA-Z0-9-]+$/,
-                          message: 'Invalid recovery code format',
+                          message: t(
+                            'twoFactorVerify.validation.invalidRecoveryFormat',
+                            'Invalid recovery code format'
+                          ),
                         }
                       : {
                           value: /^[0-9]{6}$/,
-                          message: 'Code must be 6 digits',
+                          message: t(
+                            'twoFactorVerify.validation.invalidCodeFormat',
+                            'Code must be 6 digits'
+                          ),
                         },
                   })}
                   type="text"
@@ -312,10 +366,10 @@ const TwoFactorVerifyPage = () => {
                 {isLoading ? (
                   <>
                     <Spinner size={20} className="shrink-0" />
-                    Verifying...
+                    {t('twoFactorVerify.verifying', 'Verifying...')}
                   </>
                 ) : (
-                  'Verify & Sign In'
+                  t('twoFactorVerify.verifyButton', 'Verify & Sign In')
                 )}
               </button>
             </form>
@@ -330,8 +384,14 @@ const TwoFactorVerifyPage = () => {
                 className="text-sm text-[#1F85F5] hover:text-[#00d1c0] font-medium transition-colors"
               >
                 {useRecoveryCode
-                  ? 'Use authenticator app instead'
-                  : "Can't access your authenticator? Use a recovery code"}
+                  ? t(
+                      'twoFactorVerify.useAuthenticator',
+                      'Use authenticator app instead'
+                    )
+                  : t(
+                      'twoFactorVerify.useRecovery',
+                      "Can't access your authenticator? Use a recovery code"
+                    )}
               </button>
             </div>
           )}
@@ -343,8 +403,14 @@ const TwoFactorVerifyPage = () => {
                 <Shield className="text-[#1F85F5] w-5 h-5 mt-0.5 shrink-0" />
                 <p className="text-xs text-gray-600 leading-relaxed">
                   {useRecoveryCode
-                    ? 'Each recovery code can only be used once. After using a code, we recommend generating new ones from your security settings.'
-                    : "If you've lost access to your authenticator app and recovery codes, please contact your system administrator for account recovery."}
+                    ? t(
+                        'twoFactorVerify.securityNotice.recovery',
+                        'Each recovery code can only be used once. After using a code, we recommend generating new ones from your security settings.'
+                      )
+                    : t(
+                        'twoFactorVerify.securityNotice.lost',
+                        "If you've lost access to your authenticator app and recovery codes, please contact your system administrator for account recovery."
+                      )}
                 </p>
               </div>
             </div>
