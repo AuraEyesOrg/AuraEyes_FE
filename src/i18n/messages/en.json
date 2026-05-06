@@ -160,9 +160,9 @@
     },
     "toast": {
       "cancelSigninRequired": "Unable to cancel appointment. Please sign in again.",
-      "feedbackSubmitted": "Feedback submitted",
-      "feedbackAlreadyExists": "Feedback already exists for this appointment.",
-      "feedbackSubmitFailed": "Unable to submit feedback right now. Please try again."
+      "feedbackSubmitted": "Thank you for your feedback!",
+      "feedbackAlreadyExists": "You have already submitted feedback for this.",
+      "feedbackSubmitFailed": "Failed to submit feedback. Please try again later."
     },
     "cancelModal": {
       "title": "Cancel appointment?",
@@ -172,9 +172,15 @@
     },
     "feedback": {
       "submittedBadge": "Feedback submitted",
-      "modalTitle": "Clinic feedback",
-      "modalSubtitle": "Share your clinic visit experience.",
-      "submitLabel": "Submit clinic feedback"
+      "modalTitle": "Rate Experience",
+      "modalSubtitle": "Your feedback helps us improve our service quality.",
+      "submitLabel": "Submit Feedback",
+      "targetTitle": "What would you like to rate?",
+      "targetClinic": "Clinic",
+      "targetDoctor": "Doctor",
+      "targetStaff": "Staff",
+      "ratingLabel": "Rating",
+      "commentPlaceholder": "Tell us more about your experience..."
     },
     "clinicBooking": {
       "page": {
@@ -235,6 +241,85 @@
       "confirmLabel": "Submit Request",
       "cancelling": "Submitting...",
       "confirmDirect": "Are you sure you want to cancel this appointment? Since payment has not been completed, it will be cancelled immediately and the slot will be released for others."
+    },
+    "followUp": {
+      "page": {
+        "title": "Book a Follow-up",
+        "subtitle": "Easily book a follow-up appointment based on your medical records history. We help you continue your treatment seamlessly."
+      },
+      "steps": {
+        "findRecord": "Find Record",
+        "info": "Follow-up Info",
+        "complete": "Complete"
+      },
+      "search": {
+        "label": "Search medical records",
+        "placeholder": "Enter CitizenID or UserId...",
+        "button": "SEARCH",
+        "searching": "Searching...",
+        "results": "Found results ({{count}})",
+        "empty": "Enter your ID to see your medical history",
+        "toastError": "Please enter CitizenID or UserId",
+        "notFound": "No account found with this CitizenID. Please contact reception for support.",
+        "foundEmail": "Account found. Please login with email: {{email}}",
+        "foundNoEmail": "Account found. Please login to view history.",
+        "loadError": "Could not lookup account. Please try again later."
+      },
+      "form": {
+        "title": "Follow-up Information",
+        "basedOn": "Based on record: {{id}}",
+        "previousDiagnosis": "Previous Diagnosis",
+        "previousDoctor": "Attending Doctor",
+        "reasonLabel": "Follow-up reason (optional)",
+        "reasonPlaceholder": "Describe your current condition or reason for follow-up...",
+        "dateLabel": "Preferred date",
+        "note": "* The clinic will contact you to confirm the exact time slot.",
+        "back": "BACK",
+        "confirm": "CONFIRM BOOKING",
+        "dateRequired": "Please select an appointment date"
+      },
+      "success": {
+        "title": "Booking Successful!",
+        "message": "Your follow-up request has been sent to <0>{{clinic}}</0>. We will respond soon via email or phone.",
+        "backHome": "BACK TO HOME",
+        "bookMore": "Book another appointment"
+      }
+    },
+    "bookingConfirmation": {
+      "title": "Confirm Your Booking",
+      "back": "Cancel and go back",
+      "successTitle": "Booking Confirmed!",
+      "successMessage": "Your appointment has been successfully booked. You will receive a confirmation email with the meeting details.",
+      "detailsTitle": "Appointment Details",
+      "date": "Date",
+      "time": "Time",
+      "fee": "Consultation Fee",
+      "sessionId": "Session ID",
+      "viewAppointments": "View My Appointments",
+      "shareTitle": "Share Your Medical Data",
+      "shareDesc": "Allow the doctor to access your previous screenings and AI analysis results for a more personalized consultation.",
+      "retinalImages": "Retinal Images",
+      "retinalImagesDesc": "Share your uploaded retinal images",
+      "aiResults": "AI Analysis Results",
+      "aiResultsDesc": "Share AI screening results and risk assessments",
+      "aiCaseTitle": "AI Case Attached",
+      "caseId": "Case ID",
+      "noOriginalImage": "No original image",
+      "originalImage": "Original retinal image",
+      "aiAnnotated": "AI annotated preview",
+      "turnOnAiToPreview": "Turn on \"AI Analysis Results\" to preview how the doctor will see AI highlights.",
+      "addRetinalToPreview": "Add a retinal image in screening to preview AI overlays.",
+      "symptoms": "Symptoms/findings ({{count}})",
+      "noSymptoms": "No symptom tags extracted from AI result.",
+      "cancelReservation": "Cancel Reservation",
+      "confirmAndPay": "Confirm & Pay",
+      "processing": "Processing...",
+      "agreement": "By confirming, you agree to the consultation terms and the fee will be deducted from your wallet.",
+      "toastSuccess": "You have booked your appointment successfully!",
+      "notFoundTitle": "Reservation Not Found",
+      "notFoundDesc": "The reservation may have expired or been cancelled. Please try booking again.",
+      "bookNew": "Book an Appointment",
+      "loading": "Loading booking details..."
     }
   },
   "Validation": {
@@ -293,6 +378,15 @@
     "toggleMenu": "Toggle menu",
     "switchToDark": "Switch to dark mode",
     "switchToLight": "Switch to light mode",
+    "currency": {
+      "vnd": "VND"
+    },
+    "labels": {
+      "visit": "Visit",
+      "status": "Status",
+      "notAvailable": "N/A",
+      "action": "Action"
+    },
     "sidebar": {
       "auraNetwork": "Aura Network"
     },
@@ -2755,31 +2849,44 @@
   },
   "PatientPaymentCallback": {
     "toast": {
-      "depositSuccess": "Wallet top-up completed successfully!"
+      "depositSuccess": "Wallet top-up completed successfully!",
+      "fullyPaid": "Payment completed successfully!",
+      "bookingConfirmed": "Deposit successful! Appointment confirmed."
     },
     "loading": {
       "title": "Verifying Payment...",
-      "description": "Please wait while we confirm your payment."
+      "description": "Please wait while we confirm your payment.",
+      "clinicBooking": "Confirming deposit payment...",
+      "noClose": "Please do not close this page"
     },
     "success": {
       "title": "Payment Successful!",
-      "description": "Your wallet has been credited successfully."
+      "description": "Your wallet has been credited successfully.",
+      "fullyPaid": "Payment Complete!",
+      "bookingConfirmed": "Your appointment has been confirmed. Please arrive on time.",
+      "amountRemaining": "Remaining amount",
+      "amountDeposit": "Deposit amount (30%)",
+      "amount": "Amount",
+      "descriptionLabel": "Description",
+      "paidAt": "Payment time",
+      "backToDashboard": "Back to Dashboard",
+      "paymentHistory": "Payment History",
+      "viewAppointments": "View Appointments",
+      "backToAppointments": "Back to Appointments"
     },
     "failed": {
       "title": "Payment Failed",
-      "fallbackDescription": "The payment could not be verified. No charges have been made."
+      "fallbackDescription": "The payment could not be verified. No charges have been made.",
+      "clinicBooking": "Payment not confirmed. Appointment is still held — you can try paying again in history.",
+      "retry": "Retry Payment",
+      "history": "Payment History"
     },
     "cancelled": {
       "title": "Payment Cancelled",
-      "description": "You cancelled the payment. No charges have been made."
-    },
-    "labels": {
-      "amount": "Amount",
-      "orderCode": "Order Code",
-      "newBalance": "New Balance"
-    },
-    "actions": {
-      "backToWallet": "Back to Wallet"
+      "description": "You cancelled the payment. No charges have been made.",
+      "clinicBooking": "You have cancelled the payment. This appointment slot has been released. Please re-book if you still wish to visit.",
+      "viewAppointments": "View Appointments",
+      "history": "Payment History"
     }
   },
   "PatientWallet": {
@@ -3218,7 +3325,8 @@
       "noUpcomingSlots": "No upcoming slots are available for this organisation."
     },
     "messages": {
-      "bookSuccess": "Appointment booked successfully. Please check status in Appointments."
+      "bookSuccess": "Appointment booked successfully. Please check status in Appointments.",
+      "redirectingPayment": "Booking successful! Redirecting to payment for deposit {{amount}} VND..."
     },
     "deposit": {
       "label": "Deposit",
@@ -8285,7 +8393,8 @@
           "paymentSyncFailed": "Failed to sync payment status",
           "qrBeforeAppointmentDate": "Cannot check in before the appointment date.",
           "paymentRequiredBeforeCheckIn": "Collect full payment before check-in.",
-          "depositRequiredBeforeCheckIn": "Collect the deposit before check-in."
+          "depositRequiredBeforeCheckIn": "Collect the deposit before check-in.",
+          "redirectingPayment": "Booking successful! Redirecting to payment for deposit {{amount}} VND..."
         },
         "states": {
           "billing": {
@@ -8310,6 +8419,312 @@
         "launchAi": "Launch AI",
         "reviewAndSave": "Review & Save"
       }
+    }
+  },
+  "ApiErrors": {
+    "default": "Could not complete action. Please try again.",
+    "clinicBooking": "Could not process clinic appointment action.",
+    "onlineBooking": "Could not process online consultation booking action.",
+    "walkIn": "Could not create new patient profile.",
+    "slotFull": "Slot is full. Please choose another time.",
+    "slotBlocked": "This slot is currently unavailable.",
+    "alreadyBooked": "You already have an appointment at this time.",
+    "invalidSlot": "No valid slot found. Please reload.",
+    "cannotCancel": "Cannot cancel appointment in current state.",
+    "cancellationLimit": "You can only cancel at least 6 hours before start time.",
+    "networkError": "Slow or interrupted connection. Please try again.",
+    "tooManyRequests": "You are performing actions too quickly. Please try again in a moment.",
+    "depositNotPaid": "Deposit not paid. Please collect cash deposit or confirm payment before check-in.",
+    "appointmentNotFound": "Appointment not found.",
+    "checkInRequired": "Cannot start examination. Patient must be checked-in first.",
+    "concurrentUpdate": "Data was just modified by someone else. Please reload and try again.",
+    "forbidden": "You do not have permission to perform this action.",
+    "alreadyReserved": "This slot is already reserved by someone else. Please choose another time.",
+    "invalidReservation": "Reservation session is no longer valid. Please go back and re-select slot.",
+    "reservationExpired": "Reservation session has expired. Please re-book from the beginning.",
+    "insufficientBalance": "Insufficient wallet balance. Please top up and try again.",
+    "phoneExists": "This phone number already exists in the system.",
+    "citizenIdExists": "This Citizen ID (CCCD) already has a profile at this organisation.",
+    "emailExists": "This email is already in use.",
+    "sessionExpired": "Session expired. Please log in again.",
+    "orgNotFound": "Organisation information not found. Please try again."
+  },
+  "RelativeTime": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} minutes ago",
+    "hoursAgo": "{{count}} hours ago",
+    "daysAgo": "{{count}} days ago",
+    "yesterday": "Yesterday",
+    "longTimeAgo": "Long time ago"
+  },
+  "ProfessionalNetwork": {
+    "common": {
+      "back": "Back",
+      "cancel": "Cancel",
+      "save": "Save",
+      "tryAgain": "Try again",
+      "showMore": "Show more",
+      "pagination": {
+        "previous": "Previous",
+        "next": "Next",
+        "pageOf": "Page {{page}} of {{total}}"
+      }
+    },
+    "feed": {
+      "title": "Professional Network",
+      "description": {
+        "default": "Latest posts from your professional network",
+        "manageMode": "Moderation view for hidden and flagged content"
+      },
+      "tabs": {
+        "feed": "Feed",
+        "managePosts": "Manage Posts"
+      },
+      "states": {
+        "loadError": "Failed to load posts",
+        "empty": "No posts yet. Be the first to share!"
+      },
+      "manage": {
+        "reportedPostsHeading": "Reported Posts ({{count}})",
+        "noReportedPosts": "No reported posts at this time.",
+        "hiddenPostsHeading": "Hidden Posts ({{count}})",
+        "noHiddenPosts": "No hidden posts yet."
+      },
+      "trending": {
+        "title": "Trending Topics",
+        "rankLabel": "#{{rank}} - Trending",
+        "postsCount": "{{count}} posts",
+        "empty": "No trending topics yet"
+      }
+    },
+    "collaboration": {
+      "title": "Clinical Collaboration",
+      "tabs": {
+        "chat": "Discussion",
+        "consultation": "Consilium"
+      },
+      "search": {
+        "placeholder": "Search discussion groups..."
+      },
+      "members": "members",
+      "member": "member",
+      "types": {
+        "clinicalCase": "Clinical Case",
+        "general": "General"
+      },
+      "status": {
+        "concluded": "Concluded",
+        "ongoing": "Ongoing"
+      },
+      "toasts": {
+        "adminOnlyCreate": "Only System Admin can create internal groups.",
+        "groupNameRequired": "Group name is required.",
+        "createSuccess": "Internal group created successfully.",
+        "createError": "Failed to create group.",
+        "renameSuccess": "Group renamed successfully.",
+        "renameError": "Failed to rename group.",
+        "deleteSuccess": "Group dissolved successfully.",
+        "deleteError": "Failed to delete group.",
+        "uploadSuccess": "Image sent successfully.",
+        "uploadError": "Image upload failed.",
+        "meetingSuccess": "Meeting created successfully!",
+        "meetingError": "Failed to create meeting"
+      },
+      "confirm": {
+        "createTitle": "Confirm group creation",
+        "createMessage": "Create group \"{{name}}\" with {{count}} selected member(s)?",
+        "renameTitle": "Confirm rename",
+        "renameMessage": "Rename this group to \"{{name}}\"?",
+        "deleteTitle": "Confirm group deletion",
+        "deleteMessage": "Are you sure you want to dissolve group \"{{name}}\"? This action cannot be undone.",
+        "uploadTitle": "Confirm image upload",
+        "uploadMessage": "Upload {{count}} image(s) to this group chat?",
+        "meetingTitle": "Confirm meeting creation",
+        "meetingMessage": "Create a new Google Meet session for this group?"
+      },
+      "actions": {
+        "createGroup": "Create New Group",
+        "startMeeting": "Start Google Meet",
+        "groupInfo": "Group Info",
+        "addMembers": "Add Members",
+        "deleteGroup": "Delete Group",
+        "renameGroup": "Rename Group",
+        "leaveGroup": "Leave Group",
+        "send": "Send"
+      },
+      "menu": {
+        "manageMembers": "Manage Members",
+        "viewMembers": "View Members",
+        "media": "Group Media",
+        "rename": "Rename group",
+        "delete": "Delete group"
+      },
+      "loading": {
+        "groups": "Loading groups...",
+        "messages": "Loading messages..."
+      },
+      "errors": {
+        "loadGroups": "Failed to load groups",
+        "sendMessage": "Failed to send message"
+      },
+      "consilium": {
+        "status": {
+          "concluded": "Concluded"
+        },
+        "concludeTitle": "Conclude Consilium",
+        "concludeMessage": "Are you sure you want to conclude this consilium? The chat will become read-only for legal archival purposes.",
+        "concludeConfirm": "Conclude",
+        "concludeSuccess": "Consilium concluded.",
+        "concludeError": "Failed to conclude consilium.",
+        "urgentTitle": "Urgent Consilium Request",
+        "urgentSubtitle": "Respond within 30 minutes"
+      },
+      "meet": {
+        "success": "Meeting created successfully!",
+        "error": "Failed to create meeting"
+      }
+    },
+    "discover": {
+      "title": "Discover",
+      "description": "Explore posts from professionals and organisations",
+      "searchPlaceholder": "Search posts...",
+      "tabs": {
+        "professionals": "Professionals",
+        "organisations": "Organisations"
+      },
+      "categories": {
+        "all": "All"
+      },
+      "results": {
+        "oneFound": "1 post found",
+        "manyFound": "{{count}} posts found"
+      },
+      "empty": {
+        "title": "No posts found",
+        "description": "Try a different category or search term"
+      }
+    },
+    "profile": {
+      "title": "Profile",
+      "verified": "Verified",
+      "states": {
+        "notFound": "Profile not found",
+        "noPosts": "No posts yet"
+      },
+      "preview": {
+        "banner": "You're viewing your profile as others see it",
+        "exit": "Exit Preview",
+        "label": "Preview"
+      },
+      "stats": {
+        "postsCount": "{{count}} posts"
+      },
+      "actions": {
+        "shareProfile": "Share profile",
+        "report": "Report"
+      },
+      "systemAdmin": {
+        "title": "System Administration Profile",
+        "description": "System Admin account focuses on AURA platform governance, network moderation, and system operations coordination.",
+        "items": {
+          "moderatePosts": "Moderate and hide violating posts",
+          "reviewReports": "Review reported content and escalation cases",
+          "maintainStandards": "Maintain policy and safety standards across network"
+        }
+      },
+      "organisation": {
+        "introductionTitle": "Clinic introduction",
+        "defaultBio": "The clinic partners with AURA to deploy AI retinal screening, combining specialist expertise and clinical decision support diagnostics.",
+        "featuredServicesTitle": "Featured services",
+        "featuredServices": {
+          "items": {
+            "aiScreening": "AI retinal screening at facility level",
+            "consultationAndReferral": "Result consultation and appropriate referral",
+            "recordsAndFollowUp": "Medical record management and periodic follow-up"
+          }
+        },
+        "qualityCommitmentTitle": "Quality commitments",
+        "qualityCommitment": {
+          "items": {
+            "dataPrivacy": "Comply with patient data privacy procedures",
+            "aiAndClinical": "Combine AI assessment with clinical expertise",
+            "fastAccurateCare": "Optimize fast and accurate care experience"
+          }
+        }
+      },
+      "about": {
+        "bioTitle": "Bio",
+        "noBio": "No bio added yet.",
+        "degreesTitle": "Degrees",
+        "noDegreeRecords": "No degree records.",
+        "licensesTitle": "Licenses and Certifications",
+        "noLicenseRecords": "No license records.",
+        "unknownAuthority": "Unknown authority",
+        "issued": "Issued",
+        "expires": "Expires",
+        "viewFile": "View file"
+      }
+    },
+    "organisation": {
+      "title": "Organisation",
+      "types": {
+        "hospital": "Hospital",
+        "clinic": "Clinic",
+        "researchCenter": "Research Center"
+      },
+      "states": {
+        "notFound": "Organisation not found",
+        "noPosts": "No posts yet",
+        "noPublic members": "No public members"
+      },
+      "actions": {
+        "follow": "Follow",
+        "following": "Following"
+      },
+      "stats": {
+        "followers": "Followers",
+        "membersLabel": "Members",
+        "postsLabel": "Posts"
+      },
+      "tabs": {
+        "posts": "Posts",
+        "members": "Members",
+        "about": "About"
+      },
+      "about": {
+        "title": "About",
+        "location": "Location",
+        "accreditations": "Accreditations"
+      }
+    },
+    "postDetail": {
+      "title": "Post",
+      "states": {
+        "loadingReplies": "Loading replies...",
+        "notFound": "Post not found",
+        "noComments": "No comments yet. Be the first to comment!"
+      },
+      "inputs": {
+        "addCommentPlaceholder": "Add a comment...",
+        "replyTo": "Reply to {{name}}..."
+      },
+      "comments": {
+        "title": "Comments ({{count}})"
+      },
+      "actions": {
+        "reply": "Reply",
+        "hide": "Hide",
+        "view": "View"
+      },
+      "replies": {
+        "one": "1 reply",
+        "many": "{{count}} replies"
+      }
+    },
+    "postTypes": {
+      "peerDiscussion": "Peer Discussion",
+      "knowledgeShare": "Knowledge Share",
+      "announcement": "Announcement"
     }
   }
 }

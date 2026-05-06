@@ -1,3 +1,4 @@
+import i18n from '@/i18n/i18n';
 import type { AxiosError } from 'axios';
 
 interface ErrorPayload {
@@ -85,186 +86,164 @@ const mapByKeywords = (
 export const mapClinicPatientErrorMessage = (error: unknown): string => {
   const raw = extractApiErrorMessage(
     error,
-    'Could not complete clinic booking action.'
+    i18n.t('ApiErrors.default', 'Could not complete action.')
   );
 
   return mapByKeywords(raw, [
     {
       pattern: /(slot\s+is\s+full|maximum\s+capacity|SLOT_FULL)/i,
-      mappedMessage: 'Khung giờ đã đầy. Vui lòng chọn khung giờ khác.',
+      mappedMessage: i18n.t('ApiErrors.slotFull'),
     },
     {
       pattern: /(slot\s+is\s+blocked|not\s+available|SLOT_BLOCKED)/i,
-      mappedMessage: 'Khung giờ này hiện không khả dụng.',
+      mappedMessage: i18n.t('ApiErrors.slotBlocked'),
     },
     {
       pattern: /(already\s+has\s+appointment|ALREADY_BOOKED)/i,
-      mappedMessage: 'Bạn đã có lịch trong khung giờ này.',
+      mappedMessage: i18n.t('ApiErrors.alreadyBooked'),
     },
     {
       pattern: /(slot\s+not\s+found|invalid\s+slot|INVALID_SLOT)/i,
-      mappedMessage: 'Không tìm thấy khung giờ hợp lệ. Vui lòng tải lại.',
+      mappedMessage: i18n.t('ApiErrors.invalidSlot'),
     },
     {
       pattern: /(cannot\s+cancel|CANNOT_CANCEL)/i,
-      mappedMessage: 'Không thể hủy lịch ở trạng thái hiện tại.',
+      mappedMessage: i18n.t('ApiErrors.cannotCancel'),
     },
     {
       pattern: /6\s*hours/i,
-      mappedMessage:
-        'Bạn chỉ có thể hủy lịch hẹn trước giờ bắt đầu ít nhất 6 tiếng.',
+      mappedMessage: i18n.t('ApiErrors.cancellationLimit'),
     },
     {
       pattern: /(timeout|network|ECONNABORTED)/i,
-      mappedMessage: 'Kết nối chậm hoặc bị gián đoạn. Vui lòng thử lại.',
+      mappedMessage: i18n.t('ApiErrors.networkError'),
     },
     {
       pattern: /too\s+many\s+requests/i,
-      mappedMessage:
-        'Bạn đang thao tác quá nhanh. Vui lòng thử lại sau giây lát.',
+      mappedMessage: i18n.t('ApiErrors.tooManyRequests'),
     },
   ]);
 };
 
 export const mapClinicStaffErrorMessage = (error: unknown): string => {
-  const raw = extractApiErrorMessage(
-    error,
-    'Không thể xử lý thao tác lịch khám.'
-  );
+  const raw = extractApiErrorMessage(error, i18n.t('ApiErrors.clinicBooking'));
 
   return mapByKeywords(raw, [
     {
       pattern: /DepositNotPaid/i,
-      mappedMessage:
-        'Chưa thu tiền cọc. Vui lòng thu cọc tiền mặt hoặc xác nhận thanh toán trước khi check-in.',
+      mappedMessage: i18n.t('ApiErrors.depositNotPaid'),
     },
     {
       pattern: /(appointment\s+not\s+found|APPOINTMENT_NOT_FOUND)/i,
-      mappedMessage: 'Không tìm thấy lịch khám.',
+      mappedMessage: i18n.t('ApiErrors.appointmentNotFound'),
     },
     {
       pattern: /(cannot\s+start|checked\s*in)/i,
-      mappedMessage:
-        'Không thể bắt đầu khám. Bệnh nhân cần được check-in trước.',
+      mappedMessage: i18n.t('ApiErrors.checkInRequired'),
     },
     {
       pattern: /(concurrent|modified|CONCURRENT_UPDATE)/i,
-      mappedMessage:
-        'Dữ liệu vừa thay đổi bởi người khác. Vui lòng tải lại và thử lại.',
+      mappedMessage: i18n.t('ApiErrors.concurrentUpdate'),
     },
     {
       pattern: /(forbidden|unauthorized|403)/i,
-      mappedMessage: 'Bạn không có quyền thực hiện thao tác này.',
+      mappedMessage: i18n.t('ApiErrors.forbidden'),
     },
     {
       pattern: /(timeout|network|ECONNABORTED)/i,
-      mappedMessage: 'Kết nối chậm hoặc bị gián đoạn. Vui lòng thử lại.',
+      mappedMessage: i18n.t('ApiErrors.networkError'),
     },
     {
       pattern: /too\s+many\s+requests/i,
-      mappedMessage:
-        'Bạn đang thao tác quá nhanh. Vui lòng thử lại sau giây lát.',
+      mappedMessage: i18n.t('ApiErrors.tooManyRequests'),
     },
   ]);
 };
 
 export const mapOnlineConsultationErrorMessage = (error: unknown): string => {
-  const raw = extractApiErrorMessage(
-    error,
-    'Không thể xử lý thao tác đặt lịch tư vấn online.'
-  );
+  const raw = extractApiErrorMessage(error, i18n.t('ApiErrors.onlineBooking'));
 
   return mapByKeywords(raw, [
     {
       pattern: /(already\s+reserved|slot\s+is\s+reserved|Reserved)/i,
-      mappedMessage:
-        'Khung giờ này đã được giữ bởi người khác. Vui lòng chọn khung giờ khác.',
+      mappedMessage: i18n.t('ApiErrors.alreadyReserved'),
     },
     {
       pattern: /(not\s+in\s+reserved\s+state|reserved\s+state)/i,
-      mappedMessage:
-        'Phiên giữ chỗ không còn hợp lệ. Vui lòng quay lại và đặt lại khung giờ.',
+      mappedMessage: i18n.t('ApiErrors.invalidReservation'),
     },
     {
       pattern: /(already\s+booked|slot\s+is\s+booked|Booked)/i,
-      mappedMessage: 'Khung giờ này đã được đặt. Vui lòng chọn khung giờ khác.',
+      mappedMessage: i18n.t('ApiErrors.alreadyBooked'),
     },
     {
       pattern: /(not\s+available|blocked|SLOT_BLOCKED)/i,
-      mappedMessage: 'Khung giờ này hiện không khả dụng.',
+      mappedMessage: i18n.t('ApiErrors.slotBlocked'),
     },
     {
       pattern: /(reservation\s+expired|expired)/i,
-      mappedMessage: 'Phiên giữ chỗ đã hết hạn. Vui lòng đặt lại từ đầu.',
+      mappedMessage: i18n.t('ApiErrors.reservationExpired'),
     },
     {
       pattern: /(different\s+patient|forbidden|403)/i,
-      mappedMessage:
-        'Bạn không có quyền thao tác trên phiên giữ chỗ này. Vui lòng đặt lại.',
+      mappedMessage: i18n.t('ApiErrors.forbidden'),
     },
     {
       pattern:
         /(not\s+authorized\s+to\s+release|unable\s+to\s+resolve\s+patient\s+profile|patient\s+id\s+is\s+required)/i,
-      mappedMessage:
-        'Bạn không có quyền hủy phiên giữ chỗ này. Vui lòng tải lại và thử lại.',
+      mappedMessage: i18n.t('ApiErrors.forbidden'),
     },
     {
       pattern: /(slot\s+not\s+found|not\s+found|INVALID_SLOT)/i,
-      mappedMessage: 'Không tìm thấy khung giờ. Vui lòng tải lại danh sách.',
+      mappedMessage: i18n.t('ApiErrors.invalidSlot'),
     },
     {
       pattern:
         /(insufficient\s+wallet\s+balance|wallet\s+not\s+found|top\s*up\s*your\s*wallet)/i,
-      mappedMessage:
-        'Số dư ví không đủ để đặt lịch. Vui lòng nạp thêm và thử lại.',
+      mappedMessage: i18n.t('ApiErrors.insufficientBalance'),
     },
     {
       pattern: /(timeout|network|ECONNABORTED)/i,
-      mappedMessage: 'Kết nối chậm hoặc bị gián đoạn. Vui lòng thử lại.',
+      mappedMessage: i18n.t('ApiErrors.networkError'),
     },
     {
       pattern: /too\s+many\s+requests/i,
-      mappedMessage:
-        'Bạn đang thao tác quá nhanh. Vui lòng thử lại sau giây lát.',
+      mappedMessage: i18n.t('ApiErrors.tooManyRequests'),
     },
   ]);
 };
 
 export const mapWalkInPatientErrorMessage = (error: unknown): string => {
-  const raw = extractApiErrorMessage(
-    error,
-    'Không thể tạo hồ sơ bệnh nhân mới.'
-  );
+  const raw = extractApiErrorMessage(error, i18n.t('ApiErrors.walkIn'));
 
   return mapByKeywords(raw, [
     {
       pattern: /Phone\s+number\s+already\s+exists/i,
-      mappedMessage: 'Số điện thoại này đã tồn tại trong hệ thống.',
+      mappedMessage: i18n.t('ApiErrors.phoneExists'),
     },
     {
       pattern: /Citizen\s+ID\s+already\s+exists/i,
-      mappedMessage: 'Căn cước công dân (CCCD) này đã lập hồ sơ tại tổ chức.',
+      mappedMessage: i18n.t('ApiErrors.citizenIdExists'),
     },
     {
       pattern: /(Email|UserName).*already/i,
-      mappedMessage: 'Email này đã được sử dụng.',
+      mappedMessage: i18n.t('ApiErrors.emailExists'),
     },
     {
       pattern: /User\s+not\s+authenticated/i,
-      mappedMessage: 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.',
+      mappedMessage: i18n.t('ApiErrors.sessionExpired'),
     },
     {
       pattern: /Organisation\s+not\s+found/i,
-      mappedMessage: 'Không tìm thấy thông tin tổ chức. Vui lòng thử lại.',
+      mappedMessage: i18n.t('ApiErrors.orgNotFound'),
     },
     {
       pattern: /(timeout|network|ECONNABORTED)/i,
-      mappedMessage: 'Kết nối chậm hoặc bị gián đoạn. Vui lòng thử lại.',
+      mappedMessage: i18n.t('ApiErrors.networkError'),
     },
     {
       pattern: /too\s+many\s+requests/i,
-      mappedMessage:
-        'Bạn đang thao tác quá nhanh. Vui lòng thử lại sau giây lát.',
+      mappedMessage: i18n.t('ApiErrors.tooManyRequests'),
     },
   ]);
 };
