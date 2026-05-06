@@ -33,6 +33,10 @@ import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import useNotificationStore from '@/store/useNotificationStore';
 import { NotificationType, parseNotificationType } from '@/types/notification';
+import {
+  localizeFindingsText,
+  toDisplayDiseaseName,
+} from '@/features/patient/lib/disease-translation';
 
 /* ────────────────────── helpers ────────────────────── */
 
@@ -48,6 +52,89 @@ const AVATAR_PALETTE = [
 ];
 
 type TranslateFn = (key: string, fallback: string) => string;
+
+function localizeAiLabel(label: string, language: string): string {
+  const trimmed = label.trim();
+  if (!trimmed) return trimmed;
+  if (trimmed.includes(', ')) {
+    return localizeFindingsText(trimmed, language);
+  }
+  return toDisplayDiseaseName(trimmed, language);
+}
+
+function localizeSummarySnippet(
+  summary: string | null | undefined,
+  language: string,
+  t: TranslateFn
+): string {
+  const raw = summary?.trim();
+  if (!raw) return '';
+  const isVietnamese = language.toLowerCase().startsWith('vi');
+  if (!isVietnamese) return raw;
+
+  const highWithPrimary = raw.match(
+    /^Findings need attention from an ophthalmologist \((.+)\)\.$/i
+  );
+  if (highWithPrimary) {
+    return t(
+      'Organisation.screeningResult.summary.high.withPrimary',
+      'Findings need attention from an ophthalmologist ({{primaryLabel}}).'
+    ).replace(
+      '{{primaryLabel}}',
+      localizeAiLabel(highWithPrimary[1] ?? '', language)
+    );
+  }
+  if (/^Findings need attention from an ophthalmologist\.$/i.test(raw)) {
+    return t(
+      'Organisation.screeningResult.summary.high.default',
+      'Findings need attention from an ophthalmologist.'
+    );
+  }
+
+  const moderateWithPrimary = raw.match(
+    /^Some findings may need specialist review \((.+)\)\.$/i
+  );
+  if (moderateWithPrimary) {
+    return t(
+      'Organisation.screeningResult.summary.moderate.withPrimary',
+      'Some findings may need specialist review ({{primaryLabel}}).'
+    ).replace(
+      '{{primaryLabel}}',
+      localizeAiLabel(moderateWithPrimary[1] ?? '', language)
+    );
+  }
+  if (/^Some findings may need specialist review\.$/i.test(raw)) {
+    return t(
+      'Organisation.screeningResult.summary.moderate.default',
+      'Some findings may need specialist review.'
+    );
+  }
+
+  const lowWithPrimary = raw.match(
+    /^Low-risk findings detected \((.+)\)\. Routine specialist follow-up is recommended\.$/i
+  );
+  if (lowWithPrimary) {
+    return t(
+      'Organisation.screeningResult.summary.low.withPrimary',
+      'Low-risk findings detected ({{primaryLabel}}). Routine specialist follow-up is recommended.'
+    ).replace(
+      '{{primaryLabel}}',
+      localizeAiLabel(lowWithPrimary[1] ?? '', language)
+    );
+  }
+  if (
+    /^Low-risk findings detected\. Routine specialist follow-up is recommended\.$/i.test(
+      raw
+    )
+  ) {
+    return t(
+      'Organisation.screeningResult.summary.low.default',
+      'Low-risk findings detected. Routine specialist follow-up is recommended.'
+    );
+  }
+
+  return raw;
+}
 
 function initialsFromName(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -197,9 +284,12 @@ function getConfidenceLabel(confidence: number, t: TranslateFn): string {
 
 function aiLabelForRow(
   row: OphthalmologistScreeningListItemDto,
-  t: TranslateFn
+  t: TranslateFn,
+  language: string
 ): string {
-  if (row.aiPrimaryLabel?.trim()) return row.aiPrimaryLabel.trim();
+  if (row.aiPrimaryLabel?.trim()) {
+    return localizeAiLabel(row.aiPrimaryLabel, language);
+  }
   if (row.latestRiskLevel?.trim()) {
     const risk = row.latestRiskLevel.trim().toLowerCase();
     if (risk === 'critical')
@@ -244,7 +334,7 @@ const SCREENINGS_PAGE_SIZE = 8;
 /* ────────────────────── component ────────────────────── */
 
 export default function ScreeningsPage() {
-  const { t } = useSafeTranslation();
+  const { t, i18n } = useSafeTranslation();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const currentDoctorId = user?.roleId ?? '';
@@ -790,7 +880,12 @@ export default function ScreeningsPage() {
                         'Ophthalmologist.screenings.createdDate',
                         'Created date'
                       );
-                const aiLabel = aiLabelForRow(screening, t);
+                const aiLabel = aiLabelForRow(screening, t, i18n.language);
+                const localizedSummarySnippet = localizeSummarySnippet(
+                  screening.summarySnippet ?? undefined,
+                  i18n.language,
+                  t
+                );
                 const isPending = effectiveReviewStatus === 'pending-review';
                 const isFlagged = effectiveReviewStatus === 'flagged';
 
@@ -880,9 +975,9 @@ export default function ScreeningsPage() {
                           </div>
 
                           {/* Row 3: Summary snippet */}
-                          {screening.summarySnippet?.trim() && (
+                          {localizedSummarySnippet && (
                             <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-2 leading-relaxed">
-                              {screening.summarySnippet}
+                              {localizedSummarySnippet}
                             </p>
                           )}
 
