@@ -22,12 +22,14 @@ import { formatCurrency } from '@/lib/helper';
 import { clinicQueueApi, type ClinicPaymentContext } from '../api/queue.api';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
-import { useTranslation, Trans } from 'react-i18next';
+import { Trans } from 'react-i18next';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { syncOrder } from '@/features/patient/api/financial.api';
+import { useRef } from 'react';
 
 export default function CashierPage() {
-  const { t: translate } = useTranslation() as any;
+  const { t: translate } = useSafeTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const visitIdFromQuery = searchParams.get('visitId');
   const [selectedVisitId, setSelectedVisitId] = useState<string | null>(
@@ -56,9 +58,12 @@ export default function CashierPage() {
     }
   }, [visitIdFromQuery, selectedVisitId]);
 
+  const successHandledRef = useRef(false);
+
   // Handle successful payment: clear status and refresh queue after delay
   useEffect(() => {
-    if (isPaidSuccess) {
+    if (isPaidSuccess && !successHandledRef.current) {
+      successHandledRef.current = true;
       const orderId = searchParams.get('orderId') || searchParams.get('id');
 
       // Proactively sync order status (webhook might be slow/localhost)
@@ -71,7 +76,7 @@ export default function CashierPage() {
         queueQuery.refetch();
       }
 
-      // Clear the "PAID" status from URL and reset selection after 5 seconds
+      // Clear the "PAID" status from URL and reset selection after 3 seconds
       const timer = setTimeout(() => {
         setSelectedVisitId(null);
         setSearchParams(
@@ -88,11 +93,15 @@ export default function CashierPage() {
           },
           { replace: true }
         );
-      }, 5000);
+      }, 3000);
 
       return () => clearTimeout(timer);
     }
-  }, [isPaidSuccess, searchParams, setSearchParams]);
+
+    if (!isPaidSuccess) {
+      successHandledRef.current = false;
+    }
+  }, [isPaidSuccess, setSearchParams]);
 
   const paymentContext = paymentContextQuery.data;
   const [searchQuery, setSearchQuery] = useState('');
@@ -146,7 +155,7 @@ export default function CashierPage() {
       if (variables.method === 'Cash') {
         toast.success(
           translate('Cashier.toast.cashSuccess', {
-            defaultValue: 'Thanh toán tiền mặt thành công',
+            defaultValue: 'Cash payment processed successfully',
           })
         );
 
@@ -369,11 +378,13 @@ export default function CashierPage() {
                           )}
                         </div>
                         <p className="mt-1 text-xs text-(--text-secondary)">
-                          Visit: {visit.visitId.slice(0, 8)}...
+                          {translate('Common.labels.visit', 'Visit')}:{' '}
+                          {visit.visitId.slice(0, 8)}...
                         </p>
                         <p className="mt-0.5 text-xs text-(--text-muted)">
                           {translate('Cashier.queue.doctorName')}:{' '}
-                          {visit.assignedDoctorName || 'N/A'}
+                          {visit.assignedDoctorName ||
+                            translate('Common.labels.notAvailable', 'N/A')}
                         </p>
                       </button>
                     );
@@ -395,7 +406,7 @@ export default function CashierPage() {
               <span className="inline-flex items-center gap-1 rounded-full border border-(--border-color) bg-(--bg-secondary) px-2.5 py-1 text-[11px] font-medium text-(--text-secondary)">
                 <FileText className="h-3.5 w-3.5" />
                 {effectiveVisitId
-                  ? `Visit ${effectiveVisitId.slice(0, 8)}...`
+                  ? `${translate('Common.labels.visit', 'Visit')} ${effectiveVisitId.slice(0, 8)}...`
                   : translate('Cashier.pricingPanel.noVisitSelectedBadge')}
               </span>
             </div>
@@ -436,24 +447,27 @@ export default function CashierPage() {
                 </div>
                 <h3 className="mt-5 text-xl font-bold text-(--text-primary)">
                   {translate('Cashier.pricingPanel.paymentSuccessTitle', {
-                    defaultValue: 'Thanh toán thành công',
+                    defaultValue: 'Payment Successful!',
                   })}
                 </h3>
                 <p className="mt-2 max-w-[30ch] text-sm text-(--text-secondary)">
                   <Trans
-                    i18nKey={
-                      'Cashier.pricingPanel.paymentSuccessDescription' as any
-                    }
+                    i18nKey="Cashier.pricingPanel.paymentSuccessDescription"
                     values={{
                       name:
-                        lastPaidVisitName || activeVisit?.patientName || 'này',
+                        lastPaidVisitName ||
+                        activeVisit?.patientName ||
+                        translate(
+                          'Cashier.pricingPanel.thisPatient',
+                          'patient'
+                        ),
                     }}
                   >
-                    Ca khám của bệnh nhân{' '}
+                    The visit for patient{' '}
                     <span className="font-semibold text-emerald-600">
                       {'{{name}}'}
                     </span>{' '}
-                    đã được hoàn tất và chuyển trạng thái thành công.
+                    has been finalized and marked as completed.
                   </Trans>
                 </p>
 
@@ -534,7 +548,8 @@ export default function CashierPage() {
                   })}
                 </h3>
                 <p className="text-[11px] font-medium text-(--text-muted) uppercase tracking-wider">
-                  Visit: {effectiveVisitId?.slice(0, 8)}
+                  {translate('Common.labels.visit', 'Visit')}:{' '}
+                  {effectiveVisitId?.slice(0, 8)}
                 </p>
               </div>
             </div>
@@ -716,7 +731,7 @@ function CashierPricingPanel({
   onInitiatePayment,
   isProcessing,
 }: CashierPricingPanelProps) {
-  const { t: translate } = useTranslation() as any;
+  const { t: translate } = useSafeTranslation();
   const doctorName =
     context.diagnosis.diagnosedBy.doctorName || fallbackDoctorName;
 
