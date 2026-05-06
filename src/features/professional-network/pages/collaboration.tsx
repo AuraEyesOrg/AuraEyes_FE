@@ -493,9 +493,19 @@ export default function CollaborationPage() {
 
     const fileCount = files.length;
     openConfirm({
-      title: 'Confirm image upload',
-      message: `Upload ${fileCount} image${fileCount > 1 ? 's' : ''} to this group chat?`,
-      confirmLabel: 'Upload',
+      title: t(
+        'ProfessionalNetwork.collaboration.confirm.uploadTitle',
+        'Confirm image upload'
+      ),
+      message: t(
+        'ProfessionalNetwork.collaboration.confirm.uploadMessage',
+        'Upload {{count}} image(s) to this group chat?',
+        { count: fileCount }
+      ),
+      confirmLabel: t(
+        'ProfessionalNetwork.collaboration.actions.upload',
+        'Upload'
+      ),
       tone: 'default',
       onConfirm: async () => {
         try {
@@ -505,7 +515,12 @@ export default function CollaborationPage() {
             files
           );
           if (!urls.length) {
-            toast.error('Image upload failed.');
+            toast.error(
+              t(
+                'ProfessionalNetwork.collaboration.toasts.uploadError',
+                'Image upload failed.'
+              )
+            );
             return;
           }
 
@@ -514,7 +529,12 @@ export default function CollaborationPage() {
             .join('\n');
           setNewMessage('');
           await sendComposedMessage(composedContent);
-          toast.success('Image sent successfully.');
+          toast.success(
+            t(
+              'ProfessionalNetwork.collaboration.toasts.uploadSuccess',
+              'Image sent successfully.'
+            )
+          );
         } catch (error) {
           console.error('Failed to upload images', error);
           toast.error('Failed to upload image.');
@@ -650,7 +670,12 @@ export default function CollaborationPage() {
 
   const handleCreateGroup = async () => {
     if (!isSystemAdmin) {
-      toast.error('Only System Admin can create internal groups.');
+      toast.error(
+        t(
+          'ProfessionalNetwork.collaboration.toasts.adminOnlyCreate',
+          'Only System Admin can create internal groups.'
+        )
+      );
       return;
     }
 
@@ -661,9 +686,19 @@ export default function CollaborationPage() {
     }
 
     openConfirm({
-      title: 'Confirm group creation',
-      message: `Create group "${trimmedName}" with ${selectedMemberIdsForCreate.length} selected member(s)?`,
-      confirmLabel: 'Create',
+      title: t(
+        'ProfessionalNetwork.collaboration.confirm.createTitle',
+        'Confirm group creation'
+      ),
+      message: t(
+        'ProfessionalNetwork.collaboration.confirm.createMessage',
+        'Create group "{{name}}" with {{count}} selected member(s)?',
+        { name: trimmedName, count: selectedMemberIdsForCreate.length }
+      ),
+      confirmLabel: t(
+        'ProfessionalNetwork.collaboration.actions.createGroup',
+        'Create'
+      ),
       tone: 'default',
       onConfirm: async () => {
         try {
@@ -691,10 +726,20 @@ export default function CollaborationPage() {
           setNewGroupType('General');
           setSelectedMemberIdsForCreate([]);
           setMemberSearchTerm('');
-          toast.success('Internal group created successfully.');
+          toast.success(
+            t(
+              'ProfessionalNetwork.collaboration.toasts.createSuccess',
+              'Internal group created successfully.'
+            )
+          );
         } catch (error) {
           console.error('Failed to create group', error);
-          toast.error('Failed to create group.');
+          toast.error(
+            t(
+              'ProfessionalNetwork.collaboration.toasts.createError',
+              'Failed to create group.'
+            )
+          );
           throw error;
         } finally {
           setIsCreatingGroup(false);
@@ -707,9 +752,18 @@ export default function CollaborationPage() {
     if (!selectedGroupId) return;
 
     openConfirm({
-      title: 'Confirm meeting creation',
-      message: 'Create a new Google Meet session for this group?',
-      confirmLabel: 'Create Meeting',
+      title: t(
+        'ProfessionalNetwork.collaboration.confirm.meetingTitle',
+        'Confirm meeting creation'
+      ),
+      message: t(
+        'ProfessionalNetwork.collaboration.confirm.meetingMessage',
+        'Create a new Google Meet session for this group?'
+      ),
+      confirmLabel: t(
+        'ProfessionalNetwork.collaboration.actions.startMeeting',
+        'Create Meeting'
+      ),
       tone: 'default',
       onConfirm: async () => {
         try {
@@ -771,9 +825,19 @@ export default function CollaborationPage() {
     }
 
     openConfirm({
-      title: 'Confirm rename',
-      message: `Rename this group to "${trimmedName}"?`,
-      confirmLabel: 'Rename',
+      title: t(
+        'ProfessionalNetwork.collaboration.confirm.renameTitle',
+        'Confirm rename'
+      ),
+      message: t(
+        'ProfessionalNetwork.collaboration.confirm.renameMessage',
+        'Rename this group to "{{name}}"?',
+        { name: trimmedName }
+      ),
+      confirmLabel: t(
+        'ProfessionalNetwork.collaboration.actions.renameGroup',
+        'Rename'
+      ),
       tone: 'default',
       onConfirm: async () => {
         try {
@@ -784,10 +848,20 @@ export default function CollaborationPage() {
             )
           );
           setIsRenameModalOpen(false);
-          toast.success('Group renamed successfully.');
+          toast.success(
+            t(
+              'ProfessionalNetwork.collaboration.toasts.renameSuccess',
+              'Group renamed successfully.'
+            )
+          );
         } catch (error) {
           console.error('Failed to rename group', error);
-          toast.error('Failed to rename group.');
+          toast.error(
+            t(
+              'ProfessionalNetwork.collaboration.toasts.renameError',
+              'Failed to rename group.'
+            )
+          );
         }
       },
     });
@@ -924,14 +998,17 @@ export default function CollaborationPage() {
         </div>
 
         <div className="p-4">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
+              placeholder={t(
+                'ProfessionalNetwork.collaboration.search.placeholder',
+                'Tìm nhóm...'
+              )}
               value={groupSearchTerm}
               onChange={(e) => setGroupSearchTerm(e.target.value)}
-              placeholder={t('Common.search', 'Search...')}
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border-none focus:ring-2 focus:ring-primary text-sm"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-100 dark:bg-slate-900 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
         </div>
@@ -1064,8 +1141,14 @@ export default function CollaborationPage() {
                     {t('ProfessionalNetwork.collaboration.members', 'members')}
                     <span className="mx-1.5">•</span>
                     {selectedGroup?.type === 'ClinicalCase'
-                      ? 'Clinical Case'
-                      : 'General'}
+                      ? t(
+                          'ProfessionalNetwork.collaboration.types.clinicalCase',
+                          'Clinical Case'
+                        )
+                      : t(
+                          'ProfessionalNetwork.collaboration.types.general',
+                          'General'
+                        )}
                     {selectedGroup?.type === 'ClinicalCase' && (
                       <>
                         <span className="mx-1.5">•</span>
@@ -1073,8 +1156,14 @@ export default function CollaborationPage() {
                           className={`font-bold ${selectedGroup.consiliumStatus === 'Concluded' ? 'text-rose-500' : 'text-amber-500'}`}
                         >
                           {selectedGroup.consiliumStatus === 'Concluded'
-                            ? 'Concluded'
-                            : 'Ongoing'}
+                            ? t(
+                                'ProfessionalNetwork.collaboration.status.concluded',
+                                'Concluded'
+                              )
+                            : t(
+                                'ProfessionalNetwork.collaboration.status.ongoing',
+                                'Ongoing'
+                              )}
                         </span>
                       </>
                     )}
@@ -1111,29 +1200,32 @@ export default function CollaborationPage() {
                 <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mr-2">
                   <button
                     onClick={() => setActiveTab('chat')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 border-b-2 transition-all ${
                       activeTab === 'chat'
-                        ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
-                        : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-slate-400'
                     }`}
                   >
                     <MessageSquare className="w-4 h-4" />
-                    {t('ProfessionalNetwork.collaboration.tabs.chat', 'Chat')}
+                    {t(
+                      'ProfessionalNetwork.collaboration.tabs.chat',
+                      'Thảo luận'
+                    )}
                   </button>
 
                   {isConsultationAllowed && (
                     <button
                       onClick={() => setActiveTab('consultation')}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 border-b-2 transition-all ${
                         activeTab === 'consultation'
-                          ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
-                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                          ? 'border-primary text-primary'
+                          : 'border-transparent text-slate-400'
                       }`}
                     >
                       <Video className="w-4 h-4" />
                       {t(
                         'ProfessionalNetwork.collaboration.tabs.consultation',
-                        'Hội chuẩn'
+                        'Hội chẩn'
                       )}
                     </button>
                   )}
@@ -1142,7 +1234,10 @@ export default function CollaborationPage() {
                 <button
                   onClick={() => setIsGroupMenuOpen((prev) => !prev)}
                   className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  title="Group settings"
+                  title={t(
+                    'ProfessionalNetwork.collaboration.actions.groupInfo',
+                    'Group settings'
+                  )}
                 >
                   <MoreVertical className="w-5 h-5 text-slate-400" />
                 </button>
