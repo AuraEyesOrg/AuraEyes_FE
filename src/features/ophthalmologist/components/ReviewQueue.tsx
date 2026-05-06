@@ -9,6 +9,26 @@ interface ReviewQueueProps {
   onSelect: (item: ReviewQueueItem) => void;
 }
 
+function getRiskLabel(
+  risk: string,
+  t: (key: string, fallback?: string) => string
+) {
+  const normalized = risk.trim().toLowerCase();
+  if (normalized === 'critical') {
+    return t('Ophthalmologist.screenings.risk.critical', 'Critical');
+  }
+  if (normalized === 'high') {
+    return t('Ophthalmologist.screenings.risk.high', 'High Risk');
+  }
+  if (normalized === 'moderate' || normalized === 'medium') {
+    return t('Ophthalmologist.screenings.risk.medium', 'Medium Risk');
+  }
+  if (normalized === 'low') {
+    return t('Ophthalmologist.screenings.risk.low', 'Low Risk');
+  }
+  return t('Ophthalmologist.screenings.risk.unknown', 'Unknown');
+}
+
 const riskBadgeClass = (risk: string) => {
   switch (risk.toLowerCase()) {
     case 'critical':
@@ -113,7 +133,7 @@ export default function ReviewQueue({
                       {isCriticalOrHigh && (
                         <AlertTriangle className="mr-0.5 h-2.5 w-2.5" />
                       )}
-                      {item.riskLevel}
+                      {getRiskLabel(item.riskLevel, t)}
                     </span>
                     <span className="flex items-center gap-0.5 text-[11px] text-gray-400 dark:text-gray-500">
                       <Clock className="h-3 w-3" />

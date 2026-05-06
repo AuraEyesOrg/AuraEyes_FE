@@ -1284,7 +1284,17 @@
         "viewAll": "View all screenings"
       },
       "queue": {
-        "updating": "Updating..."
+        "updating": "Updating...",
+        "empty": "No patients waiting for review",
+        "emptyHint": "New cases will appear here when patients are assigned to you.",
+        "continue": "Continue",
+        "startReview": "Start Review",
+        "inProgress": "In Progress"
+      },
+      "filters": {
+        "all": "All",
+        "highRisk": "High Risk",
+        "waitingLong": "> 30 min"
       },
       "stats": {
         "pending": "Pending Reviews",
@@ -1851,6 +1861,7 @@
       "liveQueue": "Live review queue",
       "autoSync": "Auto-sync",
       "risk": {
+        "critical": "Critical",
         "high": "High Risk",
         "medium": "Medium Risk",
         "low": "Low Risk",

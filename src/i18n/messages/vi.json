@@ -1286,7 +1286,17 @@
         "viewAll": "Xem tất cả ca khám"
       },
       "queue": {
-        "updating": "Đang cập nhật..."
+        "updating": "Đang cập nhật...",
+        "empty": "Không có bệnh nhân nào đang chờ duyệt",
+        "emptyHint": "Ca mới sẽ xuất hiện tại đây khi được phân cho bạn.",
+        "continue": "Tiếp tục",
+        "startReview": "Bắt đầu duyệt",
+        "inProgress": "Đang xử lý"
+      },
+      "filters": {
+        "all": "Tất cả",
+        "highRisk": "Nguy cơ cao",
+        "waitingLong": "> 30 phút"
       },
       "stats": {
         "pending": "Ca chờ duyệt",
@@ -2169,6 +2179,7 @@
       "pendingAnalysis": "Đang chờ phân tích",
       "review": "Xem xét",
       "risk": {
+        "critical": "Nguy cơ nghiêm trọng",
         "high": "Nguy cơ cao",
         "low": "Nguy cơ thấp",
         "medium": "Nguy cơ trung bình",

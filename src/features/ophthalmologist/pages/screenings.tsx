@@ -200,7 +200,18 @@ function aiLabelForRow(
   t: TranslateFn
 ): string {
   if (row.aiPrimaryLabel?.trim()) return row.aiPrimaryLabel.trim();
-  if (row.latestRiskLevel?.trim()) return row.latestRiskLevel.trim();
+  if (row.latestRiskLevel?.trim()) {
+    const risk = row.latestRiskLevel.trim().toLowerCase();
+    if (risk === 'critical')
+      return t('Ophthalmologist.screenings.risk.critical', 'Critical');
+    if (risk === 'high')
+      return t('Ophthalmologist.screenings.risk.high', 'High Risk');
+    if (risk === 'medium' || risk === 'moderate')
+      return t('Ophthalmologist.screenings.risk.medium', 'Medium Risk');
+    if (risk === 'low')
+      return t('Ophthalmologist.screenings.risk.low', 'Low Risk');
+    return t('Ophthalmologist.screenings.risk.unknown', 'Unknown');
+  }
   return t('Ophthalmologist.screenings.pendingAnalysis', 'Pending analysis');
 }
 

@@ -8,14 +8,15 @@ interface DoctorHeaderProps {
   pageName?: string;
 }
 
-export default function DoctorHeader({
-  pageName = 'Dashboard',
-}: DoctorHeaderProps) {
+export default function DoctorHeader({ pageName }: DoctorHeaderProps) {
   const { t } = useSafeTranslation();
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuthStore();
 
   const displayInitial = user?.fullName?.split(' ').pop()?.charAt(0) || 'D';
+
+  const resolvedPageName =
+    pageName ?? t('Ophthalmologist.sidebar.Dashboard', 'Dashboard');
 
   return (
     <header className="role-header">
@@ -23,7 +24,7 @@ export default function DoctorHeader({
         <div className="breadcrumb-text flex items-center gap-2">
           <span>{t('Ophthalmologist.header.pages', 'Pages')}</span>
           <span>/</span>
-          <span className="breadcrumb-active">{pageName}</span>
+          <span className="breadcrumb-active">{resolvedPageName}</span>
         </div>
 
         <div className="flex items-center gap-4">
