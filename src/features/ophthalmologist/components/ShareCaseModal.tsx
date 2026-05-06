@@ -84,7 +84,7 @@ export function ShareCaseModal({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-x-4 top-1/2 z-[70] mx-auto max-h-[90vh] w-full max-w-4xl -translate-y-1/2 overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-2xl dark:border-[#1e3a5f] dark:bg-[#0a1f44]"
+            className="fixed inset-x-4 top-1/2 z-[70] mx-auto flex h-[90vh] w-full max-w-4xl -translate-y-1/2 flex-col overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-2xl dark:border-[#1e3a5f] dark:bg-[#0a1f44]"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 p-6 dark:border-[#1e3a5f]">
@@ -115,7 +115,7 @@ export function ShareCaseModal({
               </button>
             </div>
 
-            <div className="flex h-full flex-col overflow-hidden md:flex-row">
+            <div className="flex flex-1 flex-col overflow-hidden md:flex-row min-h-0">
               {/* Left Column: Data */}
               <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
                 <div className="space-y-6">
@@ -197,9 +197,8 @@ export function ShareCaseModal({
                 </div>
               </div>
 
-              {/* Right Column: Input & Preview */}
-              <div className="flex-1 border-l border-slate-100 bg-slate-50/50 p-6 dark:border-[#1e3a5f] dark:bg-[#0a1929]/20">
-                <div className="flex h-full flex-col gap-6">
+              <div className="flex-1 overflow-y-auto border-l border-slate-100 bg-slate-50/50 p-6 dark:border-[#1e3a5f] dark:bg-[#0a1929]/20">
+                <div className="flex flex-col gap-6">
                   {/* Input */}
                   <div className="flex flex-col gap-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
@@ -220,14 +219,14 @@ export function ShareCaseModal({
                   </div>
 
                   {/* Preview */}
-                  <div className="flex flex-1 flex-col gap-2">
+                  <div className="flex flex-col gap-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
                       {t(
                         'Ophthalmologist.consultations.chat.shareCase.postPreview',
                         'Post Preview'
                       )}
                     </label>
-                    <div className="flex-1 rounded-2xl border border-dashed border-slate-300 p-4 dark:border-slate-700">
+                    <div className="rounded-2xl border border-dashed border-slate-300 p-4 dark:border-slate-700">
                       {content.trim() ? (
                         <div className="whitespace-pre-wrap text-sm text-slate-600 dark:text-gray-400">
                           {previewContent}
