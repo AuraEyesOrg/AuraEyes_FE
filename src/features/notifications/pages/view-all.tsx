@@ -68,7 +68,7 @@ const TYPE_GROUPS: Record<
 };
 
 export default function ViewAllNotificationsPage() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -237,16 +237,25 @@ export default function ViewAllNotificationsPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                View All Notifications
+                {t(
+                  'ClinicStaff.notifications.page.title',
+                  'View All Notifications'
+                )}
               </h1>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Full notification history across your account
+                {t(
+                  'ClinicStaff.notifications.page.subtitle',
+                  'Full notification history across your account'
+                )}
               </p>
             </div>
           </div>
 
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            Real-time: {connectionStatus === 'connected' ? 'Online' : 'Offline'}
+            Real-time:{' '}
+            {connectionStatus === 'connected'
+              ? t('ClinicStaff.notifications.realtime.online', 'Online')
+              : t('ClinicStaff.notifications.realtime.offline', 'Offline')}
           </div>
         </div>
 
@@ -259,7 +268,10 @@ export default function ViewAllNotificationsPage() {
               />
               <input
                 type="text"
-                placeholder="Search notifications..."
+                placeholder={t(
+                  'ClinicStaff.notifications.search.placeholder',
+                  'Search notifications...'
+                )}
                 value={searchQuery}
                 onChange={(event) => handleSearch(event.target.value)}
                 className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
@@ -286,13 +298,33 @@ export default function ViewAllNotificationsPage() {
               }}
               className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
-              <option value="all">All types</option>
-              <option value="screening">Screening</option>
-              <option value="consultation">Consultation</option>
-              <option value="message">Message</option>
-              <option value="appointment">Appointment</option>
-              <option value="wallet">Wallet</option>
-              <option value="system">System</option>
+              <option value="all">
+                {t('ClinicStaff.notifications.filters.all', 'All types')}
+              </option>
+              <option value="screening">
+                {t('ClinicStaff.notifications.filters.screening', 'Screening')}
+              </option>
+              <option value="consultation">
+                {t(
+                  'ClinicStaff.notifications.filters.consultation',
+                  'Consultation'
+                )}
+              </option>
+              <option value="message">
+                {t('ClinicStaff.notifications.filters.message', 'Message')}
+              </option>
+              <option value="appointment">
+                {t(
+                  'ClinicStaff.notifications.filters.appointment',
+                  'Appointment'
+                )}
+              </option>
+              <option value="wallet">
+                {t('ClinicStaff.notifications.filters.wallet', 'Wallet')}
+              </option>
+              <option value="system">
+                {t('ClinicStaff.notifications.filters.system', 'System')}
+              </option>
             </select>
 
             {unreadCount > 0 && (
@@ -301,7 +333,7 @@ export default function ViewAllNotificationsPage() {
                 className="flex items-center gap-2 rounded-lg px-4 py-2 text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
               >
                 <CheckCheck size={18} />
-                Mark All Read
+                {t('ClinicStaff.notifications.markAllRead', 'Mark All Read')}
               </button>
             )}
           </div>
@@ -311,18 +343,32 @@ export default function ViewAllNotificationsPage() {
           {isLoading ? (
             <div className="p-8 text-center">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-r-transparent" />
-              <p className="mt-2 text-gray-500">Loading notifications...</p>
+              <p className="mt-2 text-gray-500">
+                {t(
+                  'ClinicStaff.notifications.loading',
+                  'Loading notifications...'
+                )}
+              </p>
             </div>
           ) : filteredNotifications.length === 0 ? (
             <div className="p-12 text-center">
               <Bell size={48} className="mx-auto mb-3 text-gray-400" />
               <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
-                No notifications found
+                {t(
+                  'ClinicStaff.notifications.empty.title',
+                  'No notifications found'
+                )}
               </h3>
               <p className="text-gray-500 dark:text-gray-400">
                 {searchQuery
-                  ? 'Try changing the search keyword.'
-                  : 'No notification available yet.'}
+                  ? t(
+                      'ClinicStaff.notifications.empty.search',
+                      'Try changing the search keyword.'
+                    )
+                  : t(
+                      'ClinicStaff.notifications.empty.noData',
+                      'No notification available yet.'
+                    )}
               </p>
             </div>
           ) : (
@@ -341,9 +387,15 @@ export default function ViewAllNotificationsPage() {
         {totalPages > 1 && (
           <div className="mt-6 flex items-center justify-between">
             <span className="text-sm text-gray-700 dark:text-gray-300">
-              Showing {(currentPage - 1) * pageSize + 1} to{' '}
-              {Math.min(currentPage * pageSize, totalCount)} of {totalCount}{' '}
-              notifications
+              {t(
+                'ClinicStaff.notifications.pagination.showing',
+                'Showing {{from}} to {{to}} of {{total}} notifications',
+                {
+                  from: (currentPage - 1) * pageSize + 1,
+                  to: Math.min(currentPage * pageSize, totalCount),
+                  total: totalCount,
+                }
+              )}
             </span>
 
             <div className="flex items-center gap-2">
@@ -352,11 +404,18 @@ export default function ViewAllNotificationsPage() {
                 disabled={currentPage <= 1}
                 className="rounded border border-gray-300 px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600"
               >
-                Previous
+                {t('ClinicStaff.notifications.pagination.previous', 'Previous')}
               </button>
 
               <span className="text-sm text-gray-700 dark:text-gray-300">
-                Page {currentPage} of {totalPages}
+                {t(
+                  'ClinicStaff.notifications.pagination.pageOf',
+                  'Page {{current}} of {{total}}',
+                  {
+                    current: currentPage,
+                    total: totalPages,
+                  }
+                )}
               </span>
 
               <button
@@ -364,7 +423,7 @@ export default function ViewAllNotificationsPage() {
                 disabled={currentPage >= totalPages}
                 className="rounded border border-gray-300 px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600"
               >
-                Next
+                {t('ClinicStaff.notifications.pagination.next', 'Next')}
               </button>
             </div>
           </div>

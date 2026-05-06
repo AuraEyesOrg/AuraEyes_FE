@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, Clock3, RefreshCw, Search, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock3, Search, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
@@ -297,14 +297,6 @@ export default function SystemAdminLeaveRequestsPage() {
                     </option>
                   ))}
                 </select>
-
-                <button
-                  onClick={() => listQuery.refetch()}
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  {t('SystemAdmin.common.actions.refresh', 'Refresh')}
-                </button>
               </div>
             </div>
 

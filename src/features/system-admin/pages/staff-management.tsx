@@ -158,7 +158,7 @@ export default function StaffManagementPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const reloadData = useCallback(async () => {
     staffCacheTimestamp = 0;
@@ -339,12 +339,13 @@ export default function StaffManagementPage() {
       variant = 'error';
     else if (s === 'pending') variant = 'warning';
 
-    return (
-      <StatusBadge
-        status={variant}
-        label={status || t('SystemAdmin.common.active', 'Active')}
-      />
+    const statusKey = `SystemAdmin.staffManagement.status.${s}`;
+    const statusLabel = t(
+      statusKey,
+      status || t('SystemAdmin.common.active', 'Active')
     );
+
+    return <StatusBadge status={variant} label={statusLabel} />;
   };
 
   const filteredUsers = users.filter((user) => {

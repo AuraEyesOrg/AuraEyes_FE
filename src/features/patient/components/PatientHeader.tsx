@@ -1,4 +1,4 @@
-import { Search, Moon, Sun, Home } from 'lucide-react';
+import { Moon, Sun, Home } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import useAuthStore from '@/store/auth-store';
@@ -68,22 +68,6 @@ export default function PatientHeader() {
 
         {/* Right Section */}
         <div className="flex items-center gap-4">
-          {/* Search */}
-          <div className="relative">
-            <Search
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="text"
-              placeholder={t(
-                'PatientHeader.search.placeholder',
-                'Search reports, appointments...'
-              )}
-              className="header-search-input w-64"
-            />
-          </div>
-
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}

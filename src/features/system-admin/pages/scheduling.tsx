@@ -432,7 +432,7 @@ export default function SystemAdminScheduling() {
 
         {/* Tabs */}
         <div className="px-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-          <div className="flex gap-8">
+          <div className="flex gap-12">
             <button
               onClick={() => setActiveTab('appointments')}
               className={`pb-4 text-sm font-semibold border-b-2 transition-all ${

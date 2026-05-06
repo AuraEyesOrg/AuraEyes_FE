@@ -359,9 +359,9 @@ export default function OrganisationSchedulePage() {
           <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm p-8 min-h-[600px] flex flex-col">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-xl font-black text-slate-900 dark:text-white">
-                {format(selectedDate, 'MMM d, yyyy', {
-                  locale: i18n.language === 'vi' ? vi : enUS,
-                })}
+                {i18n.language === 'vi'
+                  ? format(selectedDate, 'd MMMM yyyy', { locale: vi })
+                  : format(selectedDate, 'MMM d, yyyy', { locale: enUS })}
               </h2>
               {upcomingAggregatedSlots.length > 0 && (
                 <span className="text-xs font-bold text-slate-400">

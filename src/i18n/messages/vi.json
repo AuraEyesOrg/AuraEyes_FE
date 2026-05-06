@@ -1,4 +1,74 @@
 {
+  "ClinicStaff": {
+    "profile": {
+      "page": {
+        "title": "Hồ sơ",
+        "subtitle": "Quản lý thông tin cá nhân và nhân viên phòng khám của bạn."
+      },
+      "memberSince": "Thành viên từ",
+      "personalInfo": "Thông tin cá nhân",
+      "edit": "Chỉnh sửa",
+      "cancel": "Hủy",
+      "save": "Lưu",
+      "updateAvatar": "Cập nhật ảnh đại diện",
+      "chooseImage": "Chọn ảnh",
+      "imageSupport": "Hỗ trợ JPG, PNG, GIF, WebP. Kích thước tối đa 5MB.",
+      "fields": {
+        "fullName": "Họ và tên",
+        "email": "Email",
+        "phone": "Số điện thoại",
+        "dateOfBirth": "Ngày sinh",
+        "gender": "Giới tính",
+        "citizenId": "CCCD",
+        "address": "Địa chỉ"
+      },
+      "gender": {
+        "preferNotToSay": "Không muốn tiết lộ",
+        "male": "Nam",
+        "female": "Nữ",
+        "other": "Khác"
+      },
+      "errors": {
+        "loadFailed": "Không thể tải hồ sơ nhân viên phòng khám",
+        "tryAgain": "Vui lòng thử lại sau."
+      }
+    },
+    "notifications": {
+      "page": {
+        "title": "Xem tất cả thông báo",
+        "subtitle": "Lịch sử thông báo đầy đủ trên tài khoản của bạn"
+      },
+      "realtime": {
+        "online": "Trực tuyến",
+        "offline": "Ngoại tuyến"
+      },
+      "search": {
+        "placeholder": "Tìm kiếm thông báo..."
+      },
+      "filters": {
+        "all": "Tất cả",
+        "screening": "Sàng lọc",
+        "consultation": "Tư vấn",
+        "message": "Tin nhắn",
+        "appointment": "Lịch hẹn",
+        "wallet": "Ví",
+        "system": "Hệ thống"
+      },
+      "markAllRead": "Đánh dấu đã đọc tất cả",
+      "loading": "Đang tải thông báo...",
+      "empty": {
+        "title": "Không tìm thấy thông báo",
+        "search": "Thử thay đổi từ khóa tìm kiếm.",
+        "noData": "Chưa có thông báo nào."
+      },
+      "pagination": {
+        "showing": "Đang hiển thị {{from}} đến {{to}} của {{total}} thông báo",
+        "previous": "Trước",
+        "next": "Tiếp",
+        "pageOf": "Trang {{current}} của {{total}}"
+      }
+    }
+  },
   "PatientAppointments": {
     "page": {
       "eyebrow": "Lịch của bạn",
@@ -5251,7 +5321,10 @@
       "status": "Trạng thái",
       "doctor": "Bác sĩ",
       "waitTime": "Chờ",
-      "doctorStatus": "Trạng thái bác sĩ",
+      "doctorStatus": {
+        "inconsultation": "Đang tư vấn",
+        "available": "Sẵn sàng"
+      },
       "busy": "đang bận",
       "noDoctors": "Không có bác sĩ nào đang trực.",
       "handled": "đã xử lý",
@@ -5392,6 +5465,13 @@
         "status": "Trạng thái",
         "actions": "Thao tác"
       },
+      "status": {
+        "active": "Đang hoạt động",
+        "locked": "Đã khóa",
+        "suspended": "Đã đình chỉ",
+        "inactive": "Không hoạt động",
+        "pending": "Đang chờ"
+      },
       "toasts": {
         "loadError": "Không thể tải dữ liệu nhân sự",
         "accountUnlocked": "Mở khóa tài khoản thành công.",
@@ -5427,6 +5507,37 @@
           "Payment": "Thanh toán",
           "ConsultationSupport": "Hỗ trợ tư vấn"
         }
+      }
+    },
+    "patients": {
+      "title": "Bệnh nhân",
+      "description": "Quản lý tài khoản bệnh nhân và đăng ký",
+      "summary": {
+        "showing": "Hiển thị {{shown}} của {{total}} bệnh nhân"
+      },
+      "table": {
+        "columns": {
+          "name": "Tên",
+          "email": "Email",
+          "phone": "Số điện thoại",
+          "status": "Trạng thái",
+          "type": "Loại",
+          "lastLogin": "Đăng nhập lần cuối",
+          "joined": "Ngày tham gia"
+        },
+        "values": {
+          "walkIn": "Vừa đến",
+          "registered": "Đã đăng ký",
+          "unassigned": "Chưa gán"
+        }
+      },
+      "status": {
+        "active": "Đang hoạt động",
+        "locked": "Đã khóa"
+      },
+      "actions": {
+        "unlock": "Mở khóa tài khoản",
+        "lock": "Khóa tài khoản"
       }
     },
     "staff": {
@@ -5520,10 +5631,10 @@
       "empty": "Chưa có chính sách nghỉ phép nào",
       "emptyDesc": "Bắt đầu bằng cách thêm chính sách để xác định cách nhân viên kiếm thêm ngày nghỉ.",
       "noDescription": "Không có mô tả",
-      "addTitle": "Thêm chính sách",
-      "addSubtitle": "Tạo quy tắc nghỉ phép mới cho nhân viên",
+      "addTitle": "Chính sách mới",
+      "addSubtitle": "Cấu hình quy tắc bù đắp mới",
       "editTitle": "Chỉnh sửa chính sách",
-      "editSubtitle": "Cập nhật quy tắc nghỉ phép",
+      "editSubtitle": "Sửa quy tắc hiện có",
       "fields": {
         "name": "Tên chính sách",
         "days": "Số ngày thêm",
@@ -9055,6 +9166,7 @@
       "checkedIn": "Đã check-in",
       "checkedInAtCounter": "Bệnh nhân check-in tại quầy",
       "appointmentCreated": "Lịch hẹn đã tạo",
+      "appointmentConfirmed": "Lịch hẹn đã xác nhận",
       "appointmentCancelled": "Lịch hẹn đã hủy",
       "newAppointmentBooked": "Lịch hẹn mới được đặt",
       "screeningCompleted": "Sàng lọc hoàn tất",
