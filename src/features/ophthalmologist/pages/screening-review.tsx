@@ -45,6 +45,7 @@ import useAuthStore from '@/store/auth-store';
 import Spinner from '@/components/ui/spinner';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { localizeFindingsText } from '@/features/patient/lib/disease-translation';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { ShareCaseModal } from '../components';
 import { postsApi } from '@/features/professional-network/api/network.api';
@@ -278,7 +279,7 @@ interface RxItem {
 type DiagnosisModalTab = 'diagnosis' | 'prescription' | 'referral';
 
 export default function ScreeningReviewPage() {
-  const { t } = useSafeTranslation();
+  const { t, i18n } = useSafeTranslation();
   const { screeningId } = useParams<{ screeningId: string }>();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
@@ -728,6 +729,20 @@ export default function ScreeningReviewPage() {
     }
     return fallback;
   };
+
+  const localizedCaseFindings = useMemo(() => {
+    const rawFindings =
+      clinicalFindings || (detail?.latestResult?.findings ?? '');
+    return localizeFindingsText(
+      rawFindings,
+      i18n.resolvedLanguage ?? i18n.language ?? 'vi'
+    );
+  }, [
+    clinicalFindings,
+    detail?.latestResult?.findings,
+    i18n.language,
+    i18n.resolvedLanguage,
+  ]);
 
   useEffect(() => {
     setBoxOverrides({});
@@ -3264,14 +3279,13 @@ export default function ScreeningReviewPage() {
             shareConsultationMutation.mutate({
               consultationSessionId: reportableSessionId,
               aiSummary: detail.latestResult?.summary ?? '',
-              finalDiagnosis:
-                clinicalFindings || (detail.latestResult?.findings ?? ''),
+              finalDiagnosis: localizedCaseFindings,
               doctorNote: shareCaseContent.trim(),
             });
           }}
           caseSnapshot={{
             summary: detail.latestResult?.summary ?? '',
-            findings: clinicalFindings || (detail.latestResult?.findings ?? ''),
+            findings: localizedCaseFindings,
             riskLevel: detail.latestResult?.riskLevel ?? 'None',
             confidenceScore: detail.latestResult?.confidenceScore ?? 0,
             originalImageUrls: detail.images.map((img) => img.imageUrl),
