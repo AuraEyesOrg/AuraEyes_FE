@@ -693,6 +693,66 @@
       "patientPortalLogin": "Log in to the Patient Portal to search your medical history, track treatment plans, and download your EMR (PDF)."
     }
   },
+  "CarePlan": {
+    "status": {
+      "upcoming": "Upcoming",
+      "completed": "Completed",
+      "overdue": "Overdue",
+      "cancelled": "Cancelled"
+    },
+    "stepType": {
+      "followUp": "Follow-up",
+      "test": "Test",
+      "medication": "Medication",
+      "custom": "Custom"
+    },
+    "actions": {
+      "nextUp": "Next up",
+      "markComplete": "Mark complete",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "form": {
+      "title": {
+        "edit": "Edit roadmap step",
+        "add": "Add roadmap step"
+      },
+      "quickPresets": "Quick-add presets",
+      "presets": {
+        "followUp1m": "Follow-up in 1 month",
+        "recheckVision": "Re-check vision"
+      },
+      "labels": {
+        "title": "Title",
+        "type": "Type",
+        "plannedDate": "Planned date",
+        "description": "Description",
+        "optional": "optional"
+      },
+      "stepTypeLabel": {
+        "followUp": "Follow-up visit",
+        "test": "Eye / diagnostic test",
+        "medication": "Medication review",
+        "custom": "Custom instruction"
+      },
+      "placeholders": {
+        "title": "e.g. Follow-up visit",
+        "description": "Doctor instruction or context for the patient"
+      },
+      "actions": {
+        "close": "Close",
+        "cancel": "Cancel",
+        "saving": "Saving...",
+        "saveChanges": "Save changes",
+        "addStep": "Add step"
+      },
+      "validation": {
+        "titleRequired": "Title is required.",
+        "plannedDateRequired": "Planned date is required.",
+        "saveFailed": "Failed to save roadmap step."
+      }
+    }
+  },
   "Auth": {
     "login": "Login",
     "register": "Register",
@@ -1925,9 +1985,9 @@
     "ophthalmology": "Ophthalmology"
   },
   "GuestHome": {
-    "badge": "Aura Digital Hospital System",
+    "badge": "Aura Eyes",
     "title": "Intelligent Healthcare with Clinical-Grade Precision",
-    "description": "Aura Digital Hospital provides comprehensive digital health solutions, combining the power of AI and top experts to protect your health.",
+    "description": "Aura Eyes provides comprehensive digital health solutions, combining the power of AI and top experts to protect your health.",
     "primaryCta": "Book Now",
     "secondaryCta": "Find a Doctor",
     "recruitmentPopup": {
@@ -1977,7 +2037,7 @@
       "advanced": "Advanced"
     },
     "source": {
-      "auraGovernance": "Source: AURA Clinical Governance v2026.1"
+      "auraGovernance": "Source: AURA Eyes - Clinical Governance v2026.1"
     },
     "terms": {
       "fundus": "Fundus",
@@ -2144,7 +2204,7 @@
     }
   },
   "About": {
-    "heroTitle": "Aura Digital Hospital",
+    "heroTitle": "Aura Eyes",
     "heroDescription": "Aura Eyes merges clinical expertise with advanced medical AI to provide a comprehensive, precise, and accessible healthcare experience.",
     "values": {
       "badge": "Our Core Values",

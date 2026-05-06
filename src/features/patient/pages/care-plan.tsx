@@ -9,18 +9,16 @@ import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import useAuthStore from '@/store/auth-store';
 import { RoadmapTimeline, usePatientHealthRoadmap } from '@/features/care-plan';
-import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { resolvePathWithLocale } from '@/i18n/middleware';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 /**
  * Patient-facing read-only Healthcare Roadmap (doctor-authored care plan timeline).
  * Distinct from the AI-generated roadmap at /patient/roadmap.
  */
 export default function PatientCarePlanPage() {
-  const { t: i18nT } = useTranslation();
-  const t = (key: string, defaultValue?: string, options?: any) =>
-    i18nT(key as any, { defaultValue, ...options } as any) as string;
+  const { t } = useSafeTranslation();
 
   const { user } = useAuthStore();
   const patientId = user?.roleId ?? '';
