@@ -421,16 +421,7 @@ export default function ClinicStaffPatientsPage() {
                               {patient.name}
                             </div>
                             <div className="text-xs text-(--text-tertiary)">
-                              {patient.age}{' '}
-                              {t('ClinicStaff.common.yearsAbbr', 'yrs')} ·{' '}
-                              {patient.gender === 'M'
-                                ? t('ClinicStaff.common.gender.male', 'Male')
-                                : t(
-                                    'ClinicStaff.common.gender.female',
-                                    'Female'
-                                  )}
-                              {patient.phoneNumber &&
-                                ` · ${patient.phoneNumber}`}
+                              {patient.phoneNumber}
                             </div>
                           </div>
                         </div>

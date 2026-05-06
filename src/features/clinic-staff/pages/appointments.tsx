@@ -714,9 +714,12 @@ export default function ClinicStaffAppointmentsPage() {
     }
 
     try {
-      await checkInMutation.mutateAsync(
-        scanTargetAppointmentId ?? parsed.appointmentId
-      );
+      const targetId = scanTargetAppointmentId ?? parsed.appointmentId;
+      const targetAppt = appointments.find((a) => a.id === targetId);
+      await checkInMutation.mutateAsync({
+        appointmentId: targetId,
+        patientName: targetAppt?.patientName ?? undefined,
+      });
       toast.success(
         t(
           'Organisation.calendar.toast.qrCheckInSuccess',
@@ -1390,7 +1393,11 @@ export default function ClinicStaffAppointmentsPage() {
                                     // Walk-ins don't need QR, just check-in directly
                                     await runAction(
                                       () =>
-                                        checkInMutation.mutateAsync(appt.id),
+                                        checkInMutation.mutateAsync({
+                                          appointmentId: appt.id,
+                                          patientName:
+                                            appt.patientName ?? undefined,
+                                        }),
                                       t(
                                         'Organisation.calendar.toast.checkInSuccess',
                                         'Check-in successful.'
