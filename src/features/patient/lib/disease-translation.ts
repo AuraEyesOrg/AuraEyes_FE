@@ -232,10 +232,13 @@ export function localizeFindingsText(
 
     const colonIndex = withoutConfidence.indexOf(':');
     if (colonIndex === -1) {
-      const translated = toDisplayDiseaseName(
-        normalizeDiseaseName(withoutConfidence),
-        language
-      );
+      const translated = withoutConfidence
+        .split('/')
+        .map((item) =>
+          toDisplayDiseaseName(normalizeDiseaseName(item), language)
+        )
+        .filter(Boolean)
+        .join(' / ');
       return `${translated}${confidenceSuffix}`.trim();
     }
 
@@ -256,4 +259,24 @@ export function localizeFindingsText(
     .map(localizeSegment)
     .filter(Boolean)
     .join(', ');
+}
+
+export function localizeDiseaseMentions(
+  text: string,
+  language: string
+): string {
+  const isVietnamese = (language || 'vi').toLowerCase().startsWith('vi');
+  if (!isVietnamese || !text?.trim()) return text;
+
+  const entries = Object.entries(DISEASE_NAME_VI).sort(
+    ([a], [b]) => b.length - a.length
+  );
+
+  let localized = text;
+  for (const [enName, viName] of entries) {
+    const escaped = enName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    localized = localized.replace(new RegExp(escaped, 'gi'), viName);
+  }
+
+  return localized;
 }

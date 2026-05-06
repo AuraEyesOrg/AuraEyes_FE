@@ -2,7 +2,10 @@ import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, AlertCircle, Stethoscope } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
-import { localizeFindingsText } from '@/features/patient/lib/disease-translation';
+import {
+  localizeDiseaseMentions,
+  localizeFindingsText,
+} from '@/features/patient/lib/disease-translation';
 
 interface ShareCaseModalProps {
   isOpen: boolean;
@@ -39,13 +42,17 @@ export function ShareCaseModal({
     () => localizeFindingsText(caseSnapshot.findings ?? '', language),
     [caseSnapshot.findings, language]
   );
+  const localizedSummary = useMemo(
+    () => localizeDiseaseMentions(caseSnapshot.summary ?? '', language),
+    [caseSnapshot.summary, language]
+  );
 
   const previewContent = useMemo(() => {
     const parts: string[] = [];
 
-    if (caseSnapshot.summary) {
+    if (localizedSummary) {
       parts.push(
-        `📋 **${t('ProfessionalNetwork.shareClinicCaseModal.summary.label', 'Summary')}**: ${caseSnapshot.summary}`
+        `📋 **${t('ProfessionalNetwork.shareClinicCaseModal.summary.label', 'Summary')}**: ${localizedSummary}`
       );
     }
 
@@ -74,7 +81,7 @@ export function ShareCaseModal({
     }
 
     return parts.join('\n\n');
-  }, [caseSnapshot, content, localizedFindings, t]);
+  }, [caseSnapshot, content, localizedFindings, localizedSummary, t]);
 
   return (
     <AnimatePresence>
@@ -189,7 +196,7 @@ export function ShareCaseModal({
                     </div>
                   </div>
 
-                  {caseSnapshot.summary && (
+                  {localizedSummary && (
                     <div>
                       <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
                         {t(
@@ -198,7 +205,7 @@ export function ShareCaseModal({
                         )}
                       </h4>
                       <p className="text-sm leading-relaxed text-slate-600 dark:text-gray-300 italic">
-                        "{caseSnapshot.summary}"
+                        "{localizedSummary}"
                       </p>
                     </div>
                   )}
@@ -285,13 +292,21 @@ export function ShareCaseModal({
                 className="flex items-center gap-2 rounded-xl bg-cyan-600 px-8 py-2.5 text-sm font-bold text-white shadow-lg shadow-cyan-600/20 transition-all hover:bg-cyan-700 hover:shadow-cyan-600/40 disabled:opacity-50"
               >
                 {isSubmitting ? (
-                  <Spinner size={16} className="text-white" />
+                  <>
+                    <Spinner size={16} className="text-white" />
+                    {t(
+                      'ProfessionalNetwork.shareClinicCaseModal.actions.posting',
+                      'Đang đăng...'
+                    )}
+                  </>
                 ) : (
-                  <Send className="h-4 w-4" />
-                )}
-                {t(
-                  'Ophthalmologist.consultations.chat.shareCase.submit',
-                  'Post to Network'
+                  <>
+                    <Send className="h-4 w-4" />
+                    {t(
+                      'ProfessionalNetwork.shareClinicCaseModal.actions.postCase',
+                      'Đăng ca bệnh'
+                    )}
+                  </>
                 )}
               </button>
             </div>
