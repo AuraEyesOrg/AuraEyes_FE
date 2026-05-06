@@ -4536,7 +4536,11 @@
         "waitingForPayment": "Chờ thanh toán cuối"
       },
       "summary": {
-        "records": "{{count}} hồ sơ"
+        "records": "{{count}} tổng lịch hẹn",
+        "filteredRecords": "Tìm thấy {{count}} lịch hẹn phù hợp"
+      },
+      "search": {
+        "placeholder": "Tìm theo tên, số điện thoại..."
       },
       "toast": {
         "depositRequiredBeforeCheckIn": "Vui lòng thu tiền cọc trước khi check-in.",
@@ -4573,6 +4577,7 @@
         "states": {
           "loadingAppointments": "Đang tải lịch hẹn...",
           "noAppointments": "Không có lịch hẹn trong ngày này.",
+          "noAppointmentsDescription": "Không có lịch hẹn nào được lên lịch cho ngày này.",
           "terminal": {
             "cancelled": "Lịch hẹn đã hủy",
             "completed": "Đã hoàn tất lượt khám",
@@ -11167,7 +11172,7 @@
       "notification": "Thông báo"
     }
   },
-  "Organisation": {
+  "OrganisationLegacy": {
     "screeningResult": {
       "summary": {
         "high": {
