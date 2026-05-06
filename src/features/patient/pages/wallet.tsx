@@ -17,6 +17,8 @@ import { formatCurrency, cleanDescription } from '@/lib/helper';
 import { useMyOrders, useSyncOrder } from '../hooks/use-financial';
 import type { OrderStatus, PaymentStatus } from '../types/financial.types';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 type FilterType = 'all' | 'completed' | 'pending' | 'cancelled';
 
@@ -130,6 +132,20 @@ export default function WalletPage() {
     setIsSyncingAll(true);
     try {
       await Promise.all(pendingOrders.map((o) => syncOrder(o.id)));
+      toast.success(
+        t('PatientWallet.toast.syncSuccess', {
+          defaultValue: 'Đã cập nhật trạng thái các đơn hàng.',
+        })
+      );
+    } catch (error) {
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t('PatientWallet.toast.syncFailed', {
+            defaultValue: 'Không thể cập nhật trạng thái đơn hàng.',
+          })
+        )
+      );
     } finally {
       setIsSyncingAll(false);
     }

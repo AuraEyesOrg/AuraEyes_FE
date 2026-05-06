@@ -257,8 +257,13 @@ export default function ProfilePage() {
         setPreviewUrl(null);
         setAvatarFile(null);
       },
-      onError: (_err) => {
-        toast.error(t('PatientProfile.toast.avatarUploadFailed'));
+      onError: (err) => {
+        toast.error(
+          extractApiErrorMessage(
+            err,
+            t('PatientProfile.toast.avatarUploadFailed')
+          )
+        );
       },
     });
   };

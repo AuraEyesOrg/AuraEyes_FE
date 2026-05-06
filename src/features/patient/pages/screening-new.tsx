@@ -21,7 +21,8 @@ import { toast } from 'react-toastify';
 import { screeningApi } from '../api/screening.api';
 import { agreeScreeningConsent } from '../api/consent.api';
 import { UPLOAD_SCREENING_CONSENT_CONTENT } from '../constants/consent-content';
-import { useTranslation } from 'react-i18next';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 import { aiCoreClient } from '@/lib/axios';
 import i18n from '@/i18n/i18n';
@@ -166,7 +167,7 @@ async function analyzeImageQuality(file: File): Promise<{
 }
 
 export default function ScreeningNewPage() {
-  const { t: i18nT } = useTranslation();
+  const { t: i18nT } = useSafeTranslation();
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
 
@@ -437,7 +438,12 @@ export default function ScreeningNewPage() {
       });
     } catch (error) {
       console.error('Failed to prepare consented screening session:', error);
-      toast.error(t('PatientScreeningNew.errors.startAnalysisFailed'));
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t('PatientScreeningNew.errors.startAnalysisFailed')
+        )
+      );
     } finally {
       setIsPreparingSession(false);
     }

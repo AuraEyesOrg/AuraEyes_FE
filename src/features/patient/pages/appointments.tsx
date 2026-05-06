@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import { extractApiErrorMessage } from '@/lib/api-error';
 import { useTranslation } from 'react-i18next';
 import {
   CalendarDays,
@@ -501,7 +502,12 @@ const AppointmentsPage = () => {
               toast.info(t('PatientAppointments.toast.feedbackAlreadyExists'));
               return;
             }
-            toast.error(t('PatientAppointments.toast.feedbackSubmitFailed'));
+            toast.error(
+              extractApiErrorMessage(
+                error,
+                t('PatientAppointments.toast.feedbackSubmitFailed')
+              )
+            );
             throw error; // Re-throw so FeedbackModal doesn't mark target as submitted
           }
         }}
