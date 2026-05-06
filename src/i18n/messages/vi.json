@@ -1409,7 +1409,13 @@
         "languageVi": "Tiếng Việt (VN)",
         "languageEn": "Tiếng Anh (Hoa Kỳ)"
       },
-      "appearance": "Giao diện",
+      "appearance": {
+        "title": "Giao diện",
+        "darkMode": "Chế độ tối",
+        "currentlyOn": "Đang bật",
+        "currentlyOff": "Đang tắt",
+        "toggle": "Chuyển giao diện"
+      },
       "notifications": "Thông báo",
       "dangerZone": {
         "title": "Vùng nguy hiểm",
@@ -1438,7 +1444,16 @@
       },
       "title": "Cài đặt",
       "displayOptions": "Tùy chọn hiển thị",
-      "language": "Ngôn ngữ",
+      "language": {
+        "title": "Ngôn ngữ",
+        "subtitle": "Chọn ngôn ngữ hiển thị cho cổng thông tin",
+        "options": {
+          "viNative": "Tiếng Việt",
+          "viLabel": "Tiếng Việt",
+          "enNative": "English",
+          "enLabel": "Tiếng Anh (US)"
+        }
+      },
       "theme": "Chủ đề",
       "autoSaveDraft": "Tự động lưu bản nháp",
       "compactMode": "Chế độ thu gọn",
@@ -7485,7 +7500,8 @@
       "discover": "Khám phá",
       "saved": "Đã lưu",
       "managePosts": "Quản lý bài viết",
-      "profile": "Hồ sơ"
+      "profile": "Hồ sơ",
+      "collaboration": "Hợp tác"
     },
     "sidebar": {
       "backToOrganisationDashboard": "Quay lại bảng điều khiển tổ chức",
@@ -11322,7 +11338,7 @@
     "yesterday": "Hôm qua",
     "longTimeAgo": "Cách đây lâu"
   },
-  "ProfessionalNetwork": {
+  "ProfessionalNetworkLegacy": {
     "common": {
       "back": "Quay lại",
       "cancel": "Hủy",

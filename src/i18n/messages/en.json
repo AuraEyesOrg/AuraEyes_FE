@@ -1424,7 +1424,18 @@
         "title": "Appearance",
         "darkMode": "Dark Mode",
         "currentlyOn": "Currently on",
-        "currentlyOff": "Currently off"
+        "currentlyOff": "Currently off",
+        "toggle": "Toggle theme"
+      },
+      "language": {
+        "title": "Language",
+        "subtitle": "Choose your preferred language for the portal",
+        "options": {
+          "viNative": "Tiếng Việt",
+          "viLabel": "Vietnamese",
+          "enNative": "English",
+          "enLabel": "English (US)"
+        }
       },
       "notifications": {
         "title": "Notifications",
@@ -8625,7 +8636,7 @@
     "yesterday": "Yesterday",
     "longTimeAgo": "Long time ago"
   },
-  "ProfessionalNetwork": {
+  "ProfessionalNetworkLegacy": {
     "common": {
       "back": "Back",
       "cancel": "Cancel",
