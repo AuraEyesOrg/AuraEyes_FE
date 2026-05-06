@@ -1941,10 +1941,16 @@
       "loading": "Đang tải bài sàng lọc...",
       "needsAttention": "Cần chú ý",
       "openChat": "Mở trò chuyện",
+      "openAftercare": "Tư vấn sau khám",
       "reviewNow": "Duyệt ngay",
       "searchPlaceholder": "Tìm kiếm theo tên bệnh nhân hoặc ID sàng lọc...",
       "subtitle": "Kết quả sàng lọc AI cho bệnh nhân của bạn - sắp xếp theo mức độ ưu tiên",
-      "toggleSortOrder": "Chuyển đổi thứ tự sắp xếp"
+      "toggleSortOrder": "Chuyển đổi thứ tự sắp xếp",
+      "liveQueue": "Hàng đợi trực tiếp",
+      "autoSync": "Tự động đồng bộ"
+    },
+    "consultations": {
+      "title": "Tư vấn sau khám"
     },
     "wallet": {
       "balance": "Số dư hiện tại",
