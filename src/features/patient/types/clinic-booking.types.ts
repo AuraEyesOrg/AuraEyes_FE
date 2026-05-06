@@ -39,9 +39,11 @@ export interface DoctorSlotDetailDto {
 export interface CertificateDto {
   id: string;
   type: string;
-  degreeLevel?: string | null;
+  degreeLevel?: number | null;
   name: string;
   issuingAuthority?: string | null;
+  issuingInstitution?: string | null;
+  scopeOfPractice?: string | null;
   issuedDate: string;
   expiryDate?: string | null;
   certificateUrl?: string | null;

@@ -7,33 +7,32 @@ import { api } from '@/lib/api';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { ophthalmologistProfileKeys } from '../hooks/useOphthalmologistProfile';
 
-type DegreeLevel =
-  | 'Bachelor'
-  | 'Master'
-  | 'Doctor'
-  | 'AssociateProfessor'
-  | 'Professor';
+type DegreeLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 const DEGREE_LEVEL_OPTIONS: Array<{ value: DegreeLevel; label: string }> = [
-  { value: 'Bachelor', label: 'Bachelor' },
-  { value: 'Master', label: 'Master' },
-  { value: 'Doctor', label: 'Doctor (PhD)' },
-  { value: 'AssociateProfessor', label: 'Associate Professor' },
-  { value: 'Professor', label: 'Professor' },
+  { value: 3, label: 'Cử nhân (Bachelor)' },
+  { value: 4, label: 'Thạc sĩ (Master)' },
+  { value: 5, label: 'Tiến sĩ (Doctor/PhD)' },
+  { value: 6, label: 'Phó Giáo sư (Assoc. Prof)' },
+  { value: 7, label: 'Giáo sư (Professor)' },
+  { value: 1, label: 'BSCKI' },
+  { value: 2, label: 'BSCKII' },
+  { value: 8, label: 'Bác sĩ nội trú (Resident)' },
 ];
 
 interface DegreeFormItem {
   name: string;
   degreeLevel: DegreeLevel;
-  issuingAuthority: string;
+  issuingInstitution: string;
   issuedDate: string;
   file?: FileList;
 }
 
 interface CertificateFormItem {
   name: string;
-  issuingAuthority: string;
   licenseNumber: string;
+  issuingAuthority: string;
+  scopeOfPractice: string;
   issuedDate: string;
   expiryDate: string;
   file?: FileList;
@@ -52,9 +51,11 @@ interface UploadCredentialsModalProps {
     id: string;
     type: 'Degree' | 'License';
     name: string;
-    degreeLevel?: string;
+    degreeLevel?: number;
+    issuingInstitution?: string;
     issuingAuthority?: string;
     licenseNumber?: string;
+    scopeOfPractice?: string;
     issuedDate: string;
     expiryDate?: string;
     certificateUrl?: string;
@@ -74,15 +75,16 @@ export default function UploadCredentialsModal({
 
   const createDefaultDegree = (): DegreeFormItem => ({
     name: '',
-    degreeLevel: 'Bachelor',
-    issuingAuthority: '',
+    degreeLevel: 3,
+    issuingInstitution: '',
     issuedDate: '',
   });
 
   const createDefaultCertificate = (): CertificateFormItem => ({
     name: '',
-    issuingAuthority: '',
     licenseNumber: '',
+    issuingAuthority: '',
+    scopeOfPractice: '',
     issuedDate: '',
     expiryDate: '',
   });
@@ -102,9 +104,8 @@ export default function UploadCredentialsModal({
           degrees: [
             {
               name: editingCredential.name,
-              degreeLevel:
-                (editingCredential.degreeLevel as DegreeLevel) || 'Bachelor',
-              issuingAuthority: editingCredential.issuingAuthority || '',
+              degreeLevel: (editingCredential.degreeLevel as DegreeLevel) || 3,
+              issuingInstitution: editingCredential.issuingInstitution || '',
               issuedDate: editingCredential.issuedDate
                 ? editingCredential.issuedDate.split('T')[0]
                 : '',
@@ -118,8 +119,9 @@ export default function UploadCredentialsModal({
           certificates: [
             {
               name: editingCredential.name,
-              issuingAuthority: editingCredential.issuingAuthority ?? '',
               licenseNumber: editingCredential.licenseNumber ?? '',
+              issuingAuthority: editingCredential.issuingAuthority ?? '',
+              scopeOfPractice: editingCredential.scopeOfPractice ?? '',
               issuedDate: editingCredential.issuedDate
                 ? new Date(editingCredential.issuedDate)
                     .toISOString()
@@ -166,31 +168,45 @@ export default function UploadCredentialsModal({
       let credentialIndex = 0;
 
       if (isEditMode && editingCredential) {
-        const item = data.degrees[0] || data.certificates[0];
-        formData.append('name', item.name);
-        if ('degreeLevel' in item && item.degreeLevel) {
-          formData.append('degreeLevel', item.degreeLevel as string);
-        }
-        if (item.issuingAuthority) {
-          formData.append('issuingAuthority', item.issuingAuthority);
-        }
-        if ('licenseNumber' in item && item.licenseNumber) {
-          formData.append('licenseNumber', item.licenseNumber as string);
-        }
-        if (item.issuedDate) {
+        if (editingCredential.type === 'Degree') {
+          const item = data.degrees[0];
+          formData.append('name', item.name);
+          formData.append('type', 'Degree');
+          formData.append('degreeLevel', String(item.degreeLevel));
+          formData.append('issuingInstitution', item.issuingInstitution);
           formData.append(
             'issuedDate',
-            new Date(item.issuedDate as string).toISOString()
+            new Date(item.issuedDate).toISOString()
           );
-        }
-        if ('expiryDate' in item && item.expiryDate) {
+          if (item.file && item.file.length > 0) {
+            formData.append('file', item.file[0]);
+          }
+        } else {
+          const item = data.certificates[0];
+          formData.append('name', item.name);
+          formData.append('type', 'License');
+          if (item.issuingAuthority) {
+            formData.append('issuingAuthority', item.issuingAuthority);
+          }
+          if (item.licenseNumber) {
+            formData.append('licenseNumber', item.licenseNumber);
+          }
+          if (item.scopeOfPractice) {
+            formData.append('scopeOfPractice', item.scopeOfPractice);
+          }
           formData.append(
-            'expiryDate',
-            new Date(item.expiryDate as string).toISOString()
+            'issuedDate',
+            new Date(item.issuedDate).toISOString()
           );
-        }
-        if (item.file && item.file.length > 0) {
-          formData.append('file', item.file[0]);
+          if (item.expiryDate) {
+            formData.append(
+              'expiryDate',
+              new Date(item.expiryDate).toISOString()
+            );
+          }
+          if (item.file && item.file.length > 0) {
+            formData.append('file', item.file[0]);
+          }
         }
 
         await api.put(
@@ -207,24 +223,18 @@ export default function UploadCredentialsModal({
         if (!item.file || item.file.length === 0) return;
         formData.append(`certificates[${credentialIndex}][type]`, 'Degree');
         formData.append(`certificates[${credentialIndex}][name]`, item.name);
-        if (item.degreeLevel) {
-          formData.append(
-            `certificates[${credentialIndex}][degreeLevel]`,
-            item.degreeLevel
-          );
-        }
-        if (item.issuingAuthority) {
-          formData.append(
-            `certificates[${credentialIndex}][issuingAuthority]`,
-            item.issuingAuthority
-          );
-        }
-        if (item.issuedDate) {
-          formData.append(
-            `certificates[${credentialIndex}][issuedDate]`,
-            new Date(item.issuedDate).toISOString()
-          );
-        }
+        formData.append(
+          `certificates[${credentialIndex}][degreeLevel]`,
+          String(item.degreeLevel)
+        );
+        formData.append(
+          `certificates[${credentialIndex}][issuingInstitution]`,
+          item.issuingInstitution || ''
+        );
+        formData.append(
+          `certificates[${credentialIndex}][issuedDate]`,
+          new Date(item.issuedDate).toISOString()
+        );
         formData.append(`certificates[${credentialIndex}][file]`, item.file[0]);
         credentialIndex++;
       });
@@ -233,24 +243,22 @@ export default function UploadCredentialsModal({
         if (!item.file || item.file.length === 0) return;
         formData.append(`certificates[${credentialIndex}][type]`, 'License');
         formData.append(`certificates[${credentialIndex}][name]`, item.name);
-        if (item.issuingAuthority) {
-          formData.append(
-            `certificates[${credentialIndex}][issuingAuthority]`,
-            item.issuingAuthority
-          );
-        }
-        if (item.licenseNumber) {
-          formData.append(
-            `certificates[${credentialIndex}][licenseNumber]`,
-            item.licenseNumber
-          );
-        }
-        if (item.issuedDate) {
-          formData.append(
-            `certificates[${credentialIndex}][issuedDate]`,
-            new Date(item.issuedDate).toISOString()
-          );
-        }
+        formData.append(
+          `certificates[${credentialIndex}][licenseNumber]`,
+          item.licenseNumber || ''
+        );
+        formData.append(
+          `certificates[${credentialIndex}][issuingAuthority]`,
+          item.issuingAuthority || ''
+        );
+        formData.append(
+          `certificates[${credentialIndex}][scopeOfPractice]`,
+          item.scopeOfPractice || ''
+        );
+        formData.append(
+          `certificates[${credentialIndex}][issuedDate]`,
+          new Date(item.issuedDate).toISOString()
+        );
         if (item.expiryDate) {
           formData.append(
             `certificates[${credentialIndex}][expiryDate]`,
@@ -447,13 +455,17 @@ export default function UploadCredentialsModal({
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           {t(
-                            'Ophthalmologist.credentials.issuingAuthority',
-                            'Issuing Authority'
-                          )}
+                            'Ophthalmologist.credentials.issuingInstitution',
+                            'Issuing Institution'
+                          )}{' '}
+                          <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
-                          {...register(`degrees.${index}.issuingAuthority`)}
+                          {...register(`degrees.${index}.issuingInstitution`, {
+                            required: t('Validation.Required', 'Required'),
+                          })}
+                          placeholder="e.g. University of Medicine"
                           className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
                         />
                       </div>
@@ -578,6 +590,20 @@ export default function UploadCredentialsModal({
                         <input
                           type="text"
                           {...register(`certificates.${index}.licenseNumber`)}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          {t(
+                            'Ophthalmologist.credentials.scopeOfPractice',
+                            'Scope of Practice'
+                          )}
+                        </label>
+                        <input
+                          type="text"
+                          {...register(`certificates.${index}.scopeOfPractice`)}
+                          placeholder="e.g. Ophthalmology, Eye Surgery"
                           className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
                         />
                       </div>
