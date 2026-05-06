@@ -405,7 +405,7 @@ export default function CalendarPage() {
                   return;
                 }
 
-                await checkInMutation.mutateAsync(appointmentId);
+                await checkInMutation.mutateAsync({ appointmentId });
                 toast.success(
                   t(
                     'Organisation.calendar.toast.qrCheckInSuccess',
