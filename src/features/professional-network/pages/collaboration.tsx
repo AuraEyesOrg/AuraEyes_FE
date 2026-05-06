@@ -218,6 +218,7 @@ export default function CollaborationPage() {
 
   useEffect(() => {
     const fetchScreeningId = async () => {
+      setActiveScreeningId(null);
       const selectedGroup = groups.find((g) => g.id === selectedGroupId);
       if (
         selectedGroup?.type === 'ClinicalCase' &&
@@ -1282,12 +1283,7 @@ export default function CollaborationPage() {
                                     // Priority 1: Use activeScreeningId fetched from consultation session (most accurate)
                                     // Priority 2: Use group's consultationSessionId as fallback
                                     // Priority 3: Use the ID from the link itself (e.g. medicalRecordId)
-                                    const targetId =
-                                      activeScreeningId ||
-                                      (selectedGroup?.type === 'ClinicalCase' &&
-                                      selectedGroup.consultationSessionId
-                                        ? selectedGroup.consultationSessionId
-                                        : part);
+                                    const targetId = activeScreeningId || part;
 
                                     return (
                                       <a
