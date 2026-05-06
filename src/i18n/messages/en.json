@@ -1624,6 +1624,9 @@
         "filtered": "No screenings match your current filter. Try adjusting your search or status filter."
       }
     },
+    "consultations": {
+      "title": "Post-consultations"
+    },
     "wallet": {
       "title": "Doctor Wallet",
       "subtitle": "Track your consultation income and wallet transactions.",
