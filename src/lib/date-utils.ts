@@ -1,4 +1,7 @@
+import i18n from '@/i18n/i18n';
+
 /**
+
  * Unified date/time formatting utilities for AuraEyes.
  *
  * All display functions default to `en-US` locale unless noted.
@@ -338,54 +341,55 @@ export function formatNotificationDateTime(
  *
  * @param isoString - UTC ISO timestamp
  * @param verbose   - When true, uses word labels: `"X minutes ago"`, etc.
- * @param locale    - Locale for output: 'en-US' or 'vi-VN'. Defaults to 'en-US'.
+ * @param _locale   - Unused now as we use i18n
  */
 export function formatRelativeTime(
   isoString: string,
   verbose = false,
-  locale: string = EN_US
+  _locale: string = EN_US
 ): string {
   const diffMs = Date.now() - new Date(isoString).getTime();
   const diffMin = Math.floor(diffMs / 60_000);
   const diffH = Math.floor(diffMs / 3_600_000);
   const diffD = Math.floor(diffMs / 86_400_000);
 
-  if (locale === VI_VN) {
-    if (diffMin < 1) return 'Vừa xong';
-
-    if (verbose) {
-      if (diffMin < 60)
-        return `${diffMin} phút${diffMin !== 1 ? '' : ''} trước`;
-      if (diffH < 24) return `${diffH} giờ${diffH !== 1 ? '' : ''} trước`;
-      if (diffD < 7) return `${diffD} ngày${diffD !== 1 ? '' : ''} trước`;
-      const diffW = Math.floor(diffD / 7);
-      if (diffW < 4) return `${diffW} tuần${diffW !== 1 ? '' : ''} trước`;
-      const diffMo = Math.floor(diffD / 30);
-      return `${diffMo} tháng${diffMo !== 1 ? '' : ''} trước`;
-    }
-
-    if (diffMin < 60) return `${diffMin}p trước`;
-    if (diffH < 24) return `${diffH}g trước`;
-    if (diffD < 7) return `${diffD}n trước`;
-    return formatCompactDate(isoString);
+  if (diffMin < 1) {
+    return i18n.t('RelativeTime.justNow', 'Just now');
   }
-
-  // Default English locale
-  if (diffMin < 1) return 'Just now';
 
   if (verbose) {
-    if (diffMin < 60) return `${diffMin} minute${diffMin !== 1 ? 's' : ''} ago`;
-    if (diffH < 24) return `${diffH} hour${diffH !== 1 ? 's' : ''} ago`;
-    if (diffD < 7) return `${diffD} day${diffD !== 1 ? 's' : ''} ago`;
+    if (diffMin < 60) {
+      return i18n.t('RelativeTime.minutesAgo', {
+        count: diffMin,
+        defaultValue: `${diffMin} minutes ago`,
+      });
+    }
+    if (diffH < 24) {
+      return i18n.t('RelativeTime.hoursAgo', {
+        count: diffH,
+        defaultValue: `${diffH} hours ago`,
+      });
+    }
+    if (diffD < 7) {
+      if (diffD === 1) return i18n.t('RelativeTime.yesterday', 'Yesterday');
+      return i18n.t('RelativeTime.daysAgo', {
+        count: diffD,
+        defaultValue: `${diffD} days ago`,
+      });
+    }
     const diffW = Math.floor(diffD / 7);
-    if (diffW < 4) return `${diffW} week${diffW !== 1 ? 's' : ''} ago`;
+    if (diffW < 4)
+      return i18n.t('RelativeTime.daysAgo', {
+        count: diffD,
+        defaultValue: `${diffD} days ago`,
+      });
     const diffMo = Math.floor(diffD / 30);
-    return `${diffMo} month${diffMo !== 1 ? 's' : ''} ago`;
+    return i18n.t('RelativeTime.longTimeAgo', 'Long time ago');
   }
 
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffH < 24) return `${diffH}h ago`;
-  if (diffD < 7) return `${diffD}d ago`;
+  if (diffMin < 60) return `${diffMin}m`;
+  if (diffH < 24) return `${diffH}h`;
+  if (diffD < 7) return `${diffD}d`;
   return formatCompactDate(isoString);
 }
 
@@ -399,10 +403,10 @@ export function formatRequestDate(isoString: string): string {
   const diffH = Math.floor(diffMs / 3_600_000);
   const diffD = Math.floor(diffMs / 86_400_000);
 
-  if (diffMin < 1) return 'Just now';
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffH < 24) return `${diffH}h ago`;
-  if (diffD === 1) return 'Yesterday';
+  if (diffMin < 1) return i18n.t('RelativeTime.justNow', 'Just now');
+  if (diffMin < 60) return `${diffMin}m`;
+  if (diffH < 24) return `${diffH}h`;
+  if (diffD === 1) return i18n.t('RelativeTime.yesterday', 'Yesterday');
   return formatCompactDate(isoString);
 }
 

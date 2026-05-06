@@ -605,7 +605,10 @@ export default function ClinicStaffAppointmentsPage() {
 
       if (result.paymentUrl) {
         toast.info(
-          `Đặt lịch thành công! Đang chuyển đến trang thanh toán đặt cọc ${(result.depositAmount ?? 0).toLocaleString('vi-VN')} VND...`
+          t('Organisation.calendar.walkInModal.toast.redirectingPayment', {
+            amount: (result.depositAmount ?? 0).toLocaleString('vi-VN'),
+            defaultValue: `Booking successful! Redirecting to payment for deposit ${(result.depositAmount ?? 0).toLocaleString('vi-VN')} VND...`,
+          })
         );
         setTimeout(() => {
           window.location.href = result.paymentUrl!;
