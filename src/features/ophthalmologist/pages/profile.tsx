@@ -39,6 +39,23 @@ import {
   useDeleteCertificate,
 } from '../hooks/useOphthalmologistProfile';
 
+const DEGREE_LEVEL_OPTIONS = [
+  { value: 3, label: 'Cử nhân (Bachelor)' },
+  { value: 4, label: 'Thạc sĩ (Master)' },
+  { value: 5, label: 'Tiến sĩ (Doctor/PhD)' },
+  { value: 6, label: 'Phó Giáo sư (Assoc. Prof)' },
+  { value: 7, label: 'Giáo sư (Professor)' },
+  { value: 1, label: 'BSCKI' },
+  { value: 2, label: 'BSCKII' },
+  { value: 8, label: 'Bác sĩ nội trú (Resident)' },
+];
+
+const getDegreeLevelLabel = (level: number | null | undefined) => {
+  if (!level) return '';
+  const option = DEGREE_LEVEL_OPTIONS.find((opt) => opt.value === level);
+  return option ? option.label : '';
+};
+
 const profileSchema = yup.object({
   fullName: yup
     .string()
@@ -722,11 +739,14 @@ export default function OphthalmologistProfilePage() {
                                   </p>
                                   <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
                                     <p className="text-brand font-medium">
-                                      {degree.issuingAuthority}
+                                      {degree.issuingInstitution}
                                     </p>
                                     {degree.degreeLevel && (
                                       <p className="text-[var(--text-secondary)]">
-                                        • {degree.degreeLevel}
+                                        •{' '}
+                                        {getDegreeLevelLabel(
+                                          degree.degreeLevel
+                                        )}
                                       </p>
                                     )}
                                   </div>
@@ -884,6 +904,15 @@ export default function OphthalmologistProfilePage() {
                                       </p>
                                     )}
                                   </div>
+                                  {cert.scopeOfPractice && (
+                                    <p className="mt-1 text-xs text-[var(--text-secondary)] italic">
+                                      {t(
+                                        'Ophthalmologist.profile.scopeOfPractice',
+                                        'Scope'
+                                      )}
+                                      : {cert.scopeOfPractice}
+                                    </p>
+                                  )}
                                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--text-secondary)]">
                                     <span className="flex items-center gap-1">
                                       <Calendar className="h-3 w-3" />

@@ -50,6 +50,29 @@ import type {
   AggregatedSlotDto,
   DoctorSlotDetailDto,
 } from '../types/clinic-booking.types';
+
+const getDegreeLevelLabel = (level: number | null | undefined) => {
+  switch (level) {
+    case 3:
+      return 'Cử nhân (Bachelor)';
+    case 4:
+      return 'Thạc sĩ (Master)';
+    case 5:
+      return 'Tiến sĩ (Doctor/PhD)';
+    case 6:
+      return 'Phó Giáo sư (Assoc. Prof)';
+    case 7:
+      return 'Giáo sư (Professor)';
+    case 1:
+      return 'BSCKI';
+    case 2:
+      return 'BSCKII';
+    case 8:
+      return 'Bác sĩ nội trú (Resident)';
+    default:
+      return null;
+  }
+};
 export default function OrganisationSchedulePage() {
   const { t: i18nT, i18n } = useTranslation();
   const t = (key: string, options?: Record<string, unknown>) =>
@@ -715,12 +738,14 @@ function DoctorDetailsModal({
                             <div className="space-y-1.5 ml-11">
                               <p className="text-[11px] text-slate-500 font-medium">
                                 <span className="text-slate-400">Issuer:</span>{' '}
-                                {degree.issuingAuthority || 'N/A'}
+                                {degree.issuingInstitution ||
+                                  degree.issuingAuthority ||
+                                  'N/A'}
                               </p>
                               {degree.degreeLevel && (
                                 <p className="text-[11px] text-slate-500 font-medium">
                                   <span className="text-slate-400">Level:</span>{' '}
-                                  {degree.degreeLevel}
+                                  {getDegreeLevelLabel(degree.degreeLevel)}
                                 </p>
                               )}
                               <p className="text-[11px] text-slate-500 font-medium">
@@ -774,6 +799,12 @@ function DoctorDetailsModal({
                                 </span>{' '}
                                 {cert.issuingAuthority || 'N/A'}
                               </p>
+                              {cert.scopeOfPractice && (
+                                <p className="text-[11px] text-slate-500 font-medium">
+                                  <span className="text-slate-400">Scope:</span>{' '}
+                                  {cert.scopeOfPractice}
+                                </p>
+                              )}
                               <p className="text-[11px] text-slate-500 font-medium">
                                 <span className="text-slate-400">Period:</span>{' '}
                                 {format(new Date(cert.issuedDate), 'MMM yyyy')}
