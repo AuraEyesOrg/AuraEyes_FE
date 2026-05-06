@@ -3,7 +3,7 @@
  * Displays key metrics with trends and optional sparkline
  */
 
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { Line, LineChart, ResponsiveContainer } from 'recharts';
 
 interface StatsCardProps {
@@ -110,12 +110,20 @@ export const StatsCard: React.FC<StatsCardProps> = ({
               {value}
             </p>
             {change !== undefined && (
-              <span
-                className={`flex items-center gap-0.5 text-xs font-semibold ${getTrendColor()}`}
+              <div
+                className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  trend === 'up'
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    : trend === 'down'
+                      ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                      : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
+                }`}
               >
-                <span>{getTrendIcon()}</span>
+                {trend === 'up' && <TrendingUp className="w-3 h-3" />}
+                {trend === 'down' && <TrendingDown className="w-3 h-3" />}
+                {trend === 'stable' && <Minus className="w-3 h-3" />}
                 <span>{Math.abs(change)}%</span>
-              </span>
+              </div>
             )}
           </div>
           {description && (

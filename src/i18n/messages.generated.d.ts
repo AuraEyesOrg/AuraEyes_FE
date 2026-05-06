@@ -1980,6 +1980,66 @@ declare module 'i18next' {
         patientPortalLogin: string;
       };
     };
+    CarePlan: {
+      status: {
+        upcoming: string;
+        completed: string;
+        overdue: string;
+        cancelled: string;
+      };
+      stepType: {
+        followUp: string;
+        test: string;
+        medication: string;
+        custom: string;
+      };
+      actions: {
+        nextUp: string;
+        markComplete: string;
+        edit: string;
+        delete: string;
+      };
+      form: {
+        title: {
+          edit: string;
+          add: string;
+        };
+        quickPresets: string;
+        presets: {
+          followUp1m: string;
+          recheckVision: string;
+        };
+        labels: {
+          title: string;
+          type: string;
+          plannedDate: string;
+          description: string;
+          optional: string;
+        };
+        stepTypeLabel: {
+          followUp: string;
+          test: string;
+          medication: string;
+          custom: string;
+        };
+        placeholders: {
+          title: string;
+          description: string;
+        };
+        actions: {
+          close: string;
+          cancel: string;
+          saving: string;
+          saveChanges: string;
+          addStep: string;
+        };
+        validation: {
+          titleRequired: string;
+          plannedDateRequired: string;
+          saveFailed: string;
+        };
+      };
+    };
     Auth: {
       login: string;
       register: string;
@@ -5583,6 +5643,7 @@ declare module 'i18next' {
           checkedIn: string;
           completed: string;
           noShow: string;
+          revenue: string;
         };
         bottleneckLongWait: string;
         bottleneckFullCapacity: string;
@@ -5599,6 +5660,7 @@ declare module 'i18next' {
         status: string;
         doctor: string;
         waitTime: string;
+        doctorStatusTitle: string;
         doctorStatus: {
           inconsultation: string;
           available: string;
@@ -5637,6 +5699,11 @@ declare module 'i18next' {
           count: string;
           noData: string;
           loadError: string;
+        };
+        periods: {
+          day: string;
+          month: string;
+          year: string;
         };
       };
       common: {

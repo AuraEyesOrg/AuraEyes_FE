@@ -5091,7 +5091,7 @@
       "title": "Payment Transactions",
       "description": "Manage cashflow and system-wide transactions",
       "stats": {
-        "totalVolume": "Total Volume",
+        "totalVolume": "Total Revenue",
         "pendingAmount": "Pending Amount",
         "completedOrders": "Completed Orders",
         "avgOrderValue": "Avg Order Value"
@@ -5633,11 +5633,11 @@
       },
       "transactionChart": {
         "title": "Transaction Overview",
-        "subtitle": "Monitor volume and activity across periods",
+        "subtitle": "Monitor revenue and activity across periods",
         "daily": "Last 7 Days",
         "weekly": "Last 4 Weeks",
         "monthly": "This Year",
-        "volume": "Volume",
+        "volume": "Revenue",
         "count": "Count",
         "noData": "No transactions found for this period.",
         "loadError": "Failed to load chart data."

@@ -5603,7 +5603,8 @@
         "totalAppointments": "Lịch hẹn hôm nay",
         "checkedIn": "Đã check-in",
         "completed": "Đã hoàn tất",
-        "noShow": "Vắng mặt"
+        "noShow": "Vắng mặt",
+        "revenue": "Doanh thu hôm nay"
       },
       "bottleneckLongWait": "{{count}} bệnh nhân chờ trên {{minutes}} phút",
       "bottleneckFullCapacity": "Số lượt khám đã đạt tối đa trong ngày",
@@ -5620,6 +5621,7 @@
       "status": "Trạng thái",
       "doctor": "Bác sĩ",
       "waitTime": "Chờ",
+      "doctorStatusTitle": "Trạng thái bác sĩ",
       "doctorStatus": {
         "inconsultation": "Đang tư vấn",
         "available": "Sẵn sàng"
@@ -5650,14 +5652,24 @@
       },
       "transactionChart": {
         "title": "Tổng quan giao dịch",
-        "subtitle": "Theo dõi khối lượng và hoạt động qua các kỳ",
+        "subtitle": "Theo dõi doanh thu và hoạt động qua các kỳ",
         "daily": "7 ngày qua",
         "weekly": "4 tuần qua",
         "monthly": "Năm nay",
-        "volume": "Khối lượng",
+        "volume": "Doanh thu",
         "count": "Số lượng",
         "noData": "Không tìm thấy giao dịch trong kỳ này.",
         "loadError": "Không thể tải dữ liệu biểu đồ."
+      },
+      "periods": {
+        "day": "so với hôm qua",
+        "month": "so với tháng trước",
+        "year": "so với năm trước"
+      },
+      "periodOptions": {
+        "day": "Ngày",
+        "month": "Tháng",
+        "year": "Năm"
       }
     },
     "common": {
@@ -6233,7 +6245,7 @@
       "title": "Giao dịch thanh toán",
       "description": "Quản lý dòng tiền và giao dịch toàn hệ thống",
       "stats": {
-        "totalVolume": "Tổng khối lượng",
+        "totalVolume": "Tổng doanh thu",
         "pendingAmount": "Số tiền chờ",
         "completedOrders": "Đơn đã hoàn tất",
         "avgOrderValue": "Giá trị trung bình"
