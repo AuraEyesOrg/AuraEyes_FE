@@ -464,7 +464,10 @@ const TrendIndicator = ({ trend }: { trend: TrendDirection }) => {
 const formatAppointmentSlotOrPending = (
   value: string | null,
   t: (key: string, fallback: string) => string
-) => formatAppointmentSlot(value);
+) =>
+  value
+    ? formatAppointmentSlot(value)
+    : t('Ophthalmologist.consultations.chat.pendingTime', 'Pending...');
 
 const getSessionTypeColor = (type: ConsultationSessionType) => {
   switch (type) {

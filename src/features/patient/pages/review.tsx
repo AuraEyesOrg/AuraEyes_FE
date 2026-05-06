@@ -865,13 +865,10 @@ export default function ReviewPage() {
 
       <FeedbackModal
         open={isFeedbackModalOpen}
-        title={t(
-          'PatientAppointments.feedback.modalTitle',
-          'Đánh giá trải nghiệm'
-        )}
+        title={t('PatientAppointments.feedback.modalTitle', 'Rate Experience')}
         subtitle={t(
           'PatientAppointments.feedback.modalSubtitle',
-          'Ý kiến của bạn giúp chúng tôi cải thiện chất lượng dịch vụ.'
+          'Your feedback helps us improve our service quality.'
         )}
         contextLabel={
           latestLinkedConsultation
@@ -899,29 +896,26 @@ export default function ReviewPage() {
         isSubmitting={createClinicFeedbackMutation.isPending}
         submitLabel={t(
           'PatientAppointments.feedback.submitLabel',
-          'Gửi đánh giá'
+          'Submit Feedback'
         )}
         labels={{
           targetTitle: t(
             'PatientAppointments.feedback.targetTitle',
-            'Bạn muốn đánh giá đối tượng nào?'
+            'What would you like to rate?'
           ),
           targetClinic: t(
             'PatientAppointments.feedback.targetClinic',
-            'Phòng khám'
+            'Clinic'
           ),
           targetDoctor: t(
             'PatientAppointments.feedback.targetDoctor',
-            'Bác sĩ'
+            'Doctor'
           ),
-          targetStaff: t(
-            'PatientAppointments.feedback.targetStaff',
-            'Nhân viên'
-          ),
-          rating: t('PatientAppointments.feedback.ratingLabel', 'Đánh giá'),
+          targetStaff: t('PatientAppointments.feedback.targetStaff', 'Staff'),
+          rating: t('PatientAppointments.feedback.ratingLabel', 'Rating'),
           commentPlaceholder: t(
             'PatientAppointments.feedback.commentPlaceholder',
-            'Chia sẻ thêm về trải nghiệm của bạn...'
+            'Tell us more about your experience...'
           ),
         }}
         onClose={() => setIsFeedbackModalOpen(false)}
@@ -940,7 +934,7 @@ export default function ReviewPage() {
             toast.success(
               t(
                 'PatientAppointments.toast.feedbackSubmitted',
-                'Cảm ơn bạn đã gửi đánh giá!'
+                'Thank you for your feedback!'
               )
             );
           } catch (error) {
@@ -950,7 +944,7 @@ export default function ReviewPage() {
               toast.info(
                 t(
                   'PatientAppointments.toast.feedbackAlreadyExists',
-                  'Bạn đã gửi đánh giá này rồi.'
+                  'You have already submitted feedback for this.'
                 )
               );
               return;
@@ -958,7 +952,7 @@ export default function ReviewPage() {
             toast.error(
               t(
                 'PatientAppointments.toast.feedbackSubmitFailed',
-                'Không thể gửi đánh giá. Vui lòng thử lại sau.'
+                'Failed to submit feedback. Please try again later.'
               )
             );
             throw error;
