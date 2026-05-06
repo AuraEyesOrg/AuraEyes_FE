@@ -51,12 +51,12 @@ export default function ConsultationsPage() {
 
         {/* Page Content */}
         <main className="p-6">
-          <div className="mb-5 rounded-2xl border border-cyan-100 bg-cyan-50/80 p-4 text-sm text-cyan-900 dark:border-cyan-800/60 dark:bg-cyan-900/20 dark:text-cyan-200">
+          {/* <div className="mb-5 rounded-2xl border border-cyan-100 bg-cyan-50/80 p-4 text-sm text-cyan-900 dark:border-cyan-800/60 dark:bg-cyan-900/20 dark:text-cyan-200">
             {t(
               'Ophthalmologist.consultations.aftercareHint',
               'Use this space after you verify a screening report to continue patient follow-up. Incoming clinic queue cases should be reviewed from Screenings first.'
             )}
-          </div>
+          </div> */}
           <ConsultationsChatView
             sessions={sessions}
             sessionsLoading={sessionsLoading}
