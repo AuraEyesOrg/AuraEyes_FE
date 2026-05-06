@@ -124,6 +124,10 @@ const LoginPage = () => {
   }, [theme, uiLocale]);
 
   useEffect(() => {
+    if (authMode !== 'login') {
+      return;
+    }
+
     if (!turnstileSiteKey) {
       return;
     }
@@ -180,7 +184,7 @@ const LoginPage = () => {
         turnstileWidgetIdRef.current = null;
       }
     };
-  }, [theme, turnstileSiteKey, uiLocale]);
+  }, [authMode, theme, turnstileSiteKey, uiLocale]);
 
   const hasUnverifiedEmailError = (message: string) => {
     const normalized = message.toLowerCase();
