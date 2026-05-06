@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, AlertCircle, Stethoscope } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
+import { localizeFindingsText } from '@/features/patient/lib/disease-translation';
 
 interface ShareCaseModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ interface ShareCaseModalProps {
     originalImageUrls: string[];
   };
   t: (key: string, fallback: string) => string;
+  language?: string;
 }
 
 export function ShareCaseModal({
@@ -31,7 +33,13 @@ export function ShareCaseModal({
   onChangeContent,
   caseSnapshot,
   t,
+  language = 'vi',
 }: ShareCaseModalProps) {
+  const localizedFindings = useMemo(
+    () => localizeFindingsText(caseSnapshot.findings ?? '', language),
+    [caseSnapshot.findings, language]
+  );
+
   const previewContent = useMemo(() => {
     const parts: string[] = [];
 
@@ -53,9 +61,9 @@ export function ShareCaseModal({
       );
     }
 
-    if (caseSnapshot.findings) {
+    if (localizedFindings) {
       parts.push(
-        `🔍 **${t('ProfessionalNetwork.shareClinicCaseModal.findings.label', 'Findings')}**: ${caseSnapshot.findings}`
+        `🔍 **${t('ProfessionalNetwork.shareClinicCaseModal.findings.label', 'Findings')}**: ${localizedFindings}`
       );
     }
 
@@ -66,7 +74,7 @@ export function ShareCaseModal({
     }
 
     return parts.join('\n\n');
-  }, [caseSnapshot, content, t]);
+  }, [caseSnapshot, content, localizedFindings, t]);
 
   return (
     <AnimatePresence>
@@ -95,13 +103,13 @@ export function ShareCaseModal({
                 <div>
                   <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                     {t(
-                      'Ophthalmologist.consultations.chat.shareCase.modalTitle',
+                      'Ophthalmologist.consultations.chat.shareCase.title',
                       'Share Case to Aura Network'
                     )}
                   </h3>
                   <p className="text-sm text-slate-500 dark:text-gray-400">
                     {t(
-                      'Ophthalmologist.consultations.chat.shareCase.modalSubtitle',
+                      'Ophthalmologist.consultations.chat.shareCase.description',
                       'Post clinical findings for professional discussion'
                     )}
                   </p>
@@ -191,6 +199,20 @@ export function ShareCaseModal({
                       </h4>
                       <p className="text-sm leading-relaxed text-slate-600 dark:text-gray-300 italic">
                         "{caseSnapshot.summary}"
+                      </p>
+                    </div>
+                  )}
+
+                  {localizedFindings && (
+                    <div>
+                      <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
+                        {t(
+                          'ProfessionalNetwork.shareClinicCaseModal.findings.label',
+                          'Findings'
+                        )}
+                      </h4>
+                      <p className="text-sm leading-relaxed text-slate-600 dark:text-gray-300">
+                        {localizedFindings}
                       </p>
                     </div>
                   )}

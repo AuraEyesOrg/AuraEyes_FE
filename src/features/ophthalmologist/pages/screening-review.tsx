@@ -3268,6 +3268,7 @@ export default function ScreeningReviewPage() {
       {detail && (
         <ShareCaseModal
           t={t}
+          language={i18n.resolvedLanguage ?? i18n.language ?? 'vi'}
           isOpen={isShareCaseModalOpen}
           isSubmitting={shareConsultationMutation.isPending}
           patientName={detail.patientFullName}
