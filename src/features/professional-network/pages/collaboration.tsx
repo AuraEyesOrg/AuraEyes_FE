@@ -117,7 +117,9 @@ export default function CollaborationPage() {
   const [isManageMembersOpen, setIsManageMembersOpen] = useState(false);
   const [isMediaPanelOpen, setIsMediaPanelOpen] = useState(false);
   const [isGroupMenuOpen, setIsGroupMenuOpen] = useState(false);
-  const [isExpired, setIsExpired] = useState(false);
+  const [expiredGroupMap, setExpiredGroupMap] = useState<
+    Record<string, boolean>
+  >({});
 
   const selectedGroup = useMemo(
     () => groups.find((g) => g.id === selectedGroupId) ?? null,
@@ -126,8 +128,11 @@ export default function CollaborationPage() {
 
   const isReadOnly = useMemo(() => {
     if (!selectedGroup || selectedGroup.type !== 'ClinicalCase') return false;
-    return selectedGroup.consiliumStatus === 'Concluded' || isExpired;
-  }, [selectedGroup, isExpired]);
+    return (
+      selectedGroup.consiliumStatus === 'Concluded' ||
+      !!expiredGroupMap[selectedGroup.id]
+    );
+  }, [selectedGroup, expiredGroupMap]);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupType, setNewGroupType] = useState<'General' | 'ClinicalCase'>(
@@ -163,6 +168,7 @@ export default function CollaborationPage() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const previousJoinedGroupRef = useRef<string | null>(null);
+  const selectedGroupIdRef = useRef<string | null>(null);
   const processedChatEventIdRef = useRef<string | null>(null);
   const [activeScreeningId, setActiveScreeningId] = useState<string | null>(
     null
@@ -186,7 +192,13 @@ export default function CollaborationPage() {
   }, [groupMembersMap]);
 
   useEffect(() => {
+    selectedGroupIdRef.current = selectedGroupId;
+  }, [selectedGroupId]);
+
+  useEffect(() => {
     if (selectedGroupId) {
+      setNewMessage('');
+      setMessages([]);
       void loadMessages(selectedGroupId);
     }
   }, [selectedGroupId]);
@@ -368,6 +380,7 @@ export default function CollaborationPage() {
     try {
       if (!silent) setMessagesLoading(true);
       const data = await internalChatApi.getMessages(groupId);
+      if (selectedGroupIdRef.current !== groupId) return;
 
       // Robust deduplication by ID to prevent UI duplication bugs
       const uniqueMessages = data.filter(
@@ -1249,7 +1262,12 @@ export default function CollaborationPage() {
                       isConcluded={
                         selectedGroup.consiliumStatus === 'Concluded'
                       }
-                      onExpire={() => setIsExpired(true)}
+                      onExpire={() =>
+                        setExpiredGroupMap((prev) => ({
+                          ...prev,
+                          [selectedGroup.id]: true,
+                        }))
+                      }
                     />
                   </div>
                 )}
@@ -1423,10 +1441,22 @@ export default function CollaborationPage() {
                               }`}
                             >
                               {(() => {
+                                const sanitizedContent = msg.content
+                                  .replace(
+                                    /🔗\s*Xem Bệnh án:\s*\/medical-records\/[0-9a-f-]+\s*/gi,
+                                    ''
+                                  )
+                                  .replace(
+                                    /Xem Bệnh án:\s*\/medical-records\/[0-9a-f-]+\s*/gi,
+                                    ''
+                                  )
+                                  .replace(/\s{2,}/g, ' ')
+                                  .trim();
                                 const recordRegex =
-                                  /\/(medical-records|screenings|screening-review)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi;
-                                const parts = msg.content.split(recordRegex);
-                                if (parts.length === 1) return msg.content;
+                                  /\/(screenings|screening-review)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi;
+                                const parts =
+                                  sanitizedContent.split(recordRegex);
+                                if (parts.length === 1) return sanitizedContent;
 
                                 return parts.reduce((acc: any[], part, i) => {
                                   if (i % 3 === 0) {
