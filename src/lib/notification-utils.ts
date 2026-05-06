@@ -153,7 +153,13 @@ function formatPayloadVars(payload: any): any {
   // Common aliases and fallbacks
   vars.reason = vars.reason || vars.Reason || '';
   vars.resultStatus = vars.resultStatus || vars.ResultStatus || '';
-  vars.patientName = vars.patientName || vars.PatientName || 'Patient';
+  vars.patientName =
+    vars.patientName ||
+    vars.PatientName ||
+    vars.fullName ||
+    vars.FullName ||
+    vars.patientFullName ||
+    '';
   vars.doctorName = vars.doctorName || vars.DoctorName || 'Doctor';
 
   return vars;
@@ -176,10 +182,17 @@ export function formatNotificationMessage(
       payload.patientName ||
       payload.PatientName ||
       payload.fullName ||
-      payload.FullName;
+      payload.FullName ||
+      payload.patientFullName ||
+      '';
     if (patientName) {
       formatted = formatted.replace(/\{\{patientName\}\}/g, patientName);
       formatted = formatted.replace(/\{\{patientFullName\}\}/g, patientName);
+    } else {
+      // If name is missing, try to clean up "Patient {{patientName}}" to just "Patient"
+      // or similar patterns to avoid dangling spaces or redundant words
+      formatted = formatted.replace(/Patient \{\{patientName\}\}/g, 'Patient');
+      formatted = formatted.replace(/\{\{patientName\}\}/g, '');
     }
 
     // Replace {{appointmentTime}}

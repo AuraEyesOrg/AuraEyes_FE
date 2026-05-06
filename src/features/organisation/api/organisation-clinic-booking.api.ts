@@ -211,9 +211,12 @@ export const createClinicStaffAppointment = async (
 };
 
 export const checkInClinicAppointment = async (
-  appointmentId: string
+  appointmentId: string,
+  patientName?: string
 ): Promise<void> => {
-  await api.put(API_ENDPOINTS.CLINIC_APPOINTMENTS.CHECK_IN(appointmentId));
+  await api.put(API_ENDPOINTS.CLINIC_APPOINTMENTS.CHECK_IN(appointmentId), {
+    patientName,
+  });
 };
 
 export const startClinicAppointment = async (

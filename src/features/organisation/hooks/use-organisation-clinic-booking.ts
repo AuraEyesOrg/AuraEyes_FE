@@ -81,8 +81,13 @@ export const useCreateClinicStaffAppointment = () => {
 export const useCheckInClinicAppointment = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (appointmentId: string) =>
-      checkInClinicAppointment(appointmentId),
+    mutationFn: ({
+      appointmentId,
+      patientName,
+    }: {
+      appointmentId: string;
+      patientName?: string;
+    }) => checkInClinicAppointment(appointmentId, patientName),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: organisationClinicBookingKeys.all,

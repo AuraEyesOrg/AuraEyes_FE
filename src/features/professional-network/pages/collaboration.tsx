@@ -31,7 +31,6 @@ import {
   type InternalGroupChat,
   type InternalGroupMessage,
 } from '../api/internal-chat.api';
-import { collaborationApi } from '../api/collaboration.api';
 import { useSearchParams, useParams } from 'react-router-dom';
 import { useLocalePath } from '@/i18n/middleware';
 import useAuthStore from '@/store/auth-store';
@@ -219,6 +218,8 @@ export default function CollaborationPage() {
 
   useEffect(() => {
     const fetchScreeningId = async () => {
+      const currentGroupId = selectedGroupId;
+      setActiveScreeningId(null);
       const selectedGroup = groups.find((g) => g.id === selectedGroupId);
       if (
         selectedGroup?.type === 'ClinicalCase' &&
@@ -228,15 +229,19 @@ export default function CollaborationPage() {
           const session = await getConsultationSession(
             selectedGroup.consultationSessionId
           );
-          setActiveScreeningId(
-            session.aiScreeningId || session.caseSnapshot?.screeningId || null
-          );
+          if (selectedGroupId === currentGroupId) {
+            setActiveScreeningId(
+              session.aiScreeningId || session.caseSnapshot?.screeningId || null
+            );
+          }
         } catch (error) {
           console.error(
             'Failed to fetch screening ID for clinical group',
             error
           );
-          setActiveScreeningId(null);
+          if (selectedGroupId === currentGroupId) {
+            setActiveScreeningId(null);
+          }
         }
       } else {
         setActiveScreeningId(null);
@@ -402,46 +407,6 @@ export default function CollaborationPage() {
   const sendComposedMessage = async (content: string) => {
     if (!selectedGroupId || !content.trim()) return null;
     return await internalChatApi.sendMessage(selectedGroupId, content.trim());
-  };
-
-  const handleConcludeConsilium = async () => {
-    if (!selectedGroupId || !selectedGroup) return;
-
-    openConfirm({
-      title: t(
-        'ProfessionalNetwork.collaboration.consilium.concludeTitle',
-        'Kết thúc Hội chẩn'
-      ),
-      message: t(
-        'ProfessionalNetwork.collaboration.consilium.concludeMessage',
-        'Bạn có chắc chắn muốn kết thúc buổi hội chẩn này? Nhóm chat sẽ chuyển sang chế độ chỉ đọc để lưu trữ hồ sơ pháp lý.'
-      ),
-      confirmLabel: t(
-        'ProfessionalNetwork.collaboration.consilium.concludeConfirm',
-        'Kết thúc'
-      ),
-      tone: 'danger',
-      onConfirm: async () => {
-        try {
-          await collaborationApi.concludeConsilium(selectedGroupId);
-          toast.success(
-            t(
-              'ProfessionalNetwork.collaboration.consilium.concludeSuccess',
-              'Hội chẩn đã kết thúc.'
-            )
-          );
-          void loadGroups();
-        } catch (error) {
-          console.error('Failed to conclude consilium', error);
-          toast.error(
-            t(
-              'ProfessionalNetwork.collaboration.consilium.concludeError',
-              'Không thể kết thúc hội chẩn.'
-            )
-          );
-        }
-      },
-    });
   };
 
   const handleSendMessage = async () => {
@@ -1286,20 +1251,6 @@ export default function CollaborationPage() {
                       }
                       onExpire={() => setIsExpired(true)}
                     />
-                    {selectedGroup.creatorId === user?.id &&
-                      selectedGroup.consiliumStatus === 'Ongoing' &&
-                      !isExpired && (
-                        <button
-                          onClick={handleConcludeConsilium}
-                          className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition-all border border-rose-200"
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          {t(
-                            'ProfessionalNetwork.collaboration.consilium.endButton',
-                            'Kết thúc Hội chẩn'
-                          )}
-                        </button>
-                      )}
                   </div>
                 )}
                 <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mr-2">
@@ -1482,12 +1433,7 @@ export default function CollaborationPage() {
                                     // Priority 1: Use activeScreeningId fetched from consultation session (most accurate)
                                     // Priority 2: Use group's consultationSessionId as fallback
                                     // Priority 3: Use the ID from the link itself (e.g. medicalRecordId)
-                                    const targetId =
-                                      activeScreeningId ||
-                                      (selectedGroup?.type === 'ClinicalCase' &&
-                                      selectedGroup.consultationSessionId
-                                        ? selectedGroup.consultationSessionId
-                                        : part);
+                                    const targetId = activeScreeningId || part;
 
                                     return (
                                       <a
