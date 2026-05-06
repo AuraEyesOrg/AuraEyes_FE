@@ -43,8 +43,11 @@ import {
   type ChangePasswordFormData,
 } from '@/features/patient/schemas/profile.schema';
 import { toast } from 'react-toastify';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 const TwoFactorSettingsPage = () => {
+  const { t } = useSafeTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const isPatientContext = location.pathname.startsWith('/patient/');
@@ -100,7 +103,15 @@ const TwoFactorSettingsPage = () => {
       setStatus(statusData);
       setStep('status');
     } catch (err) {
-      setError('Failed to fetch 2FA status. Please try again.');
+      setError(
+        extractApiErrorMessage(
+          err,
+          t(
+            'twoFactorSettings.toasts.fetchStatusError',
+            'Failed to fetch 2FA status. Please try again.'
+          )
+        )
+      );
       console.error('Error fetching 2FA status:', err);
     } finally {
       setIsLoading(false);
@@ -120,7 +131,15 @@ const TwoFactorSettingsPage = () => {
       setSetupData(data);
       setStep('setup');
     } catch (err) {
-      setError('Failed to setup 2FA. Please try again.');
+      setError(
+        extractApiErrorMessage(
+          err,
+          t(
+            'twoFactorSettings.toasts.setupError',
+            'Failed to setup 2FA. Please try again.'
+          )
+        )
+      );
       console.error('Error setting up 2FA:', err);
     } finally {
       setIsLoading(false);
@@ -139,7 +158,15 @@ const TwoFactorSettingsPage = () => {
         resetVerify();
       }
     } catch (err) {
-      setError('Invalid verification code. Please try again.');
+      setError(
+        extractApiErrorMessage(
+          err,
+          t(
+            'twoFactorSettings.toasts.invalidCode',
+            'Invalid verification code. Please try again.'
+          )
+        )
+      );
       console.error('Error enabling 2FA:', err);
     } finally {
       setIsLoading(false);
@@ -155,7 +182,15 @@ const TwoFactorSettingsPage = () => {
       resetDisable();
       await fetchStatus();
     } catch (err) {
-      setError('Invalid password. Please try again.');
+      setError(
+        extractApiErrorMessage(
+          err,
+          t(
+            'twoFactorSettings.toasts.invalidPassword',
+            'Invalid password. Please try again.'
+          )
+        )
+      );
       console.error('Error disabling 2FA:', err);
     } finally {
       setIsLoading(false);
@@ -173,7 +208,15 @@ const TwoFactorSettingsPage = () => {
         setStep('recovery-codes');
       }
     } catch (err) {
-      setError('Failed to generate recovery codes. Please try again.');
+      setError(
+        extractApiErrorMessage(
+          err,
+          t(
+            'twoFactorSettings.toasts.generateCodesError',
+            'Failed to generate recovery codes. Please try again.'
+          )
+        )
+      );
       console.error('Error generating recovery codes:', err);
     } finally {
       setIsLoading(false);
@@ -244,12 +287,25 @@ const TwoFactorSettingsPage = () => {
   const onChangePasswordSubmit = (data: ChangePasswordFormData) => {
     changePasswordMutation.mutate(data, {
       onSuccess: () => {
-        toast.success('Password changed successfully');
+        toast.success(
+          t(
+            'twoFactorSettings.toasts.passwordChanged',
+            'Password changed successfully'
+          )
+        );
         setShowChangePassword(false);
         resetChangePassword();
       },
-      onError: () => {
-        toast.error('Failed to change password');
+      onError: (err) => {
+        toast.error(
+          extractApiErrorMessage(
+            err,
+            t(
+              'twoFactorSettings.toasts.passwordChangeFailed',
+              'Failed to change password'
+            )
+          )
+        );
       },
     });
   };
@@ -261,7 +317,7 @@ const TwoFactorSettingsPage = () => {
         <div className="text-center">
           <Spinner size={32} className="mx-auto" />
           <p className="mt-4 text-[var(--text-secondary)]">
-            Loading security settings...
+            {t('twoFactorSettings.loading', 'Loading security settings...')}
           </p>
         </div>
       </div>
@@ -287,10 +343,13 @@ const TwoFactorSettingsPage = () => {
                 </div>
                 <div>
                   <p className="font-medium text-[var(--text-primary)]">
-                    Password
+                    {t('twoFactorSettings.sections.password.title', 'Password')}
                   </p>
                   <p className="text-sm text-[var(--text-secondary)]">
-                    Update your account password regularly.
+                    {t(
+                      'twoFactorSettings.sections.password.desc',
+                      'Update your account password regularly.'
+                    )}
                   </p>
                 </div>
               </div>
@@ -299,7 +358,7 @@ const TwoFactorSettingsPage = () => {
                 onClick={() => setShowChangePassword(true)}
                 className="px-4 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] transition-colors"
               >
-                Change
+                {t('twoFactorSettings.sections.password.action', 'Change')}
               </button>
             </div>
           </div>
@@ -312,10 +371,16 @@ const TwoFactorSettingsPage = () => {
                 </div>
                 <div>
                   <p className="font-medium text-[var(--text-primary)]">
-                    Notifications
+                    {t(
+                      'twoFactorSettings.sections.notifications.title',
+                      'Notifications'
+                    )}
                   </p>
                   <p className="text-sm text-[var(--text-secondary)]">
-                    Manage notification and reminder preferences.
+                    {t(
+                      'twoFactorSettings.sections.notifications.desc',
+                      'Manage notification and reminder preferences.'
+                    )}
                   </p>
                 </div>
               </div>
@@ -324,7 +389,10 @@ const TwoFactorSettingsPage = () => {
                 onClick={() => navigate('/patient/notifications')}
                 className="px-4 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] transition-colors"
               >
-                Configure
+                {t(
+                  'twoFactorSettings.sections.notifications.action',
+                  'Configure'
+                )}
               </button>
             </div>
           </div>
@@ -341,7 +409,7 @@ const TwoFactorSettingsPage = () => {
               onClick={() => setError(null)}
               className="text-xs text-red-600 hover:text-red-800 mt-1"
             >
-              Dismiss
+              {t('common.dismiss', 'Dismiss')}
             </button>
           </div>
         </div>
@@ -370,14 +438,26 @@ const TwoFactorSettingsPage = () => {
 
             <h2 className="text-xl font-semibold text-center text-[var(--text-primary)] mb-2">
               {status.isEnabled
-                ? 'Two-Factor Authentication is Enabled'
-                : 'Two-Factor Authentication is Disabled'}
+                ? t(
+                    'twoFactorSettings.status.enabled',
+                    'Two-Factor Authentication is Enabled'
+                  )
+                : t(
+                    'twoFactorSettings.status.disabled',
+                    'Two-Factor Authentication is Disabled'
+                  )}
             </h2>
 
             <p className="text-[var(--text-secondary)] text-center mb-8">
               {status.isEnabled
-                ? 'Your account is protected with an additional layer of security.'
-                : 'Enable 2FA to add extra security to your account.'}
+                ? t(
+                    'twoFactorSettings.status.enabledDesc',
+                    'Your account is protected with an additional layer of security.'
+                  )
+                : t(
+                    'twoFactorSettings.status.disabledDesc',
+                    'Enable 2FA to add extra security to your account.'
+                  )}
             </p>
 
             {status.isEnabled && (
@@ -386,7 +466,10 @@ const TwoFactorSettingsPage = () => {
                   <div className="flex items-center gap-3">
                     <Key className="text-brand w-5 h-5" />
                     <span className="text-sm text-[var(--text-secondary)]">
-                      Recovery Codes Remaining
+                      {t(
+                        'twoFactorSettings.status.recoveryRemaining',
+                        'Recovery Codes Remaining'
+                      )}
                     </span>
                   </div>
                   <span
@@ -410,7 +493,10 @@ const TwoFactorSettingsPage = () => {
                   className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-brand hover:bg-brand/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Smartphone className="w-5 h-5" />
-                  Enable Two-Factor Authentication
+                  {t(
+                    'twoFactorSettings.status.enableButton',
+                    'Enable Two-Factor Authentication'
+                  )}
                 </button>
               ) : (
                 <>
@@ -419,7 +505,10 @@ const TwoFactorSettingsPage = () => {
                     className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200"
                   >
                     <XCircle className="w-5 h-5" />
-                    Disable Two-Factor Authentication
+                    {t(
+                      'twoFactorSettings.status.disableButton',
+                      'Disable Two-Factor Authentication'
+                    )}
                   </button>
                   {status.recoveryCodesRemaining <= 3 && (
                     <button
@@ -427,7 +516,10 @@ const TwoFactorSettingsPage = () => {
                       className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium text-brand border border-brand hover:bg-brand-soft focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition-all duration-200"
                     >
                       <RefreshCw className="w-5 h-5" />
-                      Generate New Recovery Codes
+                      {t(
+                        'twoFactorSettings.status.generateNewCodes',
+                        'Generate New Recovery Codes'
+                      )}
                     </button>
                   )}
                 </>
@@ -439,7 +531,7 @@ const TwoFactorSettingsPage = () => {
               className="w-full flex items-center justify-center gap-2 mt-6 py-3 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Settings
+              {t('common.backToSettings', 'Back to Settings')}
             </button>
           </div>
         )}
@@ -456,11 +548,13 @@ const TwoFactorSettingsPage = () => {
             </button>
 
             <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-              Set Up Authenticator App
+              {t('twoFactorSettings.setup.title', 'Set Up Authenticator App')}
             </h2>
             <p className="text-[var(--text-secondary)] mb-6">
-              Scan the QR code below with your authenticator app (Google
-              Authenticator, Authy, etc.)
+              {t(
+                'twoFactorSettings.setup.desc',
+                'Scan the QR code below with your authenticator app (Google Authenticator, Authy, etc.)'
+              )}
             </p>
 
             <div className="flex justify-center mb-6">
@@ -477,7 +571,10 @@ const TwoFactorSettingsPage = () => {
 
             <div className="bg-[var(--bg-secondary)] rounded-xl p-4 mb-6 border border-[var(--border-color)]">
               <p className="text-xs text-[var(--text-muted)] mb-2 uppercase font-semibold tracking-wide">
-                Or enter this key manually:
+                {t(
+                  'twoFactorSettings.setup.manualKey',
+                  'Or enter this key manually:'
+                )}
               </p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 p-3 text-[var(--text-primary)] bg-[var(--bg-primary)] rounded-lg border border-[var(--border-color)] font-mono text-sm break-all">
@@ -502,7 +599,10 @@ const TwoFactorSettingsPage = () => {
                   htmlFor="code"
                   className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5"
                 >
-                  Enter the 6-digit code from your app
+                  {t(
+                    'twoFactorSettings.setup.enterCode',
+                    'Enter the 6-digit code from your app'
+                  )}
                 </label>
                 <input
                   {...registerVerify('code', {
@@ -521,7 +621,9 @@ const TwoFactorSettingsPage = () => {
                 />
                 {verifyErrors.code && (
                   <p className="text-xs text-red-500 mt-1">
-                    {verifyErrors.code.message}
+                    {t(verifyErrors.code.message || 'common.invalidInput', {
+                      defaultValue: verifyErrors.code.message,
+                    })}
                   </p>
                 )}
               </div>
@@ -536,7 +638,10 @@ const TwoFactorSettingsPage = () => {
                 ) : (
                   <>
                     <Check className="w-5 h-5" />
-                    Verify and Enable
+                    {t(
+                      'twoFactorSettings.setup.verifyAndEnable',
+                      'Verify and Enable'
+                    )}
                   </>
                 )}
               </button>
@@ -554,18 +659,25 @@ const TwoFactorSettingsPage = () => {
             </div>
 
             <h2 className="text-xl font-semibold text-center text-[var(--text-primary)] mb-2">
-              Save Your Recovery Codes
+              {t(
+                'twoFactorSettings.recoveryCodes.title',
+                'Save Your Recovery Codes'
+              )}
             </h2>
             <p className="text-[var(--text-secondary)] text-center mb-6">
-              Store these codes in a safe place. You can use them to access your
-              account if you lose your authenticator device.
+              {t(
+                'twoFactorSettings.recoveryCodes.desc',
+                'Store these codes in a safe place. You can use them to access your account if you lose your authenticator device.'
+              )}
             </p>
 
             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6 flex items-start gap-3">
               <AlertTriangle className="text-amber-500 w-5 h-5 mt-0.5 shrink-0" />
               <p className="text-sm text-amber-700 dark:text-amber-400">
-                Each code can only be used once. After using a code, it will be
-                invalidated.
+                {t(
+                  'twoFactorSettings.recoveryCodes.warning',
+                  'Each code can only be used once. After using a code, it will be invalidated.'
+                )}
               </p>
             </div>
 
@@ -595,7 +707,10 @@ const TwoFactorSettingsPage = () => {
                 ) : (
                   <>
                     <Copy className="w-4 h-4" />
-                    Copy Codes
+                    {t(
+                      'twoFactorSettings.recoveryCodes.copyCodes',
+                      'Copy Codes'
+                    )}
                   </>
                 )}
               </button>
@@ -604,7 +719,7 @@ const TwoFactorSettingsPage = () => {
                 className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm text-[var(--text-primary)] font-medium border border-[var(--border-color)] hover:bg-[var(--bg-secondary)] transition-colors"
               >
                 <Download className="w-4 h-4" />
-                Download
+                {t('twoFactorSettings.recoveryCodes.download', 'Download')}
               </button>
             </div>
 
@@ -612,7 +727,7 @@ const TwoFactorSettingsPage = () => {
               onClick={fetchStatus}
               className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-brand hover:bg-brand/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition-all duration-200"
             >
-              Done
+              {t('twoFactorSettings.recoveryCodes.done', 'Done')}
             </button>
           </div>
         )}
@@ -635,11 +750,16 @@ const TwoFactorSettingsPage = () => {
             </div>
 
             <h2 className="text-xl font-semibold text-center text-[var(--text-primary)] mb-2">
-              Disable Two-Factor Authentication?
+              {t(
+                'twoFactorSettings.disable.title',
+                'Disable Two-Factor Authentication?'
+              )}
             </h2>
             <p className="text-[var(--text-secondary)] text-center mb-6">
-              This will make your account less secure. You&apos;ll need to enter
-              your password to confirm.
+              {t(
+                'twoFactorSettings.disable.desc',
+                "This will make your account less secure. You'll need to enter your password to confirm."
+              )}
             </p>
 
             <form onSubmit={handleDisableSubmit(onDisableSubmit)}>
@@ -648,7 +768,10 @@ const TwoFactorSettingsPage = () => {
                   htmlFor="password"
                   className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5"
                 >
-                  Confirm Password
+                  {t(
+                    'twoFactorSettings.disable.confirmPassword',
+                    'Confirm Password'
+                  )}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--text-muted)]">
@@ -691,7 +814,7 @@ const TwoFactorSettingsPage = () => {
                 ) : (
                   <>
                     <XCircle className="w-5 h-5" />
-                    Disable 2FA
+                    {t('twoFactorSettings.disable.submit', 'Disable 2FA')}
                   </>
                 )}
               </button>
@@ -705,10 +828,10 @@ const TwoFactorSettingsPage = () => {
         <div className="flex items-start gap-3">
           <Shield className="text-brand w-5 h-5 mt-0.5 shrink-0" />
           <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-            Two-factor authentication adds an extra layer of security to your
-            account by requiring a verification code in addition to your
-            password. We recommend using an authenticator app like Google
-            Authenticator or Authy.
+            {t(
+              'twoFactorSettings.securityNotice',
+              'Two-factor authentication adds an extra layer of security to your account by requiring a verification code in addition to your password. We recommend using an authenticator app like Google Authenticator or Authy.'
+            )}
           </p>
         </div>
       </div>
@@ -723,17 +846,23 @@ const TwoFactorSettingsPage = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-[var(--text-primary)]">
-                  Generate Recovery Codes
+                  {t(
+                    'twoFactorSettings.modals.generateCodes.title',
+                    'Generate Recovery Codes'
+                  )}
                 </h3>
                 <p className="text-xs text-[var(--text-secondary)]">
-                  Enter your password to continue
+                  {t(
+                    'twoFactorSettings.modals.generateCodes.desc',
+                    'Enter your password to continue'
+                  )}
                 </p>
               </div>
             </div>
             <form onSubmit={handleRecoveryModalSubmit}>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-                  Password
+                  {t('twoFactorSettings.disable.confirmPassword', 'Password')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -770,7 +899,7 @@ const TwoFactorSettingsPage = () => {
                   }}
                   className="flex-1 py-2.5 px-4 rounded-xl text-sm font-medium text-[var(--text-secondary)] border border-[var(--border-color)] hover:bg-[var(--bg-secondary)] transition-colors"
                 >
-                  Cancel
+                  {t('common.cancel', 'Cancel')}
                 </button>
                 <button
                   type="submit"
@@ -780,7 +909,10 @@ const TwoFactorSettingsPage = () => {
                   {isLoading ? (
                     <Spinner size={16} className="mx-auto" />
                   ) : (
-                    'Generate'
+                    t(
+                      'twoFactorSettings.modals.generateCodes.submit',
+                      'Generate'
+                    )
                   )}
                 </button>
               </div>
@@ -794,7 +926,10 @@ const TwoFactorSettingsPage = () => {
           <div className="bg-[var(--bg-primary)] rounded-2xl p-6 w-full max-w-md shadow-xl border border-[var(--border-color)]">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                Change Password
+                {t(
+                  'twoFactorSettings.modals.changePassword.title',
+                  'Change Password'
+                )}
               </h3>
               <button
                 onClick={() => {

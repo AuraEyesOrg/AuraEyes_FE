@@ -21,6 +21,7 @@ import {
 import Spinner from '@/components/ui/spinner';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { extractApiErrorMessage } from '@/lib/api-error';
 import {
   DEFAULT_LOCALE,
   getLocaleFromPathname,
@@ -98,18 +99,12 @@ const ResetPasswordPage = () => {
       setResetDone(true);
       setRedirectCountdown(5);
     } catch (err: unknown) {
-      if (typeof err === 'object' && err !== null && 'response' in err) {
-        const axiosError = err as {
-          response?: { data?: { message?: string; errors?: string[] } };
-        };
-        toast.error(
-          axiosError.response?.data?.message ||
-            axiosError.response?.data?.errors?.join(', ') ||
-            t('AuthPages.resetPassword.messages.failed')
-        );
-      } else {
-        toast.error(t('AuthPages.resetPassword.messages.failed'));
-      }
+      toast.error(
+        extractApiErrorMessage(
+          err,
+          t('AuthPages.resetPassword.messages.failed')
+        )
+      );
     } finally {
       setIsLoading(false);
     }
