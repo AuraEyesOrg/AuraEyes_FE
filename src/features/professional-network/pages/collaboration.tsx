@@ -1424,34 +1424,41 @@ export default function CollaborationPage() {
                             >
                               {(() => {
                                 const recordRegex =
-                                  /\/(?:medical-records|screenings|screening-review)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi;
+                                  /\/(medical-records|screenings|screening-review)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi;
                                 const parts = msg.content.split(recordRegex);
                                 if (parts.length === 1) return msg.content;
 
-                                return parts.map((part, i) => {
-                                  if (i % 2 === 1) {
-                                    // Priority 1: Use activeScreeningId fetched from consultation session (most accurate)
-                                    // Priority 2: Use group's consultationSessionId as fallback
-                                    // Priority 3: Use the ID from the link itself (e.g. medicalRecordId)
-                                    const targetId = activeScreeningId || part;
+                                return parts.reduce((acc: any[], part, i) => {
+                                  if (i % 3 === 0) {
+                                    acc.push(part);
+                                  } else if (i % 3 === 2) {
+                                    const prefix = parts[i - 1];
+                                    const id = part;
+                                    const isScreening =
+                                      prefix === 'screenings' ||
+                                      prefix === 'screening-review';
 
-                                    return (
+                                    const targetId = activeScreeningId || id;
+
+                                    const path = `/ophthalmologist/screenings/${targetId}/review`;
+
+                                    const label = 'Xem Review Hội chẩn';
+
+                                    acc.push(
                                       <a
                                         key={i}
-                                        href={localePath(
-                                          `/ophthalmologist/screenings/${targetId}/review`
-                                        )}
+                                        href={localePath(path)}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="inline-flex items-center gap-1 px-2 py-0.5 mx-1 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold rounded-md hover:underline decoration-2"
                                       >
                                         <ExternalLink className="w-3 h-3" />
-                                        Xem Review Hội chẩn
+                                        {label}
                                       </a>
                                     );
                                   }
-                                  return part;
-                                });
+                                  return acc;
+                                }, []);
                               })()}
                             </div>
 
