@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Plus, Stethoscope } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { Trans } from 'react-i18next';
 import {
   useCompleteRoadmapStep,
   useCreateRoadmapStep,
@@ -40,6 +42,7 @@ export default function DoctorRoadmapPanel({
   fullRoadmapHref,
   compact = true,
 }: DoctorRoadmapPanelProps) {
+  const { t } = useSafeTranslation();
   const [formMode, setFormMode] = useState<RoadmapStepFormMode | null>(null);
 
   const roadmapQuery = usePatientHealthRoadmap(patientId);
@@ -66,19 +69,33 @@ export default function DoctorRoadmapPanel({
   const handleComplete = async (step: HealthRoadmapStepDto) => {
     try {
       await completeMutation.mutateAsync(step.id);
-      toast.success('Step marked as completed.');
+      toast.success(
+        t('DoctorCarePlan.toasts.completeSuccess', 'Step marked as completed.')
+      );
     } catch {
-      toast.error('Failed to complete step.');
+      toast.error(
+        t('DoctorCarePlan.toasts.completeError', 'Failed to complete step.')
+      );
     }
   };
 
   const handleDelete = async (step: HealthRoadmapStepDto) => {
-    if (!window.confirm(`Delete step "${step.title}"?`)) return;
+    if (
+      !window.confirm(
+        t('DoctorCarePlan.toasts.deleteConfirm', {
+          title: step.title,
+          defaultValue: `Delete step "${step.title}"?`,
+        })
+      )
+    )
+      return;
     try {
       await deleteMutation.mutateAsync(step.id);
-      toast.success('Step deleted.');
+      toast.success(t('DoctorCarePlan.toasts.deleteSuccess', 'Step deleted.'));
     } catch {
-      toast.error('Failed to delete step.');
+      toast.error(
+        t('DoctorCarePlan.toasts.deleteError', 'Failed to delete step.')
+      );
     }
   };
 
@@ -88,10 +105,13 @@ export default function DoctorRoadmapPanel({
         <div>
           <h3 className="flex items-center gap-2 text-lg font-bold text-(--text-primary)">
             <Stethoscope className="w-5 h-5 text-brand" strokeWidth={1.8} />
-            Care plan
+            {t('DoctorCarePlan.title', 'Care plan')}
           </h3>
           <p className="text-xs text-(--text-secondary) mt-0.5">
-            Doctor-authored next steps for this patient.
+            {t(
+              'DoctorCarePlan.subtitle',
+              'Doctor-authored next steps for this patient.'
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -100,7 +120,7 @@ export default function DoctorRoadmapPanel({
               to={fullRoadmapHref}
               className="text-xs font-semibold text-brand hover:underline"
             >
-              Manage all
+              {t('DoctorCarePlan.manageAll', 'Manage all')}
             </Link>
           )}
           <button
@@ -109,13 +129,15 @@ export default function DoctorRoadmapPanel({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand hover:bg-brand/90 text-white text-xs font-bold transition-colors"
           >
             <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
-            Add step
+            {t('DoctorCarePlan.addStep', 'Add step')}
           </button>
         </div>
       </header>
 
       {roadmapQuery.isLoading ? (
-        <p className="text-sm text-(--text-secondary)">Loading...</p>
+        <p className="text-sm text-(--text-secondary)">
+          {t('DoctorCarePlan.loading', 'Loading...')}
+        </p>
       ) : (
         <RoadmapTimeline
           steps={visibleSteps}
@@ -125,8 +147,10 @@ export default function DoctorRoadmapPanel({
           onDelete={handleDelete}
           emptyState={
             <p className="text-sm text-(--text-secondary)">
-              No upcoming steps. Click <strong>Add step</strong> to start the
-              patient's care plan.
+              <Trans i18nKey="DoctorCarePlan.noUpcoming">
+                No upcoming steps. Click <strong>Add step</strong> to start the
+                patient's care plan.
+              </Trans>
             </p>
           }
         />
@@ -146,24 +170,36 @@ export default function DoctorRoadmapPanel({
         onCreate={async (request) => {
           try {
             await createMutation.mutateAsync(request);
-            toast.success('Roadmap step added.');
+            toast.success(
+              t('DoctorCarePlan.toasts.addSuccess', 'Roadmap step added.')
+            );
             setFormMode(null);
           } catch (err) {
             toast.error(
-              err instanceof Error ? err.message : 'Failed to add roadmap step.'
+              err instanceof Error
+                ? err.message
+                : t(
+                    'DoctorCarePlan.toasts.addError',
+                    'Failed to add roadmap step.'
+                  )
             );
           }
         }}
         onUpdate={async (stepId, request) => {
           try {
             await updateMutation.mutateAsync({ stepId, request });
-            toast.success('Roadmap step updated.');
+            toast.success(
+              t('DoctorCarePlan.toasts.updateSuccess', 'Roadmap step updated.')
+            );
             setFormMode(null);
           } catch (err) {
             toast.error(
               err instanceof Error
                 ? err.message
-                : 'Failed to update roadmap step.'
+                : t(
+                    'DoctorCarePlan.toasts.updateError',
+                    'Failed to update roadmap step.'
+                  )
             );
           }
         }}
