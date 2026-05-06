@@ -2101,7 +2101,8 @@
         "opa": "Opa",
         "opacityLabel": "Độ mờ",
         "thr": "Thr",
-        "threshold": "Ngưỡng"
+        "threshold": "Ngưỡng",
+        "clear": "Xóa"
       },
       "findings": {
         "namePlaceholder": "Nhập tên...",
@@ -2113,7 +2114,8 @@
         "riskLabel": "Rủi ro:",
         "severityLow": "Thấp (Vàng)",
         "severityModerate": "Trung bình (Cam)",
-        "severityHigh": "Cao (Đỏ)"
+        "severityHigh": "Cao (Đỏ)",
+        "defaultManualDescription": "Phát hiện do bác sĩ ghi nhận"
       },
       "consiliumButton": "Yêu cầu Hội chẩn",
       "consiliumModal": {
@@ -2130,7 +2132,8 @@
         "noLinkedSession": "Không tìm thấy phiên Xác minh hoặc VideoCall được liên kết cho sàng lọc này.",
         "requiredDiagnosisAndFindings": "Mã chẩn đoán và phát hiện lâm sàng là bắt buộc trước khi lưu."
       },
-      "fundusAlt": "đáy mắt"
+      "fundusAlt": "đáy mắt",
+      "eyeBadge": "Mắt {{eye}} ({{code}})"
     },
     "screenings": {
       "confidence": {

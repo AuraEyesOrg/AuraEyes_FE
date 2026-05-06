@@ -1804,7 +1804,8 @@
         "opa": "Opa",
         "opacityLabel": "Opacity",
         "thr": "Thr",
-        "threshold": "Threshold"
+        "threshold": "Threshold",
+        "clear": "Clear"
       },
       "share": {
         "heatmapEdited": "Heatmap (edited view)",
@@ -1812,7 +1813,11 @@
         "aiAnnotated": "AI annotated image",
         "doctorBoxedOverlay": "Doctor boxed overlay"
       },
-      "fundusAlt": "eye fundus"
+      "fundusAlt": "eye fundus",
+      "eyeBadge": "{{eye}} Eye ({{code}})",
+      "findings": {
+        "defaultManualDescription": "Physician indicated finding"
+      }
     },
     "screenings": {
       "title": "Incoming Screenings",
