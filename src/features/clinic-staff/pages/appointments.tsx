@@ -399,17 +399,28 @@ export default function ClinicStaffAppointmentsPage() {
   );
 
   const scheduleGrouping = useMemo(() => {
+    const MIN_ADVANCE_MS = 30 * 60 * 1000; // 30 minutes
     const slots = clinicScheduleQuery.data?.aggregatedSlots ?? [];
-    const morning = slots.filter((s) => {
+    // Filter out slots starting within 30 minutes
+    const availableSlots = slots.filter((slot) => {
+      const normalizedTime =
+        slot.startTime.length === 5 ? `${slot.startTime}:00` : slot.startTime;
+      const startAt = new Date(
+        `${walkInDate}T${normalizedTime}+07:00`
+      ).getTime();
+      if (Number.isNaN(startAt)) return false;
+      return startAt >= Date.now() + MIN_ADVANCE_MS;
+    });
+    const morning = availableSlots.filter((s) => {
       const hour = parseInt(s.startTime.split(':')[0]);
       return hour < 12;
     });
-    const afternoon = slots.filter((s) => {
+    const afternoon = availableSlots.filter((s) => {
       const hour = parseInt(s.startTime.split(':')[0]);
       return hour >= 12;
     });
-    return { morning, afternoon, totalCount: slots.length };
-  }, [clinicScheduleQuery.data]);
+    return { morning, afternoon, totalCount: availableSlots.length };
+  }, [clinicScheduleQuery.data, walkInDate]);
 
   const selectedTimeBlock = useMemo(() => {
     const all = [...scheduleGrouping.morning, ...scheduleGrouping.afternoon];
