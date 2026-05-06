@@ -271,11 +271,17 @@ export default function ClinicStaffAppointmentsPage() {
 
   const isPastOneThirdDuration = (appt: OrganisationClinicAppointmentDto) => {
     if (!appt.date || !appt.startTime || !appt.endTime) return false;
+    // Slot times are stored in Vietnam local time (UTC+7)
+    // Convert to UTC for accurate comparison regardless of user's timezone
+    const vietnamOffset = 7 * 60 * 60 * 1000; // UTC+7 in milliseconds
     const start = new Date(`${appt.date}T${appt.startTime}`);
     const end = new Date(`${appt.date}T${appt.endTime}`);
-    const duration = end.getTime() - start.getTime();
-    const oneThirdPoint = new Date(start.getTime() + duration / 3);
-    return new Date() > oneThirdPoint;
+    // Adjust for Vietnam timezone: treat the time as if it's in UTC+7
+    const startUtc = new Date(start.getTime() - vietnamOffset);
+    const endUtc = new Date(end.getTime() - vietnamOffset);
+    const duration = endUtc.getTime() - startUtc.getTime();
+    const oneThirdPointUtc = new Date(startUtc.getTime() + duration / 3);
+    return new Date() > oneThirdPointUtc;
   };
 
   // ── Week window ────────────────────────────────────────────────────────────
@@ -1007,42 +1013,7 @@ export default function ClinicStaffAppointmentsPage() {
                             />
                             {i === stepIdx && (
                               <span className="absolute -top-4 text-[8px] font-black uppercase tracking-tighter text-brand">
-                                {appt.status === 'Confirmed' &&
-                                isPastOneThirdDuration(appt) ? (
-                                  <button
-                                    onClick={async () => {
-                                      setSelectedLatePatientAppointmentId(
-                                        appt.id
-                                      );
-                                      setIsLatePatientModalOpen(true);
-                                    }}
-                                    disabled={isMutating}
-                                    className="px-3 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold flex items-center gap-1.5 transition"
-                                  >
-                                    <AlertTriangle className="w-3.5 h-3.5" />
-                                    {t(
-                                      'Organisation.calendar.actions.lateArrival',
-                                      'ĐẾN MUỘN'
-                                    )}
-                                  </button>
-                                ) : ['Pending', 'Confirmed'].includes(
-                                    appt.status
-                                  ) ? (
-                                  <button
-                                    onClick={() =>
-                                      setScanTargetAppointmentId(
-                                        appt.id === scanTargetAppointmentId
-                                          ? null
-                                          : appt.id
-                                      )
-                                    }
-                                    disabled={isMutating}
-                                    className="px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 transition"
-                                  >
-                                    <QrCode className="w-3.5 h-3.5" />
-                                    {t('Appointments.scanQrCheckIn')}
-                                  </button>
-                                ) : null}
+                                {appt.status}
                               </span>
                             )}
                           </div>
