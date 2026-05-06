@@ -226,8 +226,11 @@ export function formatLongDateTime(
 /**
  * Chat message timestamp: `"2:30 PM"`.
  */
-export function formatMessageTime(isoString: string): string {
-  return formatShortTime(isoString);
+export function formatMessageTime(
+  isoString: string,
+  locale: string = EN_US
+): string {
+  return formatShortTime(isoString, locale);
 }
 
 /**

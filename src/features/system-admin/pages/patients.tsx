@@ -115,7 +115,7 @@ export default function PatientsPage() {
     } finally {
       setLoading(false);
     }
-  }, [pageNumber, searchQuery, statusFilter]);
+  }, [pageNumber, searchQuery, statusFilter, t]);
 
   useEffect(() => {
     loadData();
@@ -374,19 +374,6 @@ export default function PatientsPage() {
           {row.isWalkIn
             ? t('SystemAdmin.patients.table.values.walkIn', 'Walk-in')
             : t('SystemAdmin.patients.table.values.registered', 'Registered')}
-        </span>
-      ),
-    },
-    {
-      header: t(
-        'SystemAdmin.patients.table.columns.linkedOrganisation',
-        'Linked Organisation'
-      ),
-      accessor: 'linkedOrganisationName',
-      render: (value) => (
-        <span className="text-sm text-slate-700 dark:text-slate-300">
-          {(value as string) ||
-            t('SystemAdmin.patients.table.values.unassigned', 'Unassigned')}
         </span>
       ),
     },

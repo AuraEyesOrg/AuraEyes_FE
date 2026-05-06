@@ -77,6 +77,7 @@ import {
   formatAppointmentSlot,
   formatRelativeTime,
   formatCountdown,
+  toIntlLocale,
 } from '@/lib/date-utils';
 import { formatCurrency } from '@/lib/helper';
 import { toast } from 'react-toastify';
@@ -510,9 +511,10 @@ const AvatarBadge = ({
 };
 
 export default function ChatPage() {
-  const { t: i18nT } = useTranslation();
+  const { t: i18nT, i18n } = useTranslation();
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
+  const dateLocale = toIntlLocale(i18n.language);
 
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -1563,7 +1565,10 @@ export default function ChatPage() {
                                         : 'text-slate-500 dark:text-gray-300'
                                     }
                                   >
-                                    {formatMessageTime(message.sentAt)}
+                                    {formatMessageTime(
+                                      message.sentAt,
+                                      dateLocale
+                                    )}
                                   </span>
                                 </div>
                               )}

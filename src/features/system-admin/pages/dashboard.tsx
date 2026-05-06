@@ -364,7 +364,10 @@ export default function SystemAdminDashboard() {
                             {doc.doctorName}
                           </p>
                           <p className="text-xs text-gray-400 dark:text-slate-500">
-                            {doc.currentStatus}
+                            {t(
+                              `${T}.doctorStatus.${doc.currentStatus.toLowerCase().replace(/\s+/g, '')}`,
+                              doc.currentStatus
+                            )}
                           </p>
                         </div>
                       </div>

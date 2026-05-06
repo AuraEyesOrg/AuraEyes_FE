@@ -1024,7 +1024,10 @@ export default function ClinicStaffAppointmentsPage() {
                             />
                             {i === stepIdx && (
                               <span className="absolute -top-4 text-[8px] font-black uppercase tracking-tighter text-brand">
-                                {appt.status}
+                                {t(
+                                  `PatientAppointments.clinicStatus.${appt.status.toLowerCase()}`,
+                                  appt.status
+                                )}
                               </span>
                             )}
                           </div>
@@ -1340,7 +1343,7 @@ export default function ClinicStaffAppointmentsPage() {
                                 <AlertTriangle className="h-4 w-4" />
                                 {t(
                                   'Organisation.calendar.actions.lateArrival',
-                                  'ĐẾN MUỘN'
+                                  'Late Arrival'
                                 )}
                               </button>
                             ) : (

@@ -183,10 +183,17 @@ export default function ClinicStaffProfilePage() {
         <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-center">
           <AlertCircle className="h-10 w-10 text-red-500" />
           <p className="font-medium text-[var(--text-primary)]">
-            Could not load clinic staff profile
+            {t(
+              'ClinicStaff.profile.errors.loadFailed',
+              'Could not load clinic staff profile'
+            )}
           </p>
           <p className="text-sm text-[var(--text-secondary)]">
-            {error?.message ?? 'Please try again later.'}
+            {error?.message ??
+              t(
+                'ClinicStaff.profile.errors.tryAgain',
+                'Please try again later.'
+              )}
           </p>
         </div>
       </ClinicStaffLayout>
@@ -198,10 +205,13 @@ export default function ClinicStaffProfilePage() {
       <div className="mx-auto max-w-5xl">
         <div className="mb-8">
           <h1 className="mb-2 text-3xl font-bold text-[var(--text-primary)]">
-            Profile
+            {t('ClinicStaff.profile.page.title', 'Profile')}
           </h1>
           <p className="text-[var(--text-secondary)]">
-            Manage your personal and clinic staff profile information.
+            {t(
+              'ClinicStaff.profile.page.subtitle',
+              'Manage your personal and clinic staff profile information.'
+            )}
           </p>
         </div>
 
@@ -256,7 +266,7 @@ export default function ClinicStaffProfilePage() {
               <div className="w-full space-y-3 text-left">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[var(--text-secondary)]">
-                    Member Since
+                    {t('ClinicStaff.profile.memberSince', 'Member Since')}
                   </span>
                   <span className="font-medium text-[var(--text-primary)]">
                     {formatMonthYear(profile.createdAt)}
@@ -272,7 +282,7 @@ export default function ClinicStaffProfilePage() {
           >
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-                Personal Information
+                {t('ClinicStaff.profile.personalInfo', 'Personal Information')}
               </h2>
               {!isEditing ? (
                 <button
@@ -280,7 +290,7 @@ export default function ClinicStaffProfilePage() {
                   onClick={() => setIsEditing(true)}
                   className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] px-4 py-2 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-tertiary)]"
                 >
-                  Edit
+                  {t('ClinicStaff.profile.edit', 'Edit')}
                 </button>
               ) : (
                 <div className="flex items-center gap-2">
@@ -301,7 +311,7 @@ export default function ClinicStaffProfilePage() {
                     }}
                     className="px-3 py-2 text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
                   >
-                    Cancel
+                    {t('ClinicStaff.profile.cancel', 'Cancel')}
                   </button>
                   <button
                     type="submit"
@@ -313,7 +323,7 @@ export default function ClinicStaffProfilePage() {
                     ) : (
                       <Save className="h-4 w-4" />
                     )}
-                    Save
+                    {t('ClinicStaff.profile.save', 'Save')}
                   </button>
                 </div>
               )}
@@ -321,7 +331,7 @@ export default function ClinicStaffProfilePage() {
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <ProfileField
-                label="Full Name"
+                label={t('ClinicStaff.profile.fields.fullName', 'Full Name')}
                 icon={<User className="h-4 w-4" />}
                 isEditing={isEditing}
                 error={errors.fullName?.message}
@@ -336,14 +346,14 @@ export default function ClinicStaffProfilePage() {
               />
 
               <ProfileField
-                label="Email"
+                label={t('ClinicStaff.profile.fields.email', 'Email')}
                 icon={<Mail className="h-4 w-4" />}
                 isEditing={false}
                 value={profile.email}
               />
 
               <ProfileField
-                label="Phone"
+                label={t('ClinicStaff.profile.fields.phone', 'Phone')}
                 icon={<Phone className="h-4 w-4" />}
                 isEditing={isEditing}
                 error={errors.phone?.message}
@@ -358,7 +368,10 @@ export default function ClinicStaffProfilePage() {
               />
 
               <ProfileField
-                label="Date of Birth"
+                label={t(
+                  'ClinicStaff.profile.fields.dateOfBirth',
+                  'Date of Birth'
+                )}
                 icon={<Calendar className="h-4 w-4" />}
                 isEditing={isEditing}
                 input={
@@ -374,21 +387,32 @@ export default function ClinicStaffProfilePage() {
               />
 
               <ProfileField
-                label="Gender"
+                label={t('ClinicStaff.profile.fields.gender', 'Gender')}
                 isEditing={isEditing}
                 input={
                   <select {...register('gender')} className={fieldInputClass}>
-                    <option value="">Prefer not to say</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
+                    <option value="">
+                      {t(
+                        'ClinicStaff.profile.gender.preferNotToSay',
+                        'Prefer not to say'
+                      )}
+                    </option>
+                    <option value="male">
+                      {t('ClinicStaff.profile.gender.male', 'Male')}
+                    </option>
+                    <option value="female">
+                      {t('ClinicStaff.profile.gender.female', 'Female')}
+                    </option>
+                    <option value="other">
+                      {t('ClinicStaff.profile.gender.other', 'Other')}
+                    </option>
                   </select>
                 }
                 value={profile.gender || '—'}
               />
 
               <ProfileField
-                label="Citizen ID"
+                label={t('ClinicStaff.profile.fields.citizenId', 'Citizen ID')}
                 icon={<Shield className="h-4 w-4" />}
                 isEditing={isEditing}
                 error={errors.citizenId?.message}
@@ -404,7 +428,7 @@ export default function ClinicStaffProfilePage() {
 
               <div className="md:col-span-2">
                 <ProfileField
-                  label="Address"
+                  label={t('ClinicStaff.profile.fields.address', 'Address')}
                   icon={<MapPin className="h-4 w-4" />}
                   isEditing={isEditing}
                   error={errors.address?.message}
@@ -428,7 +452,7 @@ export default function ClinicStaffProfilePage() {
           <div className="w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                Update Avatar
+                {t('ClinicStaff.profile.updateAvatar', 'Update Avatar')}
               </h3>
               <button
                 type="button"
@@ -466,7 +490,7 @@ export default function ClinicStaffProfilePage() {
               onClick={() => fileInputRef.current?.click()}
               className="mb-4 w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] px-4 py-3 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-tertiary)]"
             >
-              Choose image
+              {t('ClinicStaff.profile.chooseImage', 'Choose image')}
             </button>
             <input
               ref={fileInputRef}
@@ -479,7 +503,10 @@ export default function ClinicStaffProfilePage() {
             />
 
             <p className="mb-6 text-center text-xs text-[var(--text-muted)]">
-              Supports JPG, PNG, GIF, WebP. Maximum size 5MB.
+              {t(
+                'ClinicStaff.profile.imageSupport',
+                'Supports JPG, PNG, GIF, WebP. Maximum size 5MB.'
+              )}
             </p>
 
             <div className="flex gap-3">
@@ -488,7 +515,7 @@ export default function ClinicStaffProfilePage() {
                 onClick={closeAvatarModal}
                 className="flex-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] px-4 py-3 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-tertiary)]"
               >
-                Cancel
+                {t('ClinicStaff.profile.cancel', 'Cancel')}
               </button>
               <button
                 type="button"
@@ -501,7 +528,7 @@ export default function ClinicStaffProfilePage() {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                Save
+                {t('ClinicStaff.profile.save', 'Save')}
               </button>
             </div>
           </div>

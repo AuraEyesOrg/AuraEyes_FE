@@ -101,6 +101,7 @@ function ActivityItem({
       'patient checked in at counter': 'checkedInAtCounter',
       'appointment created': 'appointmentCreated',
       'appointment cancelled': 'appointmentCancelled',
+      'appointment confirmed': 'appointmentConfirmed',
       'appointment canceled': 'appointmentCancelled',
       'new appointment booked': 'newAppointmentBooked',
       'screening completed': 'screeningCompleted',

@@ -65,7 +65,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 // --- Main Component ---
 export const TransactionVolumeChart = () => {
   const [period, setPeriod] = useState<Period>('daily');
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin', 'transaction-stats', period],
@@ -80,6 +80,9 @@ export const TransactionVolumeChart = () => {
           <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
             {t(`${NS}.title`, 'Transaction Overview')}
           </h2>
+          <p className="text-xs text-gray-400 dark:text-slate-500">
+            {new Date().toLocaleDateString(i18n.language)}
+          </p>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {t(`${NS}.subtitle`, 'Monitor volume and activity across periods')}
           </p>

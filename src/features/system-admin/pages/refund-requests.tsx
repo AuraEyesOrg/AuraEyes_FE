@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import {
-  RefreshCw,
   Search,
   CheckCircle2,
   Clock,
@@ -134,7 +133,7 @@ export default function RefundRequestsPage() {
         />
 
         <main className="p-6 space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
             <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 min-w-80 shadow-sm">
               <Search className="w-4 h-4 text-slate-400" />
               <input
@@ -147,21 +146,11 @@ export default function RefundRequestsPage() {
                 className="bg-transparent outline-none text-sm w-full"
               />
             </div>
-
-            <button
-              onClick={() => refetch()}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm font-semibold shadow-sm hover:bg-slate-50 transition-colors"
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`}
-              />
-              {t('SystemAdmin.common.actions.refresh', 'Refresh')}
-            </button>
           </div>
 
           {isLoading ? (
             <div className="py-20 text-center space-y-3">
-              <RefreshCw className="w-10 h-10 text-brand animate-spin mx-auto opacity-20" />
+              <Clock className="w-10 h-10 text-brand animate-spin mx-auto opacity-20" />
               <p className="text-sm text-slate-500 font-medium">
                 {t('SystemAdmin.common.loadingData', 'Loading data...')}
               </p>
@@ -398,7 +387,7 @@ export default function RefundRequestsPage() {
                 className="flex-[1.5] px-6 py-3.5 bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-emerald-600 shadow-xl shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {confirmRefundMutation.isPending ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <Clock className="w-4 h-4 animate-spin" />
                 ) : (
                   <CheckCircle2 className="w-4 h-4" />
                 )}
@@ -462,7 +451,7 @@ export default function RefundRequestsPage() {
                 className="flex-[1.5] px-6 py-3.5 bg-rose-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-rose-600 shadow-xl shadow-rose-500/20 transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {rejectRefundMutation.isPending ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <Clock className="w-4 h-4 animate-spin" />
                 ) : (
                   <AlertCircle className="w-4 h-4" />
                 )}

@@ -79,6 +79,7 @@ import {
   formatFullDate,
   formatMessageTime,
   formatRelativeTime,
+  toIntlLocale,
 } from '@/lib/date-utils';
 import { formatCurrency } from '@/lib/helper';
 import { extractApiErrorMessage } from '@/lib/api-error';
@@ -528,12 +529,13 @@ export default function ConsultationsChatView({
   sessions,
   sessionsLoading,
 }: ConsultationsChatViewProps) {
-  const { t } = useSafeTranslation();
+  const { t, i18n } = useSafeTranslation();
   const [searchParams] = useSearchParams();
   const urlSessionId = searchParams.get('sessionId');
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const currentDoctorId = user?.roleId ?? '';
+  const dateLocale = toIntlLocale(i18n.language);
 
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null
@@ -1664,8 +1666,8 @@ export default function ConsultationsChatView({
                   const showAvatar = !isPreviousSameSender || !isNextSameSender;
                   const showDateDivider =
                     !previousMessage ||
-                    formatFullDate(previousMessage.sentAt) !==
-                      formatFullDate(message.sentAt);
+                    formatFullDate(previousMessage.sentAt, dateLocale) !==
+                      formatFullDate(message.sentAt, dateLocale);
 
                   const bubbleMetaTitle = isDoctorMessage
                     ? phase === 'PRE_VISIT'
@@ -1697,7 +1699,7 @@ export default function ConsultationsChatView({
                       {showDateDivider && (
                         <div className="flex justify-center py-2">
                           <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
-                            {formatFullDate(message.sentAt)}
+                            {formatFullDate(message.sentAt, dateLocale)}
                           </span>
                         </div>
                       )}
@@ -1758,7 +1760,10 @@ export default function ConsultationsChatView({
                                       : 'text-slate-500 dark:text-gray-300'
                                   }
                                 >
-                                  {formatMessageTime(message.sentAt)}
+                                  {formatMessageTime(
+                                    message.sentAt,
+                                    dateLocale
+                                  )}
                                 </span>
                               </div>
                             )}
