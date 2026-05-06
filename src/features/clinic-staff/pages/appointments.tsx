@@ -1030,10 +1030,15 @@ export default function ClinicStaffAppointmentsPage() {
                             />
                             {i === stepIdx && (
                               <span className="absolute -top-4 text-[8px] font-black uppercase tracking-tighter text-brand">
-                                {t(
-                                  `PatientAppointments.clinicStatus.${appt.status.toLowerCase()}`,
-                                  appt.status
-                                )}
+                                {(() => {
+                                  const statusKey =
+                                    appt.status.charAt(0).toLowerCase() +
+                                    appt.status.slice(1);
+                                  return t(
+                                    `Organisation.calendar.status.${statusKey}`,
+                                    appt.status
+                                  );
+                                })()}
                               </span>
                             )}
                           </div>
@@ -2018,7 +2023,7 @@ export default function ClinicStaffAppointmentsPage() {
           if (!appointmentToPay?.orderId) return;
           const localePrefix = i18nObj.language === 'en' ? '/en' : '/vi';
 
-          await payRemainingMutation.mutateAsync({
+          const result = await payRemainingMutation.mutateAsync({
             orderId: appointmentToPay.orderId,
             method,
             returnUrl: `${window.location.origin}${localePrefix}/payment/success`,
@@ -2045,6 +2050,8 @@ export default function ClinicStaffAppointmentsPage() {
               )
             );
           }
+
+          return result;
         }}
       />
     </ClinicStaffLayout>

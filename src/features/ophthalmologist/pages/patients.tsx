@@ -20,6 +20,10 @@ import { SessionStatus } from '@/types/consultation';
 import type { ConsultationSessionListDto } from '@/types/consultation';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { DEFAULT_LOCALE, getLocaleFromPathname } from '@/i18n/locales';
+import {
+  localizeFindingsText,
+  toDisplayDiseaseName,
+} from '@/features/patient/lib/disease-translation';
 
 type PatientCardStatus = 'active' | 'urgent' | 'past';
 const PATIENTS_PAGE_SIZE = 8;
@@ -147,6 +151,66 @@ const getLastDiagnosisFromSessions = (
   }
 
   return fallback;
+};
+
+const localizeClinicalResultText = (
+  value: string,
+  language: string,
+  t: TranslateFn
+): string => {
+  const raw = value.trim();
+  if (!raw) return raw;
+  if (!language.toLowerCase().startsWith('vi')) return raw;
+
+  const primaryAndRelated = raw.match(
+    /^Primary Finding:\s*(.+?)\s*Related Findings:\s*(.+)$/i
+  );
+  if (primaryAndRelated) {
+    const primaryFinding = toDisplayDiseaseName(
+      primaryAndRelated[1]?.trim() ?? '',
+      language
+    );
+    const relatedFindings = localizeFindingsText(
+      primaryAndRelated[2]?.trim() ?? '',
+      language
+    );
+    return t(
+      'Organisation.screeningResult.findings.primaryAndRelated',
+      'Primary Finding: {{primaryFinding}}\nRelated Findings: {{relatedFindings}}',
+      {
+        primaryFinding,
+        relatedFindings,
+      }
+    );
+  }
+
+  const primaryOnly = raw.match(/^Primary Finding:\s*(.+)$/i);
+  if (primaryOnly) {
+    const primaryFinding = toDisplayDiseaseName(
+      primaryOnly[1]?.trim() ?? '',
+      language
+    );
+    return t(
+      'Organisation.screeningResult.findings.primaryOnly',
+      'Primary Finding: {{primaryFinding}}',
+      { primaryFinding }
+    );
+  }
+
+  const relatedOnly = raw.match(/^Related Findings:\s*(.+)$/i);
+  if (relatedOnly) {
+    const relatedFindings = localizeFindingsText(
+      relatedOnly[1]?.trim() ?? '',
+      language
+    );
+    return t(
+      'Organisation.screeningResult.findings.relatedOnly',
+      'Related Findings: {{relatedFindings}}',
+      { relatedFindings }
+    );
+  }
+
+  return localizeFindingsText(raw, language);
 };
 
 const getPatientFindingsOrSummary = (
@@ -304,9 +368,14 @@ export default function PatientsPage() {
         sortedByTimeDesc[0]?.patientName?.trim() ||
         `${t('Ophthalmologist.patients.patientPrefix', 'Patient')} ${patientId.slice(0, 8)}`;
 
-      const lastDiagnosis = getLastDiagnosisFromSessions(
+      const lastDiagnosisRaw = getLastDiagnosisFromSessions(
         patientSessions,
         t('Ophthalmologist.patients.notAvailable', 'N/A')
+      );
+      const lastDiagnosis = localizeClinicalResultText(
+        lastDiagnosisRaw,
+        locale,
+        t
       );
 
       result.push({

@@ -1284,7 +1284,17 @@
         "viewAll": "View all screenings"
       },
       "queue": {
-        "updating": "Updating..."
+        "updating": "Updating...",
+        "empty": "No patients waiting for review",
+        "emptyHint": "New cases will appear here when patients are assigned to you.",
+        "continue": "Continue",
+        "startReview": "Start Review",
+        "inProgress": "In Progress"
+      },
+      "filters": {
+        "all": "All",
+        "highRisk": "High Risk",
+        "waitingLong": "> 30 min"
       },
       "stats": {
         "pending": "Pending Reviews",
@@ -1424,7 +1434,18 @@
         "title": "Appearance",
         "darkMode": "Dark Mode",
         "currentlyOn": "Currently on",
-        "currentlyOff": "Currently off"
+        "currentlyOff": "Currently off",
+        "toggle": "Toggle theme"
+      },
+      "language": {
+        "title": "Language",
+        "subtitle": "Choose your preferred language for the portal",
+        "options": {
+          "viNative": "Tiếng Việt",
+          "viLabel": "Vietnamese",
+          "enNative": "English",
+          "enLabel": "English (US)"
+        }
       },
       "notifications": {
         "title": "Notifications",
@@ -1541,6 +1562,7 @@
       }
     },
     "consultations": {
+      "title": "Post-consultations",
       "chat": {
         "phase": {
           "preVisit": "Pre-visit",
@@ -1804,7 +1826,8 @@
         "opa": "Opa",
         "opacityLabel": "Opacity",
         "thr": "Thr",
-        "threshold": "Threshold"
+        "threshold": "Threshold",
+        "clear": "Clear"
       },
       "share": {
         "heatmapEdited": "Heatmap (edited view)",
@@ -1812,7 +1835,11 @@
         "aiAnnotated": "AI annotated image",
         "doctorBoxedOverlay": "Doctor boxed overlay"
       },
-      "fundusAlt": "eye fundus"
+      "fundusAlt": "eye fundus",
+      "eyeBadge": "{{eye}} Eye ({{code}})",
+      "findings": {
+        "defaultManualDescription": "Physician indicated finding"
+      }
     },
     "screenings": {
       "title": "Incoming Screenings",
@@ -1834,6 +1861,7 @@
       "liveQueue": "Live review queue",
       "autoSync": "Auto-sync",
       "risk": {
+        "critical": "Critical",
         "high": "High Risk",
         "medium": "Medium Risk",
         "low": "Low Risk",
@@ -1875,7 +1903,7 @@
         "filtered": "No screenings match your current filter. Try adjusting your search or status filter."
       }
     },
-    "consultations": {
+    "consultationsLegacy": {
       "title": "Post-consultations"
     },
     "wallet": {
@@ -3991,7 +4019,11 @@
         "waitingForPayment": "Awaiting final payment"
       },
       "summary": {
-        "records": "{{count}} records"
+        "records": "{{count}} total appointments",
+        "filteredRecords": "Found {{count}} matching appointments"
+      },
+      "search": {
+        "placeholder": "Search by name, phone..."
       },
       "toast": {
         "depositRequiredBeforeCheckIn": "Collect the deposit before check-in.",
@@ -4023,6 +4055,7 @@
         },
         "loadingAppointments": "Loading appointments...",
         "noAppointments": "No appointments on this day.",
+        "noAppointmentsDescription": "No appointments have been scheduled for this date.",
         "terminal": {
           "cancelled": "Appointment cancelled",
           "completed": "Visit completed",
@@ -5058,7 +5091,7 @@
       "title": "Payment Transactions",
       "description": "Manage cashflow and system-wide transactions",
       "stats": {
-        "totalVolume": "Total Volume",
+        "totalVolume": "Total Revenue",
         "pendingAmount": "Pending Amount",
         "completedOrders": "Completed Orders",
         "avgOrderValue": "Avg Order Value"
@@ -5600,11 +5633,11 @@
       },
       "transactionChart": {
         "title": "Transaction Overview",
-        "subtitle": "Monitor volume and activity across periods",
+        "subtitle": "Monitor revenue and activity across periods",
         "daily": "Last 7 Days",
         "weekly": "Last 4 Weeks",
         "monthly": "This Year",
-        "volume": "Volume",
+        "volume": "Revenue",
         "count": "Count",
         "noData": "No transactions found for this period.",
         "loadError": "Failed to load chart data."
@@ -8468,7 +8501,7 @@
       "notification": "Notification"
     }
   },
-  "Organisation": {
+  "OrganisationLegacy": {
     "screeningResult": {
       "summary": {
         "high": {
@@ -8614,7 +8647,7 @@
     "yesterday": "Yesterday",
     "longTimeAgo": "Long time ago"
   },
-  "ProfessionalNetwork": {
+  "ProfessionalNetworkLegacy": {
     "common": {
       "back": "Back",
       "cancel": "Cancel",

@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   Users,
   Eye,
-  Wallet,
   CalendarX,
   LogOut,
   Settings,
@@ -79,12 +78,6 @@ export default function DoctorSidebar({
       labelKey: 'Ophthalmologist.sidebar.AuraNetwork',
       icon: Globe,
       path: '/network',
-    },
-    {
-      labelKey: 'Ophthalmologist.sidebar.Wallet',
-      icon: Wallet,
-      path: '/ophthalmologist/wallet',
-      requiredPermission: Permissions.WalletsRead,
     },
     {
       labelKey: 'Ophthalmologist.sidebar.Settings',

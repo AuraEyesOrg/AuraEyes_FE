@@ -131,7 +131,9 @@ export default function OphthalmologistDashboard() {
       <DoctorSidebar pendingCount={metrics.pendingReviews} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <DoctorHeader />
+        <DoctorHeader
+          pageName={t('Ophthalmologist.sidebar.Dashboard', 'Dashboard')}
+        />
 
         <main className="p-6">
           {metricsQuery.isError ? (

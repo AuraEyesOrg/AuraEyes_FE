@@ -122,6 +122,13 @@ interface TodaySummaryDto {
   checkedInPatients: number;
   completedVisits: number;
   noShowCount: number;
+  todayRevenue: number;
+  growthPercentageDay: number;
+  growthPercentageMonth: number;
+  growthPercentageYear: number;
+  revenueGrowthPercentageDay: number;
+  revenueGrowthPercentageMonth: number;
+  revenueGrowthPercentageYear: number;
 }
 
 interface SlotUtilizationDto {
@@ -359,6 +366,13 @@ export const dashboardApi = {
       checkedInPatients: data?.checkedInPatients ?? 0,
       completedVisits: data?.completedVisits ?? 0,
       noShowCount: data?.noShowCount ?? 0,
+      todayRevenue: data?.todayRevenue ?? 0,
+      growthPercentageDay: data?.growthPercentageDay ?? 0,
+      growthPercentageMonth: data?.growthPercentageMonth ?? 0,
+      growthPercentageYear: data?.growthPercentageYear ?? 0,
+      revenueGrowthPercentageDay: data?.revenueGrowthPercentageDay ?? 0,
+      revenueGrowthPercentageMonth: data?.revenueGrowthPercentageMonth ?? 0,
+      revenueGrowthPercentageYear: data?.revenueGrowthPercentageYear ?? 0,
     };
   },
 

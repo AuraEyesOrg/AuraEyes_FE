@@ -1286,7 +1286,17 @@
         "viewAll": "Xem tất cả ca khám"
       },
       "queue": {
-        "updating": "Đang cập nhật..."
+        "updating": "Đang cập nhật...",
+        "empty": "Không có bệnh nhân nào đang chờ duyệt",
+        "emptyHint": "Ca mới sẽ xuất hiện tại đây khi được phân cho bạn.",
+        "continue": "Tiếp tục",
+        "startReview": "Bắt đầu duyệt",
+        "inProgress": "Đang xử lý"
+      },
+      "filters": {
+        "all": "Tất cả",
+        "highRisk": "Nguy cơ cao",
+        "waitingLong": "> 30 phút"
       },
       "stats": {
         "pending": "Ca chờ duyệt",
@@ -1409,7 +1419,13 @@
         "languageVi": "Tiếng Việt (VN)",
         "languageEn": "Tiếng Anh (Hoa Kỳ)"
       },
-      "appearance": "Giao diện",
+      "appearance": {
+        "title": "Giao diện",
+        "darkMode": "Chế độ tối",
+        "currentlyOn": "Đang bật",
+        "currentlyOff": "Đang tắt",
+        "toggle": "Chuyển giao diện"
+      },
       "notifications": "Thông báo",
       "dangerZone": {
         "title": "Vùng nguy hiểm",
@@ -1438,7 +1454,16 @@
       },
       "title": "Cài đặt",
       "displayOptions": "Tùy chọn hiển thị",
-      "language": "Ngôn ngữ",
+      "language": {
+        "title": "Ngôn ngữ",
+        "subtitle": "Chọn ngôn ngữ hiển thị cho cổng thông tin",
+        "options": {
+          "viNative": "Tiếng Việt",
+          "viLabel": "Tiếng Việt",
+          "enNative": "English",
+          "enLabel": "Tiếng Anh (US)"
+        }
+      },
       "theme": "Chủ đề",
       "autoSaveDraft": "Tự động lưu bản nháp",
       "compactMode": "Chế độ thu gọn",
@@ -1579,6 +1604,7 @@
       }
     },
     "consultations": {
+      "title": "Tư vấn sau khám",
       "chat": {
         "phase": {
           "preVisit": "Trước khám",
@@ -2101,7 +2127,8 @@
         "opa": "Opa",
         "opacityLabel": "Độ mờ",
         "thr": "Thr",
-        "threshold": "Ngưỡng"
+        "threshold": "Ngưỡng",
+        "clear": "Xóa"
       },
       "findings": {
         "namePlaceholder": "Nhập tên...",
@@ -2113,7 +2140,8 @@
         "riskLabel": "Rủi ro:",
         "severityLow": "Thấp (Vàng)",
         "severityModerate": "Trung bình (Cam)",
-        "severityHigh": "Cao (Đỏ)"
+        "severityHigh": "Cao (Đỏ)",
+        "defaultManualDescription": "Phát hiện do bác sĩ ghi nhận"
       },
       "consiliumButton": "Yêu cầu Hội chẩn",
       "consiliumModal": {
@@ -2130,7 +2158,8 @@
         "noLinkedSession": "Không tìm thấy phiên Xác minh hoặc VideoCall được liên kết cho sàng lọc này.",
         "requiredDiagnosisAndFindings": "Mã chẩn đoán và phát hiện lâm sàng là bắt buộc trước khi lưu."
       },
-      "fundusAlt": "đáy mắt"
+      "fundusAlt": "đáy mắt",
+      "eyeBadge": "Mắt {{eye}} ({{code}})"
     },
     "screenings": {
       "confidence": {
@@ -2150,6 +2179,7 @@
       "pendingAnalysis": "Đang chờ phân tích",
       "review": "Xem xét",
       "risk": {
+        "critical": "Nguy cơ nghiêm trọng",
         "high": "Nguy cơ cao",
         "low": "Nguy cơ thấp",
         "medium": "Nguy cơ trung bình",
@@ -2193,7 +2223,7 @@
       "liveQueue": "Hàng đợi trực tiếp",
       "autoSync": "Tự động đồng bộ"
     },
-    "consultations": {
+    "consultationsLegacy": {
       "title": "Tư vấn sau khám"
     },
     "wallet": {
@@ -4536,7 +4566,11 @@
         "waitingForPayment": "Chờ thanh toán cuối"
       },
       "summary": {
-        "records": "{{count}} hồ sơ"
+        "records": "{{count}} tổng lịch hẹn",
+        "filteredRecords": "Tìm thấy {{count}} lịch hẹn phù hợp"
+      },
+      "search": {
+        "placeholder": "Tìm theo tên, số điện thoại..."
       },
       "toast": {
         "depositRequiredBeforeCheckIn": "Vui lòng thu tiền cọc trước khi check-in.",
@@ -4573,6 +4607,7 @@
         "states": {
           "loadingAppointments": "Đang tải lịch hẹn...",
           "noAppointments": "Không có lịch hẹn trong ngày này.",
+          "noAppointmentsDescription": "Không có lịch hẹn nào được lên lịch cho ngày này.",
           "terminal": {
             "cancelled": "Lịch hẹn đã hủy",
             "completed": "Đã hoàn tất lượt khám",
@@ -5568,7 +5603,8 @@
         "totalAppointments": "Lịch hẹn hôm nay",
         "checkedIn": "Đã check-in",
         "completed": "Đã hoàn tất",
-        "noShow": "Vắng mặt"
+        "noShow": "Vắng mặt",
+        "revenue": "Doanh thu hôm nay"
       },
       "bottleneckLongWait": "{{count}} bệnh nhân chờ trên {{minutes}} phút",
       "bottleneckFullCapacity": "Số lượt khám đã đạt tối đa trong ngày",
@@ -5585,6 +5621,7 @@
       "status": "Trạng thái",
       "doctor": "Bác sĩ",
       "waitTime": "Chờ",
+      "doctorStatusTitle": "Trạng thái bác sĩ",
       "doctorStatus": {
         "inconsultation": "Đang tư vấn",
         "available": "Sẵn sàng"
@@ -5615,14 +5652,24 @@
       },
       "transactionChart": {
         "title": "Tổng quan giao dịch",
-        "subtitle": "Theo dõi khối lượng và hoạt động qua các kỳ",
+        "subtitle": "Theo dõi doanh thu và hoạt động qua các kỳ",
         "daily": "7 ngày qua",
         "weekly": "4 tuần qua",
         "monthly": "Năm nay",
-        "volume": "Khối lượng",
+        "volume": "Doanh thu",
         "count": "Số lượng",
         "noData": "Không tìm thấy giao dịch trong kỳ này.",
         "loadError": "Không thể tải dữ liệu biểu đồ."
+      },
+      "periods": {
+        "day": "so với hôm qua",
+        "month": "so với tháng trước",
+        "year": "so với năm trước"
+      },
+      "periodOptions": {
+        "day": "Ngày",
+        "month": "Tháng",
+        "year": "Năm"
       }
     },
     "common": {
@@ -6198,7 +6245,7 @@
       "title": "Giao dịch thanh toán",
       "description": "Quản lý dòng tiền và giao dịch toàn hệ thống",
       "stats": {
-        "totalVolume": "Tổng khối lượng",
+        "totalVolume": "Tổng doanh thu",
         "pendingAmount": "Số tiền chờ",
         "completedOrders": "Đơn đã hoàn tất",
         "avgOrderValue": "Giá trị trung bình"
@@ -7476,7 +7523,8 @@
       "discover": "Khám phá",
       "saved": "Đã lưu",
       "managePosts": "Quản lý bài viết",
-      "profile": "Hồ sơ"
+      "profile": "Hồ sơ",
+      "collaboration": "Hợp tác"
     },
     "sidebar": {
       "backToOrganisationDashboard": "Quay lại bảng điều khiển tổ chức",
@@ -11167,7 +11215,7 @@
       "notification": "Thông báo"
     }
   },
-  "Organisation": {
+  "OrganisationLegacy": {
     "screeningResult": {
       "summary": {
         "high": {
@@ -11313,7 +11361,7 @@
     "yesterday": "Hôm qua",
     "longTimeAgo": "Cách đây lâu"
   },
-  "ProfessionalNetwork": {
+  "ProfessionalNetworkLegacy": {
     "common": {
       "back": "Quay lại",
       "cancel": "Hủy",

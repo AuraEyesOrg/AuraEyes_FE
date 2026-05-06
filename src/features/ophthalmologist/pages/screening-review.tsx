@@ -1825,7 +1825,7 @@ export default function ScreeningReviewPage() {
                                 <span className="text-gray-900 dark:text-white font-medium">
                                   {new Date(
                                     selectedImage.capturedAt
-                                  ).toLocaleTimeString('en-US', {
+                                  ).toLocaleTimeString(undefined, {
                                     hour: '2-digit',
                                     minute: '2-digit',
                                   })}
@@ -2271,13 +2271,19 @@ export default function ScreeningReviewPage() {
                       <div className="absolute top-4 left-4 flex items-center gap-2">
                         <span className="px-3 py-1.5 bg-gray-900/80 backdrop-blur rounded-lg text-white text-sm font-medium flex items-center gap-2">
                           <Eye className="w-4 h-4 text-cyan-400" />
-                          {selectedImage.eyeSide} Eye (O
-                          {selectedImage.eyeSide === 'Left'
-                            ? 'S'
-                            : selectedImage.eyeSide === 'Right'
-                              ? 'D'
-                              : 'S/D'}
-                          )
+                          {t(
+                            'Ophthalmologist.screeningReview.eyeBadge',
+                            '{{eye}} Eye ({{code}})',
+                            {
+                              eye: selectedImage.eyeSide,
+                              code:
+                                selectedImage.eyeSide === 'Left'
+                                  ? 'S'
+                                  : selectedImage.eyeSide === 'Right'
+                                    ? 'D'
+                                    : 'S/D',
+                            }
+                          )}
                         </span>
                       </div>
                     ) : null}
@@ -2645,7 +2651,10 @@ export default function ScreeningReviewPage() {
                                           'Xóa toàn bộ bản đồ nhiệt'
                                         )}
                                       >
-                                        Clear
+                                        {t(
+                                          'Ophthalmologist.screeningReview.toolbox.clear',
+                                          'Clear'
+                                        )}
                                       </button>
                                     </div>
                                   </div>
@@ -2781,7 +2790,7 @@ export default function ScreeningReviewPage() {
                               onClick={() => setIsAddingFinding(false)}
                               className="px-3 py-1.5 text-[11px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
                             >
-                              Hủy
+                              {t('Ophthalmologist.common.cancel', 'Cancel')}
                             </button>
                             <button
                               onClick={() => {
@@ -2792,7 +2801,10 @@ export default function ScreeningReviewPage() {
                                   name: newFindingName.trim(),
                                   description:
                                     newFindingDescription.trim() ||
-                                    'Physician indicated finding',
+                                    t(
+                                      'Ophthalmologist.screeningReview.findings.defaultManualDescription',
+                                      'Physician indicated finding'
+                                    ),
                                   confidence: 100,
                                   severity: newFindingSeverity,
                                 };

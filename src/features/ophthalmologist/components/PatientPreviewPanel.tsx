@@ -24,6 +24,23 @@ const riskColorMap: Record<string, string> = {
 
 type TranslateFn = ReturnType<typeof useSafeTranslation>['t'];
 
+function getRiskLabel(risk: string, t: TranslateFn): string {
+  const normalized = risk.trim().toLowerCase();
+  if (normalized === 'critical') {
+    return t('Ophthalmologist.screenings.risk.critical', 'Critical');
+  }
+  if (normalized === 'high') {
+    return t('Ophthalmologist.screenings.risk.high', 'High Risk');
+  }
+  if (normalized === 'moderate' || normalized === 'medium') {
+    return t('Ophthalmologist.screenings.risk.medium', 'Medium Risk');
+  }
+  if (normalized === 'low') {
+    return t('Ophthalmologist.screenings.risk.low', 'Low Risk');
+  }
+  return t('Ophthalmologist.screenings.risk.unknown', 'Unknown');
+}
+
 function formatWaiting(minutes: number, t: TranslateFn): string {
   if (minutes < 1)
     return t(
@@ -123,7 +140,7 @@ export default function PatientPreviewPanel({
               {(riskLower === 'critical' || riskLower === 'high') && (
                 <AlertTriangle className="inline mr-1 h-3.5 w-3.5" />
               )}
-              {item.riskLevel}
+              {getRiskLabel(item.riskLevel, t)}
             </p>
           </div>
           <div>

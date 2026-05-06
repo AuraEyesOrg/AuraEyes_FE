@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import {
   AlertCircle,
@@ -26,10 +26,10 @@ import { Trans } from 'react-i18next';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { syncOrder } from '@/features/patient/api/financial.api';
-import { useRef } from 'react';
 
 export default function CashierPage() {
   const { t: translate } = useSafeTranslation();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const visitIdFromQuery = searchParams.get('visitId');
   const [selectedVisitId, setSelectedVisitId] = useState<string | null>(
@@ -38,6 +38,8 @@ export default function CashierPage() {
   const effectiveVisitId = selectedVisitId ?? visitIdFromQuery;
   const paymentStatus = searchParams.get('status');
   const isPaidSuccess = paymentStatus === 'PAID';
+  const [isLocalSuccess, setIsLocalSuccess] = useState(false);
+  const successHandledRef = useRef(false);
 
   const queueQuery = useQuery({
     queryKey: ['clinic-staff', 'queue', 'cashier'],
@@ -50,60 +52,76 @@ export default function CashierPage() {
     queryKey: ['clinic-staff', 'payment-context', effectiveVisitId],
     queryFn: () => clinicQueueApi.getPaymentContext(effectiveVisitId!),
     enabled: Boolean(effectiveVisitId),
+    staleTime: 5000,
   });
 
+  // Unified cleanup for all success scenarios
+  const cleanupSuccessState = useCallback(() => {
+    setSelectedVisitId(null);
+    setIsLocalSuccess(false);
+    setShowCashSuccess(false);
+    setLastPaidVisitName(null);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('status');
+        next.delete('orderCode');
+        next.delete('code');
+        next.delete('cancel');
+        next.delete('orderId');
+        next.delete('id');
+        next.delete('visitId');
+        return next;
+      },
+      { replace: true }
+    );
+    // Invalidate queue to ensure the processed item disappears
+    queryClient.invalidateQueries({
+      queryKey: ['clinic-staff', 'queue', 'cashier'],
+    });
+  }, [setSearchParams, queryClient]);
+
+  // Sync selectedVisitId with URL but handle nulls correctly
   useEffect(() => {
-    if (visitIdFromQuery && visitIdFromQuery !== selectedVisitId) {
+    if (visitIdFromQuery !== selectedVisitId) {
       setSelectedVisitId(visitIdFromQuery);
     }
-  }, [visitIdFromQuery, selectedVisitId]);
-
-  const successHandledRef = useRef(false);
+  }, [visitIdFromQuery]);
 
   // Handle successful payment: clear status and refresh queue after delay
   useEffect(() => {
     if (isPaidSuccess && !successHandledRef.current) {
       successHandledRef.current = true;
+      setIsLocalSuccess(true); // Lock the success UI locally
+
       const orderId = searchParams.get('orderId') || searchParams.get('id');
 
-      // Proactively sync order status (webhook might be slow/localhost)
+      // Proactively sync order status
       if (orderId) {
         syncOrder(orderId).finally(() => {
-          queueQuery.refetch();
-          paymentContextQuery.refetch();
+          queryClient.invalidateQueries({
+            queryKey: ['clinic-staff', 'queue', 'cashier'],
+          });
         });
-      } else {
-        queueQuery.refetch();
       }
 
-      // Clear the "PAID" status from URL and reset selection after 3 seconds
-      const timer = setTimeout(() => {
-        setSelectedVisitId(null);
-        setSearchParams(
-          (prev) => {
-            const next = new URLSearchParams(prev);
-            next.delete('status');
-            next.delete('orderCode');
-            next.delete('code');
-            next.delete('cancel');
-            next.delete('orderId');
-            next.delete('id');
-            next.delete('visitId'); // Clear visitId to prevent returning to pricing panel
-            return next;
-          },
-          { replace: true }
-        );
-      }, 3000);
-
+      // Automatically clear after 3 seconds
+      const timer = setTimeout(cleanupSuccessState, 3000);
       return () => clearTimeout(timer);
     }
 
     if (!isPaidSuccess) {
       successHandledRef.current = false;
     }
-  }, [isPaidSuccess, setSearchParams]);
+  }, [isPaidSuccess, cleanupSuccessState, searchParams, queryClient]);
+
+  const [showCashSuccess, setShowCashSuccess] = useState(false);
+  const [lastPaidVisitName, setLastPaidVisitName] = useState<string | null>(
+    null
+  );
 
   const paymentContext = paymentContextQuery.data;
+  const showSuccessUI = isPaidSuccess || isLocalSuccess || showCashSuccess;
   const [searchQuery, setSearchQuery] = useState('');
   const [medicinePriceInputs, setMedicinePriceInputs] = useState<
     Record<string, string>
@@ -140,11 +158,6 @@ export default function CashierPage() {
     'PayOS'
   );
 
-  const [showCashSuccess, setShowCashSuccess] = useState(false);
-  const [lastPaidVisitName, setLastPaidVisitName] = useState<string | null>(
-    null
-  );
-
   const paymentMutation = useMutation({
     mutationFn: (payload: any) =>
       clinicQueueApi.createClinicPayment(effectiveVisitId!, payload),
@@ -166,8 +179,10 @@ export default function CashierPage() {
         setMedicinePriceInputs({});
         setServiceFeeInput('');
 
-        // Refetch to update the queue list
-        queueQuery.refetch();
+        // Invalidate queue list
+        queryClient.invalidateQueries({
+          queryKey: ['clinic-staff', 'queue', 'cashier'],
+        });
       } else {
         toast.success(translate('Cashier.toast.createSuccess'));
         window.location.href = data.paymentUrl;
@@ -440,7 +455,7 @@ export default function CashierPage() {
               </div>
             )}
 
-            {(isPaidSuccess || showCashSuccess) && effectiveVisitId && (
+            {(isPaidSuccess || showSuccessUI) && effectiveVisitId && (
               <div className="mt-5 flex flex-col items-center justify-center rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-10 text-center animate-in fade-in zoom-in duration-500">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-600">
                   <CheckCircle2 className="h-10 w-10" />
@@ -474,12 +489,7 @@ export default function CashierPage() {
                 <div className="mt-8 flex flex-col sm:flex-row gap-3">
                   <button
                     type="button"
-                    onClick={() => {
-                      setSelectedVisitId(null);
-                      setSearchParams({}, { replace: true });
-                      setShowCashSuccess(false);
-                      setLastPaidVisitName(null);
-                    }}
+                    onClick={cleanupSuccessState}
                     className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-500 bg-emerald-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-600 hover:-translate-y-0.5 active:scale-95"
                   >
                     {translate('Cashier.pricingPanel.backToList', {
@@ -502,7 +512,7 @@ export default function CashierPage() {
               </div>
             )}
 
-            {!(isPaidSuccess || showCashSuccess) && paymentContext && (
+            {!showSuccessUI && paymentContext && effectiveVisitId && (
               <CashierPricingPanel
                 context={paymentContext}
                 fallbackDoctorName={activeVisit?.assignedDoctorName}

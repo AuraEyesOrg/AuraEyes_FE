@@ -34,6 +34,7 @@ export default function SystemAdminDashboard() {
   const [SidebarMod, setSidebarMod] = useState<any>(null);
   const [HeaderMod, setHeaderMod] = useState<any>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [period, setPeriod] = useState<'day' | 'month' | 'year'>('day');
 
   useEffect(() => {
     import('../components/Sidebar')
@@ -70,6 +71,11 @@ export default function SystemAdminDashboard() {
     queryKey: ['system-admin', 'doctor-status'],
     queryFn: () => dashboardApi.getDoctorStatus(),
     refetchInterval: POLLING_INTERVAL,
+  });
+
+  const { data: metrics, isLoading: metricsLoading } = useQuery({
+    queryKey: ['system-admin', 'dashboard-metrics'],
+    queryFn: () => dashboardApi.getMetrics(),
   });
 
   const { data: feedbackData, isLoading: feedbackLoading } = useQuery({
@@ -109,13 +115,53 @@ export default function SystemAdminDashboard() {
     }
   }, [queryClient]);
 
-  const stats = useMemo(
-    () => [
+  const stats = useMemo(() => {
+    const getGrowth = (type: 'appointments' | 'revenue') => {
+      if (type === 'appointments') {
+        switch (period) {
+          case 'month':
+            return todaySummary?.growthPercentageMonth;
+          case 'year':
+            return todaySummary?.growthPercentageYear;
+          default:
+            return todaySummary?.growthPercentageDay;
+        }
+      } else {
+        switch (period) {
+          case 'month':
+            return todaySummary?.revenueGrowthPercentageMonth;
+          case 'year':
+            return todaySummary?.revenueGrowthPercentageYear;
+          default:
+            return todaySummary?.revenueGrowthPercentageDay;
+        }
+      }
+    };
+
+    const apptGrowth = getGrowth('appointments');
+    const revGrowth = getGrowth('revenue');
+
+    const baseStats = [
       {
         label: t(`${T}.stats.totalAppointments`, "Today's Appointments"),
         value: todaySummary?.totalAppointments ?? 0,
         icon: CalendarDays,
+        change: apptGrowth,
+        trend: (apptGrowth ?? 0) >= 0 ? ('up' as const) : ('down' as const),
+        description: t(`${T}.periods.${period}`),
         variant: 'primary' as const,
+      },
+      {
+        label: t(`${T}.stats.revenue`, 'Today Revenue'),
+        value: new Intl.NumberFormat('vi-VN', {
+          style: 'currency',
+          currency: 'VND',
+        }).format(todaySummary?.todayRevenue ?? 0),
+        icon: Activity,
+        change: revGrowth,
+        trend: (revGrowth ?? 0) >= 0 ? ('up' as const) : ('down' as const),
+        description: t(`${T}.periods.${period}`),
+        variant: 'success' as const,
       },
       {
         label: t(`${T}.stats.checkedIn`, 'Checked In'),
@@ -135,9 +181,9 @@ export default function SystemAdminDashboard() {
         icon: AlertTriangle,
         variant: 'danger' as const,
       },
-    ],
-    [todaySummary, t]
-  );
+    ];
+    return baseStats;
+  }, [todaySummary, metrics, period, t]);
 
   const isLoading =
     summaryLoading || slotsLoading || queueLoading || doctorsLoading;
@@ -228,8 +274,31 @@ export default function SystemAdminDashboard() {
             </div>
           )}
 
+          {/* Period Selector */}
+          <div className="flex items-center justify-end mb-4">
+            <div className="flex items-center p-1 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl shadow-sm">
+              {(['day', 'month', 'year'] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                    period === p
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {p === 'day'
+                    ? t(`${T}.periodOptions.day`, 'Day')
+                    : p === 'month'
+                      ? t(`${T}.periodOptions.month`, 'Month')
+                      : t(`${T}.periodOptions.year`, 'Year')}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Top Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
             {stats.map((s) => (
               <StatsCard
                 key={s.label}
@@ -237,6 +306,9 @@ export default function SystemAdminDashboard() {
                 value={s.value}
                 icon={s.icon}
                 variant={s.variant}
+                change={s.change}
+                trend={s.trend}
+                description={s.description}
               />
             ))}
           </div>
@@ -323,7 +395,7 @@ export default function SystemAdminDashboard() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   <Stethoscope className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  {t(`${T}.doctorStatus`, 'Doctor Status')}
+                  {t(`${T}.doctorStatusTitle`, 'Doctor Status')}
                 </h2>
                 <span className="text-xs text-gray-400 dark:text-slate-500">
                   {

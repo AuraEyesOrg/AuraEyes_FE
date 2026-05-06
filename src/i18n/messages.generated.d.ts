@@ -5643,6 +5643,7 @@ declare module 'i18next' {
           checkedIn: string;
           completed: string;
           noShow: string;
+          revenue: string;
         };
         bottleneckLongWait: string;
         bottleneckFullCapacity: string;
@@ -5659,6 +5660,7 @@ declare module 'i18next' {
         status: string;
         doctor: string;
         waitTime: string;
+        doctorStatusTitle: string;
         doctorStatus: {
           inconsultation: string;
           available: string;
@@ -5697,6 +5699,11 @@ declare module 'i18next' {
           count: string;
           noData: string;
           loadError: string;
+        };
+        periods: {
+          day: string;
+          month: string;
+          year: string;
         };
       };
       common: {
