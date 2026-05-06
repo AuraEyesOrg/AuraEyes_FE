@@ -4070,7 +4070,7 @@
           "title": "Clinical Advisory"
         },
         "includedScans": "Included Scans",
-        "readyDescription": "System is ready to process {{count}} scan{{suffix}}. This will consume 1 AI screening credit.",
+        "readyDescription": "System is ready to process {{count}} scan{{suffix}}.",
         "title": "Launch Diagnostic Model"
       },
       "navigation": {
@@ -6976,7 +6976,7 @@
       },
       "launch": {
         "title": "Launch AI Diagnostic Model",
-        "readyCount": "Ready to analyse {{count}} scan(s). This will consume 1 AI screening credit.",
+        "readyCount": "Ready to analyse {{count}} scan(s).",
         "advisory": {
           "title": "Clinical Advisory",
           "description": "AI triage results provide preliminary probabilities. They are not intended to replace formal diagnosis by a clinical specialist."

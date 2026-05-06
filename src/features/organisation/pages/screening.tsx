@@ -745,7 +745,7 @@ export default function OrganisationScreeningPage() {
                     <p className="text-slate-500 mt-2 text-sm">
                       {t(
                         'Organisation.screening.launch.readyDescription',
-                        'System is ready to process {{count}} scan{{suffix}}. This will consume 1 AI screening credit.',
+                        'System is ready to process {{count}} scan{{suffix}}.',
                         {
                           count: readyImages.length,
                           suffix: readyImages.length > 1 ? 's' : '',

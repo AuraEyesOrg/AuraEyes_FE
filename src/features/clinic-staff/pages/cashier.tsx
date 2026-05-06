@@ -59,7 +59,7 @@ export default function CashierPage() {
   // Handle successful payment: clear status and refresh queue after delay
   useEffect(() => {
     if (isPaidSuccess) {
-      const orderId = searchParams.get('orderId');
+      const orderId = searchParams.get('orderId') || searchParams.get('id');
 
       // Proactively sync order status (webhook might be slow/localhost)
       if (orderId) {
@@ -71,28 +71,28 @@ export default function CashierPage() {
         queueQuery.refetch();
       }
 
-      // Clear the "PAID" status from URL after 5 seconds
+      // Clear the "PAID" status from URL and reset selection after 5 seconds
       const timer = setTimeout(() => {
-        setSearchParams((prev) => {
-          const next = new URLSearchParams(prev);
-          next.delete('status');
-          next.delete('orderCode');
-          next.delete('code');
-          next.delete('cancel');
-          next.delete('orderId'); // also clear orderId
-          return next;
-        });
+        setSelectedVisitId(null);
+        setSearchParams(
+          (prev) => {
+            const next = new URLSearchParams(prev);
+            next.delete('status');
+            next.delete('orderCode');
+            next.delete('code');
+            next.delete('cancel');
+            next.delete('orderId');
+            next.delete('id');
+            next.delete('visitId'); // Clear visitId to prevent returning to pricing panel
+            return next;
+          },
+          { replace: true }
+        );
       }, 5000);
 
       return () => clearTimeout(timer);
     }
-  }, [
-    isPaidSuccess,
-    queueQuery,
-    paymentContextQuery,
-    setSearchParams,
-    searchParams,
-  ]);
+  }, [isPaidSuccess, searchParams, setSearchParams]);
 
   const paymentContext = paymentContextQuery.data;
   const [searchQuery, setSearchQuery] = useState('');
