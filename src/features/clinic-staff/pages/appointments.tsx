@@ -272,16 +272,16 @@ export default function ClinicStaffAppointmentsPage() {
   const isPastOneThirdDuration = (appt: OrganisationClinicAppointmentDto) => {
     if (!appt.date || !appt.startTime || !appt.endTime) return false;
     // Slot times are stored in Vietnam local time (UTC+7)
-    // Convert to UTC for accurate comparison regardless of user's timezone
-    const vietnamOffset = 7 * 60 * 60 * 1000; // UTC+7 in milliseconds
-    const start = new Date(`${appt.date}T${appt.startTime}`);
-    const end = new Date(`${appt.date}T${appt.endTime}`);
-    // Adjust for Vietnam timezone: treat the time as if it's in UTC+7
-    const startUtc = new Date(start.getTime() - vietnamOffset);
-    const endUtc = new Date(end.getTime() - vietnamOffset);
-    const duration = endUtc.getTime() - startUtc.getTime();
-    const oneThirdPointUtc = new Date(startUtc.getTime() + duration / 3);
-    return new Date() > oneThirdPointUtc;
+    // Parse with timezone offset to get correct UTC time
+    const normalizedStart =
+      appt.startTime.length === 5 ? `${appt.startTime}:00` : appt.startTime;
+    const normalizedEnd =
+      appt.endTime.length === 5 ? `${appt.endTime}:00` : appt.endTime;
+    const start = new Date(`${appt.date}T${normalizedStart}+07:00`);
+    const end = new Date(`${appt.date}T${normalizedEnd}+07:00`);
+    const duration = end.getTime() - start.getTime();
+    const oneThirdPoint = new Date(start.getTime() + duration / 3);
+    return new Date() > oneThirdPoint;
   };
 
   // ── Week window ────────────────────────────────────────────────────────────
