@@ -25,6 +25,16 @@ export const ConsiliumInvitationOverlay: React.FC = () => {
     setUrgentInvitation(null);
   };
 
+  const sanitizedMessage = (urgentInvitation.message || '')
+    .replace(/Xem Bệnh án:\s*\/medical-records\/[0-9a-f-]+\s*/gi, '')
+    .replace(/\/medical-records\/[0-9a-f-]+\s*/gi, '')
+    .replace(
+      /Xem Review Hội chẩn:\s*\/(?:screenings|screening-review)\/[0-9a-f-]+\s*/gi,
+      'Xem Review Hội chẩn'
+    )
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-in zoom-in-95 duration-300">
@@ -64,7 +74,7 @@ export const ConsiliumInvitationOverlay: React.FC = () => {
           <div className="space-y-4 mb-8">
             <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/50">
               <p className="text-slate-600 dark:text-slate-300 text-sm italic line-clamp-3">
-                "{urgentInvitation.message}"
+                "{sanitizedMessage}"
               </p>
             </div>
 
