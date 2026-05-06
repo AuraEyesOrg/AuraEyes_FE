@@ -2276,6 +2276,102 @@ declare module 'i18next' {
         logout: string;
         footer: string;
       };
+      twoFactorVerify: {
+        title: string;
+        subtitle: string;
+        backToLogin: string;
+        sessionExpired: string;
+        sessionExpiredDesc: string;
+        successfulTitle: string;
+        successfulDesc: string;
+        redirecting: string;
+        continueNow: string;
+        enterCode: string;
+        enterRecovery: string;
+        codeDesc: string;
+        recoveryDesc: string;
+        loggingInAs: string;
+        codeLabel: string;
+        recoveryLabel: string;
+        placeholder: string;
+        recoveryPlaceholder: string;
+        verifyButton: string;
+        verifying: string;
+        useRecovery: string;
+        useAuthenticator: string;
+        securityNotice: {
+          recovery: string;
+          lost: string;
+        };
+      };
+      twoFactorSettings: {
+        title: string;
+        sections: {
+          password: {
+            title: string;
+            desc: string;
+            action: string;
+          };
+          notifications: {
+            title: string;
+            desc: string;
+            action: string;
+          };
+        };
+        status: {
+          enabled: string;
+          disabled: string;
+          enabledDesc: string;
+          disabledDesc: string;
+          recoveryRemaining: string;
+          enableButton: string;
+          disableButton: string;
+          generateNewCodes: string;
+        };
+        setup: {
+          title: string;
+          desc: string;
+          manualKey: string;
+          copied: string;
+          enterCode: string;
+          verifyAndEnable: string;
+        };
+        recoveryCodes: {
+          title: string;
+          desc: string;
+          warning: string;
+          copyCodes: string;
+          download: string;
+          done: string;
+        };
+        disable: {
+          title: string;
+          desc: string;
+          confirmPassword: string;
+          passwordPlaceholder: string;
+          submit: string;
+        };
+        modals: {
+          generateCodes: {
+            title: string;
+            desc: string;
+            submit: string;
+          };
+          changePassword: {
+            title: string;
+          };
+        };
+        securityNotice: string;
+        toasts: {
+          passwordChanged: string;
+          passwordChangeFailed: string;
+          fetchStatusError: string;
+          setupError: string;
+          invalidCode: string;
+          invalidPassword: string;
+          generateCodesError: string;
+        };
+      };
     };
     Ophthalmologist: {
       common: {
@@ -7342,6 +7438,10 @@ declare module 'i18next' {
           pageOf: string;
         };
       };
+      roles: {
+        Ophthalmologist: string;
+        ClinicStaff: string;
+      };
       feed: {
         title: string;
         description: {
@@ -7401,6 +7501,9 @@ declare module 'i18next' {
           uploadError: string;
           meetingSuccess: string;
           meetingError: string;
+          roleSelected: string;
+          memberUpdateSuccess: string;
+          memberSelectionSuccess: string;
         };
         confirm: {
           createTitle: string;
@@ -7413,6 +7516,14 @@ declare module 'i18next' {
           uploadMessage: string;
           meetingTitle: string;
           meetingMessage: string;
+          roleSelectionTitle: string;
+          roleSelectionMessage: string;
+          memberUpdateTitle: string;
+          memberUpdateMessage: string;
+          memberRemoveTitle: string;
+          memberRemoveMessage: string;
+          memberSelectTitle: string;
+          memberSelectMessage: string;
         };
         actions: {
           createGroup: string;
@@ -7437,6 +7548,8 @@ declare module 'i18next' {
         };
         errors: {
           loadGroups: string;
+          loadCandidates: string;
+          updateMembers: string;
           sendMessage: string;
         };
         consilium: {
@@ -8052,6 +8165,129 @@ declare module 'i18next' {
       daysAgo: string;
       yesterday: string;
       longTimeAgo: string;
+    };
+    DoctorCarePlan: {
+      title: string;
+      subtitle: string;
+      manageAll: string;
+      addStep: string;
+      loading: string;
+      noUpcoming: string;
+      toasts: {
+        completeSuccess: string;
+        completeError: string;
+        deleteConfirm: string;
+        deleteSuccess: string;
+        deleteError: string;
+        addSuccess: string;
+        addError: string;
+        updateSuccess: string;
+        updateError: string;
+      };
+    };
+    twoFactorVerify: {
+      title: string;
+      codeDesc: string;
+      recoveryDesc: string;
+      loggingInAs: string;
+      inputs: {
+        codePlaceholder: string;
+      };
+      actions: {
+        verify: string;
+        verifying: string;
+        useRecovery: string;
+        useApp: string;
+        backToLogin: string;
+      };
+      toasts: {
+        verifySuccess: string;
+        verifyError: string;
+      };
+    };
+    twoFactorSettings: {
+      title: string;
+      status: {
+        enabled: string;
+        disabled: string;
+      };
+      actions: {
+        enable: string;
+        disable: string;
+        viewRecovery: string;
+      };
+      setup: {
+        title: string;
+        step1: string;
+        step2: string;
+        manualLabel: string;
+        placeholder: string;
+        verify: string;
+      };
+      recovery: {
+        title: string;
+        desc: string;
+        done: string;
+      };
+      toasts: {
+        enableSuccess: string;
+        disableSuccess: string;
+        copySuccess: string;
+      };
+    };
+    MedicalRecords: {
+      page: {
+        title: string;
+        subtitle: string;
+        storageNumber: string;
+        medicalRecordNumber: string;
+        department: string;
+        bed: string;
+      };
+      sections: {
+        administrative: {
+          title: string;
+          age: string;
+          fullName: string;
+          birthDate: string;
+          gender: string;
+          job: string;
+          ethnicity: string;
+          nationality: string;
+          address: string;
+          ward: string;
+          district: string;
+          province: string;
+          workplace: string;
+          objectType: string;
+          bhytExpiry: string;
+        };
+        clinical: {
+          title: string;
+          eyeExams: string;
+          rightEye: string;
+          leftEye: string;
+        };
+      };
+      toasts: {
+        loadError: string;
+        saveSuccess: string;
+        saveError: string;
+        createFromQueueWarning: string;
+        pdfNoIdError: string;
+        pdfDownloadSuccess: string;
+        pdfDownloadError: string;
+        doctorCreateUnauthorized: string;
+        ermSaveRequiredBeforeScreening: string;
+      };
+      actions: {
+        back: string;
+        save: string;
+        print: string;
+        downloadPdf: string;
+        downloadingPdf: string;
+      };
+      loading: string;
     };
   }
 

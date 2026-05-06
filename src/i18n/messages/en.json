@@ -989,6 +989,102 @@
       "goHome": "Back to the introduction page",
       "logout": "Log out",
       "footer": "© 2026 AURA. All rights reserved."
+    },
+    "twoFactorVerify": {
+      "title": "Secure Verification",
+      "subtitle": "Two-factor authentication adds an extra layer of security to protect your medical data and patient information.",
+      "backToLogin": "Back to Login",
+      "sessionExpired": "Session Expired",
+      "sessionExpiredDesc": "Your login session has expired. Please try logging in again.",
+      "successfulTitle": "Verification Successful",
+      "successfulDesc": "Your identity has been verified. We are preparing your workspace.",
+      "redirecting": "Redirecting in {{seconds}}s...",
+      "continueNow": "Continue now",
+      "enterCode": "Two-Factor Authentication",
+      "enterRecovery": "Enter Recovery Code",
+      "codeDesc": "Enter the 6-digit code from your authenticator app.",
+      "recoveryDesc": "Enter one of your recovery codes to verify your identity.",
+      "loggingInAs": "Logging in as: <0>{{email}}</0>",
+      "codeLabel": "Verification Code",
+      "recoveryLabel": "Recovery Code",
+      "placeholder": "000000",
+      "recoveryPlaceholder": "XXXX-XXXX-XXXX",
+      "verifyButton": "Verify & Sign In",
+      "verifying": "Verifying...",
+      "useRecovery": "Can't access your authenticator? Use a recovery code",
+      "useAuthenticator": "Use authenticator app instead",
+      "securityNotice": {
+        "recovery": "Each recovery code can only be used once. After using a code, we recommend generating new ones from your security settings.",
+        "lost": "If you've lost access to your authenticator app and recovery codes, please contact your system administrator for account recovery."
+      }
+    },
+    "twoFactorSettings": {
+      "title": "Security Settings",
+      "sections": {
+        "password": {
+          "title": "Password",
+          "desc": "Update your account password regularly.",
+          "action": "Change"
+        },
+        "notifications": {
+          "title": "Notifications",
+          "desc": "Manage notification and reminder preferences.",
+          "action": "Configure"
+        }
+      },
+      "status": {
+        "enabled": "Two-Factor Authentication is Enabled",
+        "disabled": "Two-Factor Authentication is Disabled",
+        "enabledDesc": "Your account is protected with an additional layer of security.",
+        "disabledDesc": "Enable 2FA to add extra security to your account.",
+        "recoveryRemaining": "Recovery Codes Remaining",
+        "enableButton": "Enable Two-Factor Authentication",
+        "disableButton": "Disable Two-Factor Authentication",
+        "generateNewCodes": "Generate New Recovery Codes"
+      },
+      "setup": {
+        "title": "Set Up Authenticator App",
+        "desc": "Scan the QR code below with your authenticator app (Google Authenticator, Authy, etc.)",
+        "manualKey": "Or enter this key manually:",
+        "copied": "Copied!",
+        "enterCode": "Enter the 6-digit code from your app",
+        "verifyAndEnable": "Verify and Enable"
+      },
+      "recoveryCodes": {
+        "title": "Save Your Recovery Codes",
+        "desc": "Store these codes in a safe place. You can use them to access your account if you lose your authenticator device.",
+        "warning": "Each code can only be used once. After using a code, it will be invalidated.",
+        "copyCodes": "Copy Codes",
+        "download": "Download",
+        "done": "Done"
+      },
+      "disable": {
+        "title": "Disable Two-Factor Authentication?",
+        "desc": "This will make your account less secure. You'll need to enter your password to confirm.",
+        "confirmPassword": "Confirm Password",
+        "passwordPlaceholder": "Enter your password",
+        "submit": "Disable 2FA"
+      },
+      "modals": {
+        "generateCodes": {
+          "title": "Generate Recovery Codes",
+          "desc": "Enter your password to continue",
+          "submit": "Generate"
+        },
+        "changePassword": {
+          "title": "Change Password"
+        }
+      },
+      "securityNotice": "Two-factor authentication adds an extra layer of security to your account by requiring a verification code in addition to your password. We recommend using an authenticator app like Google Authenticator or Authy.",
+      "toasts": {
+        "passwordChanged": "Password changed successfully",
+        "passwordChangeFailed": "Failed to change password",
+        "fetchStatusError": "Failed to fetch 2FA status. Please try again.",
+        "setupError": "Failed to setup 2FA. Please try again.",
+        "invalidCode": "Invalid verification code. Please try again.",
+        "invalidPassword": "Invalid password. Please try again.",
+        "generateCodesError": "Failed to generate recovery codes. Please try again."
+      }
     }
   },
   "Ophthalmologist": {
@@ -1272,6 +1368,7 @@
       },
       "notifications": {
         "title": "Notifications",
+        "noNotifications": "No notifications yet.",
         "email": "Email",
         "emailHint": "Receive via email",
         "push": "Push",
@@ -8470,6 +8567,10 @@
         "pageOf": "Page {{page}} of {{total}}"
       }
     },
+    "roles": {
+      "Ophthalmologist": "Ophthalmologist",
+      "ClinicStaff": "Clinic Staff"
+    },
     "feed": {
       "title": "Professional Network",
       "description": {
@@ -8528,7 +8629,10 @@
         "uploadSuccess": "Image sent successfully.",
         "uploadError": "Image upload failed.",
         "meetingSuccess": "Meeting created successfully!",
-        "meetingError": "Failed to create meeting"
+        "meetingError": "Failed to create meeting",
+        "roleSelected": "Selected {{count}} {{role}} user(s).",
+        "memberUpdateSuccess": "Member list updated by role {{role}}.",
+        "memberSelectionSuccess": "Member selection updated successfully."
       },
       "confirm": {
         "createTitle": "Confirm group creation",
@@ -8540,7 +8644,15 @@
         "uploadTitle": "Confirm image upload",
         "uploadMessage": "Upload {{count}} image(s) to this group chat?",
         "meetingTitle": "Confirm meeting creation",
-        "meetingMessage": "Create a new Google Meet session for this group?"
+        "meetingMessage": "Create a new Google Meet session for this group?",
+        "roleSelectionTitle": "Confirm role selection",
+        "roleSelectionMessage": "Select all users with role {{role}} for this new group?",
+        "memberUpdateTitle": "Confirm member update",
+        "memberUpdateMessage": "Select all {{role}} accounts into this group?",
+        "memberRemoveTitle": "Confirm member removal",
+        "memberRemoveMessage": "Unselect {{name}} from this group?",
+        "memberSelectTitle": "Confirm member selection",
+        "memberSelectMessage": "Select {{name}} for this group?"
       },
       "actions": {
         "createGroup": "Create New Group",
@@ -8565,6 +8677,8 @@
       },
       "errors": {
         "loadGroups": "Failed to load groups",
+        "loadCandidates": "Failed to load candidate users.",
+        "updateMembers": "Failed to update members.",
         "sendMessage": "Failed to send message"
       },
       "consilium": {
@@ -8726,5 +8840,128 @@
       "knowledgeShare": "Knowledge Share",
       "announcement": "Announcement"
     }
+  },
+  "DoctorCarePlan": {
+    "title": "Care plan",
+    "subtitle": "Doctor-authored next steps for this patient.",
+    "manageAll": "Manage all",
+    "addStep": "Add step",
+    "loading": "Loading...",
+    "noUpcoming": "No upcoming steps. Click <0>Add step</0> to start the patient's care plan.",
+    "toasts": {
+      "completeSuccess": "Step marked as completed.",
+      "completeError": "Failed to complete step.",
+      "deleteConfirm": "Delete step \"{{title}}\"?",
+      "deleteSuccess": "Step deleted.",
+      "deleteError": "Failed to delete step.",
+      "addSuccess": "Roadmap step added.",
+      "addError": "Failed to add roadmap step.",
+      "updateSuccess": "Roadmap step updated.",
+      "updateError": "Failed to update roadmap step."
+    }
+  },
+  "twoFactorVerify": {
+    "title": "Two-Factor Verification",
+    "codeDesc": "Enter the 6-digit code from your authenticator app.",
+    "recoveryDesc": "Enter one of your recovery codes to verify your identity.",
+    "loggingInAs": "Logging in as: <0>{{email}}</0>",
+    "inputs": {
+      "codePlaceholder": "000000"
+    },
+    "actions": {
+      "verify": "Verify",
+      "verifying": "Verifying...",
+      "useRecovery": "Use a recovery code",
+      "useApp": "Use authenticator app",
+      "backToLogin": "Back to login"
+    },
+    "toasts": {
+      "verifySuccess": "Verification successful!",
+      "verifyError": "Verification failed. Please try again."
+    }
+  },
+  "twoFactorSettings": {
+    "title": "Two-Factor Authentication",
+    "status": {
+      "enabled": "2FA is currently enabled",
+      "disabled": "2FA is currently disabled"
+    },
+    "actions": {
+      "enable": "Enable 2FA",
+      "disable": "Disable 2FA",
+      "viewRecovery": "View Recovery Codes"
+    },
+    "setup": {
+      "title": "Set up Two-Factor Authentication",
+      "step1": "1. Scan this QR code with your authenticator app (like Google Authenticator or Authy).",
+      "step2": "2. Enter the 6-digit code from the app to verify.",
+      "manualLabel": "Can't scan the QR code? Use this secret key instead:",
+      "placeholder": "Enter 6-digit code",
+      "verify": "Verify & Enable"
+    },
+    "recovery": {
+      "title": "Your Recovery Codes",
+      "desc": "Store these codes in a safe place. You can use them to access your account if you lose your phone.",
+      "done": "I have saved these codes"
+    },
+    "toasts": {
+      "enableSuccess": "2FA has been enabled successfully!",
+      "disableSuccess": "2FA has been disabled successfully!",
+      "copySuccess": "Recovery codes copied to clipboard!"
+    }
+  },
+  "MedicalRecords": {
+    "page": {
+      "title": "Ophthalmology Medical Record",
+      "subtitle": "(For outpatient treatment)",
+      "storageNumber": "Storage No",
+      "medicalRecordNumber": "Medical Record No",
+      "department": "Department",
+      "bed": "Bed"
+    },
+    "sections": {
+      "administrative": {
+        "title": "I. ADMINISTRATIVE",
+        "age": "Age",
+        "fullName": "Full Name",
+        "birthDate": "Date of Birth",
+        "gender": "Gender",
+        "job": "Occupation",
+        "ethnicity": "Ethnicity",
+        "nationality": "Nationality",
+        "address": "Address",
+        "ward": "Ward",
+        "district": "District",
+        "province": "Province",
+        "workplace": "Workplace",
+        "objectType": "Object Type",
+        "bhytExpiry": "Health Insurance Expiry"
+      },
+      "clinical": {
+        "title": "III. CLINICAL",
+        "eyeExams": "Eye Exams",
+        "rightEye": "Right Eye",
+        "leftEye": "Left Eye"
+      }
+    },
+    "toasts": {
+      "loadError": "Failed to load medical record.",
+      "saveSuccess": "Administrative information saved successfully!",
+      "saveError": "Failed to save information.",
+      "createFromQueueWarning": "Please create records from the check-in queue.",
+      "pdfNoIdError": "Record not created. Cannot download PDF.",
+      "pdfDownloadSuccess": "EMR PDF downloaded successfully.",
+      "pdfDownloadError": "Failed to download EMR PDF. Please try again.",
+      "doctorCreateUnauthorized": "Doctors cannot create new records. Records must be created by clinic staff.",
+      "ermSaveRequiredBeforeScreening": "Please save the administrative ERM info (click Save) before creating a screening."
+    },
+    "actions": {
+      "back": "BACK",
+      "save": "SAVE INFORMATION",
+      "print": "PRINT RECORD",
+      "downloadPdf": "DOWNLOAD PDF",
+      "downloadingPdf": "DOWNLOADING PDF..."
+    },
+    "loading": "LOADING MEDICAL RECORD..."
   }
 }
