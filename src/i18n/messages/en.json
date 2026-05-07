@@ -4447,6 +4447,7 @@
       "actions": {
         "analyzing": "Analyzing...",
         "backToScreening": "Back to screening list",
+        "backToList": "Back to list",
         "downloadPdf": "Download PDF",
         "downloadPdfDisabledTitle": "Please save the record before exporting PDF.",
         "downloadPdfTitle": "Download PDF report",
@@ -4459,11 +4460,16 @@
         "saving": "Saving...",
         "share": "Share",
         "shareDisabledTitle": "Please save the record before sharing.",
-        "shareResultTitle": "Share result"
+        "shareResultTitle": "Share screening result",
+        "sendingToDoctor": "Sending...",
+        "sendToDoctor": "Send to Doctor",
+        "sentToDoctorSuccess": "Sent to Doctor successfully."
       },
       "aiResults": {
         "emptyState": "Analysis results will appear here after AI processing is complete.",
         "primaryFinding": "Primary Finding",
+        "primary": "Primary Finding",
+        "empty": "Analysis results will appear here after AI processing is complete.",
         "title": "AI Analysis Results"
       },
       "badges": {
@@ -4482,10 +4488,16 @@
         "diagnosisTitle": "Diagnosis result (editable)",
         "summaryTitle": "AI Summary (editable)"
       },
+      "cards": {
+        "summaryTitle": "AI Summary",
+        "findingsTitle": "Diagnosis Findings"
+      },
       "header": {
         "newDraft": "New draft",
         "patientLabel": "Patient",
+        "patient": "Patient",
         "sessionLabel": "Session",
+        "session": "Session",
         "title": "Screening Result"
       },
       "network": {
@@ -4495,13 +4507,25 @@
         "riskLevel": "Risk level: {{risk}}",
         "session": "Session: {{id}}...",
         "summary": "Summary:",
+        "summaryLabel": "Summary:",
+        "findingsLabel": "Top findings:",
+        "noteLabel": "Coordinator note: {{note}}",
+        "noteEmpty": "Not provided",
+        "noFindings": "No clear abnormal findings",
         "title": "AI screening case shared by organisation",
         "topFindings": "Top findings:"
       },
       "pageName": "Screening Result",
       "patientFallback": "Patient",
       "riskCard": {
-        "title": "Risk level"
+        "title": "Risk level",
+        "confidence": "Confidence score: {{score}}%",
+        "levels": {
+          "low": "Low",
+          "medium": "Medium",
+          "moderate": "Moderate",
+          "high": "High"
+        }
       },
       "sessionInfo": {
         "createdAt": "Created at",
@@ -4515,18 +4539,22 @@
         "email": {
           "attachPdf": "Attach PDF report",
           "attachRetinalImages": "Share retinal image links",
+          "attachImages": "Share retinal image links",
           "auraHint": "Aura patient: email is prefilled and can be edited.",
           "placeholder": "patient@example.com",
           "recipientLabel": "Recipient email",
+          "recipient": "Recipient email",
           "send": "Send share",
           "walkInHint": "Walk-in patient: enter recipient email for result delivery."
         },
         "network": {
           "intro": "Post this screening case to Professional Network as a case presentation. The selected retinal image will be attached.",
+          "hint": "Post this screening case to Professional Network as a case presentation.",
           "noDraft": "No AI result yet. Please run analysis first.",
           "post": "Post to Network",
           "riskLabel": "Risk level:",
-          "summaryLabel": "Summary:"
+          "summaryLabel": "Summary:",
+          "notePlaceholder": "Add an optional note for this case..."
         },
         "tabs": {
           "email": "Send email to patient",
@@ -4543,8 +4571,10 @@
         "aiNoPredictionData": "AI service returned no prediction data.",
         "analyzeBeforeSave": "Please run AI analysis before saving the record.",
         "analyzeCompleted": "AI analysis completed. You can edit the result before saving.",
+        "analyzeSuccess": "AI analysis completed successfully.",
         "analyzeFailed": "AI analysis failed. Please verify AI service and try again.",
         "analyzingAi": "Analyzing AI...",
+        "analyzing": "Analyzing retinal image...",
         "downloadPdfFailed": "Unable to download PDF report.",
         "downloadPdfSuccess": "PDF report downloaded successfully.",
         "loadResultFailed": "Unable to load screening result.",
@@ -4559,7 +4589,11 @@
         "shareNetworkFailed": "Unable to post to Professional Network. Please try again.",
         "shareNetworkSuccess": "Case shared to Professional Network successfully.",
         "shareSelectAtLeastOne": "Please select at least one item to share.",
-        "shareWalkInEmailRequired": "Please enter recipient email for walk-in patient."
+        "shareWalkInEmailRequired": "Please enter recipient email for walk-in patient.",
+        "sendToDoctorRequiresAi": "Please complete AI analysis first.",
+        "bookedDoctorMissing": "Patient has no booked doctor. Please check the appointment.",
+        "sendToDoctorSuccess": "Case sent to doctor successfully.",
+        "sendToDoctorFailed": "Unable to send this case to doctor."
       },
       "summary": {
         "high": {
@@ -4579,7 +4613,8 @@
         "primaryOnly": "Primary Finding: {{primaryFinding}}",
         "primaryAndRelated": "Primary Finding: {{primaryFinding}}\nRelated Findings: {{relatedFindings}}",
         "relatedOnly": "Related Findings: {{relatedFindings}}",
-        "manualAnnotations": "Manual Annotations: {{manualNames}}"
+        "manualAnnotations": "Manual Annotations: {{manualNames}}",
+        "emptyFallback": "No significant AI findings were identified."
       }
     },
     "wallet": {
@@ -7366,113 +7401,7 @@
         "countFound": "{{count}} screening(s) found"
       }
     },
-    "screeningResult": {
-      "patientFallback": "Patient",
-      "header": {
-        "title": "Screening Result",
-        "patient": "Patient",
-        "session": "Session"
-      },
-      "actions": {
-        "analyzing": "Analyzing...",
-        "refining": "Refining...",
-        "reanalyze": "Re-analyze",
-        "sendingToDoctor": "Sending...",
-        "sendToDoctor": "Send to Doctor",
-        "sentToDoctorSuccess": "Sent to Doctor",
-        "backToList": "Back to screening list"
-      },
-      "badges": {
-        "viewOnly": "View mode - AI result only"
-      },
-      "riskCard": {
-        "title": "Risk level",
-        "confidence": "Confidence score: {{score}}%",
-        "levels": {
-          "low": "Low",
-          "medium": "Medium",
-          "moderate": "Moderate",
-          "high": "High"
-        }
-      },
-      "cards": {
-        "summaryTitle": "AI Summary",
-        "findingsTitle": "Diagnosis Findings"
-      },
-      "aiResults": {
-        "title": "AI Analysis Results",
-        "primary": "Primary Finding",
-        "empty": "Analysis results will appear here after AI processing is complete."
-      },
-      "sessionInfo": {
-        "title": "Session Information",
-        "model": "Model",
-        "imageCount": "Image count",
-        "createdAt": "Created at",
-        "assessedAt": "Last assessed",
-        "sessionCode": "Session code"
-      },
-      "states": {
-        "missingId": "Missing screening id.",
-        "loading": "Loading screening result...",
-        "notFound": "Screening session not found.",
-        "noDraft": "No AI result yet. Press \"Re-analyze\" to generate results."
-      },
-      "toast": {
-        "loadFailed": "Unable to load screening result.",
-        "analyzing": "Analyzing retinal image...",
-        "noPredictionData": "AI service returned no prediction data.",
-        "analyzeSuccess": "AI analysis completed successfully.",
-        "analyzeFailed": "AI analysis failed. Please try again.",
-        "selectShareOption": "Please select at least one item to share.",
-        "walkInEmailRequired": "Please enter recipient email for walk-in patient.",
-        "shareEmailSuccess": "Result sent to {{email}}.",
-        "shareEmailFailed": "Unable to share result at this time.",
-        "shareNetworkSuccess": "Case shared to Professional Network successfully.",
-        "shareNetworkFailed": "Unable to post to Professional Network.",
-        "sendToDoctorRequiresAi": "Please complete AI analysis first.",
-        "bookedDoctorMissing": "Patient has no booked doctor. Please check the appointment.",
-        "sendToDoctorSuccess": "Case sent to doctor successfully.",
-        "sendToDoctorFailed": "Unable to send this case to doctor."
-      },
-      "shareModal": {
-        "title": "Share screening result",
-        "tabs": {
-          "email": "Send email",
-          "network": "Post to Network"
-        },
-        "email": {
-          "walkInHint": "Walk-in patient: enter recipient email for result delivery.",
-          "defaultHint": "Email can be edited before sending.",
-          "recipient": "Recipient email",
-          "placeholder": "patient@example.com",
-          "attachPdf": "Attach PDF report",
-          "attachImages": "Share retinal image links",
-          "send": "Send share"
-        },
-        "network": {
-          "hint": "Post this screening case to Professional Network as a case presentation.",
-          "riskLabel": "Risk level:",
-          "summaryLabel": "Summary:",
-          "noDraft": "No AI result yet. Please run analysis first.",
-          "notePlaceholder": "Add an optional note for this case...",
-          "post": "Post to Network"
-        }
-      },
-      "network": {
-        "title": "AI screening case shared by clinic coordinator",
-        "session": "Session: {{id}}...",
-        "risk": "Risk level: {{risk}}",
-        "summaryLabel": "Summary:",
-        "findingsLabel": "Top findings:",
-        "noteLabel": "Coordinator note: {{note}}",
-        "noteEmpty": "Not provided",
-        "noFindings": "No clear abnormal findings"
-      },
-      "findings": {
-        "emptyFallback": "No significant AI findings were identified."
-      }
-    },
+
     "queue": {
       "toast": {
         "sentToDoctorSuccess": "Case sent to doctor successfully.",
@@ -7797,6 +7726,184 @@
       "pagination": "Showing {{showing}} of {{total}} pending reviews",
       "previous": "Previous",
       "next": "Next"
+    },
+    "screeningResult": {
+      "actions": {
+        "analyzing": "Analyzing...",
+        "backToScreening": "Back to screening list",
+        "backToList": "Back to list",
+        "downloadPdf": "Download PDF",
+        "downloadPdfDisabledTitle": "Please save the record before exporting PDF.",
+        "downloadPdfTitle": "Download PDF report",
+        "generatingPdf": "Generating PDF...",
+        "printPdf": "Print PDF",
+        "reanalyze": "Re-analyze",
+        "refining": "Refining...",
+        "saved": "Saved",
+        "saveRecord": "Save record",
+        "saving": "Saving...",
+        "share": "Share",
+        "shareDisabledTitle": "Please save the record before sharing.",
+        "shareResultTitle": "Share screening result",
+        "sendingToDoctor": "Sending...",
+        "sendToDoctor": "Send to Doctor",
+        "sentToDoctorSuccess": "Sent to Doctor successfully."
+      },
+      "aiResults": {
+        "emptyState": "Analysis results will appear here after AI processing is complete.",
+        "primaryFinding": "Primary Finding",
+        "primary": "Primary Finding",
+        "empty": "Analysis results will appear here after AI processing is complete.",
+        "title": "AI Analysis Results"
+      },
+      "badges": {
+        "viewOnly": "View mode - record has been saved"
+      },
+      "confirmSave": {
+        "cancelLabel": "Review again",
+        "confirmLabel": "Save result",
+        "message": "Are you sure you want to save this screening result? After saving, this session will become view-only and cannot be edited.",
+        "title": "Confirm result save"
+      },
+      "editable": {
+        "consultationHint": "This note is required and will be stored with the record.",
+        "consultationPlaceholder": "Enter consultation note for this screening session...",
+        "consultationTitle": "Organisation consultation note (required)",
+        "diagnosisTitle": "Diagnosis result (editable)",
+        "summaryTitle": "AI Summary (editable)"
+      },
+      "cards": {
+        "summaryTitle": "AI Summary",
+        "findingsTitle": "Diagnosis Findings"
+      },
+      "header": {
+        "newDraft": "New draft",
+        "patientLabel": "Patient",
+        "patient": "Patient",
+        "sessionLabel": "Session",
+        "session": "Session",
+        "title": "Screening Result"
+      },
+      "network": {
+        "consultationNote": "Consultation note: {{note}}",
+        "noAbnormalFindings": "No clear abnormal findings",
+        "notProvidedYet": "Not provided yet",
+        "riskLevel": "Risk level: {{risk}}",
+        "session": "Session: {{id}}...",
+        "summary": "Summary:",
+        "summaryLabel": "Summary:",
+        "findingsLabel": "Top findings:",
+        "noteLabel": "Coordinator note: {{note}}",
+        "noteEmpty": "Not provided",
+        "noFindings": "No clear abnormal findings",
+        "title": "AI screening case shared by organisation",
+        "topFindings": "Top findings:"
+      },
+      "pageName": "Screening Result",
+      "patientFallback": "Patient",
+      "riskCard": {
+        "title": "Risk level",
+        "confidence": "Confidence score: {{score}}%",
+        "levels": {
+          "low": "Low",
+          "medium": "Medium",
+          "moderate": "Moderate",
+          "high": "High"
+        }
+      },
+      "sessionInfo": {
+        "createdAt": "Created at",
+        "imageCount": "Image count",
+        "lastAssessed": "Last assessed",
+        "assessedAt": "Last assessed",
+        "model": "Model",
+        "sessionCode": "Session code",
+        "title": "Session Information"
+      },
+      "shareModal": {
+        "email": {
+          "attachPdf": "Attach PDF report",
+          "attachRetinalImages": "Share retinal image links",
+          "attachImages": "Share retinal image links",
+          "auraHint": "Aura patient: email is prefilled and can be edited.",
+          "placeholder": "patient@example.com",
+          "recipientLabel": "Recipient email",
+          "recipient": "Recipient email",
+          "send": "Send share",
+          "walkInHint": "Walk-in patient: enter recipient email for result delivery.",
+          "defaultHint": "Email can be edited before sending."
+        },
+        "network": {
+          "intro": "Post this screening case to Professional Network as a case presentation. The selected retinal image will be attached.",
+          "hint": "Post this screening case to Professional Network as a case presentation.",
+          "noDraft": "No AI result yet. Please run analysis first.",
+          "post": "Post to Network",
+          "riskLabel": "Risk level:",
+          "summaryLabel": "Summary:",
+          "notePlaceholder": "Add an optional note for this case..."
+        },
+        "tabs": {
+          "email": "Send email to patient",
+          "network": "Post to Network"
+        },
+        "title": "Share screening result"
+      },
+      "states": {
+        "loading": "Loading screening result...",
+        "noAiDraft": "No AI result yet. Press \"Re-analyze\" to run AI and prepare editable results.",
+        "notFound": "Screening session not found",
+        "missingId": "Missing screening id.",
+        "noDraft": "No AI result yet. Press \"Re-analyze\" to generate results."
+      },
+      "toast": {
+        "aiNoPredictionData": "AI service returned no prediction data.",
+        "analyzeBeforeSave": "Please run AI analysis before saving the record.",
+        "analyzeCompleted": "AI analysis completed. You can edit the result before saving.",
+        "analyzeSuccess": "AI analysis completed successfully.",
+        "analyzeFailed": "AI analysis failed. Please verify AI service and try again.",
+        "analyzingAi": "Analyzing AI...",
+        "analyzing": "Analyzing retinal image...",
+        "downloadPdfFailed": "Unable to download PDF report.",
+        "downloadPdfSuccess": "PDF report downloaded successfully.",
+        "loadResultFailed": "Unable to load screening result.",
+        "noteRequiredBeforeSave": "Please add consultation note before saving.",
+        "quotaExhaustedForAnalyze": "Quota exhausted. Please buy more quota from wallet before analysis.",
+        "saveBeforePdf": "Please save the record before exporting PDF.",
+        "saveFailed": "Unable to save result. Please try again.",
+        "saveSuccess": "Screening result saved successfully.",
+        "sessionNotFoundForAi": "No screening session found for AI analysis.",
+        "shareEmailFailed": "Unable to share result at this time.",
+        "shareEmailSuccess": "Result sent to {{email}}.",
+        "shareNetworkFailed": "Unable to post to Professional Network. Please try again.",
+        "shareNetworkSuccess": "Case shared to Professional Network successfully.",
+        "shareSelectAtLeastOne": "Please select at least one item to share.",
+        "shareWalkInEmailRequired": "Please enter recipient email for walk-in patient.",
+        "sendToDoctorRequiresAi": "Please complete AI analysis first.",
+        "bookedDoctorMissing": "Patient has no booked doctor. Please check the appointment.",
+        "sendToDoctorSuccess": "Case sent to doctor successfully.",
+        "sendToDoctorFailed": "Unable to send this case to doctor."
+      },
+      "summary": {
+        "high": {
+          "default": "Findings need attention from an ophthalmologist.",
+          "withPrimary": "Findings need attention from an ophthalmologist ({{primaryLabel}})."
+        },
+        "moderate": {
+          "default": "Some findings may need specialist review.",
+          "withPrimary": "Some findings may need specialist review ({{primaryLabel}})."
+        },
+        "low": {
+          "default": "Low-risk findings detected. Routine specialist follow-up is recommended.",
+          "withPrimary": "Low-risk findings detected ({{primaryLabel}}). Routine specialist follow-up is recommended."
+        }
+      },
+      "findings": {
+        "primaryOnly": "Primary Finding: {{primaryFinding}}",
+        "primaryAndRelated": "Primary Finding: {{primaryFinding}}\nRelated Findings: {{relatedFindings}}",
+        "relatedOnly": "Related Findings: {{relatedFindings}}",
+        "manualAnnotations": "Manual Annotations: {{manualNames}}",
+        "emptyFallback": "No significant AI findings were identified."
+      }
     }
   },
   "ClinicStaffMedicalRecords": {

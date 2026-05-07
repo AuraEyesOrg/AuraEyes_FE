@@ -4982,6 +4982,7 @@
       "actions": {
         "analyzing": "Đang phân tích...",
         "backToScreening": "Quay lại danh sách khám",
+        "backToList": "Quay lại danh sách",
         "downloadPdf": "Tải PDF",
         "downloadPdfDisabledTitle": "Vui lòng lưu hồ sơ trước khi xuất PDF.",
         "downloadPdfTitle": "Tải báo cáo PDF",
@@ -4994,11 +4995,16 @@
         "saving": "Đang lưu...",
         "share": "Chia sẻ",
         "shareDisabledTitle": "Vui lòng lưu hồ sơ trước khi chia sẻ.",
-        "shareResultTitle": "Chia sẻ kết quả"
+        "shareResultTitle": "Chia sẻ kết quả",
+        "sendingToDoctor": "Đang gửi...",
+        "sendToDoctor": "Gửi bác sĩ",
+        "sentToDoctorSuccess": "Đã gửi hồ sơ cho bác sĩ thành công."
       },
       "aiResults": {
         "emptyState": "Kết quả phân tích sẽ hiển thị ở đây sau khi AI hoàn tất.",
         "primaryFinding": "Phát hiện chính",
+        "primary": "Phát hiện chính",
+        "empty": "Kết quả phân tích sẽ hiển thị sau khi AI hoàn tất.",
         "title": "Kết quả phân tích AI"
       },
       "badges": {
@@ -5017,10 +5023,16 @@
         "diagnosisTitle": "Kết quả chẩn đoán (có thể chỉnh sửa)",
         "summaryTitle": "Tóm tắt AI (có thể chỉnh sửa)"
       },
+      "cards": {
+        "summaryTitle": "Tóm tắt AI",
+        "findingsTitle": "Kết quả chẩn đoán"
+      },
       "header": {
         "newDraft": "Nháp mới",
         "patientLabel": "Bệnh nhân",
+        "patient": "Bệnh nhân",
         "sessionLabel": "Phiên",
+        "session": "Phiên",
         "title": "Kết quả khám"
       },
       "network": {
@@ -5030,18 +5042,31 @@
         "riskLevel": "Mức rủi ro: {{risk}}",
         "session": "Phiên: {{id}}...",
         "summary": "Tóm tắt:",
+        "summaryLabel": "Tóm tắt:",
+        "findingsLabel": "Phát hiện nổi bật:",
+        "noteLabel": "Ghi chú của điều phối viên: {{note}}",
+        "noteEmpty": "Không có",
+        "noFindings": "Chưa ghi nhận bất thường rõ ràng",
         "title": "Ca sàng lọc AI được chia sẻ từ tổ chức",
         "topFindings": "Phát hiện nổi bật:"
       },
       "pageName": "Kết quả khám",
       "patientFallback": "Bệnh nhân",
       "riskCard": {
-        "title": "Mức độ rủi ro"
+        "title": "Mức độ rủi ro",
+        "confidence": "Độ tin cậy: {{score}}%",
+        "levels": {
+          "low": "Thấp",
+          "medium": "Trung bình",
+          "moderate": "Trung bình",
+          "high": "Cao"
+        }
       },
       "sessionInfo": {
         "createdAt": "Ngày tạo",
         "imageCount": "Số ảnh",
         "lastAssessed": "Đánh giá lần cuối",
+        "assessedAt": "Đánh giá lần cuối",
         "model": "Mô hình",
         "sessionCode": "Mã phiên",
         "title": "Thông tin phiên khám"
@@ -5053,15 +5078,19 @@
           "auraHint": "Bệnh nhân Aura: email đã được điền sẵn, có thể chỉnh sửa.",
           "placeholder": "patient@example.com",
           "recipientLabel": "Email người nhận",
+          "recipient": "Email người nhận",
           "send": "Gửi chia sẻ",
-          "walkInHint": "Bệnh nhân walk-in: nhập email nhận kết quả."
+          "walkInHint": "Bệnh nhân walk-in: nhập email nhận kết quả.",
+          "defaultHint": "Email có thể được chỉnh sửa trước khi gửi."
         },
         "network": {
           "intro": "Đăng ca khám này lên Professional Network dưới dạng case presentation. Ảnh võng mạc đang được chọn sẽ được đính kèm.",
           "noDraft": "Chưa có kết quả AI. Vui lòng chạy phân tích trước.",
           "post": "Đăng lên Network",
           "riskLabel": "Mức rủi ro:",
-          "summaryLabel": "Tóm tắt:"
+          "summaryLabel": "Tóm tắt:",
+          "hint": "Đăng ca sàng lọc này lên Professional Network dưới dạng case presentation.",
+          "notePlaceholder": "Thêm ghi chú tùy chọn cho ca này..."
         },
         "tabs": {
           "email": "Gửi email bệnh nhân",
@@ -5072,7 +5101,9 @@
       "states": {
         "loading": "Đang tải kết quả khám...",
         "noAiDraft": "Chưa có kết quả AI. Nhấn \"Phân tích lại\" để chạy AI và chuẩn bị kết quả có thể chỉnh sửa.",
-        "notFound": "Không tìm thấy phiên khám"
+        "notFound": "Không tìm thấy phiên khám",
+        "missingId": "Thiếu ID sàng lọc.",
+        "noDraft": "Chưa có kết quả AI. Nhấn \"Phân tích lại\" để tạo kết quả."
       },
       "toast": {
         "aiNoPredictionData": "Dịch vụ AI không trả về dữ liệu dự đoán.",
@@ -5094,7 +5125,13 @@
         "shareNetworkFailed": "Không thể đăng lên Professional Network. Vui lòng thử lại.",
         "shareNetworkSuccess": "Đã đăng ca khám lên Professional Network.",
         "shareSelectAtLeastOne": "Vui lòng chọn ít nhất một nội dung để chia sẻ.",
-        "shareWalkInEmailRequired": "Vui lòng nhập email nhận kết quả cho bệnh nhân walk-in."
+        "shareWalkInEmailRequired": "Vui lòng nhập email nhận kết quả cho bệnh nhân walk-in.",
+        "sendToDoctorSuccess": "Đã gửi hồ sơ cho bác sĩ thành công.",
+        "sendToDoctorFailed": "Không thể gửi hồ sơ cho bác sĩ.",
+        "analyzing": "Đang phân tích ảnh võng mạc...",
+        "analyzeSuccess": "Phân tích AI hoàn tất thành công.",
+        "sendToDoctorRequiresAi": "Vui lòng hoàn tất phân tích AI trước.",
+        "bookedDoctorMissing": "Bệnh nhân chưa có bác sĩ phụ trách. Vui lòng kiểm tra lịch hẹn."
       },
       "summary": {
         "high": {
@@ -5114,7 +5151,8 @@
         "primaryOnly": "Phát hiện chính: {{primaryFinding}}",
         "primaryAndRelated": "Phát hiện chính: {{primaryFinding}}\nPhát hiện liên quan: {{relatedFindings}}",
         "relatedOnly": "Phát hiện liên quan: {{relatedFindings}}",
-        "manualAnnotations": "Ghi chú thủ công: {{manualNames}}"
+        "manualAnnotations": "Ghi chú thủ công: {{manualNames}}",
+        "emptyFallback": "Không phát hiện thấy bất thường AI đáng kể nào."
       }
     },
     "wallet": {
@@ -5601,10 +5639,14 @@
       "error": "Không thể tải dữ liệu bảng điều khiển.",
       "stats": {
         "totalAppointments": "Lịch hẹn hôm nay",
+        "monthAppointments": "Lịch hẹn trong tháng",
+        "yearAppointments": "Lịch hẹn trong năm",
         "checkedIn": "Đã check-in",
         "completed": "Đã hoàn tất",
         "noShow": "Vắng mặt",
-        "revenue": "Doanh thu hôm nay"
+        "revenue": "Doanh thu hôm nay",
+        "monthRevenue": "Doanh thu trong tháng",
+        "yearRevenue": "Doanh thu trong năm"
       },
       "bottleneckLongWait": "{{count}} bệnh nhân chờ trên {{minutes}} phút",
       "bottleneckFullCapacity": "Số lượt khám đã đạt tối đa trong ngày",
@@ -6096,7 +6138,7 @@
       "pagination": {
         "previous": "Trước",
         "next": "Tiếp",
-        "summary": "Trang {{page}} / {{total}}"
+        "summary": "Trang {{page}} / {{totalPages}} · {{totalCount}} bản ghi"
       },
       "detail": {
         "title": "Chi tiết nhật ký",
@@ -6565,7 +6607,7 @@
         "previous": "Trước",
         "next": "Tiếp",
         "page": "Trang",
-        "showing": "Hiển thị {{start}}–{{end}} / {{total}}"
+        "showing": "Hiển thị {{shown}} của {{total}} bác sĩ"
       },
       "feedback": {
         "state": {
@@ -6764,7 +6806,7 @@
       "title": "Quản lý bệnh nhân",
       "description": "Quản lý tài khoản bệnh nhân, xem lịch sử sàng lọc và theo dõi hoạt động",
       "summary": {
-        "showing": "Hiển thị {{count}} bệnh nhân"
+        "showing": "Hiển thị {{shown}} của {{total}} bệnh nhân"
       },
       "filters": {
         "searchPlaceholder": "Tìm kiếm bệnh nhân...",
@@ -7316,7 +7358,7 @@
         "previous": "Trước",
         "next": "Tiếp",
         "page": "Trang",
-        "showing": "Hiển thị {{start}}–{{end}} / {{total}}"
+        "showing": "Hiển thị {{shown}} của {{total}} quyền"
       },
       "modals": {
         "create": {
@@ -10957,24 +10999,79 @@
       }
     },
     "screeningResult": {
-      "patientFallback": "Bệnh nhân",
-      "header": {
-        "title": "Kết quả sàng lọc",
-        "patient": "Bệnh nhân",
-        "session": "Phiên"
-      },
       "actions": {
         "analyzing": "Đang phân tích...",
-        "refining": "Đang tinh chỉnh...",
+        "backToScreening": "Quay lại danh sách khám",
+        "backToList": "Quay lại danh sách",
+        "downloadPdf": "Tải PDF",
+        "downloadPdfDisabledTitle": "Vui lòng lưu hồ sơ trước khi xuất PDF.",
+        "downloadPdfTitle": "Tải báo cáo PDF",
+        "generatingPdf": "Đang tạo PDF...",
+        "printPdf": "In PDF",
         "reanalyze": "Phân tích lại",
+        "refining": "Đang hoàn thiện...",
+        "saved": "Đã lưu",
+        "saveRecord": "Lưu hồ sơ",
+        "saving": "Đang lưu...",
+        "share": "Chia sẻ",
+        "shareDisabledTitle": "Vui lòng lưu hồ sơ trước khi chia sẻ.",
+        "shareResultTitle": "Chia sẻ kết quả",
         "sendingToDoctor": "Đang gửi...",
         "sendToDoctor": "Gửi bác sĩ",
-        "sentToDoctorSuccess": "Đã gửi bác sĩ",
-        "backToList": "Quay lại danh sách"
+        "sentToDoctorSuccess": "Đã gửi hồ sơ cho bác sĩ thành công."
+      },
+      "aiResults": {
+        "emptyState": "Kết quả phân tích sẽ hiển thị ở đây sau khi AI hoàn tất.",
+        "primaryFinding": "Phát hiện chính",
+        "primary": "Phát hiện chính",
+        "empty": "Kết quả phân tích sẽ hiển thị sau khi AI hoàn tất.",
+        "title": "Kết quả phân tích AI"
       },
       "badges": {
-        "viewOnly": "Chế độ xem - chỉ kết quả AI"
+        "viewOnly": "Chế độ xem - hồ sơ đã được lưu"
       },
+      "confirmSave": {
+        "cancelLabel": "Kiểm tra lại",
+        "confirmLabel": "Lưu kết quả",
+        "message": "Bạn có chắc muốn lưu kết quả khám này không? Sau khi lưu, phiên này sẽ chuyển sang chế độ chỉ xem và không thể chỉnh sửa.",
+        "title": "Xác nhận lưu kết quả"
+      },
+      "editable": {
+        "consultationHint": "Ghi chú này là bắt buộc và sẽ được lưu cùng hồ sơ.",
+        "consultationPlaceholder": "Nhập ghi chú tư vấn cho phiên khám này...",
+        "consultationTitle": "Ghi chú tư vấn tổ chức (bắt buộc)",
+        "diagnosisTitle": "Kết quả chẩn đoán (có thể chỉnh sửa)",
+        "summaryTitle": "Tóm tắt AI (có thể chỉnh sửa)"
+      },
+      "cards": {
+        "summaryTitle": "Tóm tắt AI",
+        "findingsTitle": "Kết quả chẩn đoán"
+      },
+      "header": {
+        "newDraft": "Nháp mới",
+        "patientLabel": "Bệnh nhân",
+        "patient": "Bệnh nhân",
+        "sessionLabel": "Phiên",
+        "session": "Phiên",
+        "title": "Kết quả sàng lọc"
+      },
+      "network": {
+        "consultationNote": "Ghi chú tư vấn: {{note}}",
+        "noAbnormalFindings": "Chưa ghi nhận bất thường rõ ràng",
+        "notProvidedYet": "Chưa cập nhật",
+        "riskLevel": "Mức rủi ro: {{risk}}",
+        "session": "Phiên: {{id}}...",
+        "summary": "Tóm tắt:",
+        "summaryLabel": "Tóm tắt:",
+        "findingsLabel": "Phát hiện nổi bật:",
+        "noteLabel": "Ghi chú của điều phối viên: {{note}}",
+        "noteEmpty": "Không có",
+        "noFindings": "Chưa ghi nhận bất thường rõ ràng",
+        "title": "Ca sàng lọc AI được chia sẻ từ tổ chức",
+        "topFindings": "Phát hiện nổi bật:"
+      },
+      "pageName": "Kết quả khám",
+      "patientFallback": "Bệnh nhân",
       "riskCard": {
         "title": "Mức độ rủi ro",
         "confidence": "Độ tin cậy: {{score}}%",
@@ -10985,14 +11082,97 @@
           "high": "Cao"
         }
       },
-      "cards": {
-        "summaryTitle": "Tóm tắt AI",
-        "findingsTitle": "Kết quả chẩn đoán"
+      "sessionInfo": {
+        "createdAt": "Ngày tạo",
+        "imageCount": "Số ảnh",
+        "lastAssessed": "Đánh giá lần cuối",
+        "assessedAt": "Đánh giá lần cuối",
+        "model": "Mô hình",
+        "sessionCode": "Mã phiên",
+        "title": "Thông tin phiên khám"
       },
-      "aiResults": {
-        "title": "Kết quả phân tích AI",
-        "primary": "Phát hiện chính",
-        "empty": "Kết quả phân tích sẽ hiển thị sau khi AI hoàn tất."
+      "shareModal": {
+        "email": {
+          "attachPdf": "Đính kèm báo cáo PDF",
+          "attachRetinalImages": "Chia sẻ đường dẫn ảnh võng mạc",
+          "auraHint": "Bệnh nhân Aura: email đã được điền sẵn, có thể chỉnh sửa.",
+          "placeholder": "patient@example.com",
+          "recipientLabel": "Email người nhận",
+          "recipient": "Email người nhận",
+          "send": "Gửi chia sẻ",
+          "walkInHint": "Bệnh nhân walk-in: nhập email nhận kết quả.",
+          "defaultHint": "Email có thể được chỉnh sửa trước khi gửi."
+        },
+        "network": {
+          "intro": "Đăng ca khám này lên Professional Network dưới dạng case presentation. Ảnh võng mạc đang được chọn sẽ được đính kèm.",
+          "noDraft": "Chưa có kết quả AI. Vui lòng chạy phân tích trước.",
+          "post": "Đăng lên Network",
+          "riskLabel": "Mức rủi ro:",
+          "summaryLabel": "Tóm tắt:",
+          "hint": "Đăng ca sàng lọc này lên Professional Network dưới dạng case presentation.",
+          "notePlaceholder": "Thêm ghi chú tùy chọn cho ca này..."
+        },
+        "tabs": {
+          "email": "Gửi email bệnh nhân",
+          "network": "Đăng lên Network"
+        },
+        "title": "Chia sẻ kết quả khám"
+      },
+      "states": {
+        "loading": "Đang tải kết quả khám...",
+        "noAiDraft": "Chưa có kết quả AI. Nhấn \"Phân tích lại\" để chạy AI và chuẩn bị kết quả có thể chỉnh sửa.",
+        "notFound": "Không tìm thấy phiên khám",
+        "missingId": "Thiếu ID sàng lọc.",
+        "noDraft": "Chưa có kết quả AI. Nhấn \"Phân tích lại\" để tạo kết quả."
+      },
+      "toast": {
+        "aiNoPredictionData": "Dịch vụ AI không trả về dữ liệu dự đoán.",
+        "analyzeBeforeSave": "Vui lòng chạy phân tích AI trước khi lưu hồ sơ.",
+        "analyzeCompleted": "Phân tích AI hoàn tất. Bạn có thể chỉnh sửa kết quả trước khi lưu.",
+        "analyzeFailed": "Phân tích AI thất bại. Vui lòng kiểm tra dịch vụ AI và thử lại.",
+        "analyzingAi": "Đang phân tích AI...",
+        "downloadPdfFailed": "Không thể tải báo cáo PDF.",
+        "downloadPdfSuccess": "Đã tải báo cáo PDF.",
+        "loadResultFailed": "Không thể tải kết quả khám.",
+        "noteRequiredBeforeSave": "Vui lòng thêm ghi chú tư vấn trước khi lưu.",
+        "quotaExhaustedForAnalyze": "Đã hết quota. Vui lòng mua thêm quota từ ví trước khi phân tích.",
+        "saveBeforePdf": "Vui lòng lưu hồ sơ trước khi xuất PDF.",
+        "saveFailed": "Không thể lưu kết quả. Vui lòng thử lại.",
+        "saveSuccess": "Lưu kết quả khám thành công.",
+        "sessionNotFoundForAi": "Không tìm thấy phiên khám để phân tích AI.",
+        "shareEmailFailed": "Không thể chia sẻ kết quả lúc này.",
+        "shareEmailSuccess": "Đã gửi kết quả đến {{email}}.",
+        "shareNetworkFailed": "Không thể đăng lên Professional Network. Vui lòng thử lại.",
+        "shareNetworkSuccess": "Đã đăng ca khám lên Professional Network.",
+        "shareSelectAtLeastOne": "Vui lòng chọn ít nhất một nội dung để chia sẻ.",
+        "shareWalkInEmailRequired": "Vui lòng nhập email nhận kết quả cho bệnh nhân walk-in.",
+        "sendToDoctorSuccess": "Đã gửi hồ sơ cho bác sĩ thành công.",
+        "sendToDoctorFailed": "Không thể gửi hồ sơ cho bác sĩ.",
+        "analyzing": "Đang phân tích ảnh võng mạc...",
+        "analyzeSuccess": "Phân tích AI hoàn tất thành công.",
+        "sendToDoctorRequiresAi": "Vui lòng hoàn tất phân tích AI trước.",
+        "bookedDoctorMissing": "Bệnh nhân chưa có bác sĩ phụ trách. Vui lòng kiểm tra lịch hẹn."
+      },
+      "summary": {
+        "high": {
+          "default": "Phát hiện cần được bác sĩ nhãn khoa chú ý.",
+          "withPrimary": "Phát hiện cần được bác sĩ nhãn khoa chú ý ({{primaryLabel}})."
+        },
+        "moderate": {
+          "default": "Một số phát hiện có thể cần bác sĩ chuyên khoa đánh giá thêm.",
+          "withPrimary": "Một số phát hiện có thể cần bác sĩ chuyên khoa đánh giá thêm ({{primaryLabel}})."
+        },
+        "low": {
+          "default": "Phát hiện nguy cơ thấp. Khuyến nghị theo dõi định kỳ với bác sĩ chuyên khoa.",
+          "withPrimary": "Phát hiện nguy cơ thấp ({{primaryLabel}}). Khuyến nghị theo dõi định kỳ với bác sĩ chuyên khoa."
+        }
+      },
+      "findings": {
+        "primaryOnly": "Phát hiện chính: {{primaryFinding}}",
+        "primaryAndRelated": "Phát hiện chính: {{primaryFinding}}\nPhát hiện liên quan: {{relatedFindings}}",
+        "relatedOnly": "Phát hiện liên quan: {{relatedFindings}}",
+        "manualAnnotations": "Ghi chú thủ công: {{manualNames}}",
+        "emptyFallback": "Không phát hiện thấy bất thường AI đáng kể nào."
       }
     }
   },
