@@ -119,10 +119,14 @@ interface AdminDoctorWorkloadListItemDto {
 
 interface TodaySummaryDto {
   totalAppointments: number;
+  monthAppointments: number;
+  yearAppointments: number;
   checkedInPatients: number;
   completedVisits: number;
   noShowCount: number;
   todayRevenue: number;
+  monthRevenue: number;
+  yearRevenue: number;
   growthPercentageDay: number;
   growthPercentageMonth: number;
   growthPercentageYear: number;
@@ -363,10 +367,14 @@ export const dashboardApi = {
     const data = response.data.data;
     return {
       totalAppointments: data?.totalAppointments ?? 0,
+      monthAppointments: data?.monthAppointments ?? 0,
+      yearAppointments: data?.yearAppointments ?? 0,
       checkedInPatients: data?.checkedInPatients ?? 0,
       completedVisits: data?.completedVisits ?? 0,
       noShowCount: data?.noShowCount ?? 0,
       todayRevenue: data?.todayRevenue ?? 0,
+      monthRevenue: data?.monthRevenue ?? 0,
+      yearRevenue: data?.yearRevenue ?? 0,
       growthPercentageDay: data?.growthPercentageDay ?? 0,
       growthPercentageMonth: data?.growthPercentageMonth ?? 0,
       growthPercentageYear: data?.growthPercentageYear ?? 0,

@@ -143,8 +143,18 @@ export default function SystemAdminDashboard() {
 
     const baseStats = [
       {
-        label: t(`${T}.stats.totalAppointments`, "Today's Appointments"),
-        value: todaySummary?.totalAppointments ?? 0,
+        label:
+          period === 'year'
+            ? t(`${T}.stats.yearAppointments`, 'Year Appointments')
+            : period === 'month'
+              ? t(`${T}.stats.monthAppointments`, 'Month Appointments')
+              : t(`${T}.stats.totalAppointments`, "Today's Appointments"),
+        value:
+          period === 'year'
+            ? (todaySummary?.yearAppointments ?? 0)
+            : period === 'month'
+              ? (todaySummary?.monthAppointments ?? 0)
+              : (todaySummary?.totalAppointments ?? 0),
         icon: CalendarDays,
         change: apptGrowth,
         trend: (apptGrowth ?? 0) >= 0 ? ('up' as const) : ('down' as const),
@@ -152,11 +162,22 @@ export default function SystemAdminDashboard() {
         variant: 'primary' as const,
       },
       {
-        label: t(`${T}.stats.revenue`, 'Today Revenue'),
+        label:
+          period === 'year'
+            ? t(`${T}.stats.yearRevenue`, 'Year Revenue')
+            : period === 'month'
+              ? t(`${T}.stats.monthRevenue`, 'Month Revenue')
+              : t(`${T}.stats.revenue`, 'Today Revenue'),
         value: new Intl.NumberFormat('vi-VN', {
           style: 'currency',
           currency: 'VND',
-        }).format(todaySummary?.todayRevenue ?? 0),
+        }).format(
+          (period === 'year'
+            ? todaySummary?.yearRevenue
+            : period === 'month'
+              ? todaySummary?.monthRevenue
+              : todaySummary?.todayRevenue) ?? 0
+        ),
         icon: Activity,
         change: revGrowth,
         trend: (revGrowth ?? 0) >= 0 ? ('up' as const) : ('down' as const),
@@ -239,22 +260,18 @@ export default function SystemAdminDashboard() {
       </div>
       <div style={{ marginLeft: 280, minHeight: '100vh' }}>
         {HeaderComponent ? (
-          <HeaderComponent title={t(`${T}.title`, 'Clinic Operations')} />
+          <HeaderComponent
+            title={t(`${T}.title`, 'Clinic Operations')}
+            description={t(
+              `${T}.subtitle`,
+              "Real-time overview of today's patient flow"
+            )}
+          />
         ) : null}
         <main className="px-6 py-6">
           {/* Header + Refresh */}
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                {t(`${T}.title`, 'Clinic Operations')}
-              </h1>
-              <p className="text-sm text-gray-400 dark:text-slate-500 mt-0.5">
-                {t(
-                  `${T}.subtitle`,
-                  "Real-time overview of today's patient flow"
-                )}
-              </p>
-            </div>
+            <div />
             <button
               onClick={handleRefresh}
               className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm text-gray-900 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
